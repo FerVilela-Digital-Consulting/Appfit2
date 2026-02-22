@@ -1,5 +1,5 @@
 import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
+import DashboardHeader from "@/components/Header";
 import { Outlet } from "react-router-dom";
 
 const MainLayout = () => {
@@ -8,7 +8,7 @@ const MainLayout = () => {
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col">
-        <Header />
+        <DashboardHeader />
 
         <main className="flex-1 p-8">
           <Outlet />

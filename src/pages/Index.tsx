@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const Index = () => {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center relative">
@@ -13,12 +15,12 @@ const Index = () => {
                 Your personal fitness companion for a healthier lifestyle.
             </p>
             <div className="flex gap-4">
-                <a
-                    href="/dashboard"
-                    className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                <Link
+                    to="/dashboard"
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
                 >
                     Go to Dashboard
-                </a>
+                </Link>
             </div>
         </div>
     );
