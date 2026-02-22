@@ -7,7 +7,7 @@ const menuItems = [
   { title: "My Goals", icon: Target, path: "/goals" },
   { title: "Schedule", icon: CalendarDays, path: "/schedule" },
   { title: "Achievements", icon: Trophy, path: "/achievements" },
-  { title: "Statistics", icon: BarChart3, path: "/stats" },
+  { title: "Statistics", icon: BarChart3, path: "/statistics" },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 
