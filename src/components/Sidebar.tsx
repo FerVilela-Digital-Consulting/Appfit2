@@ -44,10 +44,8 @@ const Sidebar = () => {
         <h3 className="text-base font-semibold text-card-foreground">
           {profile?.full_name || "User"}
         </h3>
-        <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-          <span>178 cm</span>
-          <span className="text-border">|</span>
-          <span>75 kg</span>
+        <div className="mt-2 text-sm text-muted-foreground italic">
+          Profile Module Active
         </div>
       </div>
 
