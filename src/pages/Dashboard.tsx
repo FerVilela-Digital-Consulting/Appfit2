@@ -16,8 +16,9 @@ const Dashboard = () => {
     if (isGuest) return "Guest";
     return user?.email || "User";
   }, [profile?.full_name, isGuest, user?.email]);
-
-  const missingCoreDetails = !profile?.full_name || profile?.height === null || profile?.weight === null || !profile?.goal_type;
+  const heightLabel = profile?.height ? `${profile.height}cm` : "—";
+  const weightLabel = profile?.weight ? `${profile.weight}kg` : "—";
+  const goalLabel = profile?.goal_type || "—";
 
   return (
     <>
@@ -31,26 +32,18 @@ const Dashboard = () => {
             </h1>
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground ml-7">
-            {profile?.weight !== null && profile?.weight !== undefined && (
-              <span className="flex items-center gap-1">
-                <Weight className="w-3.5 h-3.5" /> {profile.weight}kg
-              </span>
-            )}
-            {profile?.height !== null && profile?.height !== undefined && (
-              <span className="flex items-center gap-1">
-                <Ruler className="w-3.5 h-3.5" /> {profile.height}cm
-              </span>
-            )}
-            {profile?.goal_type && (
-              <span className="flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5" /> {profile.goal_type}
-              </span>
-            )}
-            {missingCoreDetails && (
-              <Button variant="link" className="h-auto p-0 text-sm" onClick={() => setIsEditModalOpen(true)}>
-                Add your details
-              </Button>
-            )}
+            <span className="flex items-center gap-1">
+              <Weight className="w-3.5 h-3.5" /> {weightLabel}
+            </span>
+            <span className="flex items-center gap-1">
+              <Ruler className="w-3.5 h-3.5" /> {heightLabel}
+            </span>
+            <span className="flex items-center gap-1">
+              <TrendingUp className="w-3.5 h-3.5" /> {goalLabel}
+            </span>
+            <Button variant="link" className="h-auto p-0 text-sm" onClick={() => setIsEditModalOpen(true)}>
+              Edit details
+            </Button>
           </div>
         </div>
       </div>

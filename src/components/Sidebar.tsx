@@ -20,9 +20,10 @@ const Sidebar = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const displayName =
-    profile?.full_name?.trim() ||
-    (isGuest ? "Guest User" : user?.email?.split("@")[0] || "New User");
-  const hasMetrics = profile ? profile.height !== null || profile.weight !== null : false;
+    (isGuest ? "Guest" : (profile?.full_name?.trim() || user?.email || "User"));
+  const heightLabel = profile?.height ? `${profile.height} cm` : "—";
+  const weightLabel = profile?.weight ? `${profile.weight} kg` : "—";
+  const goalLabel = profile?.goal_type || "—";
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-border flex flex-col z-30">
@@ -40,18 +41,12 @@ const Sidebar = () => {
           </Avatar>
         </button>
         <h3 className="text-base font-semibold text-card-foreground">{displayName}</h3>
-        {hasMetrics ? (
-          <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-            {profile?.height !== null && profile?.height !== undefined && <span>{profile.height} cm</span>}
-            {profile?.height !== null && profile?.height !== undefined && profile?.weight !== null && profile?.weight !== undefined && <span className="text-border">|</span>}
-            {profile?.weight !== null && profile?.weight !== undefined && <span>{profile.weight} kg</span>}
-          </div>
-        ) : (
-          <p className="mt-2 text-xs text-muted-foreground">Add your details</p>
-        )}
-        {profile?.goal_type && (
-          <p className="mt-1 text-xs text-muted-foreground">{profile.goal_type}</p>
-        )}
+        <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
+          <span>{heightLabel}</span>
+          <span className="text-border">|</span>
+          <span>{weightLabel}</span>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">{goalLabel}</p>
         <Button
           variant="outline"
           size="sm"

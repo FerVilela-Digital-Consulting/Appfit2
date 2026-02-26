@@ -35,12 +35,25 @@ const Settings = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsedHeight = height ? Number(height) : null;
+    const parsedWeight = weight ? Number(weight) : null;
+
+    if (parsedHeight !== null && (!Number.isFinite(parsedHeight) || parsedHeight <= 0)) {
+      toast.error("Height must be a positive number.");
+      return;
+    }
+
+    if (parsedWeight !== null && (!Number.isFinite(parsedWeight) || parsedWeight <= 0)) {
+      toast.error("Weight must be a positive number.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       await updateProfile({
         full_name: fullName,
-        weight: weight ? parseFloat(weight) : null,
-        height: height ? parseFloat(height) : null,
+        weight: parsedWeight,
+        height: parsedHeight,
         goal_type: goalType,
       });
 
@@ -49,9 +62,8 @@ const Settings = () => {
       } else {
         toast.success("Settings updated successfully");
       }
-    } catch (error) {
-      console.error("Error updating settings:", error);
-      toast.error("Failed to update settings");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to update settings");
     } finally {
       setIsSaving(false);
     }

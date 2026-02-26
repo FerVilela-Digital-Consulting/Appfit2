@@ -79,6 +79,19 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        const parsedHeight = height ? Number(height) : null;
+        const parsedWeight = weight ? Number(weight) : null;
+
+        if (parsedHeight !== null && (!Number.isFinite(parsedHeight) || parsedHeight <= 0)) {
+            toast.error("Height must be a positive number.");
+            return;
+        }
+
+        if (parsedWeight !== null && (!Number.isFinite(parsedWeight) || parsedWeight <= 0)) {
+            toast.error("Weight must be a positive number.");
+            return;
+        }
+
         setIsSaving(true);
         try {
             let nextAvatarUrl: string | null | undefined = profile?.avatar_url ?? null;
@@ -93,8 +106,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
 
             await updateProfile({
                 full_name: fullName,
-                weight: weight ? parseFloat(weight) : null,
-                height: height ? parseFloat(height) : null,
+                weight: parsedWeight,
+                height: parsedHeight,
                 goal_type: goalType,
                 avatar_url: nextAvatarUrl,
             });
@@ -105,9 +118,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
                 toast.success("Profile updated successfully");
             }
             onOpenChange(false);
-        } catch (error) {
-            console.error("Error updating profile:", error);
-            toast.error("Failed to update profile");
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to update profile");
         } finally {
             setIsSaving(false);
         }

@@ -27,11 +27,6 @@ const Profile = () => {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (isGuest) {
-            toast.error("Cannot save profile in guest mode");
-            return;
-        }
-
         setIsSaving(true);
         try {
             await updateProfile({
@@ -40,9 +35,12 @@ const Profile = () => {
                 height: height ? parseFloat(height) : null,
                 goal_type: goalType,
             });
-            toast.success("Profile updated successfully");
+            if (isGuest) {
+                toast.info("Guest mode: changes won't be saved.");
+            } else {
+                toast.success("Profile updated successfully");
+            }
         } catch (error) {
-            console.error("Error updating profile:", error);
             toast.error("Failed to update profile");
         } finally {
             setIsSaving(false);
@@ -94,7 +92,6 @@ const Profile = () => {
                                     placeholder="Enter your full name"
                                     value={fullName}
                                     onChange={(e) => setFullName(e.target.value)}
-                                    disabled={isGuest}
                                 />
                             </div>
 
@@ -108,7 +105,6 @@ const Profile = () => {
                                     placeholder="70"
                                     value={weight}
                                     onChange={(e) => setWeight(e.target.value)}
-                                    disabled={isGuest}
                                 />
                             </div>
 
@@ -122,7 +118,6 @@ const Profile = () => {
                                     placeholder="175"
                                     value={height}
                                     onChange={(e) => setHeight(e.target.value)}
-                                    disabled={isGuest}
                                 />
                             </div>
 
@@ -135,13 +130,12 @@ const Profile = () => {
                                     placeholder="e.g. Muscle Gain, Weight Loss"
                                     value={goalType}
                                     onChange={(e) => setGoalType(e.target.value)}
-                                    disabled={isGuest}
                                 />
                             </div>
                         </div>
                     </CardContent>
                     <CardFooter className="flex justify-end border-t pt-6">
-                        <Button type="submit" disabled={isSaving || isGuest}>
+                        <Button type="submit" disabled={isSaving}>
                             {isSaving ? "Saving..." : "Save Changes"}
                         </Button>
                     </CardFooter>

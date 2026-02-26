@@ -1,16 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/services/supabaseClient';
+import { toast } from 'sonner';
 
 interface Profile {
-    id: string;
     full_name: string | null;
     avatar_url: string | null;
     weight: number | null;
     height: number | null;
     goal_type: string | null;
-    is_premium: boolean;
-    created_at: string;
 }
 
 interface AuthContextType {
@@ -27,21 +25,26 @@ interface AuthContextType {
     completeOnboarding: () => Promise<void>;
     refreshProfile: () => Promise<void>;
     updateAvatar: (file: File) => Promise<string>;
-    updateProfile: (data: Partial<Omit<Profile, 'id' | 'created_at'>>) => Promise<void>;
+    updateProfile: (data: Partial<Profile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_STORAGE_KEY = 'appfit_is_guest';
 
 const createGuestProfile = (): Profile => ({
-    id: 'guest',
     full_name: 'Guest',
     avatar_url: null,
     weight: null,
     height: null,
     goal_type: null,
-    is_premium: false,
-    created_at: new Date().toISOString()
+});
+
+const createEmptyProfile = (): Profile => ({
+    full_name: null,
+    avatar_url: null,
+    weight: null,
+    height: null,
+    goal_type: null,
 });
 
 const deriveOnboardingCompleted = (resolvedProfile: Profile | null) => {
@@ -53,34 +56,6 @@ const deriveOnboardingCompleted = (resolvedProfile: Profile | null) => {
         resolvedProfile.height !== null ||
         resolvedProfile.goal_type
     );
-};
-
-const ensureProfile = async (userId: string): Promise<Profile> => {
-    const { data: existingProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
-    if (fetchError) {
-        throw fetchError;
-    }
-
-    if (existingProfile) {
-        return existingProfile as Profile;
-    }
-
-    const { data: insertedProfile, error: insertError } = await supabase
-        .from('profiles')
-        .insert({ id: userId })
-        .select('*')
-        .single();
-
-    if (insertError) {
-        throw insertError;
-    }
-
-    return insertedProfile as Profile;
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -98,6 +73,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const fetchProfile = async (userId: string): Promise<Profile> => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('full_name,height,weight,goal_type,avatar_url')
+            .eq('id', userId)
+            .limit(1)
+            .maybeSingle();
+
+        if (error) {
+            throw error;
+        }
+
+        const nextProfile: Profile = {
+            full_name: data?.full_name ?? null,
+            height: data?.height ?? null,
+            weight: data?.weight ?? null,
+            goal_type: data?.goal_type ?? null,
+            avatar_url: data?.avatar_url ?? null,
+        };
+        setAuthedProfile(nextProfile);
+        return nextProfile;
+    };
+
     const syncAuthenticatedUser = async (authUser: User) => {
         logFlow("Syncing authenticated user: " + authUser.id);
         setUser(authUser);
@@ -105,11 +103,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem(GUEST_STORAGE_KEY);
 
         try {
-            const resolvedProfile = await ensureProfile(authUser.id);
-            setAuthedProfile(resolvedProfile);
+            const resolvedProfile = await fetchProfile(authUser.id);
             setOnboardingCompleted(deriveOnboardingCompleted(resolvedProfile));
         } catch (error) {
-            console.error('Error ensuring profile:', error);
+            console.error('Error fetching profile:', error);
             setAuthedProfile(null);
             setOnboardingCompleted(false);
         }
@@ -117,8 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const refreshProfile = async () => {
         if (!user || isGuest) return;
-        const resolvedProfile = await ensureProfile(user.id);
-        setAuthedProfile(resolvedProfile);
+        await fetchProfile(user.id);
     };
 
     useEffect(() => {
@@ -284,7 +280,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return publicUrlData.publicUrl;
     };
 
-    const updateProfile = async (data: Partial<Omit<Profile, 'id' | 'created_at'>>) => {
+    const updateProfile = async (data: Partial<Profile>) => {
         logFlow("Updating profile...");
 
         if (isGuest) {
@@ -297,16 +293,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Optimistic update
         const oldProfile = authedProfile;
-        setAuthedProfile(prev => prev ? { ...prev, ...data } : prev);
+        const baseProfile = authedProfile ?? createEmptyProfile();
+        setAuthedProfile({ ...baseProfile, ...data });
 
         const { error } = await supabase
             .from('profiles')
-            .update(data)
+            .update({ ...data, updated_at: new Date().toISOString() })
             .eq('id', user.id);
 
         if (error) {
             setAuthedProfile(oldProfile);
-            console.error('Error updating profile:', error);
+            toast.error(error.message);
             throw error;
         }
 
