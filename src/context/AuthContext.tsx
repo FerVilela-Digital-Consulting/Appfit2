@@ -19,8 +19,9 @@ interface AuthContextType {
     profile: Profile | null;
     isGuest: boolean;
     continueAsGuest: () => void;
-    signIn: (email: string) => Promise<void>;
-    signUp: (email: string) => Promise<void>;
+    signIn: (email: string, password?: string) => Promise<void>;
+    signInWithGoogle: () => Promise<void>;
+    signUp: (email: string, password?: string) => Promise<void>;
     signOut: () => Promise<void>;
     completeOnboarding: () => Promise<void>;
     updateProfile: (data: Partial<Omit<Profile, 'id' | 'created_at'>>) => Promise<void>;
@@ -167,6 +168,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsGuest(false);
     };
 
+    const signInWithGoogle = async () => {
+        logFlow("Signing in with Google...");
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin,
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
+                },
+            }
+        });
+        if (error) throw error;
+        setIsGuest(false);
+    };
+
     const signUp = async (email: string, password?: string) => {
         logFlow("Signing up...");
         const { data, error } = await supabase.auth.signUp({
@@ -254,6 +271,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             isGuest,
             continueAsGuest,
             signIn,
+            signInWithGoogle,
             signUp,
             signOut,
             completeOnboarding,
