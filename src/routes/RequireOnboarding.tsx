@@ -10,6 +10,11 @@ import { useAuth } from '@/context/AuthContext';
  * as it assumes an authenticated user context.
  */
 const RequireOnboarding = () => {
+    if (import.meta.env.VITE_GUEST_MODE === "true") {
+        console.log("Guest mode enabled — bypassing onboarding");
+        return <Outlet />;
+    }
+
     const { onboardingCompleted, loading, user } = useAuth();
     const location = useLocation();
 

@@ -3,6 +3,11 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 const ProtectedRoute = () => {
+    if (import.meta.env.VITE_GUEST_MODE === "true") {
+        console.log("Guest mode enabled — bypassing auth");
+        return <Outlet />;
+    }
+
     const { user, loading } = useAuth();
 
     // DEV BYPASS: skip auth check in development
