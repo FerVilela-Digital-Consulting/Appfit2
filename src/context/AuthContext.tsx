@@ -296,10 +296,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const baseProfile = authedProfile ?? createEmptyProfile();
         setAuthedProfile({ ...baseProfile, ...data });
 
-        const { error } = await supabase
+        let { error } = await supabase
             .from('profiles')
-            .update({ ...data, updated_at: new Date().toISOString() })
+            .update({ ...data, updated_at: new Date().toISOString() } as any)
             .eq('id', user.id);
+
+        // Some projects don't have updated_at in profiles; retry without it.
+        if (error && error.message?.includes("Could not find the 'updated_at' column")) {
+            const retry = await supabase
+                .from('profiles')
+                .update(data as any)
+                .eq('id', user.id);
+            error = retry.error;
+        }
 
         if (error) {
             setAuthedProfile(oldProfile);
