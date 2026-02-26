@@ -97,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (currentUser) {
                     logFlow("Initial session detected: " + currentUser.id);
                     setUser(currentUser);
+                    setIsGuest(false);
                     await ensureProfile(currentUser.id);
                 } else {
                     logFlow("No initial session detected.");
@@ -119,14 +120,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (!isMounted) return;
 
-            if (event === 'SIGNED_IN') {
+            if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
                 setUser(currentUser);
                 setLoading(true);
                 if (currentUser) {
                     await ensureProfile(currentUser.id);
+                    setIsGuest(false);
                 }
                 setLoading(false);
-                setIsGuest(false);
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);
                 setProfile(null);
@@ -143,24 +144,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, []);
 
-    const signIn = async (email: string) => {
-        const { error } = await supabase.auth.signInWithOtp({
+    const signIn = async (email: string, password?: string) => {
+        logFlow("Signing in with password...");
+        if (!password) {
+            // Keep magic link as fallback or for Index.tsx compatibility if needed, 
+            // but the primary requirement is password.
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: {
+                    emailRedirectTo: window.location.origin
+                }
+            });
+            if (error) throw error;
+            return;
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({
             email,
-            options: {
-                emailRedirectTo: window.location.origin
-            }
+            password,
         });
         if (error) throw error;
+        setIsGuest(false);
     };
 
-    const signUp = async (email: string) => {
-        const { error } = await supabase.auth.signUp({ email, password: 'temporary-password' });
+    const signUp = async (email: string, password?: string) => {
+        logFlow("Signing up...");
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password: password || 'temporary-password'
+        });
+
         if (error) throw error;
+
+        if (data.user) {
+            logFlow("Signup successful, creating profile...");
+            await ensureProfile(data.user.id);
+            setIsGuest(false);
+        }
     };
 
     const signOut = async () => {
+        logFlow("Signing out...");
         const { error } = await supabase.auth.signOut();
         setIsGuest(false);
+        setUser(null);
+        setProfile(null);
         if (error) throw error;
     };
 

@@ -17,7 +17,7 @@ const GuestWarningBanner: React.FC = () => {
                     size="sm"
                     variant="default"
                     className="bg-amber-600 hover:bg-amber-700 text-white border-none h-8 text-xs font-semibold px-4"
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/auth')}
                 >
                     Create Account
                 </Button>

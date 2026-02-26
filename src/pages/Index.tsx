@@ -63,36 +63,12 @@ const Index = () => {
                 Your personal fitness companion for a healthier lifestyle.
             </p>
 
-            <form onSubmit={handleDashboardClick} className="w-full max-w-sm space-y-4">
-                {!user && (
-                    <div className="space-y-2">
-                        <Input
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="text-center"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                            We'll send you a magic link to sign in.
-                        </p>
-                    </div>
-                )}
-
+            <div className="w-full max-w-sm space-y-4">
                 <Button
-                    type="submit"
                     className="w-full h-10 px-6 font-medium"
-                    disabled={loading}
+                    onClick={() => navigate(user ? "/dashboard" : "/auth")}
                 >
-                    {loading ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Sending link...
-                        </>
-                    ) : (
-                        user ? "Go to Dashboard" : "Sign In / Go to Dashboard"
-                    )}
+                    {user ? "Go to Dashboard" : "Get Started"}
                 </Button>
 
                 <Button
@@ -107,7 +83,7 @@ const Index = () => {
                 >
                     Continue as Guest
                 </Button>
-            </form>
+            </div>
         </div>
     );
 };

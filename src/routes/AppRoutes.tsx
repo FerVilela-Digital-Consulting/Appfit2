@@ -13,10 +13,13 @@ import Settings from "@/pages/Settings";
 import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/NotFound";
 
+import Auth from "@/pages/Auth";
+
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
+      <Route path="/auth" element={<Auth />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/onboarding" element={<Onboarding />} />
