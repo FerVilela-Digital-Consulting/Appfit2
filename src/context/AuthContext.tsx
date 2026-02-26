@@ -5,7 +5,7 @@ import { supabase } from '@/services/supabaseClient';
 interface Profile {
     id: string;
     full_name: string | null;
-    avatar_url?: string | null;
+    avatar_url: string | null;
     weight: number | null;
     height: number | null;
     goal_type: string | null;
@@ -25,25 +25,21 @@ interface AuthContextType {
     signUp: (email: string, password: string) => Promise<{ requiresEmailConfirmation: boolean }>;
     signOut: () => Promise<void>;
     completeOnboarding: () => Promise<void>;
-    updateAvatar: (file: File) => Promise<void>;
+    refreshProfile: () => Promise<void>;
+    updateAvatar: (file: File) => Promise<string>;
     updateProfile: (data: Partial<Omit<Profile, 'id' | 'created_at'>>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_STORAGE_KEY = 'appfit_is_guest';
-const GUEST_AVATAR_STORAGE_KEY = 'appfit_guest_avatar';
 
-const getStoredGuestAvatar = () => localStorage.getItem(GUEST_AVATAR_STORAGE_KEY);
-const saveStoredGuestAvatar = (avatarDataUrl: string) => {
-    localStorage.setItem(GUEST_AVATAR_STORAGE_KEY, avatarDataUrl);
-};
 const createGuestProfile = (): Profile => ({
     id: 'guest',
-    full_name: 'Guest User',
-    avatar_url: getStoredGuestAvatar(),
-    weight: 70,
-    height: 175,
-    goal_type: 'Build Muscles',
+    full_name: 'Guest',
+    avatar_url: null,
+    weight: null,
+    height: null,
+    goal_type: null,
     is_premium: false,
     created_at: new Date().toISOString()
 });
@@ -91,8 +87,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
-    const [profile, setProfile] = useState<Profile | null>(null);
+    const [authedProfile, setAuthedProfile] = useState<Profile | null>(null);
+    const [guestProfile, setGuestProfile] = useState<Profile>(() => createGuestProfile());
     const [isGuest, setIsGuest] = useState(() => localStorage.getItem(GUEST_STORAGE_KEY) === 'true');
+    const profile = isGuest ? guestProfile : authedProfile;
 
     const logFlow = (message: string) => {
         if (import.meta.env.DEV) {
@@ -108,13 +106,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         try {
             const resolvedProfile = await ensureProfile(authUser.id);
-            setProfile(resolvedProfile);
+            setAuthedProfile(resolvedProfile);
             setOnboardingCompleted(deriveOnboardingCompleted(resolvedProfile));
         } catch (error) {
             console.error('Error ensuring profile:', error);
-            setProfile(null);
+            setAuthedProfile(null);
             setOnboardingCompleted(false);
         }
+    };
+
+    const refreshProfile = async () => {
+        if (!user || isGuest) return;
+        const resolvedProfile = await ensureProfile(user.id);
+        setAuthedProfile(resolvedProfile);
     };
 
     useEffect(() => {
@@ -132,14 +136,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 } else {
                     logFlow("No initial session detected.");
                     setUser(null);
-                    setProfile(isGuest ? createGuestProfile() : null);
+                    setAuthedProfile(null);
+                    setGuestProfile(createGuestProfile());
                     setOnboardingCompleted(isGuest ? true : false);
                 }
             } catch (error) {
                 console.error('Error during initial session check:', error);
                 if (isMounted) {
                     setUser(null);
-                    setProfile(isGuest ? createGuestProfile() : null);
+                    setAuthedProfile(null);
+                    setGuestProfile(createGuestProfile());
                     setOnboardingCompleted(isGuest ? true : false);
                 }
             } finally {
@@ -163,14 +169,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     await syncAuthenticatedUser(session.user);
                 } else if (localStorage.getItem(GUEST_STORAGE_KEY) !== 'true') {
                     setUser(null);
-                    setProfile(null);
+                    setAuthedProfile(null);
                     setOnboardingCompleted(false);
                 }
 
                 setLoading(false);
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);
-                setProfile(null);
+                setAuthedProfile(null);
+                setGuestProfile(createGuestProfile());
                 setOnboardingCompleted(false);
                 setIsGuest(false);
                 localStorage.removeItem(GUEST_STORAGE_KEY);
@@ -214,7 +221,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsGuest(false);
         localStorage.removeItem(GUEST_STORAGE_KEY);
         setUser(null);
-        setProfile(null);
+        setAuthedProfile(null);
+        setGuestProfile(createGuestProfile());
         setOnboardingCompleted(false);
 
         const { error } = await supabase.auth.signOut();
@@ -226,14 +234,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsGuest(true);
         localStorage.setItem(GUEST_STORAGE_KEY, 'true');
         setUser(null);
+        setAuthedProfile(null);
         setOnboardingCompleted(true);
-        setProfile(createGuestProfile());
+        setGuestProfile(createGuestProfile());
     };
 
     const exitGuest = () => {
         setIsGuest(false);
         localStorage.removeItem(GUEST_STORAGE_KEY);
-        setProfile(null);
+        setGuestProfile(createGuestProfile());
         setOnboardingCompleted(false);
     };
 
@@ -245,29 +254,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const updateAvatar = async (file: File) => {
-        if (!file) return;
+        if (!file) {
+            throw new Error('No file selected.');
+        }
 
         if (!file.type.startsWith('image/')) {
             throw new Error('Please select an image file.');
         }
 
         if (isGuest || !user) {
-            const dataUrl = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    if (typeof reader.result === 'string') resolve(reader.result);
-                };
-                reader.onerror = () => reject(new Error('Failed to read image file.'));
-                reader.readAsDataURL(file);
-            });
-
-            saveStoredGuestAvatar(dataUrl);
-            setProfile(prev => prev ? { ...prev, avatar_url: dataUrl } : prev);
-            return;
+            throw new Error("Guest mode: avatar upload is disabled.");
         }
 
         const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-        const path = `${user.id}/avatar.${fileExt}`;
+        const path = `${user.id}/${Date.now()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
             .from('avatars')
@@ -281,18 +281,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .from('avatars')
             .getPublicUrl(path);
 
-        const avatarUrl = publicUrlData.publicUrl;
-
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ avatar_url: avatarUrl } as any)
-            .eq('id', user.id);
-
-        if (updateError) {
-            throw updateError;
-        }
-
-        setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : prev);
+        return publicUrlData.publicUrl;
     };
 
     const updateProfile = async (data: Partial<Omit<Profile, 'id' | 'created_at'>>) => {
@@ -300,15 +289,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (isGuest) {
             logFlow("Guest mode: performing local update.");
-            setProfile(prev => prev ? { ...prev, ...data } : null);
+            setGuestProfile(prev => ({ ...prev, ...data }));
             return;
         }
 
         if (!user) return;
 
         // Optimistic update
-        const oldProfile = profile;
-        setProfile(prev => prev ? { ...prev, ...data } : null);
+        const oldProfile = authedProfile;
+        setAuthedProfile(prev => prev ? { ...prev, ...data } : prev);
 
         const { error } = await supabase
             .from('profiles')
@@ -316,7 +305,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('id', user.id);
 
         if (error) {
-            setProfile(oldProfile);
+            setAuthedProfile(oldProfile);
             console.error('Error updating profile:', error);
             throw error;
         }
@@ -337,6 +326,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             signUp,
             signOut,
             completeOnboarding,
+            refreshProfile,
             updateAvatar,
             updateProfile
         }}>

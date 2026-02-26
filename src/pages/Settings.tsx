@@ -13,6 +13,8 @@ import {
 import { toast } from "sonner";
 import { Scale, Ruler, Target, User, Settings as SettingsIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Settings = () => {
   const { profile, updateProfile, isGuest, loading } = useAuth();
@@ -79,6 +81,22 @@ const Settings = () => {
         </CardHeader>
         <form onSubmit={handleSave}>
           <CardContent className="space-y-6">
+            {isGuest && (
+              <Alert>
+                <AlertDescription>Guest mode: changes won't be saved.</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="flex items-center gap-4">
+              <Avatar className="h-14 w-14">
+                <AvatarImage src={profile?.avatar_url || undefined} alt="Profile avatar" />
+                <AvatarFallback>{(fullName || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <p className="text-sm text-muted-foreground">
+                Avatar can be updated from Edit Profile.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="fullName" className="flex items-center gap-2">
                 <User className="h-4 w-4" /> Full Name

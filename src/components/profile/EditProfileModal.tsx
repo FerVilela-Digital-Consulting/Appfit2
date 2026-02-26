@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { Scale, Ruler, Target } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface EditProfileModalProps {
     open: boolean;
@@ -35,6 +36,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
     const [goalType, setGoalType] = useState("");
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [removeAvatar, setRemoveAvatar] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -45,12 +47,18 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
             setGoalType(profile.goal_type || "");
             setAvatarPreview(profile.avatar_url || null);
             setAvatarFile(null);
+            setRemoveAvatar(false);
         }
     }, [open, profile]);
 
     const handleAvatarSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
+
+        if (isGuest) {
+            toast.info("Guest mode: avatar upload is disabled.");
+            return;
+        }
 
         if (!file.type.startsWith("image/")) {
             toast.error("Please choose an image file.");
@@ -62,6 +70,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
             if (typeof reader.result === "string") {
                 setAvatarPreview(reader.result);
                 setAvatarFile(file);
+                setRemoveAvatar(false);
             }
         };
         reader.onerror = () => toast.error("Could not read image file.");
@@ -72,18 +81,26 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
         e.preventDefault();
         setIsSaving(true);
         try {
+            let nextAvatarUrl: string | null | undefined = profile?.avatar_url ?? null;
+
+            if (avatarFile && !isGuest) {
+                nextAvatarUrl = await updateAvatar(avatarFile);
+            }
+
+            if (removeAvatar && !isGuest) {
+                nextAvatarUrl = null;
+            }
+
             await updateProfile({
                 full_name: fullName,
                 weight: weight ? parseFloat(weight) : null,
                 height: height ? parseFloat(height) : null,
                 goal_type: goalType,
+                avatar_url: nextAvatarUrl,
             });
-            if (avatarFile) {
-                await updateAvatar(avatarFile);
-            }
 
             if (isGuest) {
-                toast.info("Guest mode: Changes will not be saved permanently.");
+                toast.info("Guest mode: changes won't be saved.");
             } else {
                 toast.success("Profile updated successfully");
             }
@@ -108,14 +125,41 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSave} className="space-y-4 py-4">
+                    {isGuest && (
+                        <Alert>
+                            <AlertDescription>Guest mode: changes won't be saved.</AlertDescription>
+                        </Alert>
+                    )}
+
                     <div className="flex items-center gap-4">
                         <Avatar className="h-16 w-16">
                             <AvatarImage src={avatarPreview || undefined} alt="Profile avatar" />
                             <AvatarFallback>{(fullName || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div className="space-y-2">
+                        <div className="space-y-2 flex-1">
                             <Label htmlFor="avatar">Profile Photo</Label>
-                            <Input id="avatar" type="file" accept="image/*" onChange={handleAvatarSelect} />
+                            <Input
+                                id="avatar"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleAvatarSelect}
+                                disabled={isGuest}
+                            />
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={isGuest || !avatarPreview}
+                                    onClick={() => {
+                                        setAvatarPreview(null);
+                                        setAvatarFile(null);
+                                        setRemoveAvatar(true);
+                                    }}
+                                >
+                                    Remove photo
+                                </Button>
+                            </div>
                         </div>
                     </div>
 
