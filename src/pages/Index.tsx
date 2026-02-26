@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 const Index = () => {
-    const { user, signIn, loading: authLoading } = useAuth();
+    const { user, signIn, loading: authLoading, continueAsGuest } = useAuth();
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
@@ -93,6 +93,19 @@ const Index = () => {
                     ) : (
                         user ? "Go to Dashboard" : "Sign In / Go to Dashboard"
                     )}
+                </Button>
+
+                <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-10 px-6 font-medium"
+                    onClick={() => {
+                        console.log("[Navigation Flow] Continuing as Guest.");
+                        continueAsGuest();
+                        navigate("/dashboard");
+                    }}
+                >
+                    Continue as Guest
                 </Button>
             </form>
         </div>

@@ -7,6 +7,8 @@ interface AuthContextType {
     loading: boolean;
     onboardingCompleted: boolean | null;
     profile: { full_name: string | null; avatar_url: string | null } | null;
+    isGuest: boolean;
+    continueAsGuest: () => void;
     signIn: (email: string) => Promise<void>;
     signUp: (email: string) => Promise<void>;
     signOut: () => Promise<void>;
@@ -21,6 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
     const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
     const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+    const [isGuest, setIsGuest] = useState(false);
 
     const logFlow = (message: string) => {
         if (import.meta.env.DEV) {
@@ -143,7 +146,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const signOut = async () => {
         const { error } = await supabase.auth.signOut();
+        setIsGuest(false);
         if (error) throw error;
+    };
+
+    const continueAsGuest = () => {
+        setIsGuest(true);
+        setOnboardingCompleted(true);
     };
 
     const completeOnboarding = async () => {
@@ -190,6 +199,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             loading,
             onboardingCompleted,
             profile,
+            isGuest,
+            continueAsGuest,
             signIn,
             signUp,
             signOut,
