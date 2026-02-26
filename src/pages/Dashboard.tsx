@@ -2,11 +2,17 @@ import { Dumbbell, Flame, Moon, TrendingUp } from "lucide-react";
 import StatCard from "@/components/StatCard";
 import ActivityChart from "@/components/ActivityChart";
 
+import { useAuth } from "@/context/AuthContext";
+import GuestWarningBanner from "@/components/GuestWarningBanner";
+
 const Dashboard = () => {
+  const { isGuest } = useAuth();
+
   return (
     <>
+      {isGuest && <GuestWarningBanner />}
       {/* Goal Section */}
-      <div className="mb-8">
+      <div className="mb-8 pt-4">
         <p className="text-sm text-muted-foreground mb-1">Current Goal</p>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">

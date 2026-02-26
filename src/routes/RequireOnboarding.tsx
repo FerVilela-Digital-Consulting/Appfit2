@@ -10,16 +10,10 @@ import { useAuth } from '@/context/AuthContext';
  * as it assumes an authenticated user context.
  */
 const RequireOnboarding = () => {
-    const { isGuest, onboardingCompleted, loading, user } = useAuth();
+    const { isGuest, onboardingCompleted, loading } = useAuth();
     const location = useLocation();
 
     if (isGuest) {
-        return <Outlet />;
-    }
-
-    // DEV BYPASS: skip onboarding check in development
-    if (import.meta.env.DEV) {
-        console.log(`[RequireOnboarding] DEV BYPASS — skipping onboarding check. Path: ${location.pathname}`);
         return <Outlet />;
     }
 
@@ -34,12 +28,6 @@ const RequireOnboarding = () => {
         );
     }
 
-    /**
-     * Redirection Decision Tree:
-     * 
-     * Case A: Onboarding NOT completed.
-     * If the user is anywhere except the /onboarding page, redirect them there.
-     */
     if (onboardingCompleted === false) {
         if (location.pathname !== '/onboarding') {
             console.log("[RequireOnboarding] Redirecting to /onboarding");
@@ -47,10 +35,6 @@ const RequireOnboarding = () => {
         }
     }
 
-    /**
-     * Case B: Onboarding completed.
-     * If the user is on the /onboarding page, redirect them back to the dashboard.
-     */
     if (onboardingCompleted === true) {
         if (location.pathname === '/onboarding') {
             console.log("[RequireOnboarding] Redirecting to /dashboard");
@@ -58,11 +42,6 @@ const RequireOnboarding = () => {
         }
     }
 
-    /**
-     * Case C: No redirection needed.
-     * Either the user is on /onboarding and hasn't finished, 
-     * or has finished and is NOT on /onboarding.
-     */
     return <Outlet />;
 };
 

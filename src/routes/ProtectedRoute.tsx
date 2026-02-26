@@ -5,22 +5,16 @@ import { useAuth } from '@/context/AuthContext';
 const ProtectedRoute = () => {
     const { user, loading, isGuest } = useAuth();
 
-    if (isGuest) {
-        return <Outlet />;
-    }
-
-    // DEV BYPASS: skip auth check in development
-    if (import.meta.env.DEV) {
-        console.log(`[ProtectedRoute] DEV BYPASS — skipping auth. Path: ${window.location.pathname}`);
-        return <Outlet />;
-    }
-
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
         );
+    }
+
+    if (isGuest) {
+        return <Outlet />;
     }
 
     if (!user) {
