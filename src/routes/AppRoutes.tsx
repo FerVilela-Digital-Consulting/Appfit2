@@ -10,6 +10,7 @@ import Schedule from "@/pages/Schedule";
 import Achievements from "@/pages/Achievements";
 import Stats from "@/pages/Stats";
 import Settings from "@/pages/Settings";
+import BodyWeight from "@/pages/BodyWeight";
 import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/NotFound";
 
@@ -32,6 +33,7 @@ const AppRoutes = () => {
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/achievements" element={<Achievements />} />
             <Route path="/statistics" element={<Stats />} />
+            <Route path="/weight" element={<BodyWeight />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
         </Route>

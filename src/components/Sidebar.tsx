@@ -1,4 +1,4 @@
-import { Home, Target, CalendarDays, Trophy, BarChart3, Settings } from "lucide-react";
+import { Home, Target, CalendarDays, Trophy, BarChart3, Settings, Scale } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -12,6 +12,7 @@ const menuItems = [
   { title: "Schedule", icon: CalendarDays, path: "/schedule" },
   { title: "Achievements", icon: Trophy, path: "/achievements" },
   { title: "Statistics", icon: BarChart3, path: "/statistics" },
+  { title: "Weight", icon: Scale, path: "/weight" },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 
@@ -19,15 +20,13 @@ const Sidebar = () => {
   const { profile, user, isGuest } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const displayName =
-    (isGuest ? "Guest" : (profile?.full_name?.trim() || user?.email || "User"));
-  const heightLabel = profile?.height ? `${profile.height} cm` : "—";
-  const weightLabel = profile?.weight ? `${profile.weight} kg` : "—";
-  const goalLabel = profile?.goal_type || "—";
+  const displayName = isGuest ? "Guest" : profile?.full_name?.trim() || user?.email || "User";
+  const heightLabel = profile?.height ? `${profile.height} cm` : "--";
+  const weightLabel = profile?.weight ? `${profile.weight} kg` : "--";
+  const goalLabel = profile?.goal_type || "--";
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-border flex flex-col z-30">
-      {/* Profile Section */}
       <div className="flex flex-col items-center pt-8 pb-6 px-6 border-b border-border">
         <button
           type="button"
@@ -57,7 +56,6 @@ const Sidebar = () => {
         </Button>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 px-4 py-6">
         <ul className="space-y-1">
           {menuItems.map((item) => (
