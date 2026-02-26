@@ -1,11 +1,155 @@
-import { Settings as SettingsIcon } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { Scale, Ruler, Target, User, Settings as SettingsIcon } from "lucide-react";
+import GuestWarningBanner from "@/components/GuestWarningBanner";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
-const Settings = () => (
-  <div className="flex flex-col items-center justify-center h-[60vh] text-muted-foreground">
-    <SettingsIcon className="w-16 h-16 mb-4 text-primary/40" />
-    <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
-    <p className="mt-2 text-sm">Coming soon — customize your experience.</p>
-  </div>
-);
+const Settings = () => {
+  const { profile, updateProfile, isGuest, loading } = useAuth();
+  const [fullName, setFullName] = useState("");
+  const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
+  const [goalType, setGoalType] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || "");
+      setWeight(profile.weight?.toString() || "");
+      setHeight(profile.height?.toString() || "");
+      setGoalType(profile.goal_type || "");
+    }
+  }, [profile]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      await updateProfile({
+        full_name: fullName,
+        weight: weight ? parseFloat(weight) : null,
+        height: height ? parseFloat(height) : null,
+        goal_type: goalType,
+      });
+
+      if (isGuest) {
+        toast.info("Guest mode: Changes are not permanently saved.");
+      } else {
+        toast.success("Settings updated successfully");
+      }
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      toast.error("Failed to update settings");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (loading && !profile) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <p className="text-muted-foreground">Loading settings...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container max-w-2xl py-8 space-y-8 animate-in fade-in duration-500">
+      {isGuest && <GuestWarningBanner />}
+
+      <div className="flex items-center gap-3 mb-2">
+        <SettingsIcon className="w-8 h-8 text-primary" />
+        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+      </div>
+
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle>Profile Information</CardTitle>
+          <CardDescription>
+            Manage your personal details and fitness goals.
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSave}>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="flex items-center gap-2">
+                <User className="h-4 w-4" /> Full Name
+              </Label>
+              <Input
+                id="fullName"
+                placeholder="Your Name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="bg-background/50"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="weight" className="flex items-center gap-2">
+                  <Scale className="h-4 w-4" /> Weight (kg)
+                </Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  placeholder="70"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  className="bg-background/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="height" className="flex items-center gap-2">
+                  <Ruler className="h-4 w-4" /> Height (cm)
+                </Label>
+                <Input
+                  id="height"
+                  type="number"
+                  placeholder="175"
+                  value={height}
+                  onChange={(e) => setHeight(e.target.value)}
+                  className="bg-background/50"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="goalType" className="flex items-center gap-2">
+                <Target className="h-4 w-4" /> Fitness Goal
+              </Label>
+              <Select value={goalType} onValueChange={setGoalType}>
+                <SelectTrigger id="goalType" className="bg-background/50">
+                  <SelectValue placeholder="Select your goal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Build Muscles">Build Muscles</SelectItem>
+                  <SelectItem value="Lose Weight">Lose Weight</SelectItem>
+                  <SelectItem value="Keep Fit">Keep Fit</SelectItem>
+                  <SelectItem value="Improve Endurance">Improve Endurance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+          <CardFooter className="border-t border-border/50 pt-6">
+            <Button type="submit" className="w-full md:w-auto ml-auto" disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
+  );
+};
 
 export default Settings;
