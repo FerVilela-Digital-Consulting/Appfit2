@@ -5,6 +5,7 @@ import { supabase } from '@/services/supabaseClient';
 interface Profile {
     id: string;
     full_name: string | null;
+    avatar_url?: string | null;
     weight: number | null;
     height: number | null;
     goal_type: string | null;
@@ -24,14 +25,22 @@ interface AuthContextType {
     signUp: (email: string, password: string) => Promise<{ requiresEmailConfirmation: boolean }>;
     signOut: () => Promise<void>;
     completeOnboarding: () => Promise<void>;
+    updateAvatar: (file: File) => Promise<void>;
     updateProfile: (data: Partial<Omit<Profile, 'id' | 'created_at'>>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_STORAGE_KEY = 'appfit_is_guest';
+const GUEST_AVATAR_STORAGE_KEY = 'appfit_guest_avatar';
+
+const getStoredGuestAvatar = () => localStorage.getItem(GUEST_AVATAR_STORAGE_KEY);
+const saveStoredGuestAvatar = (avatarDataUrl: string) => {
+    localStorage.setItem(GUEST_AVATAR_STORAGE_KEY, avatarDataUrl);
+};
 const createGuestProfile = (): Profile => ({
     id: 'guest',
     full_name: 'Guest User',
+    avatar_url: getStoredGuestAvatar(),
     weight: 70,
     height: 175,
     goal_type: 'Build Muscles',
@@ -235,6 +244,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setOnboardingCompleted(true);
     };
 
+    const updateAvatar = async (file: File) => {
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            throw new Error('Please select an image file.');
+        }
+
+        if (isGuest || !user) {
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    if (typeof reader.result === 'string') resolve(reader.result);
+                };
+                reader.onerror = () => reject(new Error('Failed to read image file.'));
+                reader.readAsDataURL(file);
+            });
+
+            saveStoredGuestAvatar(dataUrl);
+            setProfile(prev => prev ? { ...prev, avatar_url: dataUrl } : prev);
+            return;
+        }
+
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const path = `${user.id}/avatar.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(path, file, { upsert: true, contentType: file.type });
+
+        if (uploadError) {
+            throw uploadError;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(path);
+
+        const avatarUrl = publicUrlData.publicUrl;
+
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ avatar_url: avatarUrl } as any)
+            .eq('id', user.id);
+
+        if (updateError) {
+            throw updateError;
+        }
+
+        setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : prev);
+    };
+
     const updateProfile = async (data: Partial<Omit<Profile, 'id' | 'created_at'>>) => {
         logFlow("Updating profile...");
 
@@ -277,6 +337,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             signUp,
             signOut,
             completeOnboarding,
+            updateAvatar,
             updateProfile
         }}>
             {children}

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Scale, Ruler, Target } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface EditProfileModalProps {
     open: boolean;
@@ -27,11 +28,13 @@ interface EditProfileModalProps {
 }
 
 const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange }) => {
-    const { profile, updateProfile, isGuest } = useAuth();
+    const { profile, updateProfile, updateAvatar, isGuest } = useAuth();
     const [fullName, setFullName] = useState("");
     const [weight, setWeight] = useState("");
     const [height, setHeight] = useState("");
     const [goalType, setGoalType] = useState("");
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -40,8 +43,30 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
             setWeight(profile.weight?.toString() || "");
             setHeight(profile.height?.toString() || "");
             setGoalType(profile.goal_type || "");
+            setAvatarPreview(profile.avatar_url || null);
+            setAvatarFile(null);
         }
     }, [open, profile]);
+
+    const handleAvatarSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Please choose an image file.");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result === "string") {
+                setAvatarPreview(reader.result);
+                setAvatarFile(file);
+            }
+        };
+        reader.onerror = () => toast.error("Could not read image file.");
+        reader.readAsDataURL(file);
+    };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,6 +78,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
                 height: height ? parseFloat(height) : null,
                 goal_type: goalType,
             });
+            if (avatarFile) {
+                await updateAvatar(avatarFile);
+            }
 
             if (isGuest) {
                 toast.info("Guest mode: Changes will not be saved permanently.");
@@ -80,6 +108,17 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSave} className="space-y-4 py-4">
+                    <div className="flex items-center gap-4">
+                        <Avatar className="h-16 w-16">
+                            <AvatarImage src={avatarPreview || undefined} alt="Profile avatar" />
+                            <AvatarFallback>{(fullName || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="space-y-2">
+                            <Label htmlFor="avatar">Profile Photo</Label>
+                            <Input id="avatar" type="file" accept="image/*" onChange={handleAvatarSelect} />
+                        </div>
+                    </div>
+
                     <div className="space-y-2">
                         <Label htmlFor="fullName">Full Name</Label>
                         <Input

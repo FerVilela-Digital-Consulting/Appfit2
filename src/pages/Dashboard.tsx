@@ -1,15 +1,11 @@
-import { useState } from "react";
 import { Dumbbell, Flame, Moon, TrendingUp, User, Weight, Ruler } from "lucide-react";
 import StatCard from "@/components/StatCard";
 import ActivityChart from "@/components/ActivityChart";
-import { Button } from "@/components/ui/button";
 
 import { useAuth } from "@/context/AuthContext";
-import EditProfileModal from "@/components/profile/EditProfileModal";
 
 const Dashboard = () => {
   const { profile } = useAuth();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   return (
     <>
@@ -38,21 +34,7 @@ const Dashboard = () => {
             </span>
           </div>
         </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-fit"
-          onClick={() => setIsEditModalOpen(true)}
-        >
-          Edit Profile
-        </Button>
       </div>
-
-      <EditProfileModal
-        open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
-      />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
