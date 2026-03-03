@@ -35,6 +35,24 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_STORAGE_KEY = 'appfit_is_guest';
+const AUTH_RESOLVE_TIMEOUT_MS = 8000;
+
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+        const timer = setTimeout(() => {
+            reject(new Error(timeoutMessage));
+        }, timeoutMs);
+
+        promise
+            .then((value) => {
+                clearTimeout(timer);
+                resolve(value);
+            })
+            .catch((error) => {
+                clearTimeout(timer);
+                reject(error);
+            });
+    });
 
 const createGuestProfile = (): Profile => ({
     full_name: 'Guest',
@@ -134,7 +152,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem(GUEST_STORAGE_KEY);
 
         try {
-            const resolvedProfile = await fetchProfile(authUser.id);
+            const resolvedProfile = await withTimeout(
+                fetchProfile(authUser.id),
+                AUTH_RESOLVE_TIMEOUT_MS,
+                'Profile fetch timed out.'
+            );
             setOnboardingCompleted(deriveOnboardingCompleted(resolvedProfile));
         } catch (error) {
             console.error('Error fetching profile:', error);
@@ -154,7 +176,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const initializeAuth = async () => {
             logFlow("Initializing Auth...");
             try {
-                const { data: { session } } = await supabase.auth.getSession();
+                const { data: { session } } = await withTimeout(
+                    supabase.auth.getSession(),
+                    AUTH_RESOLVE_TIMEOUT_MS,
+                    'Initial auth session check timed out.'
+                );
                 if (!isMounted) return;
 
                 if (session?.user) {
@@ -190,7 +216,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (!isMounted) return;
 
             if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-                setLoading(true);
                 try {
                     if (session?.user) {
                         await syncAuthenticatedUser(session.user);

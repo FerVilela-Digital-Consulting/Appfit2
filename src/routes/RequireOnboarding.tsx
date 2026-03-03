@@ -10,7 +10,7 @@ import { useAuth } from '@/context/AuthContext';
  * as it assumes an authenticated user context.
  */
 const RequireOnboarding = () => {
-    const { isGuest, onboardingCompleted, loading } = useAuth();
+    const { isGuest, onboardingCompleted } = useAuth();
     const location = useLocation();
 
     if (isGuest) {
@@ -18,7 +18,10 @@ const RequireOnboarding = () => {
     }
 
     // Wait for auth and profile data to resolve
-    if (loading || onboardingCompleted === null) {
+    if (onboardingCompleted === null) {
+        if (import.meta.env.DEV) {
+            console.warn("[RequireOnboarding] Spinner active", { onboardingCompleted, path: location.pathname, isGuest });
+        }
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary text-center">
