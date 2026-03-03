@@ -189,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             logFlow(`Auth state change: ${event}`);
             if (!isMounted) return;
 
-            if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+            if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
                 setLoading(true);
                 try {
                     if (session?.user) {
@@ -211,6 +211,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         setLoading(false);
                     }
                 }
+            } else if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                logFlow(`Skipping loading transition for ${event}`);
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);
                 setAuthedProfile(null);
