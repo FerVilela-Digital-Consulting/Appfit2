@@ -1,4 +1,4 @@
-import { Home, BarChart3, Settings, Scale, Target } from "lucide-react";
+import { Home, BarChart3, Settings, Scale, Target, Droplets } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -10,6 +10,7 @@ const menuItems = [
   { title: "Dashboard", icon: Home, path: "/dashboard" },
   { title: "Goals", icon: Target, path: "/goals" },
   { title: "Statistics", icon: BarChart3, path: "/statistics" },
+  { title: "Water", icon: Droplets, path: "/water" },
   { title: "Weight", icon: Scale, path: "/weight" },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];

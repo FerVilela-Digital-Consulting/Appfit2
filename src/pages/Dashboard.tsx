@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import EditProfileModal from "@/components/profile/EditProfileModal";
 import ProfileSummaryCard from "@/components/dashboard/ProfileSummaryCard";
+import WaterCard from "@/components/dashboard/WaterCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,6 +33,7 @@ import {
   saveGuestDailyTasks,
   setDailyTaskCompleted,
 } from "@/services/dailyTasks";
+import { getWaterWeeklySummary } from "@/services/waterIntake";
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -78,6 +80,12 @@ const Dashboard = () => {
     queryKey: ["daily_tasks", user?.id, today],
     queryFn: () => ensureDailyTasks(user?.id ?? null, today, isGuest),
     enabled: Boolean(user?.id) && !isGuest,
+  });
+
+  const { data: waterWeekSummary } = useQuery({
+    queryKey: ["water_week_summary", user?.id, today],
+    queryFn: () => getWaterWeeklySummary(user?.id ?? null, new Date(), { isGuest }),
+    enabled: Boolean(user?.id) || isGuest,
   });
 
   useEffect(() => {
@@ -363,6 +371,27 @@ const Dashboard = () => {
               <div className="rounded-lg border p-3">
                 <p className="text-xs text-muted-foreground">Entreno</p>
                 <p className="text-xl font-semibold">{checkin?.workout_done ? "Hecho" : "Pendiente"}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <WaterCard />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Agua semanal</CardTitle>
+              <CardDescription>Promedio y cumplimiento de objetivo.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Promedio semanal</p>
+                <p className="text-xl font-semibold">{waterWeekSummary?.average_ml ?? 0} ml/dia</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Dias cumplidos</p>
+                <p className="text-xl font-semibold">
+                  {waterWeekSummary?.days_met ?? 0}/{waterWeekSummary?.days_total ?? 7}
+                </p>
               </div>
             </CardContent>
           </Card>
