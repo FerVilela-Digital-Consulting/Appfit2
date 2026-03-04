@@ -6,15 +6,18 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import {
   addWaterIntake,
+  addWaterPreset,
+  clearWaterLogsByDate,
+  deleteWaterPreset,
   deleteWaterLog,
   getWaterDayTotal,
   getWaterGoal,
   getWaterLogsByDate,
+  listWaterPresets,
   getWaterWeeklySummary,
   updateWaterGoal,
-  updateWaterQuickOptions,
 } from "@/services/waterIntake";
-import type { WaterLog } from "@/services/waterIntake";
+import type { WaterPreset } from "@/services/waterIntake";
 import {
   calculateWaterProgress,
   DEFAULT_WATER_PRESETS_ML,
@@ -41,14 +44,14 @@ const WaterCard = () => {
   const today = useMemo(() => new Date(), []);
   const dayKey = useMemo(() => getDateKeyForTimezone(today, timeZone), [timeZone, today]);
 
-  const [selectedQuickMl, setSelectedQuickMl] = useState<string>("250");
   const [customOpen, setCustomOpen] = useState(false);
   const [customValue, setCustomValue] = useState("");
   const [customUnit, setCustomUnit] = useState<"ml" | "l">("ml");
   const [saveAsPreset, setSaveAsPreset] = useState(false);
+  const [customPresetName, setCustomPresetName] = useState("");
   const [goalInput, setGoalInput] = useState("");
   const [goalUnit, setGoalUnit] = useState<"ml" | "l">("ml");
-  const [lastAddedLog, setLastAddedLog] = useState<WaterLog | null>(null);
+  const [selectedPresetValue, setSelectedPresetValue] = useState<string>("default:250");
 
   const { data: dayTotal = 0 } = useQuery({
     queryKey: ["water_day_total", user?.id, dayKey],
@@ -62,9 +65,15 @@ const WaterCard = () => {
     enabled: Boolean(user?.id) || isGuest,
   });
 
+  const { data: namedPresets = [] } = useQuery({
+    queryKey: ["water_presets", user?.id],
+    queryFn: () => listWaterPresets(user?.id ?? null, { isGuest }),
+    enabled: Boolean(user?.id) || isGuest,
+  });
+
   const { data: weekSummary } = useQuery({
     queryKey: ["water_week_summary", user?.id, dayKey],
-    queryFn: () => getWaterWeeklySummary(user?.id ?? null, today, { isGuest }),
+    queryFn: () => getWaterWeeklySummary(user?.id ?? null, today, { isGuest, timeZone }),
     enabled: Boolean(user?.id) || isGuest,
   });
 
@@ -94,8 +103,7 @@ const WaterCard = () => {
       queryClient.setQueryData<number>(key, context?.previous ?? 0);
       toast.error(error?.message || "Failed to add water log.");
     },
-    onSuccess: (log) => {
-      setLastAddedLog(log);
+    onSuccess: (_log) => {
       queryClient.invalidateQueries({ queryKey: ["water_day_total", user?.id, dayKey] });
       queryClient.invalidateQueries({ queryKey: ["water_logs_day", user?.id, dayKey] });
       queryClient.invalidateQueries({ queryKey: ["water_week_summary", user?.id, dayKey] });
@@ -106,11 +114,21 @@ const WaterCard = () => {
   const undoMutation = useMutation({
     mutationFn: (id: string) => deleteWaterLog(id, user?.id ?? null, { isGuest }),
     onSuccess: () => {
-      setLastAddedLog(null);
       queryClient.invalidateQueries({ queryKey: ["water_day_total", user?.id, dayKey] });
       queryClient.invalidateQueries({ queryKey: ["water_logs_day", user?.id, dayKey] });
       queryClient.invalidateQueries({ queryKey: ["water_week_summary", user?.id, dayKey] });
       queryClient.invalidateQueries({ queryKey: ["water_range", user?.id] });
+    },
+  });
+
+  const resetDayMutation = useMutation({
+    mutationFn: () => clearWaterLogsByDate(user?.id ?? null, today, { isGuest, timeZone }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["water_day_total", user?.id, dayKey] });
+      queryClient.invalidateQueries({ queryKey: ["water_logs_day", user?.id, dayKey] });
+      queryClient.invalidateQueries({ queryKey: ["water_week_summary", user?.id, dayKey] });
+      queryClient.invalidateQueries({ queryKey: ["water_range", user?.id] });
+      toast.success("Se reinicio el conteo de hoy.");
     },
   });
 
@@ -127,13 +145,18 @@ const WaterCard = () => {
     onError: (error: any) => toast.error(error?.message || "Failed to update goal."),
   });
 
-  const updatePresetsMutation = useMutation({
-    mutationFn: (options: number[]) => updateWaterQuickOptions(user?.id ?? null, options, { isGuest }),
-    onSuccess: (options) => {
-      queryClient.setQueryData(["water_goal", user?.id], (prev: any) => ({
-        water_goal_ml: prev?.water_goal_ml ?? 2000,
-        water_quick_options_ml: options,
-      }));
+  const createPresetMutation = useMutation({
+    mutationFn: (payload: { name: string; amount_ml: number }) => addWaterPreset(user?.id ?? null, payload, { isGuest }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["water_presets", user?.id] });
+      toast.success("Preset guardado.");
+    },
+  });
+
+  const deletePresetMutation = useMutation({
+    mutationFn: (preset: WaterPreset) => deleteWaterPreset(preset.id, user?.id ?? null, { isGuest }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["water_presets", user?.id] });
     },
   });
 
@@ -141,12 +164,27 @@ const WaterCard = () => {
   const quickOptions = normalizeWaterPresets(goalData?.water_quick_options_ml ?? DEFAULT_WATER_PRESETS_ML);
   const progress = calculateWaterProgress(dayTotal, goalMl);
 
+  const combinedPresetOptions = useMemo(() => {
+    const defaults = quickOptions.map((ml) => ({
+      value: `default:${ml}`,
+      label: `${ml} ml`,
+      amount_ml: ml,
+    }));
+    const named = namedPresets.map((preset) => ({
+      value: `named:${preset.id}`,
+      label: `${preset.name} (${preset.amount_ml} ml)`,
+      amount_ml: preset.amount_ml,
+      preset,
+    }));
+    return [...defaults, ...named];
+  }, [namedPresets, quickOptions]);
+
   useEffect(() => {
-    if (selectedQuickMl === "custom") return;
-    if (!quickOptions.some((option) => String(option) === selectedQuickMl)) {
-      setSelectedQuickMl(String(quickOptions[0] ?? 250));
+    if (selectedPresetValue === "custom") return;
+    if (!combinedPresetOptions.some((option) => option.value === selectedPresetValue)) {
+      setSelectedPresetValue(combinedPresetOptions[0]?.value ?? "default:250");
     }
-  }, [quickOptions, selectedQuickMl]);
+  }, [combinedPresetOptions, selectedPresetValue]);
 
   const handleAddQuick = async (amount: number) => {
     await addMutation.mutateAsync(amount);
@@ -165,17 +203,23 @@ const WaterCard = () => {
       return;
     }
 
+    if (saveAsPreset && !customPresetName.trim()) {
+      toast.error("Ponle un nombre al preset.");
+      return;
+    }
+
     await addMutation.mutateAsync(ml);
 
     if (saveAsPreset) {
-      const next = normalizeWaterPresets([...quickOptions, ml]);
-      await updatePresetsMutation.mutateAsync(next);
+      const name = customPresetName.trim();
+      await createPresetMutation.mutateAsync({ name, amount_ml: ml });
     }
 
     setCustomOpen(false);
     setCustomValue("");
     setCustomUnit("ml");
     setSaveAsPreset(false);
+    setCustomPresetName("");
     toast.success(`Added ${ml} ml.`);
   };
 
@@ -219,14 +263,14 @@ const WaterCard = () => {
             + 1 vaso (250 ml)
           </Button>
           <div className="flex gap-2">
-            <Select value={selectedQuickMl} onValueChange={setSelectedQuickMl}>
+            <Select value={selectedPresetValue} onValueChange={setSelectedPresetValue}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Opciones" />
               </SelectTrigger>
               <SelectContent>
-                {quickOptions.map((option) => (
-                  <SelectItem key={option} value={String(option)}>
-                    {option} ml
+                {combinedPresetOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
                 <SelectItem value="custom">Personalizado...</SelectItem>
@@ -235,11 +279,13 @@ const WaterCard = () => {
             <Button
               variant="outline"
               onClick={() => {
-                if (selectedQuickMl === "custom") {
+                if (selectedPresetValue === "custom") {
                   setCustomOpen(true);
                   return;
                 }
-                void handleAddQuick(Number(selectedQuickMl));
+                const selected = combinedPresetOptions.find((option) => option.value === selectedPresetValue);
+                if (!selected) return;
+                void handleAddQuick(selected.amount_ml);
               }}
               disabled={addMutation.isPending}
             >
@@ -283,16 +329,50 @@ const WaterCard = () => {
 
         {todayLogs.length === 0 && <p className="text-xs text-muted-foreground">No hay consumos registrados hoy.</p>}
 
-        {lastAddedLog && (
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => undoMutation.mutate(lastAddedLog.id)}
-            disabled={undoMutation.isPending}
+            onClick={() => {
+              const latest = todayLogs[0];
+              if (!latest) return;
+              undoMutation.mutate(latest.id);
+            }}
+            disabled={undoMutation.isPending || todayLogs.length === 0}
           >
             <Undo2 className="mr-2 h-4 w-4" />
-            Deshacer ultimo registro
+            Deshacer ultimo ({todayLogs.length})
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (!window.confirm("Esto eliminara todos los registros de agua de hoy. Continuar?")) return;
+              resetDayMutation.mutate();
+            }}
+            disabled={resetDayMutation.isPending || todayLogs.length === 0}
+          >
+            Reiniciar hoy
+          </Button>
+        </div>
+
+        {namedPresets.length > 0 && (
+          <div className="space-y-2 rounded-lg border p-3">
+            <p className="text-sm font-medium">Presets guardados</p>
+            {namedPresets.map((preset) => (
+              <div key={preset.id} className="flex items-center justify-between text-sm">
+                <span>{preset.name} ({preset.amount_ml} ml)</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => deletePresetMutation.mutate(preset)}
+                  disabled={deletePresetMutation.isPending}
+                >
+                  Eliminar
+                </Button>
+              </div>
+            ))}
+          </div>
         )}
       </CardContent>
 
@@ -325,6 +405,13 @@ const WaterCard = () => {
               <Checkbox id="savePreset" checked={saveAsPreset} onCheckedChange={(v) => setSaveAsPreset(Boolean(v))} />
               <Label htmlFor="savePreset">Guardar como opcion rapida</Label>
             </div>
+            {saveAsPreset && (
+              <Input
+                value={customPresetName}
+                onChange={(e) => setCustomPresetName(e.target.value)}
+                placeholder="Nombre del preset (ej. Botella gym)"
+              />
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCustomOpen(false)}>

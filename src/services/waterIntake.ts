@@ -19,6 +19,14 @@ export type WaterLog = {
   created_at: string;
 };
 
+export type WaterPreset = {
+  id: string;
+  user_id: string;
+  name: string;
+  amount_ml: number;
+  created_at: string;
+};
+
 type WaterGoalRecord = {
   water_goal_ml: number;
   water_quick_options_ml: number[];
@@ -56,15 +64,34 @@ const saveGuestGoal = (ml: number) => localStorage.setItem(GUEST_WATER_GOAL_KEY,
 
 const getGuestPresets = () => {
   const raw = localStorage.getItem(GUEST_WATER_PRESETS_KEY);
-  if (!raw) return DEFAULT_WATER_PRESETS_ML;
+  if (!raw) return [] as WaterPreset[];
   try {
-    return normalizeWaterPresets(JSON.parse(raw) as number[]);
+    const parsed = JSON.parse(raw) as Array<WaterPreset | number>;
+    if (!Array.isArray(parsed)) return [] as WaterPreset[];
+
+    // Backward compatibility: numeric presets stored in old versions
+    if (typeof parsed[0] === "number") {
+      return normalizeWaterPresets(parsed as number[]).map((amount) => ({
+        id: crypto.randomUUID(),
+        user_id: "guest",
+        name: `${amount} ml`,
+        amount_ml: amount,
+        created_at: new Date().toISOString(),
+      }));
+    }
+
+    return (parsed as WaterPreset[])
+      .filter((item) => item && Number(item.amount_ml) > 0)
+      .map((item) => ({
+        ...item,
+        amount_ml: Math.round(Number(item.amount_ml)),
+        name: item.name || `${item.amount_ml} ml`,
+      }));
   } catch {
-    return DEFAULT_WATER_PRESETS_ML;
+    return [] as WaterPreset[];
   }
 };
-const saveGuestPresets = (options: number[]) =>
-  localStorage.setItem(GUEST_WATER_PRESETS_KEY, JSON.stringify(normalizeWaterPresets(options)));
+const saveGuestPresets = (presets: WaterPreset[]) => localStorage.setItem(GUEST_WATER_PRESETS_KEY, JSON.stringify(presets));
 
 export const addWaterIntake = async ({
   userId,
@@ -142,10 +169,11 @@ export const getWaterRangeTotals = async (
   userId: string | null,
   from: Date,
   to: Date,
-  options?: { isGuest?: boolean },
+  options?: { isGuest?: boolean; timeZone?: string },
 ): Promise<Array<{ date_key: string; total_ml: number }>> => {
-  const fromKey = from.toISOString().slice(0, 10);
-  const toKey = to.toISOString().slice(0, 10);
+  const timeZone = options?.timeZone || DEFAULT_WATER_TIMEZONE;
+  const fromKey = getDateKeyForTimezone(from, timeZone);
+  const toKey = getDateKeyForTimezone(to, timeZone);
   const isGuest = options?.isGuest || false;
 
   if (isGuest) {
@@ -213,9 +241,10 @@ export const deleteWaterLog = async (id: string, userId: string | null, options?
 export const getWaterGoal = async (userId: string | null, options?: { isGuest?: boolean }): Promise<WaterGoalRecord> => {
   const isGuest = options?.isGuest || false;
   if (isGuest) {
+    const presetAmounts = normalizeWaterPresets(getGuestPresets().map((preset) => preset.amount_ml));
     return {
       water_goal_ml: getGuestGoal(),
-      water_quick_options_ml: getGuestPresets(),
+      water_quick_options_ml: presetAmounts.length > 0 ? presetAmounts : DEFAULT_WATER_PRESETS_ML,
     };
   }
 
@@ -271,7 +300,15 @@ export const updateWaterQuickOptions = async (
   const isGuest = params?.isGuest || false;
 
   if (isGuest) {
-    saveGuestPresets(normalized);
+    saveGuestPresets(
+      normalized.map((amount) => ({
+        id: crypto.randomUUID(),
+        user_id: "guest",
+        name: `${amount} ml`,
+        amount_ml: amount,
+        created_at: new Date().toISOString(),
+      })),
+    );
     return normalized;
   }
   if (!userId) return normalized;
@@ -284,10 +321,99 @@ export const updateWaterQuickOptions = async (
   return normalized;
 };
 
+export const listWaterPresets = async (userId: string | null, options?: { isGuest?: boolean }): Promise<WaterPreset[]> => {
+  const isGuest = options?.isGuest || false;
+  if (isGuest) {
+    return getGuestPresets().sort((a, b) => a.created_at.localeCompare(b.created_at));
+  }
+  if (!userId) return [];
+
+  const { data, error } = await supabase
+    .from("water_presets")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return (data || []) as WaterPreset[];
+};
+
+export const addWaterPreset = async (
+  userId: string | null,
+  payload: { name: string; amount_ml: number },
+  options?: { isGuest?: boolean },
+): Promise<WaterPreset | null> => {
+  const isGuest = options?.isGuest || false;
+  const amount = Math.round(Number(payload.amount_ml));
+  const name = payload.name.trim();
+  if (!name) throw new Error("Preset name is required.");
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error("Preset amount must be greater than 0.");
+
+  if (isGuest) {
+    const preset: WaterPreset = {
+      id: crypto.randomUUID(),
+      user_id: "guest",
+      name,
+      amount_ml: amount,
+      created_at: new Date().toISOString(),
+    };
+    saveGuestPresets([...getGuestPresets(), preset]);
+    return preset;
+  }
+
+  if (!userId) return null;
+
+  const { data, error } = await supabase
+    .from("water_presets")
+    .insert({
+      user_id: userId,
+      name,
+      amount_ml: amount,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as WaterPreset;
+};
+
+export const deleteWaterPreset = async (id: string, userId: string | null, options?: { isGuest?: boolean }) => {
+  const isGuest = options?.isGuest || false;
+  if (!id) return;
+
+  if (isGuest) {
+    saveGuestPresets(getGuestPresets().filter((preset) => preset.id !== id));
+    return;
+  }
+  if (!userId) return;
+
+  const { error } = await supabase.from("water_presets").delete().eq("id", id).eq("user_id", userId);
+  if (error) throw error;
+};
+
+export const clearWaterLogsByDate = async (
+  userId: string | null,
+  date: Date,
+  options?: { isGuest?: boolean; timeZone?: string },
+) => {
+  const isGuest = options?.isGuest || false;
+  const timeZone = options?.timeZone || DEFAULT_WATER_TIMEZONE;
+  const dateKey = getDateKeyForTimezone(date, timeZone);
+
+  if (isGuest) {
+    saveGuestLogs(getGuestLogs().filter((log) => log.date_key !== dateKey));
+    return;
+  }
+  if (!userId) return;
+
+  const { error } = await supabase.from("water_intake_logs").delete().eq("user_id", userId).eq("date_key", dateKey);
+  if (error) throw error;
+};
+
 export const getWaterWeeklySummary = async (
   userId: string | null,
   referenceDate = new Date(),
-  options?: { isGuest?: boolean },
+  options?: { isGuest?: boolean; timeZone?: string },
 ) => {
   const to = new Date(referenceDate);
   to.setHours(0, 0, 0, 0);
@@ -295,7 +421,7 @@ export const getWaterWeeklySummary = async (
   from.setDate(from.getDate() - 6);
 
   const [totals, goal] = await Promise.all([
-    getWaterRangeTotals(userId, from, to, { isGuest: options?.isGuest }),
+    getWaterRangeTotals(userId, from, to, { isGuest: options?.isGuest, timeZone: options?.timeZone }),
     getWaterGoal(userId, { isGuest: options?.isGuest }),
   ]);
 

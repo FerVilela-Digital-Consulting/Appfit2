@@ -55,6 +55,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { profile, user, isGuest } = useAuth();
+  const timeZone = (profile as any)?.timezone || "America/Lima";
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [sleepModalOpen, setSleepModalOpen] = useState(false);
@@ -84,7 +85,7 @@ const Dashboard = () => {
 
   const { data: waterWeekSummary } = useQuery({
     queryKey: ["water_week_summary", user?.id, today],
-    queryFn: () => getWaterWeeklySummary(user?.id ?? null, new Date(), { isGuest }),
+    queryFn: () => getWaterWeeklySummary(user?.id ?? null, new Date(), { isGuest, timeZone }),
     enabled: Boolean(user?.id) || isGuest,
   });
 

@@ -16,6 +16,7 @@ interface Profile {
     goal_direction: "lose" | "gain" | "maintain" | null;
     water_goal_ml: number | null;
     water_quick_options_ml: number[] | null;
+    onboarding_completed: boolean | null;
 }
 
 interface AuthContextType {
@@ -38,6 +39,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_STORAGE_KEY = 'appfit_is_guest';
 const AUTH_RESOLVE_TIMEOUT_MS = 8000;
+const ONBOARDING_CACHE_KEY_PREFIX = "appfit_onboarding_completed_";
+
+const getOnboardingCacheKey = (userId: string) => `${ONBOARDING_CACHE_KEY_PREFIX}${userId}`;
+const getCachedOnboarding = (userId: string): boolean | null => {
+    const raw = localStorage.getItem(getOnboardingCacheKey(userId));
+    if (raw === null) return null;
+    return raw === "true";
+};
+const setCachedOnboarding = (userId: string, value: boolean) =>
+    localStorage.setItem(getOnboardingCacheKey(userId), value ? "true" : "false");
 
 const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> =>
     new Promise<T>((resolve, reject) => {
@@ -69,6 +80,7 @@ const createGuestProfile = (): Profile => ({
     goal_direction: null,
     water_goal_ml: 2000,
     water_quick_options_ml: [250, 500, 1000, 2000],
+    onboarding_completed: true,
 });
 
 const createEmptyProfile = (): Profile => ({
@@ -84,10 +96,12 @@ const createEmptyProfile = (): Profile => ({
     goal_direction: null,
     water_goal_ml: 2000,
     water_quick_options_ml: [250, 500, 1000, 2000],
+    onboarding_completed: null,
 });
 
 const deriveOnboardingCompleted = (resolvedProfile: Profile | null) => {
     if (!resolvedProfile) return false;
+    if (resolvedProfile.onboarding_completed === true) return true;
 
     return Boolean(
         resolvedProfile.full_name ||
@@ -115,7 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchProfile = async (userId: string): Promise<Profile> => {
         let { data, error } = await supabase
             .from('profiles')
-            .select('full_name,birth_date,height,weight,goal_type,avatar_url,target_weight_kg,target_date,start_weight_kg,goal_direction,water_goal_ml,water_quick_options_ml')
+            .select('full_name,birth_date,height,weight,goal_type,avatar_url,target_weight_kg,target_date,start_weight_kg,goal_direction,water_goal_ml,water_quick_options_ml,onboarding_completed')
             .eq('id', userId)
             .limit(1)
             .maybeSingle();
@@ -148,6 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             goal_direction: (data?.goal_direction as Profile["goal_direction"]) ?? null,
             water_goal_ml: data?.water_goal_ml ?? 2000,
             water_quick_options_ml: data?.water_quick_options_ml ?? [250, 500, 1000, 2000],
+            onboarding_completed: data?.onboarding_completed ?? null,
         };
         setAuthedProfile(nextProfile);
         return nextProfile;
@@ -165,11 +180,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 AUTH_RESOLVE_TIMEOUT_MS,
                 'Profile fetch timed out.'
             );
-            setOnboardingCompleted(deriveOnboardingCompleted(resolvedProfile));
+            const derivedCompleted = deriveOnboardingCompleted(resolvedProfile);
+            const cachedCompleted = getCachedOnboarding(authUser.id);
+            const completed = derivedCompleted || cachedCompleted === true;
+            setOnboardingCompleted(completed);
+            setCachedOnboarding(authUser.id, completed);
         } catch (error) {
             console.error('Error fetching profile:', error);
-            setAuthedProfile(null);
-            setOnboardingCompleted(false);
+            const fallbackCompleted = getCachedOnboarding(authUser.id);
+            setOnboardingCompleted(prev => prev ?? fallbackCompleted ?? true);
         }
     };
 
@@ -322,8 +341,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const completeOnboarding = async () => {
         if (!user || isGuest) return;
         logFlow("Completing onboarding...");
-        // Assuming for now it's just state-based until table is updated.
+        try {
+            const { error } = await supabase
+                .from("profiles")
+                .update({ onboarding_completed: true })
+                .eq("id", user.id);
+
+            if (error && !error.message?.includes("onboarding_completed")) {
+                throw error;
+            }
+        } catch (error) {
+            console.warn("Could not persist onboarding_completed in profiles, using local cache fallback.", error);
+        }
+
         setOnboardingCompleted(true);
+        setCachedOnboarding(user.id, true);
+        setAuthedProfile(prev => prev ? { ...prev, onboarding_completed: true } : prev);
     };
 
     const updateAvatar = async (file: File) => {
@@ -391,6 +424,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setAuthedProfile(oldProfile);
             toast.error(error.message);
             throw error;
+        }
+
+        if (typeof data.onboarding_completed === "boolean" && user?.id) {
+            setCachedOnboarding(user.id, data.onboarding_completed);
+            setOnboardingCompleted(data.onboarding_completed);
         }
 
         logFlow("Profile updated successfully.");

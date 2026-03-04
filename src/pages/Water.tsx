@@ -45,7 +45,7 @@ const Water = () => {
 
   const { data: totals = [] } = useQuery({
     queryKey: ["water_range", user?.id, range, rangeDates.from.toISOString(), rangeDates.to.toISOString()],
-    queryFn: () => getWaterRangeTotals(user?.id ?? null, rangeDates.from, rangeDates.to, { isGuest }),
+    queryFn: () => getWaterRangeTotals(user?.id ?? null, rangeDates.from, rangeDates.to, { isGuest, timeZone: tz }),
     enabled: Boolean(user?.id) || isGuest,
   });
 
