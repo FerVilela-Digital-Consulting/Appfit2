@@ -8,6 +8,9 @@ export type TranslationKey =
   | "nav.water"
   | "nav.weight"
   | "nav.sleep"
+  | "nav.biofeedback"
+  | "nav.measurements"
+  | "nav.weeklyReview"
   | "nav.calendar"
   | "nav.settings"
   | "sidebar.editProfile"
@@ -127,6 +130,9 @@ export const translations: Record<AppLanguage, Dict> = {
     "nav.water": "Water",
     "nav.weight": "Weight",
     "nav.sleep": "Sleep",
+    "nav.biofeedback": "Biofeedback",
+    "nav.measurements": "Measurements",
+    "nav.weeklyReview": "Weekly Review",
     "nav.calendar": "Calendar",
     "nav.settings": "Settings",
     "sidebar.editProfile": "Edit Profile",
@@ -243,6 +249,9 @@ export const translations: Record<AppLanguage, Dict> = {
     "nav.water": "Agua",
     "nav.weight": "Peso",
     "nav.sleep": "Sueño",
+    "nav.biofeedback": "Biofeedback",
+    "nav.measurements": "Medidas",
+    "nav.weeklyReview": "Revisión semanal",
     "nav.calendar": "Calendario",
     "nav.settings": "Ajustes",
     "sidebar.editProfile": "Editar perfil",

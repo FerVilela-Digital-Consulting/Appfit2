@@ -212,3 +212,30 @@ export const getBodyWeightSnapshot = async (userId: string | null, isGuest = fal
         : null,
   };
 };
+
+export const getWeightTrendAnalysis = async (userId: string | null, isGuest = false) => {
+  const snapshot = await getBodyWeightSnapshot(userId, isGuest);
+  const entries = snapshot.entries;
+  const latest = snapshot.latest ? Number(snapshot.latest.weight_kg) : null;
+
+  const last7 = entries.slice(Math.max(0, entries.length - 7));
+  const prev7 = entries.slice(Math.max(0, entries.length - 14), Math.max(0, entries.length - 7));
+  const movingAvg7 =
+    last7.length > 0 ? Number((last7.reduce((sum, row) => sum + Number(row.weight_kg), 0) / last7.length).toFixed(2)) : null;
+  const prevMovingAvg7 =
+    prev7.length > 0 ? Number((prev7.reduce((sum, row) => sum + Number(row.weight_kg), 0) / prev7.length).toFixed(2)) : null;
+  const weeklyChange = snapshot.weeklyDelta;
+
+  let trend: "up" | "down" | "stable" = "stable";
+  if (weeklyChange !== null && Math.abs(weeklyChange) >= 0.2) {
+    trend = weeklyChange > 0 ? "up" : "down";
+  }
+
+  return {
+    latest,
+    weeklyChange,
+    movingAvg7,
+    prevMovingAvg7,
+    trend,
+  };
+};

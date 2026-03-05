@@ -8,6 +8,7 @@ import {
   BodyMetricEntry,
   deleteBodyMetric,
   getGuestBodyMetrics,
+  getWeightTrendAnalysis,
   listBodyMetrics,
   saveGuestBodyMetrics,
   upsertBodyMetric,
@@ -56,6 +57,11 @@ const BodyWeight = () => {
     queryFn: () => listBodyMetrics(user?.id ?? null, isGuest),
     enabled: Boolean(user?.id) && !isGuest,
   });
+  const { data: trendAnalysis } = useQuery({
+    queryKey: ["body_metrics_trend", user?.id, isGuest],
+    queryFn: () => getWeightTrendAnalysis(user?.id ?? null, isGuest),
+    enabled: Boolean(user?.id) || isGuest,
+  });
 
   useEffect(() => {
     if (!isGuest) return;
@@ -77,7 +83,12 @@ const BodyWeight = () => {
     },
     onSuccess: async () => {
       if (!isGuest && user?.id) {
-        await queryClient.invalidateQueries({ queryKey: ["body_metrics", user.id] });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["body_metrics", user.id] }),
+          queryClient.invalidateQueries({ queryKey: ["body_metrics_trend"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+          queryClient.invalidateQueries({ queryKey: ["stats"] }),
+        ]);
       }
     },
   });
@@ -89,7 +100,12 @@ const BodyWeight = () => {
     },
     onSuccess: async () => {
       if (!isGuest && user?.id) {
-        await queryClient.invalidateQueries({ queryKey: ["body_metrics", user.id] });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["body_metrics", user.id] }),
+          queryClient.invalidateQueries({ queryKey: ["body_metrics_trend"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+          queryClient.invalidateQueries({ queryKey: ["stats"] }),
+        ]);
       }
     },
   });
@@ -147,6 +163,11 @@ const BodyWeight = () => {
         nextEntries.sort((a, b) => b.measured_at.localeCompare(a.measured_at));
         setGuestEntries(nextEntries);
         saveGuestBodyMetrics(nextEntries);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["body_metrics_trend"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+          queryClient.invalidateQueries({ queryKey: ["stats"] }),
+        ]);
         toast.info("Guest mode: weight entries won't be saved to your account.");
         resetForm();
         return;
@@ -185,6 +206,11 @@ const BodyWeight = () => {
         const nextEntries = guestEntries.filter((entry) => entry.id !== deleteTarget.id);
         setGuestEntries(nextEntries);
         saveGuestBodyMetrics(nextEntries);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["body_metrics_trend"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+          queryClient.invalidateQueries({ queryKey: ["stats"] }),
+        ]);
       } else {
         await deleteMutation.mutateAsync(deleteTarget.id);
       }
@@ -197,6 +223,12 @@ const BodyWeight = () => {
   };
 
   const latestWeight = useMemo(() => displayedEntries[0]?.weight_kg ?? null, [displayedEntries]);
+  const trendLabel = useMemo(() => {
+    if (!trendAnalysis) return "Sin datos";
+    if (trendAnalysis.trend === "up") return "Subiendo";
+    if (trendAnalysis.trend === "down") return "Bajando";
+    return "Estable";
+  }, [trendAnalysis]);
 
   return (
     <div className="container max-w-4xl py-8 space-y-6">
@@ -210,10 +242,56 @@ const BodyWeight = () => {
             Track your body weight over time.
             {latestWeight !== null ? ` Latest: ${latestWeight} kg` : ""}
           </p>
+          <p className="text-xs text-muted-foreground">
+            Media movil 7d:{" "}
+            {trendAnalysis?.movingAvg7 === null || trendAnalysis?.movingAvg7 === undefined
+              ? "--"
+              : `${trendAnalysis.movingAvg7.toFixed(2)} kg`}{" "}
+            | Cambio semanal:{" "}
+            {trendAnalysis?.weeklyChange === null || trendAnalysis?.weeklyChange === undefined
+              ? "--"
+              : `${trendAnalysis.weeklyChange > 0 ? "+" : ""}${trendAnalysis.weeklyChange.toFixed(2)} kg`}{" "}
+            | Tendencia: {trendLabel}
+          </p>
           {isGuest && (
             <p className="text-xs text-amber-700 mt-1">Guest mode: weight entries won't be saved to your account.</p>
           )}
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Moving average 7d</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">
+              {trendAnalysis?.movingAvg7 === null || trendAnalysis?.movingAvg7 === undefined
+                ? "--"
+                : `${trendAnalysis.movingAvg7.toFixed(2)} kg`}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Weekly change</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">
+              {trendAnalysis?.weeklyChange === null || trendAnalysis?.weeklyChange === undefined
+                ? "--"
+                : `${trendAnalysis.weeklyChange > 0 ? "+" : ""}${trendAnalysis.weeklyChange.toFixed(2)} kg`}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Trend classification</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">{trendLabel}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>

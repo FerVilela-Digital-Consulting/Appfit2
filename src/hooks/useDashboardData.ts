@@ -2,7 +2,10 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "@/context/AuthContext";
-import { getBodyWeightSnapshot } from "@/services/bodyMetrics";
+import { getBodyWeightSnapshot, getWeightTrendAnalysis } from "@/services/bodyMetrics";
+import { getBiofeedbackWeeklyAverages, getDailyBiofeedback, listRecentBiofeedback } from "@/services/dailyBiofeedback";
+import { getLatestBodyMeasurement } from "@/services/bodyMeasurements";
+import { getWeeklyReviewSummary } from "@/services/weeklyReview";
 import { getGoalProgress, getUserGoal } from "@/services/goals";
 import { getWaterDayTotal, getWaterGoal, getWaterRangeTotals, getWaterWeeklySummary, listRecentWaterLogs } from "@/services/waterIntake";
 import { getSleepDay, getSleepGoal, getSleepRangeTotals, getSleepWeeklySummary, listRecentSleepLogs } from "@/services/sleep";
@@ -19,6 +22,11 @@ export const useDashboardData = () => {
   const weightQuery = useQuery({
     queryKey: ["dashboard", "weight_snapshot", userId],
     queryFn: () => getBodyWeightSnapshot(userId, isGuest),
+    enabled: Boolean(userId) || isGuest,
+  });
+  const weightTrendQuery = useQuery({
+    queryKey: ["dashboard", "weight_trend", userId],
+    queryFn: () => getWeightTrendAnalysis(userId, isGuest),
     enabled: Boolean(userId) || isGuest,
   });
 
@@ -97,6 +105,31 @@ export const useDashboardData = () => {
     queryFn: () => listRecentSleepLogs(userId, 3, { isGuest }),
     enabled: Boolean(userId) || isGuest,
   });
+  const biofeedbackTodayQuery = useQuery({
+    queryKey: ["dashboard", "biofeedback_today", userId, dayKey],
+    queryFn: () => getDailyBiofeedback(userId, today, { isGuest, timeZone }),
+    enabled: Boolean(userId) || isGuest,
+  });
+  const biofeedbackWeekQuery = useQuery({
+    queryKey: ["dashboard", "biofeedback_week", userId, dayKey],
+    queryFn: () => getBiofeedbackWeeklyAverages(userId, today, { isGuest, timeZone }),
+    enabled: Boolean(userId) || isGuest,
+  });
+  const recentBiofeedbackQuery = useQuery({
+    queryKey: ["dashboard", "biofeedback_recent", userId],
+    queryFn: () => listRecentBiofeedback(userId, 3, { isGuest }),
+    enabled: Boolean(userId) || isGuest,
+  });
+  const bodyCompositionQuery = useQuery({
+    queryKey: ["dashboard", "body_composition", userId],
+    queryFn: () => getLatestBodyMeasurement(userId, { isGuest }),
+    enabled: Boolean(userId) || isGuest,
+  });
+  const weeklyReviewQuery = useQuery({
+    queryKey: ["dashboard", "weekly_review", userId, dayKey],
+    queryFn: () => getWeeklyReviewSummary(userId, today, { isGuest, timeZone }),
+    enabled: Boolean(userId) || isGuest,
+  });
 
   const goal = getUserGoal(profile, isGuest);
   const latestWeight = weightQuery.data?.latest ? Number(weightQuery.data.latest.weight_kg) : null;
@@ -119,11 +152,12 @@ export const useDashboardData = () => {
   const sleepGoalMinutes = sleepGoalQuery.data?.sleep_goal_minutes ?? (profile?.sleep_goal_minutes ?? 480);
 
   const weightTrend = useMemo(() => {
-    const delta = weightQuery.data?.weeklyDelta;
-    if (delta === null || delta === undefined) return "sin datos suficientes";
-    if (Math.abs(delta) < 0.2) return "estable";
-    return delta < 0 ? "bajando" : "subiendo";
-  }, [weightQuery.data?.weeklyDelta]);
+    const trend = weightTrendQuery.data?.trend;
+    if (!trend) return "sin datos suficientes";
+    if (trend === "up") return "subiendo";
+    if (trend === "down") return "bajando";
+    return "estable";
+  }, [weightTrendQuery.data?.trend]);
 
   const displayName = isGuest ? "Guest" : profile?.full_name?.trim() || user?.email || "User";
   const todayLabel = new Intl.DateTimeFormat("es-PE", {
@@ -139,11 +173,13 @@ export const useDashboardData = () => {
       latest: latestWeight,
       initial: initialWeight,
       initialDate: weightQuery.data?.first?.measured_at ?? null,
-      weeklyDelta: weightQuery.data?.weeklyDelta ?? null,
+      weeklyDelta: weightTrendQuery.data?.weeklyChange ?? weightQuery.data?.weeklyDelta ?? null,
+      movingAvg7: weightTrendQuery.data?.movingAvg7 ?? null,
+      prevMovingAvg7: weightTrendQuery.data?.prevMovingAvg7 ?? null,
       trend: weightTrend,
       latestEntry: weightQuery.data?.latest ?? null,
-      loading: weightQuery.isLoading,
-      error: weightQuery.error,
+      loading: weightQuery.isLoading || weightTrendQuery.isLoading,
+      error: weightQuery.error || weightTrendQuery.error,
     },
     goal: {
       target: goal.target_weight_kg,
@@ -174,6 +210,29 @@ export const useDashboardData = () => {
       loading: sleepDayQuery.isLoading || sleepGoalQuery.isLoading || sleepWeekQuery.isLoading || sleepMonthQuery.isLoading,
       error: sleepDayQuery.error || sleepGoalQuery.error || sleepWeekQuery.error || sleepMonthQuery.error,
       recentLogs: recentSleepQuery.data ?? [],
+    },
+    biofeedback: {
+      today: biofeedbackTodayQuery.data,
+      weekAverages: biofeedbackWeekQuery.data ?? {
+        days_logged: 0,
+        avg_sleep_quality: 0,
+        avg_energy: 0,
+        avg_stress: 0,
+        avg_training_energy: 0,
+      },
+      recentLogs: recentBiofeedbackQuery.data ?? [],
+      loading: biofeedbackTodayQuery.isLoading || biofeedbackWeekQuery.isLoading || recentBiofeedbackQuery.isLoading,
+      error: biofeedbackTodayQuery.error || biofeedbackWeekQuery.error || recentBiofeedbackQuery.error,
+    },
+    bodyComposition: {
+      latest: bodyCompositionQuery.data ?? null,
+      loading: bodyCompositionQuery.isLoading,
+      error: bodyCompositionQuery.error,
+    },
+    weeklyReview: {
+      summary: weeklyReviewQuery.data ?? null,
+      loading: weeklyReviewQuery.isLoading,
+      error: weeklyReviewQuery.error,
     },
   };
 };

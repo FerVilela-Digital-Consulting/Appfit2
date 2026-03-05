@@ -5,19 +5,22 @@ import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContai
 import { TrendingUp } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-import { usePreferences } from "@/context/PreferencesContext";
 import { calculateGoalProgress, resolveInitialWeight, type GoalDirection } from "@/features/goals/goalProgress";
 import {
   BodyMetricEntry,
   getGuestBodyMetrics,
   getGuestWeightGoal,
+  getWeightTrendAnalysis,
   listBodyMetricsByRange,
 } from "@/services/bodyMetrics";
+import { getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
+import { getBiofeedbackRange, getBiofeedbackWeeklyAverages } from "@/services/dailyBiofeedback";
+import { getBodyMeasurementsRange, getLatestBodyMeasurement } from "@/services/bodyMeasurements";
+import { getWeeklyReviewSummary } from "@/services/weeklyReview";
+import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
 import GuestWarningBanner from "@/components/GuestWarningBanner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
-import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
 
 type Range = "7d" | "30d" | "90d" | "all";
 
@@ -29,9 +32,15 @@ const findOnOrBefore = (entriesAsc: BodyMetricEntry[], targetISO: string) => {
   return entriesAsc[0] ?? null;
 };
 
+const trendLabel = (trend: "up" | "down" | "stable" | null) => {
+  if (trend === "up") return "Subiendo";
+  if (trend === "down") return "Bajando";
+  if (trend === "stable") return "Estable";
+  return "--";
+};
+
 const Stats = () => {
   const { user, isGuest, profile } = useAuth();
-  const { t } = usePreferences();
   const timeZone = (profile as any)?.timezone || DEFAULT_WATER_TIMEZONE;
   const [range, setRange] = useState<Range>("30d");
 
@@ -45,6 +54,12 @@ const Stats = () => {
     queryKey: ["body_metrics", user?.id, "all"],
     queryFn: () => listBodyMetricsByRange(user?.id ?? null, "all", isGuest),
     enabled: Boolean(user?.id) && !isGuest,
+  });
+
+  const { data: weightTrendData } = useQuery({
+    queryKey: ["stats_weight_trend", user?.id, isGuest],
+    queryFn: () => getWeightTrendAnalysis(user?.id ?? null, isGuest),
+    enabled: Boolean(user?.id) || isGuest,
   });
 
   const guestEntries = useMemo(
@@ -102,10 +117,16 @@ const Stats = () => {
     direction: goalDirection,
   });
 
-  const chartData = entriesForChart.map((e) => ({
-    date: e.measured_at,
-    weight: Number(e.weight_kg),
-  }));
+  const chartData = entriesForChart.map((entry, index) => {
+    const from = Math.max(0, index - 6);
+    const slice = entriesForChart.slice(from, index + 1);
+    const movingAvg7 = slice.length ? slice.reduce((acc, row) => acc + Number(row.weight_kg), 0) / slice.length : null;
+    return {
+      date: entry.measured_at,
+      weight: Number(entry.weight_kg),
+      movingAvg7: movingAvg7 !== null ? Number(movingAvg7.toFixed(2)) : null,
+    };
+  });
 
   const { data: sleepGoalData = { sleep_goal_minutes: 480 } } = useQuery({
     queryKey: ["sleep_goal", user?.id],
@@ -141,6 +162,62 @@ const Stats = () => {
     ? sleepMonthTotals.reduce((sum, row) => sum + row.total_minutes, 0) / sleepMonthTotals.length
     : 0;
   const sleepWeekMet = sleepWeekTotals.filter((row) => row.total_minutes >= sleepGoalData.sleep_goal_minutes).length;
+
+  const { data: biofeedbackWeek } = useQuery({
+    queryKey: ["stats_biofeedback_week", user?.id, isGuest, timeZone],
+    queryFn: () => getBiofeedbackWeeklyAverages(user?.id ?? null, new Date(), { isGuest, timeZone }),
+    enabled: Boolean(user?.id) || isGuest,
+  });
+
+  const { data: biofeedbackRows = [] } = useQuery({
+    queryKey: ["stats_biofeedback_range", user?.id, isGuest, timeZone],
+    queryFn: async () => {
+      const to = new Date();
+      to.setHours(0, 0, 0, 0);
+      const from = new Date(to);
+      from.setDate(from.getDate() - 29);
+      return getBiofeedbackRange(user?.id ?? null, from, to, { isGuest, timeZone });
+    },
+    enabled: Boolean(user?.id) || isGuest,
+  });
+
+  const { data: latestMeasurement } = useQuery({
+    queryKey: ["stats_latest_measurement", user?.id, isGuest],
+    queryFn: () => getLatestBodyMeasurement(user?.id ?? null, { isGuest }),
+    enabled: Boolean(user?.id) || isGuest,
+  });
+
+  const { data: bodyMeasurementRows = [] } = useQuery({
+    queryKey: ["stats_measurements_range", user?.id, isGuest, timeZone],
+    queryFn: async () => {
+      const to = new Date();
+      to.setHours(0, 0, 0, 0);
+      const from = new Date(to);
+      from.setDate(from.getDate() - 180);
+      return getBodyMeasurementsRange(user?.id ?? null, from, to, { isGuest, timeZone });
+    },
+    enabled: Boolean(user?.id) || isGuest,
+  });
+
+  const { data: weeklyReview } = useQuery({
+    queryKey: ["stats_weekly_review", user?.id, isGuest, timeZone],
+    queryFn: () => getWeeklyReviewSummary(user?.id ?? null, new Date(), { isGuest, timeZone }),
+    enabled: Boolean(user?.id) || isGuest,
+  });
+
+  const bodyFatChartData = bodyMeasurementRows
+    .filter((row) => row.body_fat_pct !== null)
+    .map((row) => ({
+      date: row.date_key,
+      body_fat_pct: Number(row.body_fat_pct),
+    }));
+
+  const biofeedbackChartData = biofeedbackRows.map((row) => ({
+    date: row.date_key,
+    energy: row.daily_energy,
+    stress: row.perceived_stress,
+    sleep_quality: row.sleep_quality,
+  }));
 
   const hasInitialFallback = initialWeight === null;
 
@@ -220,57 +297,127 @@ const Stats = () => {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Change vs 30d</CardTitle>
+            <CardTitle className="text-sm">Moving avg 7d</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{delta30 === null ? "--" : `${delta30 > 0 ? "+" : ""}${delta30.toFixed(1)} kg`}</p>
+            <p className="text-2xl font-semibold">
+              {weightTrendData?.movingAvg7 === null || weightTrendData?.movingAvg7 === undefined
+                ? "--"
+                : `${weightTrendData.movingAvg7.toFixed(2)} kg`}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Weekly average</CardTitle>
+            <CardTitle className="text-sm">Trend</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{weeklyAvg === null ? "--" : `${weeklyAvg.toFixed(1)} kg`}</p>
+            <p className="text-2xl font-semibold">{trendLabel(weightTrendData?.trend ?? null)}</p>
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("sleep.page.title")} Summary</CardTitle>
-          <CardDescription>{t("sleep.page.description")}</CardDescription>
+          <CardTitle>Sleep Summary</CardTitle>
+          <CardDescription>Goal and trends from sleep logs.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">{t("sleep.page.goal")}</p>
+            <p className="text-xs text-muted-foreground">Goal</p>
             <p className="text-xl font-semibold">{(sleepGoalData.sleep_goal_minutes / 60).toFixed(1)} h</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">{t("sleep.page.avg")} (7d)</p>
+            <p className="text-xs text-muted-foreground">Average (7d)</p>
             <p className="text-xl font-semibold">{(sleepWeekAvg / 60).toFixed(1)} h</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">{t("sleep.page.avg")} (30d)</p>
+            <p className="text-xs text-muted-foreground">Average (30d)</p>
             <p className="text-xl font-semibold">{(sleepMonthAvg / 60).toFixed(1)} h</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">{t("sleep.page.daysMet")}</p>
+            <p className="text-xs text-muted-foreground">Days met</p>
             <p className="text-xl font-semibold">{sleepWeekMet}/7</p>
           </div>
           <div className="md:col-span-4">
             <Button asChild variant="outline">
-              <Link to="/sleep">{t("nav.sleep")}</Link>
+              <Link to="/sleep">Sleep</Link>
             </Button>
           </div>
         </CardContent>
       </Card>
 
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Biofeedback weekly</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            <p className="font-semibold">Energy: {biofeedbackWeek?.avg_energy ?? 0}/10</p>
+            <p className="font-semibold">Stress: {biofeedbackWeek?.avg_stress ?? 0}/10</p>
+            <p className="font-semibold">Sleep quality: {biofeedbackWeek?.avg_sleep_quality ?? 0}/10</p>
+            <p className="text-xs text-muted-foreground">Days logged: {biofeedbackWeek?.days_logged ?? 0}/7</p>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/biofeedback">Open biofeedback</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Body composition</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            <p className="font-semibold">
+              Body fat:{" "}
+              {latestMeasurement?.body_fat_pct === null || latestMeasurement?.body_fat_pct === undefined
+                ? "--"
+                : `${Number(latestMeasurement.body_fat_pct).toFixed(1)}%`}
+            </p>
+            <p className="font-semibold">
+              Fat mass:{" "}
+              {latestMeasurement?.fat_mass_kg === null || latestMeasurement?.fat_mass_kg === undefined
+                ? "--"
+                : `${Number(latestMeasurement.fat_mass_kg).toFixed(1)} kg`}
+            </p>
+            <p className="font-semibold">
+              Lean mass:{" "}
+              {latestMeasurement?.lean_mass_kg === null || latestMeasurement?.lean_mass_kg === undefined
+                ? "--"
+                : `${Number(latestMeasurement.lean_mass_kg).toFixed(1)} kg`}
+            </p>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/measurements">Open measurements</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Weekly review</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            <p className="font-semibold">
+              Water adherence: {weeklyReview?.waterDaysMet ?? 0}/{weeklyReview?.waterDaysTotal ?? 7}
+            </p>
+            <p className="font-semibold">Active days: {weeklyReview?.activeDays ?? 0}/7</p>
+            <p className="font-semibold">Weight trend: {trendLabel(weeklyReview?.weightTrend ?? null)}</p>
+            <p className="text-xs text-muted-foreground">
+              Weekly change:{" "}
+              {weeklyReview?.weightWeeklyChange === null || weeklyReview?.weightWeeklyChange === undefined
+                ? "--"
+                : `${weeklyReview.weightWeeklyChange > 0 ? "+" : ""}${weeklyReview.weightWeeklyChange.toFixed(2)} kg`}
+            </p>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/weekly-review">Open weekly review</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Weight Trend</CardTitle>
-            <CardDescription>Body weight over time</CardDescription>
+            <CardDescription>Body weight and moving average over time</CardDescription>
           </div>
           <div className="flex gap-2">
             {(["7d", "30d", "90d", "all"] as Range[]).map((r) => (
@@ -292,15 +439,102 @@ const Stats = () => {
                   <YAxis domain={["auto", "auto"]} />
                   <Tooltip
                     labelFormatter={(v) => new Date(String(v)).toLocaleDateString()}
-                    formatter={(value: number) => [`${value} kg`, "Weight"]}
+                    formatter={(value: number, name: string) => [`${value} kg`, name === "weight" ? "Weight" : "Moving avg 7d"]}
                   />
                   <Line type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={2} dot />
+                  <Line type="monotone" dataKey="movingAvg7" stroke="hsl(var(--muted-foreground))" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           )}
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Biofeedback (30d)</CardTitle>
+            <CardDescription>Energy, stress and sleep quality by day.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {biofeedbackChartData.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No biofeedback data yet.</p>
+            ) : (
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={biofeedbackChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
+                    <YAxis domain={[1, 10]} />
+                    <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString()} />
+                    <Line type="monotone" dataKey="energy" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="stress" stroke="#ef4444" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="sleep_quality" stroke="#22c55e" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Body fat trend</CardTitle>
+            <CardDescription>Navy body fat estimation from body measurements.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {bodyFatChartData.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No body measurements with body fat yet.</p>
+            ) : (
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={bodyFatChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
+                    <YAxis />
+                    <Tooltip
+                      labelFormatter={(v) => new Date(String(v)).toLocaleDateString()}
+                      formatter={(value: number) => [`${value}%`, "Body fat"]}
+                    />
+                    <Line type="monotone" dataKey="body_fat_pct" stroke="hsl(var(--primary))" strokeWidth={2} dot />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Change vs 30d</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">{delta30 === null ? "--" : `${delta30 > 0 ? "+" : ""}${delta30.toFixed(1)} kg`}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Weekly average</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">{weeklyAvg === null ? "--" : `${weeklyAvg.toFixed(1)} kg`}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Previous moving avg 7d</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">
+              {weightTrendData?.prevMovingAvg7 === null || weightTrendData?.prevMovingAvg7 === undefined
+                ? "--"
+                : `${weightTrendData.prevMovingAvg7.toFixed(2)} kg`}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

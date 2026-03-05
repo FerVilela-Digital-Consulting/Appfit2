@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays, addMonths, endOfMonth, endOfWeek, format, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
-import { CheckCircle2, ChevronLeft, ChevronRight, Droplets, Moon, Scale } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Droplets, HeartPulse, Moon, Scale } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
@@ -16,6 +17,7 @@ import {
   type BodyMetricEntry,
 } from "@/services/bodyMetrics";
 import { addSleepLog, getSleepDay, getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
+import { getBiofeedbackRange, getDailyBiofeedback } from "@/services/dailyBiofeedback";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +32,7 @@ type CalendarDayData = {
   hasWater: boolean;
   hasWeight: boolean;
   hasSleep: boolean;
+  hasBiofeedback: boolean;
 };
 
 const formatDateKey = (date: Date) => format(date, "yyyy-MM-dd");
@@ -75,10 +78,11 @@ const Calendar = () => {
       sleepGoal.sleep_goal_minutes,
     ],
     queryFn: async () => {
-      const [waterTotals, weightEntries, sleepTotals] = await Promise.all([
+      const [waterTotals, weightEntries, sleepTotals, biofeedbackRows] = await Promise.all([
         getWaterRangeTotals(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
         isGuest ? Promise.resolve(getGuestBodyMetrics()) : listBodyMetricsByRange(user?.id ?? null, "all", false),
         getSleepRangeTotals(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
+        getBiofeedbackRange(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
       ]);
 
       const waterMap = new Map<string, number>();
@@ -94,6 +98,9 @@ const Calendar = () => {
       const sleepMap = new Map<string, number>();
       sleepTotals.forEach((row) => sleepMap.set(row.date_key, Number(row.total_minutes || 0)));
 
+      const biofeedbackMap = new Map<string, boolean>();
+      biofeedbackRows.forEach((row) => biofeedbackMap.set(row.date_key, true));
+
       const daily = new Map<string, CalendarDayData>();
       let cursor = new Date(gridStart);
       while (cursor <= gridEnd) {
@@ -106,6 +113,7 @@ const Calendar = () => {
         const hasWater = totalWaterMl > 0;
         const hasWeight = weightKg !== null;
         const hasSleep = totalSleepMinutes > 0;
+        const hasBiofeedback = biofeedbackMap.get(dateKey) ?? false;
         daily.set(dateKey, {
           dateKey,
           totalWaterMl,
@@ -116,6 +124,7 @@ const Calendar = () => {
           hasWater,
           hasWeight,
           hasSleep,
+          hasBiofeedback,
         });
         cursor = addDays(cursor, 1);
       }
@@ -135,6 +144,11 @@ const Calendar = () => {
     queryFn: () => getSleepDay(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }),
     enabled: Boolean(user?.id) || isGuest,
   });
+  const { data: selectedBiofeedback } = useQuery({
+    queryKey: ["calendar_day_biofeedback", user?.id, selectedDateKey, timezone, isGuest],
+    queryFn: () => getDailyBiofeedback(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }),
+    enabled: Boolean(user?.id) || isGuest,
+  });
 
   const selectedDay = calendarData?.daily.get(selectedDateKey);
 
@@ -152,7 +166,7 @@ const Calendar = () => {
       (day) => day.dateKey >= formatDateKey(monthStart) && day.dateKey <= formatDateKey(monthEnd),
     );
 
-    const activeDays = monthDays.filter((day) => day.hasWater || day.hasWeight || day.hasSleep).length;
+    const activeDays = monthDays.filter((day) => day.hasWater || day.hasWeight || day.hasSleep || day.hasBiofeedback).length;
     const metGoalDays = monthDays.filter((day) => day.metWaterGoal).length;
     const avgWaterMl =
       monthDays.length > 0
@@ -290,7 +304,12 @@ const Calendar = () => {
     if (!day) return inCurrentMonth ? "bg-card" : "bg-muted/40";
 
     const intensity =
-      (day.hasWater ? 1 : 0) + (day.hasWeight ? 1 : 0) + (day.hasSleep ? 1 : 0) + (day.metWaterGoal ? 1 : 0) + (day.metSleepGoal ? 1 : 0);
+      (day.hasWater ? 1 : 0) +
+      (day.hasWeight ? 1 : 0) +
+      (day.hasSleep ? 1 : 0) +
+      (day.hasBiofeedback ? 1 : 0) +
+      (day.metWaterGoal ? 1 : 0) +
+      (day.metSleepGoal ? 1 : 0);
     const heatClass =
       intensity <= 1
         ? "bg-card"
@@ -405,6 +424,7 @@ const Calendar = () => {
                         {day?.hasWater && <Droplets className="h-3 w-3 text-primary" aria-label={t("calendar.summary.water")} />}
                         {day?.hasWeight && <Scale className="h-3 w-3 text-muted-foreground" aria-label={t("calendar.summary.weight")} />}
                         {day?.hasSleep && <Moon className="h-3 w-3 text-indigo-500" aria-label={t("calendar.summary.sleep")} />}
+                        {day?.hasBiofeedback && <HeartPulse className="h-3 w-3 text-rose-500" aria-label="Biofeedback" />}
                         {day?.metSleepGoal && <CheckCircle2 className="h-3 w-3 text-emerald-500" aria-hidden="true" />}
                       </div>
                     </button>
@@ -488,6 +508,27 @@ const Calendar = () => {
                         ))}
                       </div>
                     )}
+                  </div>
+
+                  <div className="rounded-md border p-3 space-y-2">
+                    <p className="text-sm text-muted-foreground">Biofeedback</p>
+                    {!selectedBiofeedback ? (
+                      <p className="text-sm text-muted-foreground">Sin check-in para este dia.</p>
+                    ) : (
+                      <>
+                        <p className="text-lg font-semibold">Check-in completado</p>
+                        <p className="text-xs text-muted-foreground">
+                          Energia {selectedBiofeedback.daily_energy}/10 | Estres {selectedBiofeedback.perceived_stress}/10 | Sueno{" "}
+                          {selectedBiofeedback.sleep_quality}/10
+                        </p>
+                        {selectedBiofeedback.notes ? (
+                          <p className="text-xs text-muted-foreground">{selectedBiofeedback.notes}</p>
+                        ) : null}
+                      </>
+                    )}
+                    <Button asChild variant="outline" size="sm">
+                      <Link to={`/biofeedback?date=${selectedDateKey}`}>Abrir check-in</Link>
+                    </Button>
                   </div>
                 </>
               )}

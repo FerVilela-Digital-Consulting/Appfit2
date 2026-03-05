@@ -14,6 +14,9 @@ import Sleep from "@/pages/Sleep";
 import Settings from "@/pages/Settings";
 import BodyWeight from "@/pages/BodyWeight";
 import Calendar from "@/pages/Calendar";
+import DailyBiofeedback from "@/pages/DailyBiofeedback";
+import BodyMeasurements from "@/pages/BodyMeasurements";
+import WeeklyReview from "@/pages/WeeklyReview";
 import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/NotFound";
 
@@ -38,6 +41,9 @@ const AppRoutes = () => {
             <Route path="/statistics" element={<Stats />} />
             <Route path="/water" element={<Water />} />
             <Route path="/sleep" element={<Sleep />} />
+            <Route path="/biofeedback" element={<DailyBiofeedback />} />
+            <Route path="/measurements" element={<BodyMeasurements />} />
+            <Route path="/weekly-review" element={<WeeklyReview />} />
             <Route path="/weight" element={<BodyWeight />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/settings" element={<Settings />} />

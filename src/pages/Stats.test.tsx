@@ -11,6 +11,45 @@ const mockGetGuestWeightGoal = vi.fn(() => ({
   start_weight_kg: null,
   goal_direction: null,
 }));
+const mockGetWeightTrendAnalysis = vi.fn(() =>
+  Promise.resolve({
+    latest: null,
+    weeklyChange: null,
+    movingAvg7: null,
+    prevMovingAvg7: null,
+    trend: "stable",
+  }),
+);
+const mockGetSleepGoal = vi.fn(() => Promise.resolve({ sleep_goal_minutes: 480 }));
+const mockGetSleepRangeTotals = vi.fn(() => Promise.resolve([]));
+const mockGetBiofeedbackWeeklyAverages = vi.fn(() =>
+  Promise.resolve({
+    days_logged: 0,
+    avg_sleep_quality: 0,
+    avg_energy: 0,
+    avg_stress: 0,
+    avg_training_energy: 0,
+  }),
+);
+const mockGetBiofeedbackRange = vi.fn(() => Promise.resolve([]));
+const mockGetLatestBodyMeasurement = vi.fn(() => Promise.resolve(null));
+const mockGetBodyMeasurementsRange = vi.fn(() => Promise.resolve([]));
+const mockGetWeeklyReviewSummary = vi.fn(() =>
+  Promise.resolve({
+    weekStart: new Date("2026-03-02T00:00:00.000Z"),
+    weekEnd: new Date("2026-03-08T00:00:00.000Z"),
+    waterDaysMet: 0,
+    waterDaysTotal: 7,
+    avgSleepMinutes: 0,
+    avgBioSleepQuality: 0,
+    avgBioEnergy: 0,
+    avgBioStress: 0,
+    weightWeeklyChange: null,
+    weightTrend: "stable",
+    weightMovingAvg7: null,
+    activeDays: 0,
+  }),
+);
 
 const mockUseAuth = vi.fn();
 
@@ -18,6 +57,26 @@ vi.mock("@/services/bodyMetrics", () => ({
   listBodyMetricsByRange: (...args: any[]) => mockListBodyMetricsByRange(...args),
   getGuestBodyMetrics: () => mockGetGuestBodyMetrics(),
   getGuestWeightGoal: () => mockGetGuestWeightGoal(),
+  getWeightTrendAnalysis: (...args: any[]) => mockGetWeightTrendAnalysis(...args),
+}));
+
+vi.mock("@/services/sleep", () => ({
+  getSleepGoal: (...args: any[]) => mockGetSleepGoal(...args),
+  getSleepRangeTotals: (...args: any[]) => mockGetSleepRangeTotals(...args),
+}));
+
+vi.mock("@/services/dailyBiofeedback", () => ({
+  getBiofeedbackWeeklyAverages: (...args: any[]) => mockGetBiofeedbackWeeklyAverages(...args),
+  getBiofeedbackRange: (...args: any[]) => mockGetBiofeedbackRange(...args),
+}));
+
+vi.mock("@/services/bodyMeasurements", () => ({
+  getLatestBodyMeasurement: (...args: any[]) => mockGetLatestBodyMeasurement(...args),
+  getBodyMeasurementsRange: (...args: any[]) => mockGetBodyMeasurementsRange(...args),
+}));
+
+vi.mock("@/services/weeklyReview", () => ({
+  getWeeklyReviewSummary: (...args: any[]) => mockGetWeeklyReviewSummary(...args),
 }));
 
 vi.mock("@/context/AuthContext", () => ({
@@ -60,6 +119,14 @@ describe("Stats page", () => {
       start_weight_kg: null,
       goal_direction: null,
     });
+    mockGetWeightTrendAnalysis.mockClear();
+    mockGetSleepGoal.mockClear();
+    mockGetSleepRangeTotals.mockClear();
+    mockGetBiofeedbackWeeklyAverages.mockClear();
+    mockGetBiofeedbackRange.mockClear();
+    mockGetLatestBodyMeasurement.mockClear();
+    mockGetBodyMeasurementsRange.mockClear();
+    mockGetWeeklyReviewSummary.mockClear();
 
     mockUseAuth.mockReset();
     mockUseAuth.mockReturnValue({

@@ -10,11 +10,13 @@ type Props = {
   initial: number | null;
   initialDate: string | null;
   weeklyDelta: number | null;
+  movingAvg7?: number | null;
+  trend?: string;
   loading?: boolean;
   error?: unknown;
 };
 
-const WeightCard = ({ latest, initial, initialDate, weeklyDelta, loading = false, error }: Props) => {
+const WeightCard = ({ latest, initial, initialDate, weeklyDelta, movingAvg7 = null, trend = "sin datos", loading = false, error }: Props) => {
   if (loading) {
     return (
       <Card>
@@ -47,6 +49,10 @@ const WeightCard = ({ latest, initial, initialDate, weeklyDelta, loading = false
             <p className="text-sm text-muted-foreground">
               Cambio semanal: {weeklyDelta === null ? "--" : `${weeklyDelta > 0 ? "+" : ""}${weeklyDelta.toFixed(1)} kg`}
             </p>
+            <p className="text-sm text-muted-foreground">
+              Media movil 7d: {movingAvg7 === null ? "--" : `${movingAvg7.toFixed(2)} kg`}
+            </p>
+            <p className="text-sm text-muted-foreground">Tendencia: {trend}</p>
             <p className="text-sm text-muted-foreground">
               Peso inicial: {initial !== null ? `${initial.toFixed(1)} kg` : "Sin registros"}
               {initialDate ? ` (${initialDate})` : ""}
