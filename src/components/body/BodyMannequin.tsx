@@ -1,5 +1,7 @@
-import { cn } from "@/lib/utils";
+import { useState } from "react";
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 export type PointKey = "neck" | "arm" | "waist" | "hip" | "thigh";
 
@@ -13,15 +15,28 @@ export type MeasurementPoint = {
   y: number;
 };
 
-const toneClass: Record<NonNullable<MeasurementPoint["tone"]>, string> = {
-  neutral: "border-white/20 bg-white/10",
-  positive: "border-emerald-400/50 bg-emerald-500/20",
-  negative: "border-rose-400/50 bg-rose-500/20",
+const labelTone: Record<NonNullable<MeasurementPoint["tone"]>, string> = {
+  neutral: "border-slate-300/70 bg-slate-700/90 text-white",
+  positive: "border-emerald-300/70 bg-emerald-700/90 text-white",
+  negative: "border-rose-300/70 bg-rose-700/90 text-white",
+};
+
+const dotTone: Record<NonNullable<MeasurementPoint["tone"]>, string> = {
+  neutral: "bg-slate-300 ring-slate-100/60",
+  positive: "bg-emerald-400 ring-emerald-100/60",
+  negative: "bg-rose-400 ring-rose-100/60",
+};
+
+const offsets: Record<PointKey, { dx: number; dy: number }> = {
+  neck: { dx: 0, dy: -28 },
+  arm: { dx: -46, dy: -8 },
+  waist: { dx: 0, dy: -26 },
+  hip: { dx: 0, dy: 20 },
+  thigh: { dx: -16, dy: 20 },
 };
 
 export function BodyMannequin({
   points,
-  // Place provided PNG in public/body-mannequin.png (transparent background).
   imageSrc = "/body-mannequin.png",
   onPointClick,
 }: {
@@ -29,66 +44,78 @@ export function BodyMannequin({
   imageSrc?: string;
   onPointClick?: (key: PointKey) => void;
 }) {
-  const hasImage = Boolean(imageSrc);
+  const [imageError, setImageError] = useState(false);
+  const showImage = Boolean(imageSrc) && !imageError;
 
   return (
-    <div className="relative w-full max-w-[340px] aspect-[2/3]">
-      {hasImage ? (
+    <div className="relative w-full max-w-[380px] aspect-[2/3]">
+      {showImage ? (
         <img
           src={imageSrc}
           alt="Body measurement mannequin"
           className="absolute inset-0 h-full w-full object-contain"
-          onError={(event) => {
-            event.currentTarget.style.display = "none";
-          }}
+          onError={() => setImageError(true)}
         />
-      ) : null}
-      <svg
-        viewBox="0 0 300 500"
-        className="absolute inset-0 h-full w-full text-foreground/20"
-        role="img"
-        aria-label="Body measurement mannequin fallback"
-      >
-        <g fill="none" stroke="currentColor" strokeOpacity="0.22" strokeWidth="8">
-          <circle cx="150" cy="65" r="35" />
-          <path d="M135 105 C140 130, 160 130, 165 105" />
-          <path d="M90 150 C120 120, 180 120, 210 150" />
-          <path d="M90 150 C95 230, 110 285, 135 320" />
-          <path d="M210 150 C205 230, 190 285, 165 320" />
-          <path d="M135 320 C125 350, 125 380, 140 400" />
-          <path d="M165 320 C175 350, 175 380, 160 400" />
-          <path d="M140 400 C125 430, 120 460, 120 490" />
-          <path d="M160 400 C175 430, 180 460, 180 490" />
-          <path d="M90 155 C70 210, 70 260, 85 320" />
-          <path d="M210 155 C230 210, 230 260, 215 320" />
-        </g>
-      </svg>
+      ) : (
+        <div className="absolute inset-0 rounded-xl border border-border/60 bg-muted/20" />
+      )}
 
       <TooltipProvider delayDuration={80}>
-        {points.map((p) => (
-          <Tooltip key={p.key}>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  "absolute -translate-x-1/2 -translate-y-1/2 rounded-full border min-h-5 px-2 py-0.5 text-[10px] font-semibold shadow-sm hover:scale-105 transition focus:outline-none focus:ring-2 focus:ring-primary/50",
-                  toneClass[p.tone || "neutral"],
-                )}
-                style={{ left: `${p.x}%`, top: `${p.y}%` }}
-                onClick={() => onPointClick?.(p.key)}
-                aria-label={`${p.label}: ${p.valueText ?? "sin dato"} ${p.deltaText ? `(${p.deltaText})` : ""}`}
-              >
-                {p.valueText ?? "—"}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-[220px]">
-              <p className="text-xs font-medium">{p.label}</p>
-              <p className="text-xs">{p.valueText ?? "Sin dato"}</p>
-              <p className="text-xs text-muted-foreground">{p.deltaText ? `${p.deltaText} since last measurement` : "Sin comparativa previa"}</p>
-            </TooltipContent>
-          </Tooltip>
-        ))}
+        {points.map((point) => {
+          const offset = offsets[point.key];
+          const angle = (Math.atan2(offset.dy, offset.dx) * 180) / Math.PI;
+          const lineWidth = Math.max(8, Math.hypot(offset.dx, offset.dy) - 12);
+          const tone = point.tone || "neutral";
+
+          return (
+            <Tooltip key={point.key}>
+              <TooltipTrigger asChild>
+                <div
+                  className="absolute -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: `${point.x}%`, top: `${point.y}%` }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => onPointClick?.(point.key)}
+                    className={cn(
+                      "absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 shadow focus:outline-none focus:ring-2 focus:ring-primary",
+                      dotTone[tone],
+                    )}
+                    aria-label={`${point.label}: ${point.valueText ?? "sin dato"} ${point.deltaText ? `(${point.deltaText})` : ""}`}
+                  />
+                  <div
+                    className="absolute left-1/2 top-1/2 h-px bg-white/80"
+                    style={{
+                      width: `${lineWidth}px`,
+                      transform: `rotate(${angle}deg)`,
+                      transformOrigin: "0 0",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => onPointClick?.(point.key)}
+                    className={cn(
+                      "absolute rounded-md border px-2 py-1 text-[10px] font-semibold leading-none shadow-md backdrop-blur-sm transition hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-primary/60",
+                      labelTone[tone],
+                    )}
+                    style={{ transform: `translate(${offset.dx}px, ${offset.dy}px)` }}
+                  >
+                    {point.valueText ?? "--"}
+                  </button>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-[220px]">
+                <p className="text-xs font-medium">{point.label}</p>
+                <p className="text-xs">{point.valueText ?? "Sin dato"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {point.deltaText ? `${point.deltaText} since last measurement` : "Sin comparativa previa"}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
       </TooltipProvider>
     </div>
   );
 }
+
