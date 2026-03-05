@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays, addMonths, endOfMonth, endOfWeek, format, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
-import { CheckCircle2, ChevronLeft, ChevronRight, Droplets, HeartPulse, Moon, Scale } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Droplets, FileText, HeartPulse, Moon, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -18,9 +18,11 @@ import {
 } from "@/services/bodyMetrics";
 import { addSleepLog, getSleepDay, getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
 import { getBiofeedbackRange, getDailyBiofeedback } from "@/services/dailyBiofeedback";
+import { getDailyNote, listDailyNotesByRange, upsertDailyNote } from "@/services/dailyNotes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 type CalendarDayData = {
   dateKey: string;
@@ -33,6 +35,7 @@ type CalendarDayData = {
   hasWeight: boolean;
   hasSleep: boolean;
   hasBiofeedback: boolean;
+  hasNote: boolean;
 };
 
 const formatDateKey = (date: Date) => format(date, "yyyy-MM-dd");
@@ -48,6 +51,8 @@ const Calendar = () => {
   const [quickWaterMl, setQuickWaterMl] = useState("");
   const [quickWeightKg, setQuickWeightKg] = useState("");
   const [quickSleepMinutes, setQuickSleepMinutes] = useState("");
+  const [noteTitle, setNoteTitle] = useState("");
+  const [noteContent, setNoteContent] = useState("");
 
   const timezone = (profile as any)?.timezone || DEFAULT_WATER_TIMEZONE;
   const monthStart = startOfMonth(currentMonth);
@@ -78,11 +83,12 @@ const Calendar = () => {
       sleepGoal.sleep_goal_minutes,
     ],
     queryFn: async () => {
-      const [waterTotals, weightEntries, sleepTotals, biofeedbackRows] = await Promise.all([
+      const [waterTotals, weightEntries, sleepTotals, biofeedbackRows, notesRows] = await Promise.all([
         getWaterRangeTotals(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
         isGuest ? Promise.resolve(getGuestBodyMetrics()) : listBodyMetricsByRange(user?.id ?? null, "all", false),
         getSleepRangeTotals(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
         getBiofeedbackRange(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
+        listDailyNotesByRange(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
       ]);
 
       const waterMap = new Map<string, number>();
@@ -100,6 +106,8 @@ const Calendar = () => {
 
       const biofeedbackMap = new Map<string, boolean>();
       biofeedbackRows.forEach((row) => biofeedbackMap.set(row.date_key, true));
+      const notesMap = new Map<string, boolean>();
+      notesRows.forEach((row) => notesMap.set(row.date_key, true));
 
       const daily = new Map<string, CalendarDayData>();
       let cursor = new Date(gridStart);
@@ -114,6 +122,7 @@ const Calendar = () => {
         const hasWeight = weightKg !== null;
         const hasSleep = totalSleepMinutes > 0;
         const hasBiofeedback = biofeedbackMap.get(dateKey) ?? false;
+        const hasNote = notesMap.get(dateKey) ?? false;
         daily.set(dateKey, {
           dateKey,
           totalWaterMl,
@@ -125,6 +134,7 @@ const Calendar = () => {
           hasWeight,
           hasSleep,
           hasBiofeedback,
+          hasNote,
         });
         cursor = addDays(cursor, 1);
       }
@@ -149,6 +159,16 @@ const Calendar = () => {
     queryFn: () => getDailyBiofeedback(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }),
     enabled: Boolean(user?.id) || isGuest,
   });
+  const { data: selectedNote } = useQuery({
+    queryKey: ["calendar_day_note", user?.id, selectedDateKey, timezone, isGuest],
+    queryFn: () => getDailyNote(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }),
+    enabled: Boolean(user?.id) || isGuest,
+  });
+
+  useEffect(() => {
+    setNoteTitle(selectedNote?.title ?? "");
+    setNoteContent(selectedNote?.content ?? "");
+  }, [selectedNote?.content, selectedNote?.title]);
 
   const selectedDay = calendarData?.daily.get(selectedDateKey);
 
@@ -166,7 +186,7 @@ const Calendar = () => {
       (day) => day.dateKey >= formatDateKey(monthStart) && day.dateKey <= formatDateKey(monthEnd),
     );
 
-    const activeDays = monthDays.filter((day) => day.hasWater || day.hasWeight || day.hasSleep || day.hasBiofeedback).length;
+    const activeDays = monthDays.filter((day) => day.hasWater || day.hasWeight || day.hasSleep || day.hasBiofeedback || day.hasNote).length;
     const metGoalDays = monthDays.filter((day) => day.metWaterGoal).length;
     const avgWaterMl =
       monthDays.length > 0
@@ -308,6 +328,7 @@ const Calendar = () => {
       (day.hasWeight ? 1 : 0) +
       (day.hasSleep ? 1 : 0) +
       (day.hasBiofeedback ? 1 : 0) +
+      (day.hasNote ? 1 : 0) +
       (day.metWaterGoal ? 1 : 0) +
       (day.metSleepGoal ? 1 : 0);
     const heatClass =
@@ -321,6 +342,29 @@ const Calendar = () => {
 
     return `${heatClass} ${inCurrentMonth ? "" : "opacity-65"}`;
   };
+
+  const saveNoteMutation = useMutation({
+    mutationFn: () =>
+      upsertDailyNote({
+        userId: user?.id ?? null,
+        date: fromDateKey(selectedDateKey),
+        title: noteTitle.trim() || null,
+        content: noteContent,
+        isGuest,
+        timeZone: timezone,
+      }),
+    onSuccess: async () => {
+      toast.success("Nota del dia guardada.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar_day_note"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      ]);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "No se pudo guardar la nota.");
+    },
+  });
 
   return (
     <div className="container max-w-7xl py-8 space-y-6">
@@ -425,6 +469,7 @@ const Calendar = () => {
                         {day?.hasWeight && <Scale className="h-3 w-3 text-muted-foreground" aria-label={t("calendar.summary.weight")} />}
                         {day?.hasSleep && <Moon className="h-3 w-3 text-indigo-500" aria-label={t("calendar.summary.sleep")} />}
                         {day?.hasBiofeedback && <HeartPulse className="h-3 w-3 text-rose-500" aria-label="Biofeedback" />}
+                        {day?.hasNote && <FileText className="h-3 w-3 text-amber-500" aria-label="Daily note" />}
                         {day?.metSleepGoal && <CheckCircle2 className="h-3 w-3 text-emerald-500" aria-hidden="true" />}
                       </div>
                     </button>
@@ -528,6 +573,30 @@ const Calendar = () => {
                     )}
                     <Button asChild variant="outline" size="sm">
                       <Link to={`/biofeedback?date=${selectedDateKey}`}>Abrir check-in</Link>
+                    </Button>
+                  </div>
+
+                  <div className="rounded-md border p-3 space-y-2">
+                    <p className="text-sm text-muted-foreground">Daily Notes</p>
+                    <Input
+                      value={noteTitle}
+                      onChange={(event) => setNoteTitle(event.target.value)}
+                      placeholder="Titulo"
+                      maxLength={120}
+                    />
+                    <Textarea
+                      value={noteContent}
+                      onChange={(event) => setNoteContent(event.target.value)}
+                      placeholder="Observaciones tacticas del dia..."
+                      className="min-h-24"
+                    />
+                    {selectedNote ? (
+                      <p className="text-xs text-muted-foreground">Nota existente para {selectedDateKey}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Sin nota para este dia.</p>
+                    )}
+                    <Button onClick={() => saveNoteMutation.mutate()} disabled={saveNoteMutation.isPending || !noteContent.trim()}>
+                      Guardar nota
                     </Button>
                   </div>
                 </>

@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getBodyWeightSnapshot, getWeightTrendAnalysis } from "@/services/bodyMetrics";
 import { getBiofeedbackWeeklyAverages, getDailyBiofeedback, listRecentBiofeedback } from "@/services/dailyBiofeedback";
 import { getLatestBodyMeasurement } from "@/services/bodyMeasurements";
+import { getDailyNote, getLatestDailyNote } from "@/services/dailyNotes";
 import { getWeeklyReviewSummary } from "@/services/weeklyReview";
 import { getGoalProgress, getUserGoal } from "@/services/goals";
 import { getWaterDayTotal, getWaterGoal, getWaterRangeTotals, getWaterWeeklySummary, listRecentWaterLogs } from "@/services/waterIntake";
@@ -130,6 +131,16 @@ export const useDashboardData = () => {
     queryFn: () => getWeeklyReviewSummary(userId, today, { isGuest, timeZone }),
     enabled: Boolean(userId) || isGuest,
   });
+  const todayNoteQuery = useQuery({
+    queryKey: ["dashboard", "daily_note_today", userId, dayKey],
+    queryFn: () => getDailyNote(userId, today, { isGuest, timeZone }),
+    enabled: Boolean(userId) || isGuest,
+  });
+  const latestNoteQuery = useQuery({
+    queryKey: ["dashboard", "daily_note_latest", userId],
+    queryFn: () => getLatestDailyNote(userId, { isGuest }),
+    enabled: Boolean(userId) || isGuest,
+  });
 
   const goal = getUserGoal(profile, isGuest);
   const latestWeight = weightQuery.data?.latest ? Number(weightQuery.data.latest.weight_kg) : null;
@@ -150,6 +161,32 @@ export const useDashboardData = () => {
   const waterProgress = calculateWaterProgress(waterTodayMl, waterGoalMl);
   const sleepTodayMinutes = sleepDayQuery.data?.total_minutes ?? 0;
   const sleepGoalMinutes = sleepGoalQuery.data?.sleep_goal_minutes ?? (profile?.sleep_goal_minutes ?? 480);
+  const clamp = (value: number, min = 0, max = 1) => Math.max(min, Math.min(max, value));
+
+  const sleepQualityNorm =
+    biofeedbackTodayQuery.data?.sleep_quality !== undefined && biofeedbackTodayQuery.data?.sleep_quality !== null
+      ? clamp(biofeedbackTodayQuery.data.sleep_quality / 10)
+      : clamp(sleepTodayMinutes / Math.max(sleepGoalMinutes, 1));
+  const dailyEnergyNorm = clamp((biofeedbackTodayQuery.data?.daily_energy ?? biofeedbackWeekQuery.data?.avg_energy ?? 5) / 10);
+  const stressNorm = clamp(1 - (biofeedbackTodayQuery.data?.perceived_stress ?? biofeedbackWeekQuery.data?.avg_stress ?? 5) / 10);
+  const trainingEnergyNorm = clamp(
+    (biofeedbackTodayQuery.data?.training_energy ?? biofeedbackWeekQuery.data?.avg_training_energy ?? 5) / 10,
+  );
+  const hydrationNorm = clamp(waterTodayMl / Math.max(waterGoalMl, 1));
+
+  const recoveryScore = Math.round(
+    100 * (sleepQualityNorm * 0.3 + dailyEnergyNorm * 0.2 + stressNorm * 0.2 + trainingEnergyNorm * 0.15 + hydrationNorm * 0.15),
+  );
+  const recoveryStatus =
+    recoveryScore >= 75 ? "Recuperacion alta" : recoveryScore >= 50 ? "Recuperacion moderada" : "Recuperacion baja";
+
+  const recoveryFactors: string[] = [];
+  if (sleepQualityNorm < 0.5) recoveryFactors.push("Sueno bajo");
+  if (dailyEnergyNorm < 0.5) recoveryFactors.push("Energia diaria baja");
+  if (stressNorm < 0.45) recoveryFactors.push("Estres alto");
+  if (trainingEnergyNorm < 0.5) recoveryFactors.push("Energia de entrenamiento baja");
+  if (hydrationNorm < 0.6) recoveryFactors.push("Hidratacion insuficiente");
+  if (recoveryFactors.length === 0) recoveryFactors.push("Variables estables");
 
   const weightTrend = useMemo(() => {
     const trend = weightTrendQuery.data?.trend;
@@ -233,6 +270,20 @@ export const useDashboardData = () => {
       summary: weeklyReviewQuery.data ?? null,
       loading: weeklyReviewQuery.isLoading,
       error: weeklyReviewQuery.error,
+    },
+    recovery: {
+      score: recoveryScore,
+      status: recoveryStatus,
+      factors: recoveryFactors,
+      hydrationPct: Math.round(hydrationNorm * 100),
+      loading: waterTodayQuery.isLoading || waterGoalQuery.isLoading || biofeedbackTodayQuery.isLoading || biofeedbackWeekQuery.isLoading,
+      error: waterTodayQuery.error || waterGoalQuery.error || biofeedbackTodayQuery.error || biofeedbackWeekQuery.error,
+    },
+    notes: {
+      today: todayNoteQuery.data ?? null,
+      latest: latestNoteQuery.data ?? null,
+      loading: todayNoteQuery.isLoading || latestNoteQuery.isLoading,
+      error: todayNoteQuery.error || latestNoteQuery.error,
     },
   };
 };

@@ -1,6 +1,12 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
+import { useAuth } from "@/context/AuthContext";
+import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { upsertDailyNote } from "@/services/dailyNotes";
 import WeightCard from "@/components/dashboard/WeightCard";
 import GoalCard from "@/components/dashboard/GoalCard";
 import WaterCard from "@/components/dashboard/WaterCard";
@@ -8,9 +14,16 @@ import SleepCard from "@/components/dashboard/SleepCard";
 import WeeklySummaryCard from "@/components/dashboard/WeeklySummaryCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 
 const Dashboard = () => {
+  const { user, isGuest, profile } = useAuth();
   const data = useDashboardData();
+  const queryClient = useQueryClient();
+  const [noteTitle, setNoteTitle] = useState("");
+  const [noteContent, setNoteContent] = useState("");
 
   const goalHeadline = data.goal.progress === null ? "--" : `${data.goal.progress.toFixed(0)}%`;
   const waterHeadline = `${(data.water.todayMl / 1000).toFixed(1)} / ${(data.water.goalMl / 1000).toFixed(1)} L`;
@@ -22,6 +35,40 @@ const Dashboard = () => {
     data.bodyComposition.latest?.body_fat_pct !== null && data.bodyComposition.latest?.body_fat_pct !== undefined
       ? `${Number(data.bodyComposition.latest.body_fat_pct).toFixed(1)}% grasa`
       : "Sin medicion corporal";
+  const recoveryTone =
+    data.recovery.score >= 75
+      ? "text-emerald-600"
+      : data.recovery.score >= 50
+      ? "text-amber-600"
+      : "text-rose-600";
+
+  useEffect(() => {
+    setNoteTitle(data.notes.today?.title ?? "");
+    setNoteContent(data.notes.today?.content ?? "");
+  }, [data.notes.today?.content, data.notes.today?.title]);
+
+  const saveNoteMutation = useMutation({
+    mutationFn: () =>
+      upsertDailyNote({
+        userId: user?.id ?? null,
+        date: new Date(),
+        title: noteTitle.trim() || null,
+        content: noteContent,
+        isGuest,
+        timeZone: (profile as any)?.timezone || DEFAULT_WATER_TIMEZONE,
+      }),
+    onSuccess: async () => {
+      toast.success("Nota diaria guardada.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar_day_note"] }),
+      ]);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "No se pudo guardar la nota.");
+    },
+  });
 
   return (
     <div className="space-y-6 py-4">
@@ -69,6 +116,15 @@ const Dashboard = () => {
                 ? `${Number(data.bodyComposition.latest.lean_mass_kg).toFixed(1)} kg`
                 : "--"}
             </p>
+          </div>
+          <div className="rounded-lg border p-4 md:col-span-2">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-muted-foreground">Recovery Score</p>
+              <p className={`text-lg font-semibold ${recoveryTone}`}>{data.recovery.score}/100</p>
+            </div>
+            <Progress value={data.recovery.score} className="mt-2" />
+            <p className={`mt-2 text-sm font-medium ${recoveryTone}`}>{data.recovery.status}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Factores: {data.recovery.factors.join(" | ")}</p>
           </div>
         </CardContent>
       </Card>
@@ -194,6 +250,47 @@ const Dashboard = () => {
             <Button asChild variant="outline">
               <Link to="/weekly-review">Weekly review</Link>
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Daily Notes</CardTitle>
+          <CardDescription>Libreta tactica para observaciones del dia.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">Nota de hoy</p>
+              <Input
+                value={noteTitle}
+                onChange={(event) => setNoteTitle(event.target.value)}
+                placeholder="Titulo corto"
+                maxLength={120}
+              />
+              <Textarea
+                value={noteContent}
+                onChange={(event) => setNoteContent(event.target.value)}
+                placeholder="Ejemplo: entreno pesado, poca energia por la tarde, mejorar hidratacion."
+                className="min-h-28"
+              />
+              <Button onClick={() => saveNoteMutation.mutate()} disabled={saveNoteMutation.isPending || !noteContent.trim()}>
+                Guardar nota del dia
+              </Button>
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="text-xs text-muted-foreground">Ultima nota registrada</p>
+              {!data.notes.latest ? (
+                <p className="mt-2 text-sm">Sin notas registradas.</p>
+              ) : (
+                <div className="mt-2 space-y-2">
+                  <p className="font-medium">{data.notes.latest.title || "Nota sin titulo"}</p>
+                  <p className="text-xs text-muted-foreground">{data.notes.latest.date_key}</p>
+                  <p className="text-sm">{data.notes.latest.content}</p>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
