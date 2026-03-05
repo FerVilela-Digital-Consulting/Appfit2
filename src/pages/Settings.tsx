@@ -25,6 +25,7 @@ const Settings = () => {
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
   const [goalType, setGoalType] = useState("");
+  const [sleepGoalMinutes, setSleepGoalMinutes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ const Settings = () => {
       setWeight(profile.weight?.toString() || "");
       setHeight(profile.height?.toString() || "");
       setGoalType(profile.goal_type || "");
+      setSleepGoalMinutes(profile.sleep_goal_minutes?.toString() || "480");
     }
   }, [profile]);
 
@@ -41,6 +43,7 @@ const Settings = () => {
     e.preventDefault();
     const parsedHeight = height ? Number(height) : null;
     const parsedWeight = weight ? Number(weight) : null;
+    const parsedSleepGoal = sleepGoalMinutes ? Number(sleepGoalMinutes) : 480;
 
     if (parsedHeight !== null && (!Number.isFinite(parsedHeight) || parsedHeight <= 0)) {
       toast.error(t("settings.heightError"));
@@ -49,6 +52,10 @@ const Settings = () => {
 
     if (parsedWeight !== null && (!Number.isFinite(parsedWeight) || parsedWeight <= 0)) {
       toast.error(t("settings.weightError"));
+      return;
+    }
+    if (!Number.isFinite(parsedSleepGoal) || parsedSleepGoal <= 0 || parsedSleepGoal > 1440) {
+      toast.error(t("settings.sleepGoalError"));
       return;
     }
 
@@ -60,6 +67,7 @@ const Settings = () => {
         weight: parsedWeight,
         height: parsedHeight,
         goal_type: goalType,
+        sleep_goal_minutes: parsedSleepGoal,
       });
 
       if (isGuest) {
@@ -203,6 +211,21 @@ const Settings = () => {
                   <SelectItem value="Improve Endurance">{t("settings.goal.improveEndurance")}</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sleepGoal">{t("settings.sleepGoal")}</Label>
+              <Input
+                id="sleepGoal"
+                type="number"
+                min="1"
+                max="1440"
+                placeholder="480"
+                value={sleepGoalMinutes}
+                onChange={(e) => setSleepGoalMinutes(e.target.value)}
+                className="bg-background/50"
+              />
+              <p className="text-xs text-muted-foreground">{t("settings.sleepGoalHint")}</p>
             </div>
           </CardContent>
           <CardFooter className="border-t border-border/50 pt-6">

@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getBodyWeightSnapshot } from "@/services/bodyMetrics";
 import { getGoalProgress, getUserGoal } from "@/services/goals";
 import { getWaterDayTotal, getWaterGoal, getWaterRangeTotals, getWaterWeeklySummary, listRecentWaterLogs } from "@/services/waterIntake";
+import { getSleepDay, getSleepGoal, getSleepRangeTotals, getSleepWeeklySummary, listRecentSleepLogs } from "@/services/sleep";
 import { calculateWaterProgress, DEFAULT_WATER_TIMEZONE, getDateKeyForTimezone } from "@/features/water/waterUtils";
 
 export const useDashboardData = () => {
@@ -59,6 +60,44 @@ export const useDashboardData = () => {
     enabled: Boolean(userId) || isGuest,
   });
 
+  const sleepDayQuery = useQuery({
+    queryKey: ["dashboard", "sleep_day", userId, dayKey],
+    queryFn: () => getSleepDay(userId, today, { isGuest, timeZone }),
+    enabled: Boolean(userId) || isGuest,
+  });
+
+  const sleepGoalQuery = useQuery({
+    queryKey: ["dashboard", "sleep_goal", userId],
+    queryFn: () => getSleepGoal(userId, { isGuest }),
+    enabled: Boolean(userId) || isGuest,
+  });
+
+  const sleepWeekQuery = useQuery({
+    queryKey: ["dashboard", "sleep_week", userId, dayKey],
+    queryFn: () => getSleepWeeklySummary(userId, today, { isGuest, timeZone }),
+    enabled: Boolean(userId) || isGuest,
+  });
+
+  const sleepMonthQuery = useQuery({
+    queryKey: ["dashboard", "sleep_month", userId, dayKey],
+    queryFn: async () => {
+      const to = new Date(today);
+      to.setHours(0, 0, 0, 0);
+      const from = new Date(to);
+      from.setDate(from.getDate() - 29);
+      const totals = await getSleepRangeTotals(userId, from, to, { isGuest, timeZone });
+      if (totals.length === 0) return 0;
+      return Math.round(totals.reduce((acc, item) => acc + item.total_minutes, 0) / totals.length);
+    },
+    enabled: Boolean(userId) || isGuest,
+  });
+
+  const recentSleepQuery = useQuery({
+    queryKey: ["dashboard", "recent_sleep", userId],
+    queryFn: () => listRecentSleepLogs(userId, 3, { isGuest }),
+    enabled: Boolean(userId) || isGuest,
+  });
+
   const goal = getUserGoal(profile, isGuest);
   const latestWeight = weightQuery.data?.latest ? Number(weightQuery.data.latest.weight_kg) : null;
   const initialWeight = weightQuery.data?.first ? Number(weightQuery.data.first.weight_kg) : (profile?.weight ?? null);
@@ -76,6 +115,8 @@ export const useDashboardData = () => {
   const waterGoalMl = waterGoalQuery.data?.water_goal_ml ?? (profile?.water_goal_ml ?? 2000);
   const waterTodayMl = waterTodayQuery.data ?? 0;
   const waterProgress = calculateWaterProgress(waterTodayMl, waterGoalMl);
+  const sleepTodayMinutes = sleepDayQuery.data?.total_minutes ?? 0;
+  const sleepGoalMinutes = sleepGoalQuery.data?.sleep_goal_minutes ?? (profile?.sleep_goal_minutes ?? 480);
 
   const weightTrend = useMemo(() => {
     const delta = weightQuery.data?.weeklyDelta;
@@ -122,6 +163,17 @@ export const useDashboardData = () => {
       loading: waterTodayQuery.isLoading || waterGoalQuery.isLoading || waterWeekQuery.isLoading || waterMonthQuery.isLoading,
       error: waterTodayQuery.error || waterGoalQuery.error || waterWeekQuery.error || waterMonthQuery.error,
       recentLogs: recentWaterQuery.data ?? [],
+    },
+    sleep: {
+      todayMinutes: sleepTodayMinutes,
+      goalMinutes: sleepGoalMinutes,
+      weekAverageMinutes: sleepWeekQuery.data?.average_minutes ?? 0,
+      monthAverageMinutes: sleepMonthQuery.data ?? 0,
+      weekDaysMet: sleepWeekQuery.data?.days_met ?? 0,
+      weekDaysTotal: sleepWeekQuery.data?.days_total ?? 7,
+      loading: sleepDayQuery.isLoading || sleepGoalQuery.isLoading || sleepWeekQuery.isLoading || sleepMonthQuery.isLoading,
+      error: sleepDayQuery.error || sleepGoalQuery.error || sleepWeekQuery.error || sleepMonthQuery.error,
+      recentLogs: recentSleepQuery.data ?? [],
     },
   };
 };

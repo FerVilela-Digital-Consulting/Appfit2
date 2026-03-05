@@ -10,6 +10,10 @@ type Props = {
   waterMonthAverageMl: number;
   waterDaysMet: number;
   waterDaysTotal: number;
+  sleepAverageMinutes: number;
+  sleepMonthAverageMinutes: number;
+  sleepDaysMet: number;
+  sleepDaysTotal: number;
   weightTrend: string;
   loading?: boolean;
   error?: unknown;
@@ -20,6 +24,10 @@ const WeeklySummaryCard = ({
   waterMonthAverageMl,
   waterDaysMet,
   waterDaysTotal,
+  sleepAverageMinutes,
+  sleepMonthAverageMinutes,
+  sleepDaysMet,
+  sleepDaysTotal,
   weightTrend,
   loading = false,
   error,
@@ -64,6 +72,17 @@ const WeeklySummaryCard = ({
               Objetivo cumplido: <span className="font-semibold">{waterDaysMet}/{waterDaysTotal}</span>
             </p>
             <p className="text-sm">
+              Sueño promedio: <span className="font-semibold">{(sleepAverageMinutes / 60).toFixed(1)} h/dia</span>{" "}
+              <span className="text-muted-foreground">({sleepAverageMinutes} min)</span>
+            </p>
+            <p className="text-sm">
+              Sueño 30d: <span className="font-semibold">{(sleepMonthAverageMinutes / 60).toFixed(1)} h/dia</span>{" "}
+              <span className="text-muted-foreground">({sleepMonthAverageMinutes} min)</span>
+            </p>
+            <p className="text-sm">
+              Meta de sueño: <span className="font-semibold">{sleepDaysMet}/{sleepDaysTotal}</span>
+            </p>
+            <p className="text-sm">
               Tendencia peso: <span className="font-semibold">{weightTrend}</span>
             </p>
           </>
@@ -74,6 +93,9 @@ const WeeklySummaryCard = ({
           </Button>
           <Button asChild variant="outline" size="sm">
             <Link to="/water">Agua</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/sleep">Sueño</Link>
           </Button>
         </div>
       </CardContent>

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays, addMonths, endOfMonth, endOfWeek, format, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
-import { CheckCircle2, ChevronLeft, ChevronRight, Droplets, Scale } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Droplets, Moon, Scale } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
@@ -15,6 +15,7 @@ import {
   upsertBodyMetric,
   type BodyMetricEntry,
 } from "@/services/bodyMetrics";
+import { addSleepLog, getSleepDay, getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,10 +23,13 @@ import { Input } from "@/components/ui/input";
 type CalendarDayData = {
   dateKey: string;
   totalWaterMl: number;
+  totalSleepMinutes: number;
   weightKg: number | null;
   metWaterGoal: boolean;
+  metSleepGoal: boolean;
   hasWater: boolean;
   hasWeight: boolean;
+  hasSleep: boolean;
 };
 
 const formatDateKey = (date: Date) => format(date, "yyyy-MM-dd");
@@ -40,6 +44,7 @@ const Calendar = () => {
   const [selectedDateKey, setSelectedDateKey] = useState(() => formatDateKey(new Date()));
   const [quickWaterMl, setQuickWaterMl] = useState("");
   const [quickWeightKg, setQuickWeightKg] = useState("");
+  const [quickSleepMinutes, setQuickSleepMinutes] = useState("");
 
   const timezone = (profile as any)?.timezone || DEFAULT_WATER_TIMEZONE;
   const monthStart = startOfMonth(currentMonth);
@@ -52,6 +57,11 @@ const Calendar = () => {
     queryFn: () => getWaterGoal(user?.id ?? null, { isGuest }),
     enabled: Boolean(user?.id) || isGuest,
   });
+  const { data: sleepGoal = { sleep_goal_minutes: 480 } } = useQuery({
+    queryKey: ["sleep_goal", user?.id, isGuest],
+    queryFn: () => getSleepGoal(user?.id ?? null, { isGuest }),
+    enabled: Boolean(user?.id) || isGuest,
+  });
 
   const { data: calendarData, isLoading } = useQuery({
     queryKey: [
@@ -62,19 +72,17 @@ const Calendar = () => {
       timezone,
       isGuest,
       waterGoal.water_goal_ml,
+      sleepGoal.sleep_goal_minutes,
     ],
     queryFn: async () => {
-      const [waterTotals, weightEntries] = await Promise.all([
+      const [waterTotals, weightEntries, sleepTotals] = await Promise.all([
         getWaterRangeTotals(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
-        isGuest
-          ? Promise.resolve(getGuestBodyMetrics())
-          : listBodyMetricsByRange(user?.id ?? null, "all", false),
+        isGuest ? Promise.resolve(getGuestBodyMetrics()) : listBodyMetricsByRange(user?.id ?? null, "all", false),
+        getSleepRangeTotals(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
       ]);
 
       const waterMap = new Map<string, number>();
-      waterTotals.forEach((row) => {
-        waterMap.set(row.date_key, Number(row.total_ml || 0));
-      });
+      waterTotals.forEach((row) => waterMap.set(row.date_key, Number(row.total_ml || 0)));
 
       const weightMap = new Map<string, number>();
       weightEntries.forEach((entry) => {
@@ -83,22 +91,31 @@ const Calendar = () => {
         }
       });
 
+      const sleepMap = new Map<string, number>();
+      sleepTotals.forEach((row) => sleepMap.set(row.date_key, Number(row.total_minutes || 0)));
+
       const daily = new Map<string, CalendarDayData>();
       let cursor = new Date(gridStart);
       while (cursor <= gridEnd) {
         const dateKey = formatDateKey(cursor);
         const totalWaterMl = waterMap.get(dateKey) ?? 0;
+        const totalSleepMinutes = sleepMap.get(dateKey) ?? 0;
         const weightKg = weightMap.get(dateKey) ?? null;
         const metWaterGoal = totalWaterMl >= waterGoal.water_goal_ml;
+        const metSleepGoal = totalSleepMinutes >= sleepGoal.sleep_goal_minutes;
         const hasWater = totalWaterMl > 0;
         const hasWeight = weightKg !== null;
+        const hasSleep = totalSleepMinutes > 0;
         daily.set(dateKey, {
           dateKey,
           totalWaterMl,
+          totalSleepMinutes,
           weightKg,
           metWaterGoal,
+          metSleepGoal,
           hasWater,
           hasWeight,
+          hasSleep,
         });
         cursor = addDays(cursor, 1);
       }
@@ -111,6 +128,11 @@ const Calendar = () => {
   const { data: selectedDayLogs = [] } = useQuery({
     queryKey: ["calendar_day_logs", user?.id, selectedDateKey, timezone, isGuest],
     queryFn: () => getWaterLogsByDate(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }),
+    enabled: Boolean(user?.id) || isGuest,
+  });
+  const { data: selectedSleepDay } = useQuery({
+    queryKey: ["calendar_day_sleep", user?.id, selectedDateKey, timezone, isGuest],
+    queryFn: () => getSleepDay(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }),
     enabled: Boolean(user?.id) || isGuest,
   });
 
@@ -130,7 +152,7 @@ const Calendar = () => {
       (day) => day.dateKey >= formatDateKey(monthStart) && day.dateKey <= formatDateKey(monthEnd),
     );
 
-    const activeDays = monthDays.filter((day) => day.hasWater || day.hasWeight).length;
+    const activeDays = monthDays.filter((day) => day.hasWater || day.hasWeight || day.hasSleep).length;
     const metGoalDays = monthDays.filter((day) => day.metWaterGoal).length;
     const avgWaterMl =
       monthDays.length > 0
@@ -235,16 +257,46 @@ const Calendar = () => {
     },
   });
 
+  const addSleepMutation = useMutation({
+    mutationFn: async () => {
+      const parsed = Number(quickSleepMinutes);
+      if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 1440) {
+        throw new Error(t("settings.sleepGoalError"));
+      }
+      await addSleepLog({
+        userId: user?.id ?? null,
+        date: fromDateKey(selectedDateKey),
+        total_minutes: parsed,
+        isGuest,
+        timeZone: timezone,
+      });
+    },
+    onSuccess: async () => {
+      setQuickSleepMinutes("");
+      toast.success(t("calendar.quickAdd.savedSleep"));
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar_day_sleep"] }),
+        queryClient.invalidateQueries({ queryKey: ["sleep_day"] }),
+        queryClient.invalidateQueries({ queryKey: ["sleep_range"] }),
+      ]);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || t("calendar.quickAdd.saveError"));
+    },
+  });
+
   const dayCellClasses = (day: CalendarDayData | undefined, inCurrentMonth: boolean) => {
     if (!day) return inCurrentMonth ? "bg-card" : "bg-muted/40";
 
-    const intensity = (day.hasWater ? 1 : 0) + (day.hasWeight ? 1 : 0) + (day.metWaterGoal ? 1 : 0);
+    const intensity =
+      (day.hasWater ? 1 : 0) + (day.hasWeight ? 1 : 0) + (day.hasSleep ? 1 : 0) + (day.metWaterGoal ? 1 : 0) + (day.metSleepGoal ? 1 : 0);
     const heatClass =
-      intensity === 0
+      intensity <= 1
         ? "bg-card"
-        : intensity === 1
-        ? "bg-primary/10"
         : intensity === 2
+        ? "bg-primary/10"
+        : intensity === 3
         ? "bg-primary/20"
         : "bg-primary/30";
 
@@ -352,6 +404,8 @@ const Calendar = () => {
                       <div className="mt-2 flex flex-wrap gap-1 text-xs">
                         {day?.hasWater && <Droplets className="h-3 w-3 text-primary" aria-label={t("calendar.summary.water")} />}
                         {day?.hasWeight && <Scale className="h-3 w-3 text-muted-foreground" aria-label={t("calendar.summary.weight")} />}
+                        {day?.hasSleep && <Moon className="h-3 w-3 text-indigo-500" aria-label={t("calendar.summary.sleep")} />}
+                        {day?.metSleepGoal && <CheckCircle2 className="h-3 w-3 text-emerald-500" aria-hidden="true" />}
                       </div>
                     </button>
                   );
@@ -396,6 +450,23 @@ const Calendar = () => {
                     <p className="text-xs text-muted-foreground">
                       {selectedDay.metWaterGoal ? t("calendar.summary.goalReached") : t("calendar.summary.goalPending")}
                     </p>
+                  </div>
+
+                  <div className="rounded-md border p-3 space-y-2">
+                    <p className="text-sm text-muted-foreground">{t("calendar.summary.sleep")}</p>
+                    <p className="text-lg font-semibold">
+                      {selectedDay.totalSleepMinutes > 0
+                        ? `${(selectedDay.totalSleepMinutes / 60).toFixed(1)}h / ${(sleepGoal.sleep_goal_minutes / 60).toFixed(1)}h`
+                        : t("calendar.summary.noSleep")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedDay.metSleepGoal ? t("calendar.summary.goalReached") : t("calendar.summary.goalPending")}
+                    </p>
+                    {selectedSleepDay?.logs?.length ? (
+                      <p className="text-xs text-muted-foreground">
+                        {selectedSleepDay.logs.length} {t("sleep.page.logs").toLowerCase()}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="rounded-md border p-3 space-y-2">
@@ -461,6 +532,24 @@ const Calendar = () => {
                   />
                   <Button onClick={() => addWeightMutation.mutate()} disabled={addWeightMutation.isPending}>
                     {t("calendar.quickAdd.addWeight")}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm flex items-center gap-2">
+                  <Moon className="h-4 w-4" />
+                  {t("calendar.quickAdd.sleep")}
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    value={quickSleepMinutes}
+                    onChange={(e) => setQuickSleepMinutes(e.target.value)}
+                    placeholder={t("calendar.quickAdd.sleepPlaceholder")}
+                  />
+                  <Button onClick={() => addSleepMutation.mutate()} disabled={addSleepMutation.isPending}>
+                    {t("calendar.quickAdd.addSleep")}
                   </Button>
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContai
 import { TrendingUp } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { usePreferences } from "@/context/PreferencesContext";
 import { calculateGoalProgress, resolveInitialWeight, type GoalDirection } from "@/features/goals/goalProgress";
 import {
   BodyMetricEntry,
@@ -15,6 +16,8 @@ import {
 import GuestWarningBanner from "@/components/GuestWarningBanner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
+import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
 
 type Range = "7d" | "30d" | "90d" | "all";
 
@@ -28,6 +31,8 @@ const findOnOrBefore = (entriesAsc: BodyMetricEntry[], targetISO: string) => {
 
 const Stats = () => {
   const { user, isGuest, profile } = useAuth();
+  const { t } = usePreferences();
+  const timeZone = (profile as any)?.timezone || DEFAULT_WATER_TIMEZONE;
   const [range, setRange] = useState<Range>("30d");
 
   const { data: chartEntries = [] } = useQuery({
@@ -101,6 +106,41 @@ const Stats = () => {
     date: e.measured_at,
     weight: Number(e.weight_kg),
   }));
+
+  const { data: sleepGoalData = { sleep_goal_minutes: 480 } } = useQuery({
+    queryKey: ["sleep_goal", user?.id],
+    queryFn: () => getSleepGoal(user?.id ?? null, { isGuest }),
+    enabled: Boolean(user?.id) || isGuest,
+  });
+  const { data: sleepWeekTotals = [] } = useQuery({
+    queryKey: ["sleep_stats_week", user?.id],
+    queryFn: async () => {
+      const to = new Date();
+      to.setHours(0, 0, 0, 0);
+      const from = new Date(to);
+      from.setDate(from.getDate() - 6);
+      return getSleepRangeTotals(user?.id ?? null, from, to, { isGuest, timeZone });
+    },
+    enabled: Boolean(user?.id) || isGuest,
+  });
+  const { data: sleepMonthTotals = [] } = useQuery({
+    queryKey: ["sleep_stats_month", user?.id],
+    queryFn: async () => {
+      const to = new Date();
+      to.setHours(0, 0, 0, 0);
+      const from = new Date(to);
+      from.setDate(from.getDate() - 29);
+      return getSleepRangeTotals(user?.id ?? null, from, to, { isGuest, timeZone });
+    },
+    enabled: Boolean(user?.id) || isGuest,
+  });
+  const sleepWeekAvg = sleepWeekTotals.length
+    ? sleepWeekTotals.reduce((sum, row) => sum + row.total_minutes, 0) / sleepWeekTotals.length
+    : 0;
+  const sleepMonthAvg = sleepMonthTotals.length
+    ? sleepMonthTotals.reduce((sum, row) => sum + row.total_minutes, 0) / sleepMonthTotals.length
+    : 0;
+  const sleepWeekMet = sleepWeekTotals.filter((row) => row.total_minutes >= sleepGoalData.sleep_goal_minutes).length;
 
   const hasInitialFallback = initialWeight === null;
 
@@ -195,6 +235,36 @@ const Stats = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("sleep.page.title")} Summary</CardTitle>
+          <CardDescription>{t("sleep.page.description")}</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">{t("sleep.page.goal")}</p>
+            <p className="text-xl font-semibold">{(sleepGoalData.sleep_goal_minutes / 60).toFixed(1)} h</p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">{t("sleep.page.avg")} (7d)</p>
+            <p className="text-xl font-semibold">{(sleepWeekAvg / 60).toFixed(1)} h</p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">{t("sleep.page.avg")} (30d)</p>
+            <p className="text-xl font-semibold">{(sleepMonthAvg / 60).toFixed(1)} h</p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">{t("sleep.page.daysMet")}</p>
+            <p className="text-xl font-semibold">{sleepWeekMet}/7</p>
+          </div>
+          <div className="md:col-span-4">
+            <Button asChild variant="outline">
+              <Link to="/sleep">{t("nav.sleep")}</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

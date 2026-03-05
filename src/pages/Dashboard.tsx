@@ -4,6 +4,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import WeightCard from "@/components/dashboard/WeightCard";
 import GoalCard from "@/components/dashboard/GoalCard";
 import WaterCard from "@/components/dashboard/WaterCard";
+import SleepCard from "@/components/dashboard/SleepCard";
 import WeeklySummaryCard from "@/components/dashboard/WeeklySummaryCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +14,7 @@ const Dashboard = () => {
 
   const goalHeadline = data.goal.progress === null ? "--" : `${data.goal.progress.toFixed(0)}%`;
   const waterHeadline = `${(data.water.todayMl / 1000).toFixed(1)} / ${(data.water.goalMl / 1000).toFixed(1)} L`;
+  const sleepHeadline = `${(data.sleep.todayMinutes / 60).toFixed(1)} / ${(data.sleep.goalMinutes / 60).toFixed(1)} h`;
 
   return (
     <div className="space-y-6 py-4">
@@ -31,6 +33,13 @@ const Dashboard = () => {
             <p className="text-xl font-semibold">{waterHeadline}</p>
             <p className="text-xs text-muted-foreground">
               {data.water.todayMl} ml / {data.water.goalMl} ml
+            </p>
+          </div>
+          <div className="rounded-lg border p-4 md:col-span-2">
+            <p className="text-xs text-muted-foreground">Sueño hoy</p>
+            <p className="text-xl font-semibold">{sleepHeadline}</p>
+            <p className="text-xs text-muted-foreground">
+              {data.sleep.todayMinutes} min / {data.sleep.goalMinutes} min
             </p>
           </div>
         </CardContent>
@@ -53,14 +62,19 @@ const Dashboard = () => {
           error={data.goal.error}
         />
         <WaterCard showHistoryButton />
+        <SleepCard />
         <WeeklySummaryCard
           waterAverageMl={data.water.weekAverageMl}
           waterMonthAverageMl={data.water.monthAverageMl}
           waterDaysMet={data.water.weekDaysMet}
           waterDaysTotal={data.water.weekDaysTotal}
+          sleepAverageMinutes={data.sleep.weekAverageMinutes}
+          sleepMonthAverageMinutes={data.sleep.monthAverageMinutes}
+          sleepDaysMet={data.sleep.weekDaysMet}
+          sleepDaysTotal={data.sleep.weekDaysTotal}
           weightTrend={data.weight.trend}
-          loading={data.water.loading}
-          error={data.water.error}
+          loading={data.water.loading || data.sleep.loading}
+          error={data.water.error || data.sleep.error}
         />
       </div>
 
@@ -96,12 +110,30 @@ const Dashboard = () => {
             )}
           </div>
 
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">Ultimos registros de sueño</p>
+            {data.sleep.recentLogs.length === 0 ? (
+              <p className="font-medium">Sin registros</p>
+            ) : (
+              <div className="space-y-1">
+                {data.sleep.recentLogs.slice(0, 3).map((log) => (
+                  <p key={log.id} className="font-medium">
+                    {(log.total_minutes / 60).toFixed(1)} h - {log.date_key}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
               <Link to="/statistics">Ver historial peso</Link>
             </Button>
             <Button asChild variant="outline">
               <Link to="/water">Ver historial agua</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/sleep">Ver historial sueño</Link>
             </Button>
           </div>
         </CardContent>

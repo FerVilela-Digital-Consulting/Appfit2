@@ -1,4 +1,4 @@
-import { Home, BarChart3, Settings, Scale, Target, Droplets, UserRound, CalendarDays } from "lucide-react";
+import { Home, BarChart3, Settings, Scale, Target, Droplets, UserRound, CalendarDays, Moon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -18,6 +18,7 @@ const Sidebar = () => {
     { title: t("nav.goals"), icon: Target, path: "/goals" },
     { title: t("nav.statistics"), icon: BarChart3, path: "/statistics" },
     { title: t("nav.water"), icon: Droplets, path: "/water" },
+    { title: t("nav.sleep"), icon: Moon, path: "/sleep" },
     { title: t("nav.weight"), icon: Scale, path: "/weight" },
     { title: t("nav.calendar"), icon: CalendarDays, path: "/calendar" },
     { title: t("nav.settings"), icon: Settings, path: "/settings" },

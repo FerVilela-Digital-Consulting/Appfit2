@@ -7,6 +7,7 @@ export type TranslationKey =
   | "nav.statistics"
   | "nav.water"
   | "nav.weight"
+  | "nav.sleep"
   | "nav.calendar"
   | "nav.settings"
   | "sidebar.editProfile"
@@ -46,6 +47,9 @@ export type TranslationKey =
   | "settings.theme.light"
   | "settings.theme.dark"
   | "settings.theme.system"
+  | "settings.sleepGoal"
+  | "settings.sleepGoalHint"
+  | "settings.sleepGoalError"
   | "calendar.title"
   | "calendar.description"
   | "calendar.loading"
@@ -66,6 +70,8 @@ export type TranslationKey =
   | "calendar.summary.noWater"
   | "calendar.summary.logsTitle"
   | "calendar.summary.noLogs"
+  | "calendar.summary.sleep"
+  | "calendar.summary.noSleep"
   | "calendar.quickAddTitle"
   | "calendar.quickAdd.water"
   | "calendar.quickAdd.weight"
@@ -75,7 +81,40 @@ export type TranslationKey =
   | "calendar.quickAdd.weightPlaceholder"
   | "calendar.quickAdd.savedWater"
   | "calendar.quickAdd.savedWeight"
-  | "calendar.quickAdd.saveError";
+  | "calendar.quickAdd.sleep"
+  | "calendar.quickAdd.addSleep"
+  | "calendar.quickAdd.sleepPlaceholder"
+  | "calendar.quickAdd.savedSleep"
+  | "calendar.quickAdd.saveError"
+  | "sleep.card.title"
+  | "sleep.card.description"
+  | "sleep.card.progressLabel"
+  | "sleep.card.quickButton"
+  | "sleep.page.title"
+  | "sleep.page.description"
+  | "sleep.page.range.7d"
+  | "sleep.page.range.30d"
+  | "sleep.page.range.month"
+  | "sleep.page.today"
+  | "sleep.page.goal"
+  | "sleep.page.avg"
+  | "sleep.page.daysMet"
+  | "sleep.page.logs"
+  | "sleep.page.noLogs"
+  | "sleep.page.addTitle"
+  | "sleep.page.totalHours"
+  | "sleep.page.quality"
+  | "sleep.page.notes"
+  | "sleep.page.advanced"
+  | "sleep.page.sleepStart"
+  | "sleep.page.sleepEnd"
+  | "sleep.page.save"
+  | "sleep.page.saved"
+  | "sleep.page.saveError"
+  | "sleep.error.invalidDuration"
+  | "common.cancel"
+  | "common.hours"
+  | "common.minutes";
 
 type Dict = Record<TranslationKey, string>;
 
@@ -87,6 +126,7 @@ export const translations: Record<AppLanguage, Dict> = {
     "nav.statistics": "Statistics",
     "nav.water": "Water",
     "nav.weight": "Weight",
+    "nav.sleep": "Sleep",
     "nav.calendar": "Calendar",
     "nav.settings": "Settings",
     "sidebar.editProfile": "Edit Profile",
@@ -126,6 +166,9 @@ export const translations: Record<AppLanguage, Dict> = {
     "settings.theme.light": "Light",
     "settings.theme.dark": "Dark",
     "settings.theme.system": "System",
+    "settings.sleepGoal": "Sleep Goal (minutes)",
+    "settings.sleepGoalHint": "Recommended: 480 minutes (8 hours).",
+    "settings.sleepGoalError": "Sleep goal must be between 1 and 1440 minutes.",
     "calendar.title": "Activity Calendar",
     "calendar.description": "Track daily water and weight history by month.",
     "calendar.loading": "Loading calendar...",
@@ -146,6 +189,8 @@ export const translations: Record<AppLanguage, Dict> = {
     "calendar.summary.noWater": "No water logged",
     "calendar.summary.logsTitle": "Water logs",
     "calendar.summary.noLogs": "No water logs for this day.",
+    "calendar.summary.sleep": "Sleep",
+    "calendar.summary.noSleep": "No sleep logged",
     "calendar.quickAddTitle": "Quick Add",
     "calendar.quickAdd.water": "Water (ml)",
     "calendar.quickAdd.weight": "Weight (kg)",
@@ -155,7 +200,40 @@ export const translations: Record<AppLanguage, Dict> = {
     "calendar.quickAdd.weightPlaceholder": "e.g. 70.5",
     "calendar.quickAdd.savedWater": "Water log saved.",
     "calendar.quickAdd.savedWeight": "Weight entry saved.",
+    "calendar.quickAdd.sleep": "Sleep (minutes)",
+    "calendar.quickAdd.addSleep": "Save Sleep",
+    "calendar.quickAdd.sleepPlaceholder": "e.g. 480",
+    "calendar.quickAdd.savedSleep": "Sleep log saved.",
     "calendar.quickAdd.saveError": "Could not save entry.",
+    "sleep.card.title": "Sleep",
+    "sleep.card.description": "Sleep today/night vs your goal.",
+    "sleep.card.progressLabel": "Goal progress",
+    "sleep.card.quickButton": "Log sleep",
+    "sleep.page.title": "Sleep",
+    "sleep.page.description": "Track daily sleep and quality trends.",
+    "sleep.page.range.7d": "Week",
+    "sleep.page.range.30d": "30 days",
+    "sleep.page.range.month": "This month",
+    "sleep.page.today": "Today",
+    "sleep.page.goal": "Goal",
+    "sleep.page.avg": "Average",
+    "sleep.page.daysMet": "Goal reached days",
+    "sleep.page.logs": "Sleep logs",
+    "sleep.page.noLogs": "No sleep logs for this day.",
+    "sleep.page.addTitle": "Log sleep",
+    "sleep.page.totalHours": "Hours",
+    "sleep.page.quality": "Quality (1-5)",
+    "sleep.page.notes": "Notes",
+    "sleep.page.advanced": "Advanced fields",
+    "sleep.page.sleepStart": "Sleep start",
+    "sleep.page.sleepEnd": "Sleep end",
+    "sleep.page.save": "Save sleep",
+    "sleep.page.saved": "Sleep registered.",
+    "sleep.page.saveError": "Could not save sleep.",
+    "sleep.error.invalidDuration": "Invalid sleep duration.",
+    "common.cancel": "Cancel",
+    "common.hours": "Hours",
+    "common.minutes": "Minutes",
   },
   es: {
     "nav.dashboard": "Inicio",
@@ -164,6 +242,7 @@ export const translations: Record<AppLanguage, Dict> = {
     "nav.statistics": "Estadísticas",
     "nav.water": "Agua",
     "nav.weight": "Peso",
+    "nav.sleep": "Sueño",
     "nav.calendar": "Calendario",
     "nav.settings": "Ajustes",
     "sidebar.editProfile": "Editar perfil",
@@ -203,6 +282,9 @@ export const translations: Record<AppLanguage, Dict> = {
     "settings.theme.light": "Claro",
     "settings.theme.dark": "Oscuro",
     "settings.theme.system": "Sistema",
+    "settings.sleepGoal": "Meta de sueño (minutos)",
+    "settings.sleepGoalHint": "Recomendado: 480 minutos (8 horas).",
+    "settings.sleepGoalError": "La meta de sueño debe estar entre 1 y 1440 minutos.",
     "calendar.title": "Calendario de actividad",
     "calendar.description": "Revisa historial diario de agua y peso por mes.",
     "calendar.loading": "Cargando calendario...",
@@ -223,6 +305,8 @@ export const translations: Record<AppLanguage, Dict> = {
     "calendar.summary.noWater": "Sin agua registrada",
     "calendar.summary.logsTitle": "Registros de agua",
     "calendar.summary.noLogs": "No hay registros de agua para este día.",
+    "calendar.summary.sleep": "Sueño",
+    "calendar.summary.noSleep": "Sin sueño registrado",
     "calendar.quickAddTitle": "Registro rápido",
     "calendar.quickAdd.water": "Agua (ml)",
     "calendar.quickAdd.weight": "Peso (kg)",
@@ -232,6 +316,39 @@ export const translations: Record<AppLanguage, Dict> = {
     "calendar.quickAdd.weightPlaceholder": "ej. 70.5",
     "calendar.quickAdd.savedWater": "Registro de agua guardado.",
     "calendar.quickAdd.savedWeight": "Registro de peso guardado.",
+    "calendar.quickAdd.sleep": "Sueño (minutos)",
+    "calendar.quickAdd.addSleep": "Guardar sueño",
+    "calendar.quickAdd.sleepPlaceholder": "ej. 480",
+    "calendar.quickAdd.savedSleep": "Registro de sueño guardado.",
     "calendar.quickAdd.saveError": "No se pudo guardar el registro.",
+    "sleep.card.title": "Sueño",
+    "sleep.card.description": "Sueño de hoy/anoche frente a tu meta.",
+    "sleep.card.progressLabel": "Progreso de meta",
+    "sleep.card.quickButton": "Registrar sueño",
+    "sleep.page.title": "Sueño",
+    "sleep.page.description": "Sigue tu sueño diario y tendencia de calidad.",
+    "sleep.page.range.7d": "Semana",
+    "sleep.page.range.30d": "30 días",
+    "sleep.page.range.month": "Este mes",
+    "sleep.page.today": "Hoy",
+    "sleep.page.goal": "Meta",
+    "sleep.page.avg": "Promedio",
+    "sleep.page.daysMet": "Días con meta cumplida",
+    "sleep.page.logs": "Registros de sueño",
+    "sleep.page.noLogs": "No hay registros de sueño para este día.",
+    "sleep.page.addTitle": "Registrar sueño",
+    "sleep.page.totalHours": "Horas",
+    "sleep.page.quality": "Calidad (1-5)",
+    "sleep.page.notes": "Notas",
+    "sleep.page.advanced": "Campos avanzados",
+    "sleep.page.sleepStart": "Inicio de sueño",
+    "sleep.page.sleepEnd": "Fin de sueño",
+    "sleep.page.save": "Guardar sueño",
+    "sleep.page.saved": "Sueño registrado.",
+    "sleep.page.saveError": "No se pudo registrar el sueño.",
+    "sleep.error.invalidDuration": "Duración de sueño inválida.",
+    "common.cancel": "Cancelar",
+    "common.hours": "Horas",
+    "common.minutes": "Minutos",
   },
 };
