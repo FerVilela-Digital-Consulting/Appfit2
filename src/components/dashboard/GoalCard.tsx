@@ -17,7 +17,7 @@ type Props = {
 const GoalCard = ({ target, progress, remainingKg, loading = false, error }: Props) => {
   if (loading) {
     return (
-      <Card>
+      <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
         <CardHeader>
           <CardTitle>Meta</CardTitle>
         </CardHeader>
@@ -30,7 +30,7 @@ const GoalCard = ({ target, progress, remainingKg, loading = false, error }: Pro
   }
 
   return (
-    <Card>
+    <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5 text-primary" />
@@ -43,8 +43,8 @@ const GoalCard = ({ target, progress, remainingKg, loading = false, error }: Pro
           <p className="text-sm text-destructive">No se pudo cargar meta.</p>
         ) : (
           <>
-            <p className="text-2xl font-semibold">{target !== null ? `${target.toFixed(1)} kg` : "Sin meta"}</p>
-            <Progress value={progress ?? 0} />
+            <p className="text-3xl font-semibold">{target !== null ? `${target.toFixed(1)} kg` : "Sin meta"}</p>
+            <Progress value={progress ?? 0} className="h-2" />
             <p className="text-sm text-muted-foreground">
               Progreso: {progress === null ? "--" : `${progress.toFixed(0)}%`}
             </p>

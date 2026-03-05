@@ -19,7 +19,7 @@ type Props = {
 const WeightCard = ({ latest, initial, initialDate, weeklyDelta, movingAvg7 = null, trend = "sin datos", loading = false, error }: Props) => {
   if (loading) {
     return (
-      <Card>
+      <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
         <CardHeader>
           <CardTitle>Peso</CardTitle>
         </CardHeader>
@@ -32,27 +32,27 @@ const WeightCard = ({ latest, initial, initialDate, weeklyDelta, movingAvg7 = nu
   }
 
   return (
-    <Card>
+    <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Scale className="h-5 w-5 text-primary" />
           Weight
         </CardTitle>
-        <CardDescription>Estado actual y cambio semanal.</CardDescription>
+        <CardDescription>Peso actual, cambio 7d, media movil y tendencia.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {error ? (
           <p className="text-sm text-destructive">No se pudo cargar peso.</p>
         ) : (
           <>
-            <p className="text-2xl font-semibold">{latest !== null ? `${latest.toFixed(1)} kg` : "Sin registros"}</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-3xl font-semibold">{latest !== null ? `${latest.toFixed(1)} kg` : "Sin registros"}</p>
+            <p className="text-sm text-muted-foreground border rounded-lg p-2">
               Cambio semanal: {weeklyDelta === null ? "--" : `${weeklyDelta > 0 ? "+" : ""}${weeklyDelta.toFixed(1)} kg`}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground border rounded-lg p-2">
               Media movil 7d: {movingAvg7 === null ? "--" : `${movingAvg7.toFixed(2)} kg`}
             </p>
-            <p className="text-sm text-muted-foreground">Tendencia: {trend}</p>
+            <p className="text-sm text-muted-foreground border rounded-lg p-2">Tendencia: {trend}</p>
             <p className="text-sm text-muted-foreground">
               Peso inicial: {initial !== null ? `${initial.toFixed(1)} kg` : "Sin registros"}
               {initialDate ? ` (${initialDate})` : ""}

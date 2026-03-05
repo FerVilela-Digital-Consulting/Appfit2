@@ -1,68 +1,45 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import type { ComponentType } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { startOfMonth } from "date-fns";
+import { BarChart3, CalendarDays, LayoutDashboard, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
-import { useAuth } from "@/context/AuthContext";
-import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
-import { useDashboardData } from "@/hooks/useDashboardData";
-import { upsertDailyNote } from "@/services/dailyNotes";
-import WeightCard from "@/components/dashboard/WeightCard";
+import BodyMeasurementsCard from "@/components/dashboard/BodyMeasurementsCard";
+import CalendarMiniWidget from "@/components/dashboard/CalendarMiniWidget";
 import GoalCard from "@/components/dashboard/GoalCard";
-import WaterCard from "@/components/dashboard/WaterCard";
-import SleepCard from "@/components/dashboard/SleepCard";
-import WeeklySummaryCard from "@/components/dashboard/WeeklySummaryCard";
+import RecoveryCard from "@/components/dashboard/RecoveryCard";
+import TacticalNotesCard from "@/components/dashboard/TacticalNotesCard";
+import TodayStatusRow from "@/components/dashboard/TodayStatusRow";
+import WeeklyTrendsCard from "@/components/dashboard/WeeklyTrendsCard";
+import WeightCard from "@/components/dashboard/WeightCard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
+
+type TabKey = "overview" | "analytics" | "calendar" | "settings";
+
+const tabItems: Array<{ key: TabKey; label: string; icon: ComponentType<{ className?: string }> }> = [
+  { key: "overview", label: "Overview", icon: LayoutDashboard },
+  { key: "analytics", label: "Analytics", icon: BarChart3 },
+  { key: "calendar", label: "Calendar", icon: CalendarDays },
+  { key: "settings", label: "Settings", icon: Settings },
+];
 
 const Dashboard = () => {
-  const { user, isGuest, profile } = useAuth();
-  const data = useDashboardData();
   const queryClient = useQueryClient();
-  const [noteTitle, setNoteTitle] = useState("");
-  const [noteContent, setNoteContent] = useState("");
-
-  const goalHeadline = data.goal.progress === null ? "--" : `${data.goal.progress.toFixed(0)}%`;
-  const waterHeadline = `${(data.water.todayMl / 1000).toFixed(1)} / ${(data.water.goalMl / 1000).toFixed(1)} L`;
-  const sleepHeadline = `${(data.sleep.todayMinutes / 60).toFixed(1)} / ${(data.sleep.goalMinutes / 60).toFixed(1)} h`;
-  const biofeedbackHeadline = data.biofeedback.today
-    ? `Energia ${data.biofeedback.today.daily_energy}/10 | Estres ${data.biofeedback.today.perceived_stress}/10`
-    : "Sin check-in hoy";
-  const compositionHeadline =
-    data.bodyComposition.latest?.body_fat_pct !== null && data.bodyComposition.latest?.body_fat_pct !== undefined
-      ? `${Number(data.bodyComposition.latest.body_fat_pct).toFixed(1)}% grasa`
-      : "Sin medicion corporal";
-  const recoveryTone =
-    data.recovery.score >= 75
-      ? "text-emerald-600"
-      : data.recovery.score >= 50
-      ? "text-amber-600"
-      : "text-rose-600";
-
-  useEffect(() => {
-    setNoteTitle(data.notes.today?.title ?? "");
-    setNoteContent(data.notes.today?.content ?? "");
-  }, [data.notes.today?.content, data.notes.today?.title]);
+  const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
+  const [tab, setTab] = useState<TabKey>("overview");
+  const snapshot = useDashboardSnapshot(currentMonth);
 
   const saveNoteMutation = useMutation({
-    mutationFn: () =>
-      upsertDailyNote({
-        userId: user?.id ?? null,
-        date: new Date(),
-        title: noteTitle.trim() || null,
-        content: noteContent,
-        isGuest,
-        timeZone: (profile as any)?.timezone || DEFAULT_WATER_TIMEZONE,
-      }),
+    mutationFn: (payload: { title?: string | null; content: string }) => snapshot.saveTodayNote(payload),
     onSuccess: async () => {
       toast.success("Nota diaria guardada.");
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
         queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
-        queryClient.invalidateQueries({ queryKey: ["calendar_day_note"] }),
       ]);
     },
     onError: (error: any) => {
@@ -70,230 +47,178 @@ const Dashboard = () => {
     },
   });
 
+  const core = snapshot.core;
+  const goalRemaining =
+    core?.goal?.target_weight_kg !== null &&
+    core?.goal?.target_weight_kg !== undefined &&
+    core?.latestWeight !== null &&
+    core?.latestWeight !== undefined
+      ? Number(core.goal.target_weight_kg) - Number(core.latestWeight)
+      : null;
+
   return (
     <div className="space-y-6 py-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Hola, {data.displayName}</CardTitle>
-          <CardDescription>{data.todayLabel}</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="rounded-lg border p-4">
-            <p className="text-xs text-muted-foreground">Estado de meta</p>
-            <p className="text-xl font-semibold">Vas {goalHeadline} hacia tu meta</p>
+      <Card className="rounded-3xl border-border/60 bg-gradient-to-br from-card to-card/70 shadow-sm">
+        <CardContent className="p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">Hola, {core?.displayName ?? "Usuario"}</h1>
+            <p className="text-sm text-muted-foreground">{core?.todayLabel ?? "Cargando fecha..."}</p>
           </div>
-          <div className="rounded-lg border p-4">
-            <p className="text-xs text-muted-foreground">Agua hoy</p>
-            <p className="text-xl font-semibold">{waterHeadline}</p>
-            <p className="text-xs text-muted-foreground">
-              {data.water.todayMl} ml / {data.water.goalMl} ml
-            </p>
-          </div>
-          <div className="rounded-lg border p-4 md:col-span-2">
-            <p className="text-xs text-muted-foreground">Sueno hoy</p>
-            <p className="text-xl font-semibold">{sleepHeadline}</p>
-            <p className="text-xs text-muted-foreground">
-              {data.sleep.todayMinutes} min / {data.sleep.goalMinutes} min
-            </p>
-          </div>
-          <div className="rounded-lg border p-4">
-            <p className="text-xs text-muted-foreground">Biofeedback diario</p>
-            <p className="text-lg font-semibold">{biofeedbackHeadline}</p>
-            <p className="text-xs text-muted-foreground">
-              Promedios 7d: Energia {data.biofeedback.weekAverages.avg_energy}/10 | Estres {data.biofeedback.weekAverages.avg_stress}/10
-            </p>
-          </div>
-          <div className="rounded-lg border p-4">
-            <p className="text-xs text-muted-foreground">Composicion corporal</p>
-            <p className="text-lg font-semibold">{compositionHeadline}</p>
-            <p className="text-xs text-muted-foreground">
-              Masa grasa:{" "}
-              {data.bodyComposition.latest?.fat_mass_kg !== null && data.bodyComposition.latest?.fat_mass_kg !== undefined
-                ? `${Number(data.bodyComposition.latest.fat_mass_kg).toFixed(1)} kg`
-                : "--"}{" "}
-              | Masa magra:{" "}
-              {data.bodyComposition.latest?.lean_mass_kg !== null && data.bodyComposition.latest?.lean_mass_kg !== undefined
-                ? `${Number(data.bodyComposition.latest.lean_mass_kg).toFixed(1)} kg`
-                : "--"}
-            </p>
-          </div>
-          <div className="rounded-lg border p-4 md:col-span-2">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs text-muted-foreground">Recovery Score</p>
-              <p className={`text-lg font-semibold ${recoveryTone}`}>{data.recovery.score}/100</p>
-            </div>
-            <Progress value={data.recovery.score} className="mt-2" />
-            <p className={`mt-2 text-sm font-medium ${recoveryTone}`}>{data.recovery.status}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Factores: {data.recovery.factors.join(" | ")}</p>
+          <div className="flex flex-wrap items-center gap-2 rounded-full border border-border/60 bg-background/60 p-1">
+            {tabItems.map((item) => {
+              const active = tab === item.key;
+              return (
+                <Button
+                  key={item.key}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTab(item.key)}
+                  className={`rounded-full px-4 ${active ? "bg-primary text-primary-foreground hover:bg-primary" : "text-muted-foreground"}`}
+                >
+                  <item.icon className="h-4 w-4 mr-2" />
+                  {item.label}
+                </Button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <WeightCard
-          latest={data.weight.latest}
-          initial={data.weight.initial}
-          initialDate={data.weight.initialDate}
-          weeklyDelta={data.weight.weeklyDelta}
-          movingAvg7={data.weight.movingAvg7}
-          trend={data.weight.trend}
-          loading={data.weight.loading}
-          error={data.weight.error}
+      {(tab === "overview" || tab === "analytics") && (
+        <TodayStatusRow
+          loading={snapshot.coreLoading}
+          waterMl={core?.waterTodayMl ?? 0}
+          waterGoalMl={core?.waterGoalMl ?? 2000}
+          sleepMinutes={core?.sleepDay?.total_minutes ?? 0}
+          sleepGoalMinutes={core?.sleepGoalMinutes ?? 480}
+          energy={core?.bioToday?.daily_energy ?? null}
+          stress={core?.bioToday?.perceived_stress ?? null}
+          streakDays={core?.activeDays7 ?? 0}
         />
-        <GoalCard
-          target={data.goal.target}
-          progress={data.goal.progress}
-          remainingKg={data.goal.remainingKg}
-          loading={data.goal.loading}
-          error={data.goal.error}
-        />
-        <WaterCard showHistoryButton />
-        <SleepCard />
-        <WeeklySummaryCard
-          waterAverageMl={data.water.weekAverageMl}
-          waterMonthAverageMl={data.water.monthAverageMl}
-          waterDaysMet={data.water.weekDaysMet}
-          waterDaysTotal={data.water.weekDaysTotal}
-          sleepAverageMinutes={data.sleep.weekAverageMinutes}
-          sleepMonthAverageMinutes={data.sleep.monthAverageMinutes}
-          sleepDaysMet={data.sleep.weekDaysMet}
-          sleepDaysTotal={data.sleep.weekDaysTotal}
-          weightTrend={data.weight.trend}
-          bioEnergy={data.biofeedback.weekAverages.avg_energy}
-          bioStress={data.biofeedback.weekAverages.avg_stress}
-          bioSleep={data.biofeedback.weekAverages.avg_sleep_quality}
-          activeDays={data.weeklyReview.summary?.activeDays ?? 0}
-          weeklyReviewHref="/weekly-review"
-          loading={data.water.loading || data.sleep.loading || data.biofeedback.loading || data.weeklyReview.loading}
-          error={data.water.error || data.sleep.error || data.biofeedback.error || data.weeklyReview.error}
-        />
-      </div>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Actividad reciente</CardTitle>
-          <CardDescription>Ultimos registros relevantes.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Ultimo peso</p>
-            {data.weight.latestEntry ? (
-              <p className="font-medium">
-                {Number(data.weight.latestEntry.weight_kg).toFixed(1)} kg ({data.weight.latestEntry.measured_at})
+      {tab === "overview" && (
+        <>
+          <div className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">
+            <RecoveryCard
+              loading={snapshot.coreLoading}
+              score={core?.recovery.score ?? 0}
+              status={core?.recovery.status ?? "Recuperacion Moderada"}
+              drivers={core?.recovery.drivers ?? []}
+              subscores={
+                core?.recovery.subscores ?? {
+                  sleep: 0,
+                  biofeedback: 0,
+                  hydration: 0,
+                  consistency: 0,
+                }
+              }
+            />
+            <CalendarMiniWidget
+              month={currentMonth}
+              onMonthChange={setCurrentMonth}
+              activity={snapshot.monthActivity}
+              loading={snapshot.monthActivityLoading}
+            />
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
+            <WeightCard
+              latest={core?.latestWeight ?? null}
+              initial={core?.initialWeight ?? null}
+              initialDate={core?.weightSnapshot.first?.measured_at ?? null}
+              weeklyDelta={core?.weightTrend.weeklyChange ?? null}
+              movingAvg7={core?.weightTrend.movingAvg7 ?? null}
+              trend={core?.weightTrend.trend === "up" ? "subiendo" : core?.weightTrend.trend === "down" ? "bajando" : "estable"}
+              loading={snapshot.coreLoading}
+              error={snapshot.coreError}
+            />
+            <GoalCard
+              target={core?.goal?.target_weight_kg ?? null}
+              progress={core?.goalProgress ?? null}
+              remainingKg={goalRemaining}
+              loading={snapshot.coreLoading}
+              error={snapshot.coreError}
+            />
+            <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
+              <CardContent className="p-4 space-y-2">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Agua hoy</p>
+                <p className="text-3xl font-semibold">{core?.waterTodayMl ?? 0} ml</p>
+                <p className="text-xs text-muted-foreground">Objetivo: {core?.waterGoalMl ?? 2000} ml</p>
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/water">Ir a Agua</Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
+              <CardContent className="p-4 space-y-2">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Sueno hoy</p>
+                <p className="text-3xl font-semibold">{((core?.sleepDay?.total_minutes ?? 0) / 60).toFixed(1)} h</p>
+                <p className="text-xs text-muted-foreground">Objetivo: {((core?.sleepGoalMinutes ?? 480) / 60).toFixed(1)} h</p>
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/sleep">Ir a Sueno</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <BodyMeasurementsCard
+            loading={snapshot.coreLoading}
+            latest={core?.latestMeasurement ?? null}
+            previous={core?.previousMeasurement ?? null}
+          />
+
+          <WeeklyTrendsCard loading={snapshot.coreLoading} data={snapshot.trends} />
+
+          <TacticalNotesCard
+            loading={snapshot.coreLoading}
+            todayNote={core?.noteToday ?? null}
+            latestNote={core?.noteLatest ?? null}
+            onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
+          />
+        </>
+      )}
+
+      {tab === "analytics" && <WeeklyTrendsCard loading={snapshot.coreLoading} data={snapshot.trends} />}
+
+      {tab === "calendar" && (
+        <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+          <CalendarMiniWidget
+            month={currentMonth}
+            onMonthChange={setCurrentMonth}
+            activity={snapshot.monthActivity}
+            loading={snapshot.monthActivityLoading}
+          />
+          <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
+            <CardContent className="p-4 space-y-3">
+              <p className="text-lg font-semibold">Actividad mensual</p>
+              <p className="text-sm text-muted-foreground">
+                Abre el calendario completo para revisar agua, sueno, peso, biofeedback y notas por dia.
               </p>
-            ) : (
-              <p className="font-medium">Sin registros</p>
-            )}
-          </div>
+              <Button asChild>
+                <Link to="/calendar">Abrir calendario completo</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-          <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Ultimos consumos de agua</p>
-            {data.water.recentLogs.length === 0 ? (
-              <p className="font-medium">Sin registros</p>
-            ) : (
-              <div className="space-y-1">
-                {data.water.recentLogs.slice(0, 3).map((log) => (
-                  <p key={log.id} className="font-medium">
-                    {log.consumed_ml} ml - {new Date(log.logged_at).toLocaleString()}
-                  </p>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Ultimos registros de sueno</p>
-            {data.sleep.recentLogs.length === 0 ? (
-              <p className="font-medium">Sin registros</p>
-            ) : (
-              <div className="space-y-1">
-                {data.sleep.recentLogs.slice(0, 3).map((log) => (
-                  <p key={log.id} className="font-medium">
-                    {(log.total_minutes / 60).toFixed(1)} h - {log.date_key}
-                  </p>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Ultimos biofeedbacks</p>
-            {data.biofeedback.recentLogs.length === 0 ? (
-              <p className="font-medium">Sin registros</p>
-            ) : (
-              <div className="space-y-1">
-                {data.biofeedback.recentLogs.slice(0, 3).map((log) => (
-                  <p key={log.id} className="font-medium">
-                    {log.date_key}: E {log.daily_energy}/10 | S {log.perceived_stress}/10 | SQ {log.sleep_quality}/10
-                  </p>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline">
-              <Link to="/statistics">Ver historial peso</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/water">Ver historial agua</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/sleep">Ver historial sueno</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/biofeedback">Biofeedback</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/measurements">Medidas corporales</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/weekly-review">Weekly review</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Daily Notes</CardTitle>
-          <CardDescription>Libreta tactica para observaciones del dia.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Nota de hoy</p>
-              <Input
-                value={noteTitle}
-                onChange={(event) => setNoteTitle(event.target.value)}
-                placeholder="Titulo corto"
-                maxLength={120}
-              />
-              <Textarea
-                value={noteContent}
-                onChange={(event) => setNoteContent(event.target.value)}
-                placeholder="Ejemplo: entreno pesado, poca energia por la tarde, mejorar hidratacion."
-                className="min-h-28"
-              />
-              <Button onClick={() => saveNoteMutation.mutate()} disabled={saveNoteMutation.isPending || !noteContent.trim()}>
-                Guardar nota del dia
+      {tab === "settings" && (
+        <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
+          <CardContent className="p-6 space-y-3">
+            <p className="text-lg font-semibold">Configuracion rapida</p>
+            <p className="text-sm text-muted-foreground">Gestiona perfil, objetivos y preferencias desde Ajustes.</p>
+            <div className="flex gap-2">
+              <Button asChild variant="outline">
+                <Link to="/profile">Perfil</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/settings">Ajustes</Link>
               </Button>
             </div>
-            <div className="rounded-lg border p-4">
-              <p className="text-xs text-muted-foreground">Ultima nota registrada</p>
-              {!data.notes.latest ? (
-                <p className="mt-2 text-sm">Sin notas registradas.</p>
-              ) : (
-                <div className="mt-2 space-y-2">
-                  <p className="font-medium">{data.notes.latest.title || "Nota sin titulo"}</p>
-                  <p className="text-xs text-muted-foreground">{data.notes.latest.date_key}</p>
-                  <p className="text-sm">{data.notes.latest.content}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
