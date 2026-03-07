@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays } from "date-fns";
-import { CheckCircle2, Flame, ListChecks, Settings2 } from "lucide-react";
+import { Check, Flame, Settings2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -231,16 +231,18 @@ const DailyMetricsTodoCard = ({ core }: { core: DashboardCore | null | undefined
             return (
               <div
                 key={task.key}
-                className={`flex items-center justify-between rounded-lg border px-3 py-2 ${
-                  isDone ? "border-primary/40 bg-primary/5" : "border-border/60"
-                }`}
+                className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2"
               >
                 <div className="flex items-center gap-2">
-                  {isDone ? (
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                  ) : (
-                    <ListChecks className="h-4 w-4 text-muted-foreground" />
-                  )}
+                  <span
+                    className={`inline-flex h-4 w-4 items-center justify-center rounded-[4px] border transition-all duration-200 ${
+                      isDone
+                        ? "border-primary/70 bg-primary/20 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.35),0_0_14px_hsl(var(--primary)/0.35)]"
+                        : "border-border/80 bg-transparent text-transparent"
+                    }`}
+                  >
+                    <Check className="h-3 w-3" />
+                  </span>
                   <span className={`text-sm ${isDone ? "text-foreground" : "text-muted-foreground"}`}>{task.label}</span>
                 </div>
                 {!isDone && (
