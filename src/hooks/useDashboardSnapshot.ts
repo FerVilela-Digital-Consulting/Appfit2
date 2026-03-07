@@ -196,9 +196,11 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
         sleep7d,
         bioToday,
         bio7d,
+        notes7d,
         activeDays7: activeDays7.size,
         recovery,
         latestMeasurement,
+        measurementRange,
         previousMeasurement,
         weeklyWaistDeltaCm,
         noteToday,
@@ -212,6 +214,19 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
     const weightRows = coreQuery.data?.weightSnapshot?.entries ?? [];
     const weightMap = new Map<string, number>();
     weightRows.forEach((row) => weightMap.set(row.measured_at, Number(row.weight_kg)));
+    const bioMap = new Map<string, any>();
+    (coreQuery.data?.bio7d ?? []).forEach((row) => bioMap.set(row.date_key, row));
+    const notesMap = new Set((coreQuery.data?.notes7d ?? []).map((row) => row.date_key));
+    const measurementMap = new Map<string, { waistCm: number | null; bodyFatPct: number | null }>();
+    (coreQuery.data?.measurementRange ?? []).forEach((row) =>
+      measurementMap.set(row.date_key, {
+        waistCm: row.waist_cm !== null && row.waist_cm !== undefined ? Number(row.waist_cm) : null,
+        bodyFatPct: row.body_fat_pct !== null && row.body_fat_pct !== undefined ? Number(row.body_fat_pct) : null,
+      }),
+    );
+
+    const waterGoalMl = Number(coreQuery.data?.waterGoalMl ?? 2000);
+    const sleepGoalMinutes = Number(coreQuery.data?.sleepGoalMinutes ?? 480);
 
     const end = new Date(today);
     end.setHours(0, 0, 0, 0);
@@ -224,16 +239,52 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
       const dateKey = formatDateKey(date);
       const water = coreQuery.data?.water7d?.find((row) => row.date_key === dateKey)?.total_ml ?? 0;
       const sleep = coreQuery.data?.sleep7d?.find((row) => row.date_key === dateKey)?.total_minutes ?? 0;
+      const weight = weightMap.get(dateKey) ?? null;
+      const bio = bioMap.get(dateKey);
+      const measurement = measurementMap.get(dateKey);
+      const hasBio = Boolean(bio);
+      const hasMeasurement = Boolean(measurement);
+      const completionCount =
+        Number(water > 0) +
+        Number(sleep > 0) +
+        Number(weight !== null) +
+        Number(hasBio) +
+        Number(notesMap.has(dateKey)) +
+        Number(hasMeasurement);
+      const goalHits = Number(water >= waterGoalMl) + Number(sleep >= sleepGoalMinutes);
+
       return {
         dateKey,
         label: format(date, "dd/MM"),
         water,
         sleep,
-        weight: weightMap.get(dateKey) ?? null,
+        sleep_hours: Number((sleep / 60).toFixed(2)),
+        weight,
+        sleep_quality: bio?.sleep_quality ?? null,
+        energy: bio?.daily_energy ?? null,
+        stress: bio?.perceived_stress ?? null,
+        training_energy: bio?.training_energy ?? null,
+        hunger: bio?.hunger_level ?? null,
+        digestion: bio?.digestion ?? null,
+        libido: bio?.libido ?? null,
+        waist_cm: measurement?.waistCm ?? null,
+        body_fat_pct: measurement?.bodyFatPct ?? null,
+        completion_count: completionCount,
+        goal_hits: goalHits,
       };
     });
     return days;
-  }, [coreQuery.data?.sleep7d, coreQuery.data?.water7d, coreQuery.data?.weightSnapshot?.entries, today]);
+  }, [
+    coreQuery.data?.bio7d,
+    coreQuery.data?.measurementRange,
+    coreQuery.data?.notes7d,
+    coreQuery.data?.sleep7d,
+    coreQuery.data?.sleepGoalMinutes,
+    coreQuery.data?.water7d,
+    coreQuery.data?.waterGoalMl,
+    coreQuery.data?.weightSnapshot?.entries,
+    today,
+  ]);
 
   return {
     monthRange: { monthStart, monthEnd, gridStart, gridEnd },
