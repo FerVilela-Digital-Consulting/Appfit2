@@ -10,6 +10,7 @@ import BodyMeasurementsCard from "@/components/dashboard/BodyMeasurementsCard";
 import CalendarMiniWidget from "@/components/dashboard/CalendarMiniWidget";
 import DailyMetricsTodoCard from "@/components/dashboard/DailyMetricsTodoCard";
 import GoalCard from "@/components/dashboard/GoalCard";
+import NutritionCard from "@/components/dashboard/NutritionCard";
 import RecoveryCard from "@/components/dashboard/RecoveryCard";
 import SleepInsightsCard from "@/components/dashboard/SleepInsightsCard";
 import TacticalNotesCard from "@/components/dashboard/TacticalNotesCard";
@@ -127,7 +128,7 @@ const Dashboard = () => {
             />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
+          <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-5">
             <WeightCard
               latest={core?.latestWeight ?? null}
               initial={core?.initialWeight ?? null}
@@ -150,6 +151,7 @@ const Dashboard = () => {
               goalMl={core?.waterGoalMl ?? 2000}
               loading={snapshot.coreLoading}
             />
+            <NutritionCard />
             <SleepInsightsCard
               sleepMinutes={core?.sleepDay?.total_minutes ?? 0}
               goalMinutes={core?.sleepGoalMinutes ?? 480}

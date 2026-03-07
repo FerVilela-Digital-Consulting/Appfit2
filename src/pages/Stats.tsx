@@ -16,6 +16,7 @@ import {
 import { getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
 import { getBiofeedbackRange, getBiofeedbackWeeklyAverages } from "@/services/dailyBiofeedback";
 import { getBodyMeasurementsRange, getLatestBodyMeasurement } from "@/services/bodyMeasurements";
+import { getNutritionGoals, getNutritionRangeSummary } from "@/services/nutrition";
 import { getWeeklyReviewSummary } from "@/services/weeklyReview";
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
 import GuestWarningBanner from "@/components/GuestWarningBanner";
@@ -205,6 +206,48 @@ const Stats = () => {
     enabled: Boolean(user?.id) || isGuest,
   });
 
+  const { data: nutritionGoals } = useQuery({
+    queryKey: ["stats_nutrition_goals", user?.id, isGuest],
+    queryFn: () =>
+      getNutritionGoals(user?.id ?? null, { isGuest }).catch(() => ({
+        calorie_goal: 2000,
+        protein_goal_g: 150,
+        carb_goal_g: 250,
+        fat_goal_g: 70,
+      })),
+    enabled: Boolean(user?.id) || isGuest,
+  });
+
+  const { data: nutrition7d } = useQuery({
+    queryKey: ["stats_nutrition_7d", user?.id, isGuest, timeZone],
+    queryFn: async () => {
+      const to = new Date();
+      to.setHours(0, 0, 0, 0);
+      const from = new Date(to);
+      from.setDate(from.getDate() - 6);
+      return getNutritionRangeSummary(user?.id ?? null, from, to, { isGuest, timeZone }).catch(() => ({
+        days: [],
+        averages: { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+      }));
+    },
+    enabled: Boolean(user?.id) || isGuest,
+  });
+
+  const { data: nutrition30d } = useQuery({
+    queryKey: ["stats_nutrition_30d", user?.id, isGuest, timeZone],
+    queryFn: async () => {
+      const to = new Date();
+      to.setHours(0, 0, 0, 0);
+      const from = new Date(to);
+      from.setDate(from.getDate() - 29);
+      return getNutritionRangeSummary(user?.id ?? null, from, to, { isGuest, timeZone }).catch(() => ({
+        days: [],
+        averages: { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+      }));
+    },
+    enabled: Boolean(user?.id) || isGuest,
+  });
+
   const bodyFatChartData = bodyMeasurementRows
     .filter((row) => row.body_fat_pct !== null)
     .map((row) => ({
@@ -347,6 +390,35 @@ const Stats = () => {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Nutrition Summary</CardTitle>
+          <CardDescription>Calorias y macros promedio en 7 y 30 dias.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">Calorias (7d)</p>
+            <p className="text-xl font-semibold">{nutrition7d?.averages.calories ?? 0} kcal</p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">Proteina (7d)</p>
+            <p className="text-xl font-semibold">{nutrition7d?.averages.protein_g ?? 0} g</p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">Carbs (30d)</p>
+            <p className="text-xl font-semibold">{nutrition30d?.averages.carbs_g ?? 0} g</p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">Grasas (30d)</p>
+            <p className="text-xl font-semibold">{nutrition30d?.averages.fat_g ?? 0} g</p>
+          </div>
+          <div className="md:col-span-4 text-xs text-muted-foreground">
+            Objetivos: {nutritionGoals?.calorie_goal ?? 2000} kcal | P {nutritionGoals?.protein_goal_g ?? 150}g | C{" "}
+            {nutritionGoals?.carb_goal_g ?? 250}g | G {nutritionGoals?.fat_goal_g ?? 70}g
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
@@ -451,6 +523,76 @@ const Stats = () => {
       </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Nutrition trends (7d)</CardTitle>
+            <CardDescription>Ultima semana de calorias y macros.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!nutrition7d?.days?.length ? (
+              <p className="text-sm text-muted-foreground">No nutrition data yet.</p>
+            ) : (
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={nutrition7d.days.map((row) => ({
+                      date: row.date_key,
+                      calories: row.calories,
+                      protein_g: row.protein_g,
+                      carbs_g: row.carbs_g,
+                      fat_g: row.fat_g,
+                    }))}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
+                    <YAxis />
+                    <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString()} />
+                    <Line type="monotone" dataKey="calories" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="protein_g" stroke="#22c55e" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="carbs_g" stroke="#0ea5e9" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="fat_g" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Nutrition trends (30d)</CardTitle>
+            <CardDescription>Calorias y macros por dia.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!nutrition30d?.days?.length ? (
+              <p className="text-sm text-muted-foreground">No nutrition data yet.</p>
+            ) : (
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={nutrition30d.days.map((row) => ({
+                      date: row.date_key,
+                      calories: row.calories,
+                      protein_g: row.protein_g,
+                      carbs_g: row.carbs_g,
+                      fat_g: row.fat_g,
+                    }))}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
+                    <YAxis />
+                    <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString()} />
+                    <Line type="monotone" dataKey="calories" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="protein_g" stroke="#22c55e" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="carbs_g" stroke="#0ea5e9" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="fat_g" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Biofeedback (30d)</CardTitle>

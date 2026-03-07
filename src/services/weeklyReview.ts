@@ -5,6 +5,7 @@ import { getWaterGoal, getWaterRangeTotals } from "@/services/waterIntake";
 import { getSleepRangeTotals } from "@/services/sleep";
 import { getBiofeedbackRange } from "@/services/dailyBiofeedback";
 import { getWeightTrendAnalysis } from "@/services/bodyMetrics";
+import { getNutritionGoals, getNutritionRangeSummary } from "@/services/nutrition";
 import { supabase } from "@/services/supabaseClient";
 
 export type WeeklyReviewRecord = {
@@ -47,12 +48,22 @@ export const getWeeklyReviewSummary = async (
   const weekStart = startOfWeek(referenceDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(referenceDate, { weekStartsOn: 1 });
 
-  const [waterTotals, waterGoal, sleepTotals, biofeedbackRows, weightTrend] = await Promise.all([
+  const [waterTotals, waterGoal, sleepTotals, biofeedbackRows, weightTrend, nutritionRange, nutritionGoals] = await Promise.all([
     getWaterRangeTotals(userId, weekStart, weekEnd, { isGuest, timeZone }),
     getWaterGoal(userId, { isGuest }),
     getSleepRangeTotals(userId, weekStart, weekEnd, { isGuest, timeZone }),
     getBiofeedbackRange(userId, weekStart, weekEnd, { isGuest, timeZone }),
     getWeightTrendAnalysis(userId, isGuest),
+    getNutritionRangeSummary(userId, weekStart, weekEnd, { isGuest, timeZone }).catch(() => ({
+      days: [],
+      averages: { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+    })),
+    getNutritionGoals(userId, { isGuest }).catch(() => ({
+      calorie_goal: 2000,
+      protein_goal_g: 150,
+      carb_goal_g: 250,
+      fat_goal_g: 70,
+    })),
   ]);
 
   const waterDaysMet = waterTotals.filter((row) => row.total_ml >= waterGoal.water_goal_ml).length;
@@ -69,6 +80,9 @@ export const getWeeklyReviewSummary = async (
   waterTotals.forEach((row) => row.total_ml > 0 && daySet.add(row.date_key));
   sleepTotals.forEach((row) => row.total_minutes > 0 && daySet.add(row.date_key));
   biofeedbackRows.forEach((row) => daySet.add(row.date_key));
+  const nutritionDaysWithData = nutritionRange.days.filter((day) => day.calories > 0).length;
+  const nutritionCalorieDaysMet = nutritionRange.days.filter((day) => day.calories >= nutritionGoals.calorie_goal).length;
+  const nutritionProteinDaysMet = nutritionRange.days.filter((day) => day.protein_g >= nutritionGoals.protein_goal_g).length;
 
   return {
     weekStart,
@@ -83,6 +97,12 @@ export const getWeeklyReviewSummary = async (
     weightTrend: weightTrend.trend,
     weightMovingAvg7: weightTrend.movingAvg7,
     activeDays: daySet.size,
+    nutritionDaysTotal: nutritionRange.days.length || 7,
+    nutritionDaysWithData,
+    nutritionCalorieDaysMet,
+    nutritionProteinDaysMet,
+    avgCalories: nutritionRange.averages.calories,
+    avgProteinG: nutritionRange.averages.protein_g,
   };
 };
 

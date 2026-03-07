@@ -30,6 +30,10 @@ const Settings = () => {
   const [height, setHeight] = useState("");
   const [goalType, setGoalType] = useState("");
   const [sleepGoalMinutes, setSleepGoalMinutes] = useState("");
+  const [calorieGoal, setCalorieGoal] = useState("");
+  const [proteinGoal, setProteinGoal] = useState("");
+  const [carbGoal, setCarbGoal] = useState("");
+  const [fatGoal, setFatGoal] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false);
 
@@ -41,6 +45,10 @@ const Settings = () => {
       setHeight(profile.height?.toString() || "");
       setGoalType(profile.goal_type || "");
       setSleepGoalMinutes(profile.sleep_goal_minutes?.toString() || "480");
+      setCalorieGoal((profile as any).calorie_goal?.toString() || "2000");
+      setProteinGoal((profile as any).protein_goal_g?.toString() || "150");
+      setCarbGoal((profile as any).carb_goal_g?.toString() || "250");
+      setFatGoal((profile as any).fat_goal_g?.toString() || "70");
     }
   }, [profile]);
 
@@ -49,6 +57,10 @@ const Settings = () => {
     const parsedHeight = height ? Number(height) : null;
     const parsedWeight = weight ? Number(weight) : null;
     const parsedSleepGoal = sleepGoalMinutes ? Number(sleepGoalMinutes) : 480;
+    const parsedCalorieGoal = calorieGoal ? Number(calorieGoal) : 2000;
+    const parsedProteinGoal = proteinGoal ? Number(proteinGoal) : 150;
+    const parsedCarbGoal = carbGoal ? Number(carbGoal) : 250;
+    const parsedFatGoal = fatGoal ? Number(fatGoal) : 70;
 
     if (parsedHeight !== null && (!Number.isFinite(parsedHeight) || parsedHeight <= 0)) {
       toast.error(t("settings.heightError"));
@@ -63,6 +75,22 @@ const Settings = () => {
       toast.error(t("settings.sleepGoalError"));
       return;
     }
+    if (!Number.isFinite(parsedCalorieGoal) || parsedCalorieGoal <= 0) {
+      toast.error("La meta de calorias debe ser mayor que 0.");
+      return;
+    }
+    if (!Number.isFinite(parsedProteinGoal) || parsedProteinGoal < 0) {
+      toast.error("La meta de proteina no puede ser negativa.");
+      return;
+    }
+    if (!Number.isFinite(parsedCarbGoal) || parsedCarbGoal < 0) {
+      toast.error("La meta de carbs no puede ser negativa.");
+      return;
+    }
+    if (!Number.isFinite(parsedFatGoal) || parsedFatGoal < 0) {
+      toast.error("La meta de grasas no puede ser negativa.");
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -73,6 +101,10 @@ const Settings = () => {
         height: parsedHeight,
         goal_type: goalType,
         sleep_goal_minutes: parsedSleepGoal,
+        calorie_goal: parsedCalorieGoal,
+        protein_goal_g: parsedProteinGoal,
+        carb_goal_g: parsedCarbGoal,
+        fat_goal_g: parsedFatGoal,
       });
 
       if (isGuest) {
@@ -261,6 +293,53 @@ const Settings = () => {
                 className="bg-background/50"
               />
               <p className="text-xs text-muted-foreground">{t("settings.sleepGoalHint")}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="calorieGoal">Meta calorias (kcal)</Label>
+                <Input
+                  id="calorieGoal"
+                  type="number"
+                  min="1"
+                  value={calorieGoal}
+                  onChange={(e) => setCalorieGoal(e.target.value)}
+                  className="bg-background/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="proteinGoal">Meta proteina (g)</Label>
+                <Input
+                  id="proteinGoal"
+                  type="number"
+                  min="0"
+                  value={proteinGoal}
+                  onChange={(e) => setProteinGoal(e.target.value)}
+                  className="bg-background/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="carbGoal">Meta carbs (g)</Label>
+                <Input
+                  id="carbGoal"
+                  type="number"
+                  min="0"
+                  value={carbGoal}
+                  onChange={(e) => setCarbGoal(e.target.value)}
+                  className="bg-background/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fatGoal">Meta grasas (g)</Label>
+                <Input
+                  id="fatGoal"
+                  type="number"
+                  min="0"
+                  value={fatGoal}
+                  onChange={(e) => setFatGoal(e.target.value)}
+                  className="bg-background/50"
+                />
+              </div>
             </div>
           </CardContent>
           <CardFooter className="border-t border-border/50 pt-6">

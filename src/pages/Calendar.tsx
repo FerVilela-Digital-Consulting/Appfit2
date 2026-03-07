@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays, addMonths, endOfMonth, endOfWeek, format, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
-import { CheckCircle2, ChevronLeft, ChevronRight, Droplets, FileText, HeartPulse, Moon, Scale } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Droplets, FileText, HeartPulse, Moon, Scale, UtensilsCrossed } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -19,6 +19,7 @@ import {
 import { addSleepLog, getSleepDay, getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
 import { getBiofeedbackRange, getDailyBiofeedback } from "@/services/dailyBiofeedback";
 import { getDailyNote, listDailyNotesByRange, upsertDailyNote } from "@/services/dailyNotes";
+import { getNutritionDaySummary, getNutritionRangeSummary } from "@/services/nutrition";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,8 @@ type CalendarDayData = {
   hasSleep: boolean;
   hasBiofeedback: boolean;
   hasNote: boolean;
+  hasNutrition: boolean;
+  nutritionCalories: number;
 };
 
 const formatDateKey = (date: Date) => format(date, "yyyy-MM-dd");
@@ -83,12 +86,16 @@ const Calendar = () => {
       sleepGoal.sleep_goal_minutes,
     ],
     queryFn: async () => {
-      const [waterTotals, weightEntries, sleepTotals, biofeedbackRows, notesRows] = await Promise.all([
+      const [waterTotals, weightEntries, sleepTotals, biofeedbackRows, notesRows, nutritionRange] = await Promise.all([
         getWaterRangeTotals(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
         isGuest ? Promise.resolve(getGuestBodyMetrics()) : listBodyMetricsByRange(user?.id ?? null, "all", false),
         getSleepRangeTotals(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
         getBiofeedbackRange(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
         listDailyNotesByRange(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
+        getNutritionRangeSummary(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }).catch(() => ({
+          days: [],
+          averages: { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+        })),
       ]);
 
       const waterMap = new Map<string, number>();
@@ -108,6 +115,8 @@ const Calendar = () => {
       biofeedbackRows.forEach((row) => biofeedbackMap.set(row.date_key, true));
       const notesMap = new Map<string, boolean>();
       notesRows.forEach((row) => notesMap.set(row.date_key, true));
+      const nutritionMap = new Map<string, number>();
+      nutritionRange.days.forEach((row) => nutritionMap.set(row.date_key, Number(row.calories || 0)));
 
       const daily = new Map<string, CalendarDayData>();
       let cursor = new Date(gridStart);
@@ -123,6 +132,8 @@ const Calendar = () => {
         const hasSleep = totalSleepMinutes > 0;
         const hasBiofeedback = biofeedbackMap.get(dateKey) ?? false;
         const hasNote = notesMap.get(dateKey) ?? false;
+        const nutritionCalories = nutritionMap.get(dateKey) ?? 0;
+        const hasNutrition = nutritionCalories > 0;
         daily.set(dateKey, {
           dateKey,
           totalWaterMl,
@@ -135,6 +146,8 @@ const Calendar = () => {
           hasSleep,
           hasBiofeedback,
           hasNote,
+          hasNutrition,
+          nutritionCalories,
         });
         cursor = addDays(cursor, 1);
       }
@@ -164,6 +177,12 @@ const Calendar = () => {
     queryFn: () => getDailyNote(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }),
     enabled: Boolean(user?.id) || isGuest,
   });
+  const { data: selectedNutrition } = useQuery({
+    queryKey: ["calendar_day_nutrition", user?.id, selectedDateKey, timezone, isGuest],
+    queryFn: () =>
+      getNutritionDaySummary(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }).catch(() => null),
+    enabled: Boolean(user?.id) || isGuest,
+  });
 
   useEffect(() => {
     setNoteTitle(selectedNote?.title ?? "");
@@ -186,7 +205,7 @@ const Calendar = () => {
       (day) => day.dateKey >= formatDateKey(monthStart) && day.dateKey <= formatDateKey(monthEnd),
     );
 
-    const activeDays = monthDays.filter((day) => day.hasWater || day.hasWeight || day.hasSleep || day.hasBiofeedback || day.hasNote).length;
+    const activeDays = monthDays.filter((day) => day.hasWater || day.hasWeight || day.hasSleep || day.hasBiofeedback || day.hasNote || day.hasNutrition).length;
     const metGoalDays = monthDays.filter((day) => day.metWaterGoal).length;
     const avgWaterMl =
       monthDays.length > 0
@@ -329,6 +348,7 @@ const Calendar = () => {
       (day.hasSleep ? 1 : 0) +
       (day.hasBiofeedback ? 1 : 0) +
       (day.hasNote ? 1 : 0) +
+      (day.hasNutrition ? 1 : 0) +
       (day.metWaterGoal ? 1 : 0) +
       (day.metSleepGoal ? 1 : 0);
     const heatClass =
@@ -470,6 +490,7 @@ const Calendar = () => {
                         {day?.hasSleep && <Moon className="h-3 w-3 text-indigo-500" aria-label={t("calendar.summary.sleep")} />}
                         {day?.hasBiofeedback && <HeartPulse className="h-3 w-3 text-rose-500" aria-label="Biofeedback" />}
                         {day?.hasNote && <FileText className="h-3 w-3 text-amber-500" aria-label="Daily note" />}
+                        {day?.hasNutrition && <UtensilsCrossed className="h-3 w-3 text-emerald-400" aria-label="Nutrition" />}
                         {day?.metSleepGoal && <CheckCircle2 className="h-3 w-3 text-emerald-500" aria-hidden="true" />}
                       </div>
                     </button>
@@ -573,6 +594,25 @@ const Calendar = () => {
                     )}
                     <Button asChild variant="outline" size="sm">
                       <Link to={`/biofeedback?date=${selectedDateKey}`}>Abrir check-in</Link>
+                    </Button>
+                  </div>
+
+                  <div className="rounded-md border p-3 space-y-2">
+                    <p className="text-sm text-muted-foreground">Nutrition</p>
+                    {!selectedNutrition || selectedNutrition.totals.calories <= 0 ? (
+                      <p className="text-sm text-muted-foreground">Sin registros de alimentacion.</p>
+                    ) : (
+                      <>
+                        <p className="text-lg font-semibold">
+                          {selectedNutrition.totals.calories} / {selectedNutrition.goals.calorie_goal} kcal
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          P {selectedNutrition.totals.protein_g}g | C {selectedNutrition.totals.carbs_g}g | G {selectedNutrition.totals.fat_g}g
+                        </p>
+                      </>
+                    )}
+                    <Button asChild variant="outline" size="sm">
+                      <Link to={`/nutrition?date=${selectedDateKey}`}>Abrir Nutrition</Link>
                     </Button>
                   </div>
 

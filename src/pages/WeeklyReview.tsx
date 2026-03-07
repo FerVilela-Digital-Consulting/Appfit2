@@ -133,6 +133,17 @@ const WeeklyReview = () => {
             <p className="text-xs text-muted-foreground">Agua, sueno o biofeedback</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Adherencia nutricion</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">
+              {summary?.nutritionCalorieDaysMet ?? 0}/{summary?.nutritionDaysTotal ?? 7}
+            </p>
+            <p className="text-xs text-muted-foreground">Dias cumpliendo calorias objetivo</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -163,6 +174,21 @@ const WeeklyReview = () => {
               {summary?.weightMovingAvg7 === null || summary?.weightMovingAvg7 === undefined
                 ? "--"
                 : `${summary.weightMovingAvg7.toFixed(2)} kg`}
+            </p>
+          </div>
+          <div className="rounded-lg border p-3 md:col-span-2">
+            <p className="text-sm text-muted-foreground">Nutricion</p>
+            <p className="font-medium">
+              Dias con registros: {summary?.nutritionDaysWithData ?? 0}/{summary?.nutritionDaysTotal ?? 7}
+            </p>
+            <p className="font-medium">
+              Calorias en meta: {summary?.nutritionCalorieDaysMet ?? 0}/{summary?.nutritionDaysTotal ?? 7}
+            </p>
+            <p className="font-medium">
+              Proteina en meta: {summary?.nutritionProteinDaysMet ?? 0}/{summary?.nutritionDaysTotal ?? 7}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Promedio: {summary?.avgCalories ?? 0} kcal | Proteina: {summary?.avgProteinG ?? 0} g
             </p>
           </div>
         </CardContent>

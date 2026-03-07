@@ -17,6 +17,10 @@ interface Profile {
     water_goal_ml: number | null;
     water_quick_options_ml: number[] | null;
     sleep_goal_minutes: number | null;
+    calorie_goal: number | null;
+    protein_goal_g: number | null;
+    carb_goal_g: number | null;
+    fat_goal_g: number | null;
     onboarding_completed: boolean | null;
     app_language: "en" | "es" | null;
     theme_preference: "light" | "dark" | "system" | null;
@@ -84,6 +88,10 @@ const createGuestProfile = (): Profile => ({
     water_goal_ml: 2000,
     water_quick_options_ml: [250, 500, 1000, 2000],
     sleep_goal_minutes: 480,
+    calorie_goal: 2000,
+    protein_goal_g: 150,
+    carb_goal_g: 250,
+    fat_goal_g: 70,
     onboarding_completed: true,
     app_language: "en",
     theme_preference: "system",
@@ -103,6 +111,10 @@ const createEmptyProfile = (): Profile => ({
     water_goal_ml: 2000,
     water_quick_options_ml: [250, 500, 1000, 2000],
     sleep_goal_minutes: 480,
+    calorie_goal: 2000,
+    protein_goal_g: 150,
+    carb_goal_g: 250,
+    fat_goal_g: 70,
     onboarding_completed: null,
     app_language: "en",
     theme_preference: "system",
@@ -138,12 +150,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchProfile = async (userId: string): Promise<Profile> => {
         let { data, error } = await supabase
             .from('profiles')
-            .select('full_name,birth_date,height,weight,goal_type,avatar_url,target_weight_kg,target_date,start_weight_kg,goal_direction,water_goal_ml,water_quick_options_ml,sleep_goal_minutes,onboarding_completed,app_language,theme_preference')
+            .select('full_name,birth_date,height,weight,goal_type,avatar_url,target_weight_kg,target_date,start_weight_kg,goal_direction,water_goal_ml,water_quick_options_ml,sleep_goal_minutes,calorie_goal,protein_goal_g,carb_goal_g,fat_goal_g,onboarding_completed,app_language,theme_preference')
             .eq('id', userId)
             .limit(1)
             .maybeSingle();
 
-        if (error && error.message?.includes("schema cache")) {
+        if (
+            error &&
+            (
+                error.message?.includes("schema cache") ||
+                error.message?.includes("calorie_goal") ||
+                error.message?.includes("protein_goal_g") ||
+                error.message?.includes("carb_goal_g") ||
+                error.message?.includes("fat_goal_g") ||
+                error.message?.toLowerCase().includes("column")
+            )
+        ) {
             const fallback = await supabase
                 .from('profiles')
                 .select('full_name,height,weight,goal_type,avatar_url')
@@ -172,6 +194,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             water_goal_ml: data?.water_goal_ml ?? 2000,
             water_quick_options_ml: data?.water_quick_options_ml ?? [250, 500, 1000, 2000],
             sleep_goal_minutes: data?.sleep_goal_minutes ?? 480,
+            calorie_goal: data?.calorie_goal ?? 2000,
+            protein_goal_g: data?.protein_goal_g ?? 150,
+            carb_goal_g: data?.carb_goal_g ?? 250,
+            fat_goal_g: data?.fat_goal_g ?? 70,
             onboarding_completed: data?.onboarding_completed ?? null,
             app_language: (data?.app_language as Profile["app_language"]) ?? "en",
             theme_preference: (data?.theme_preference as Profile["theme_preference"]) ?? "system",
