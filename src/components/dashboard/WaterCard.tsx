@@ -106,7 +106,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
     onError: (error: any, _consumedMl, context) => {
       const key = ["water_day_total", user?.id, dayKey] as const;
       queryClient.setQueryData<number>(key, context?.previous ?? 0);
-      toast.error(error?.message || "Failed to add water log.");
+      toast.error(error?.message || "No se pudo agregar el registro de agua.");
     },
     onSuccess: (_log) => {
       queryClient.invalidateQueries({ queryKey: ["water_day_total", user?.id, dayKey] });
@@ -145,9 +145,9 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
         water_quick_options_ml: prev?.water_quick_options_ml ?? DEFAULT_WATER_PRESETS_ML,
       }));
       queryClient.invalidateQueries({ queryKey: ["water_week_summary", user?.id, dayKey] });
-      toast.success("Water goal updated.");
+      toast.success("Meta de agua actualizada.");
     },
-    onError: (error: any) => toast.error(error?.message || "Failed to update goal."),
+    onError: (error: any) => toast.error(error?.message || "No se pudo actualizar la meta."),
   });
 
   const createPresetMutation = useMutation({
@@ -193,18 +193,18 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
 
   const handleAddQuick = async (amount: number) => {
     await addMutation.mutateAsync(amount);
-    toast.success(`Added ${amount} ml.`);
+    toast.success(`Agregados ${amount} ml.`);
   };
 
   const handleAddCustom = async () => {
     const numeric = Number(customValue);
     if (!Number.isFinite(numeric) || numeric <= 0) {
-      toast.error("Enter a valid amount.");
+      toast.error("Ingresa una cantidad valida.");
       return;
     }
 
     const ml = customUnit === "l" ? Math.round(numeric * 1000) : Math.round(numeric);
-    if (ml > 10000 && !window.confirm("This is more than 10L in one entry. Continue?")) {
+    if (ml > 10000 && !window.confirm("Esto supera 10L en un solo registro. Continuar?")) {
       return;
     }
 
@@ -225,13 +225,13 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
     setCustomUnit("ml");
     setSaveAsPreset(false);
     setCustomPresetName("");
-    toast.success(`Added ${ml} ml.`);
+    toast.success(`Agregados ${ml} ml.`);
   };
 
   const handleSaveGoal = async () => {
     const value = Number(goalInput);
     if (!Number.isFinite(value) || value <= 0) {
-      toast.error("Goal must be greater than 0.");
+      toast.error("La meta debe ser mayor que 0.");
       return;
     }
     const goal = goalUnit === "l" ? Math.round(value * 1000) : Math.round(value);

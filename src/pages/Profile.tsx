@@ -36,12 +36,12 @@ const Profile = () => {
                 goal_type: goalType,
             });
             if (isGuest) {
-                toast.info("Guest mode: changes won't be saved.");
+                toast.info("Modo invitado: los cambios no se guardaran.");
             } else {
-                toast.success("Profile updated successfully");
+                toast.success("Perfil actualizado correctamente");
             }
         } catch (error) {
-            toast.error("Failed to update profile");
+            toast.error("No se pudo actualizar el perfil");
         } finally {
             setIsSaving(false);
         }
@@ -61,11 +61,11 @@ const Profile = () => {
         <div className="container max-w-2xl py-8 space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Profile Settings</CardTitle>
+                    <CardTitle>Ajustes de perfil</CardTitle>
                     <CardDescription>
                         {isGuest
-                            ? "You are viewing the profile in guest mode. Changes will not be saved."
-                            : "Manage your personal information and fitness goals."}
+                            ? "Estas viendo el perfil en modo invitado. Los cambios no se guardaran."
+                            : "Gestiona tu informacion personal y objetivos fitness."}
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleSave}>
@@ -77,19 +77,19 @@ const Profile = () => {
                                 </AvatarFallback>
                             </Avatar>
                             <div className="space-y-1 text-center">
-                                <h3 className="text-lg font-medium">{fullName || (isGuest ? "Guest User" : "New User")}</h3>
+                                <h3 className="text-lg font-medium">{fullName || (isGuest ? "Usuario invitado" : "Usuario nuevo")}</h3>
                                 <p className="text-sm text-muted-foreground">
-                                    {isGuest ? "Temporary Session" : "Personalize your account"}
+                                    {isGuest ? "Sesion temporal" : "Personaliza tu cuenta"}
                                 </p>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2 md:col-span-2">
-                                <Label htmlFor="fullName">Full Name</Label>
+                                <Label htmlFor="fullName">Nombre completo</Label>
                                 <Input
                                     id="fullName"
-                                    placeholder="Enter your full name"
+                                    placeholder="Ingresa tu nombre completo"
                                     value={fullName}
                                     onChange={(e) => setFullName(e.target.value)}
                                 />
@@ -97,7 +97,7 @@ const Profile = () => {
 
                             <div className="space-y-2">
                                 <Label htmlFor="weight" className="flex items-center gap-2">
-                                    <Scale className="h-4 w-4" /> Weight (kg)
+                                    <Scale className="h-4 w-4" /> Peso (kg)
                                 </Label>
                                 <Input
                                     id="weight"
@@ -110,7 +110,7 @@ const Profile = () => {
 
                             <div className="space-y-2">
                                 <Label htmlFor="height" className="flex items-center gap-2">
-                                    <Ruler className="h-4 w-4" /> Height (cm)
+                                    <Ruler className="h-4 w-4" /> Altura (cm)
                                 </Label>
                                 <Input
                                     id="height"
@@ -123,11 +123,11 @@ const Profile = () => {
 
                             <div className="space-y-2 md:col-span-2">
                                 <Label htmlFor="goalType" className="flex items-center gap-2">
-                                    <Target className="h-4 w-4" /> Fitness Goal
+                                    <Target className="h-4 w-4" /> Objetivo fitness
                                 </Label>
                                 <Input
                                     id="goalType"
-                                    placeholder="e.g. Muscle Gain, Weight Loss"
+                                    placeholder="ej. Ganar musculo, Bajar de peso"
                                     value={goalType}
                                     onChange={(e) => setGoalType(e.target.value)}
                                 />
@@ -136,7 +136,7 @@ const Profile = () => {
                     </CardContent>
                     <CardFooter className="flex justify-end border-t pt-6">
                         <Button type="submit" disabled={isSaving}>
-                            {isSaving ? "Saving..." : "Save Changes"}
+                            {isSaving ? "Guardando..." : "Guardar cambios"}
                         </Button>
                     </CardFooter>
                 </form>

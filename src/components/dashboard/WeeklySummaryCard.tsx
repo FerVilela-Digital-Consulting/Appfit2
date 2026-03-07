@@ -61,7 +61,7 @@ const WeeklySummaryCard = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CalendarDays className="h-5 w-5 text-primary" />
-          Weekly summary
+          Resumen semanal
         </CardTitle>
         <CardDescription>Ultimos 7 dias: agua, sueno, biofeedback y peso.</CardDescription>
       </CardHeader>
@@ -116,7 +116,7 @@ const WeeklySummaryCard = ({
             <Link to="/sleep">Sueno</Link>
           </Button>
           <Button asChild variant="outline" size="sm">
-            <Link to={weeklyReviewHref}>Weekly review</Link>
+            <Link to={weeklyReviewHref}>Revision semanal</Link>
           </Button>
         </div>
       </CardContent>

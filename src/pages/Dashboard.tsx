@@ -25,10 +25,10 @@ import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
 type TabKey = "overview" | "analytics" | "calendar" | "settings";
 
 const tabItems: Array<{ key: TabKey; label: string; icon: ComponentType<{ className?: string }> }> = [
-  { key: "overview", label: "Overview", icon: LayoutDashboard },
-  { key: "analytics", label: "Analytics", icon: BarChart3 },
-  { key: "calendar", label: "Calendar", icon: CalendarDays },
-  { key: "settings", label: "Settings", icon: Settings },
+  { key: "overview", label: "Resumen", icon: LayoutDashboard },
+  { key: "analytics", label: "Analisis", icon: BarChart3 },
+  { key: "calendar", label: "Calendario", icon: CalendarDays },
+  { key: "settings", label: "Ajustes", icon: Settings },
 ];
 
 const Dashboard = () => {

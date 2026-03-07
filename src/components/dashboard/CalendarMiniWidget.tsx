@@ -52,7 +52,7 @@ const CalendarMiniWidget = ({ month, onMonthChange, activity, loading = false }:
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <CardTitle>Calendar Activity</CardTitle>
+            <CardTitle>Actividad en calendario</CardTitle>
             <CardDescription>Dias con actividad y resumen rapido.</CardDescription>
           </div>
           <div className="flex items-center gap-1">

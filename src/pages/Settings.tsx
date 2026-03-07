@@ -108,7 +108,7 @@ const Settings = () => {
       });
 
       if (isGuest) {
-        toast.info("Guest mode: Changes are not permanently saved.");
+        toast.info("Modo invitado: los cambios no se guardan de forma permanente.");
       } else {
         toast.success(t("settings.success"));
       }
@@ -202,7 +202,7 @@ const Settings = () => {
 
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14">
-                <AvatarImage src={profile?.avatar_url || undefined} alt="Profile avatar" />
+                <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar de perfil" />
                 <AvatarFallback>{(fullName || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
               </Avatar>
               <p className="text-sm text-muted-foreground">
@@ -216,7 +216,7 @@ const Settings = () => {
               </Label>
               <Input
                 id="fullName"
-                placeholder="Your Name"
+                placeholder="Tu nombre"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="bg-background/50"

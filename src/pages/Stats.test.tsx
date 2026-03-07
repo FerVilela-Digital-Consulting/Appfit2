@@ -156,10 +156,10 @@ describe("Stats page", () => {
 
     renderStats();
 
-    expect(await screen.findByText("Weight Goal Summary")).toBeInTheDocument();
-    expect(screen.getByText("Current")).toBeInTheDocument();
-    expect(screen.getByText("Initial")).toBeInTheDocument();
-    expect(screen.getByText("Target")).toBeInTheDocument();
+    expect(await screen.findByText("Resumen de meta de peso")).toBeInTheDocument();
+    expect(screen.getByText("Actual")).toBeInTheDocument();
+    expect(screen.getByText("Inicial")).toBeInTheDocument();
+    expect(screen.getByText("Objetivo")).toBeInTheDocument();
     expect(screen.getByText("80.0 kg")).toBeInTheDocument();
     expect(screen.getByText("84.0 kg")).toBeInTheDocument();
     expect(screen.getByText("75.0 kg")).toBeInTheDocument();
@@ -181,8 +181,8 @@ describe("Stats page", () => {
 
     renderStats();
 
-    expect(await screen.findByText("Not defined yet")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Register weight" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Complete onboarding" })).toBeInTheDocument();
+    expect(await screen.findByText("Aun no definido")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Registrar peso" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Completar onboarding" })).toBeInTheDocument();
   });
 });

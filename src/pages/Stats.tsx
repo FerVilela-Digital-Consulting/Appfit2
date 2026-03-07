@@ -272,34 +272,34 @@ const Stats = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Weight Goal Summary
+            Resumen de meta de peso
           </CardTitle>
-          <CardDescription>Goals are managed in the Goals module.</CardDescription>
+          <CardDescription>Las metas se gestionan en el modulo de objetivos.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-6">
             <div>
-              <p className="text-muted-foreground">Current</p>
+              <p className="text-muted-foreground">Actual</p>
               <p className="font-semibold">{formatNumber(latestWeight)} kg</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Initial</p>
-              <p className="font-semibold">{hasInitialFallback ? "Not defined yet" : `${formatNumber(initialWeight)} kg`}</p>
+              <p className="text-muted-foreground">Inicial</p>
+              <p className="font-semibold">{hasInitialFallback ? "Aun no definido" : `${formatNumber(initialWeight)} kg`}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Target</p>
+              <p className="text-muted-foreground">Objetivo</p>
               <p className="font-semibold">{formatNumber(target)} kg</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Target date</p>
+              <p className="text-muted-foreground">Fecha objetivo</p>
               <p className="font-semibold">{targetDate}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Remaining</p>
+              <p className="text-muted-foreground">Restante</p>
               <p className="font-semibold">{remaining === null ? "--" : `${remaining > 0 ? "+" : ""}${remaining.toFixed(1)} kg`}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Progress</p>
+              <p className="text-muted-foreground">Progreso</p>
               <p className="font-semibold">{progress === null ? "--" : `${progress.toFixed(0)}%`}</p>
             </div>
           </div>
@@ -307,16 +307,16 @@ const Stats = () => {
           {hasInitialFallback && (
             <div className="flex flex-wrap gap-2">
               <Button asChild variant="outline">
-                <Link to="/weight">Register weight</Link>
+                <Link to="/weight">Registrar peso</Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/onboarding">Complete onboarding</Link>
+                <Link to="/onboarding">Completar onboarding</Link>
               </Button>
             </div>
           )}
 
           <Button asChild>
-            <Link to="/goals">{target === null ? "Create goal" : "Manage goal"}</Link>
+            <Link to="/goals">{target === null ? "Crear meta" : "Gestionar meta"}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -324,7 +324,7 @@ const Stats = () => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Latest weight</CardTitle>
+            <CardTitle className="text-sm">Peso mas reciente</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">{formatNumber(latestWeight)} kg</p>
@@ -332,7 +332,7 @@ const Stats = () => {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Change vs 7d</CardTitle>
+            <CardTitle className="text-sm">Cambio vs 7d</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">{delta7 === null ? "--" : `${delta7 > 0 ? "+" : ""}${delta7.toFixed(1)} kg`}</p>
@@ -340,7 +340,7 @@ const Stats = () => {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Moving avg 7d</CardTitle>
+            <CardTitle className="text-sm">Promedio movil 7d</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">
@@ -352,7 +352,7 @@ const Stats = () => {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Trend</CardTitle>
+            <CardTitle className="text-sm">Tendencia</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">{trendLabel(weightTrendData?.trend ?? null)}</p>
@@ -362,29 +362,29 @@ const Stats = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Sleep Summary</CardTitle>
-          <CardDescription>Goal and trends from sleep logs.</CardDescription>
+          <CardTitle>Resumen de sueno</CardTitle>
+          <CardDescription>Meta y tendencias desde registros de sueno.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Goal</p>
+            <p className="text-xs text-muted-foreground">Meta</p>
             <p className="text-xl font-semibold">{(sleepGoalData.sleep_goal_minutes / 60).toFixed(1)} h</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Average (7d)</p>
+            <p className="text-xs text-muted-foreground">Promedio (7d)</p>
             <p className="text-xl font-semibold">{(sleepWeekAvg / 60).toFixed(1)} h</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Average (30d)</p>
+            <p className="text-xs text-muted-foreground">Promedio (30d)</p>
             <p className="text-xl font-semibold">{(sleepMonthAvg / 60).toFixed(1)} h</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Days met</p>
+            <p className="text-xs text-muted-foreground">Dias cumplidos</p>
             <p className="text-xl font-semibold">{sleepWeekMet}/7</p>
           </div>
           <div className="md:col-span-4">
             <Button asChild variant="outline">
-              <Link to="/sleep">Sleep</Link>
+              <Link to="/sleep">Sueno</Link>
             </Button>
           </div>
         </CardContent>
@@ -392,7 +392,7 @@ const Stats = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Nutrition Summary</CardTitle>
+          <CardTitle>Resumen de alimentacion</CardTitle>
           <CardDescription>Calorias y macros promedio en 7 y 30 dias.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -422,64 +422,64 @@ const Stats = () => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Biofeedback weekly</CardTitle>
+            <CardTitle className="text-sm">Biofeedback semanal</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
-            <p className="font-semibold">Energy: {biofeedbackWeek?.avg_energy ?? 0}/10</p>
-            <p className="font-semibold">Stress: {biofeedbackWeek?.avg_stress ?? 0}/10</p>
-            <p className="font-semibold">Sleep quality: {biofeedbackWeek?.avg_sleep_quality ?? 0}/10</p>
-            <p className="text-xs text-muted-foreground">Days logged: {biofeedbackWeek?.days_logged ?? 0}/7</p>
+            <p className="font-semibold">Energia: {biofeedbackWeek?.avg_energy ?? 0}/10</p>
+            <p className="font-semibold">Estres: {biofeedbackWeek?.avg_stress ?? 0}/10</p>
+            <p className="font-semibold">Calidad de sueno: {biofeedbackWeek?.avg_sleep_quality ?? 0}/10</p>
+            <p className="text-xs text-muted-foreground">Dias registrados: {biofeedbackWeek?.days_logged ?? 0}/7</p>
             <Button asChild variant="outline" size="sm">
-              <Link to="/biofeedback">Open biofeedback</Link>
+              <Link to="/biofeedback">Abrir biofeedback</Link>
             </Button>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Body composition</CardTitle>
+            <CardTitle className="text-sm">Composicion corporal</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
             <p className="font-semibold">
-              Body fat:{" "}
+              Grasa corporal:{" "}
               {latestMeasurement?.body_fat_pct === null || latestMeasurement?.body_fat_pct === undefined
                 ? "--"
                 : `${Number(latestMeasurement.body_fat_pct).toFixed(1)}%`}
             </p>
             <p className="font-semibold">
-              Fat mass:{" "}
+              Masa grasa:{" "}
               {latestMeasurement?.fat_mass_kg === null || latestMeasurement?.fat_mass_kg === undefined
                 ? "--"
                 : `${Number(latestMeasurement.fat_mass_kg).toFixed(1)} kg`}
             </p>
             <p className="font-semibold">
-              Lean mass:{" "}
+              Masa magra:{" "}
               {latestMeasurement?.lean_mass_kg === null || latestMeasurement?.lean_mass_kg === undefined
                 ? "--"
                 : `${Number(latestMeasurement.lean_mass_kg).toFixed(1)} kg`}
             </p>
             <Button asChild variant="outline" size="sm">
-              <Link to="/measurements">Open measurements</Link>
+              <Link to="/measurements">Abrir medidas</Link>
             </Button>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Weekly review</CardTitle>
+            <CardTitle className="text-sm">Revision semanal</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
             <p className="font-semibold">
-              Water adherence: {weeklyReview?.waterDaysMet ?? 0}/{weeklyReview?.waterDaysTotal ?? 7}
+              Adherencia agua: {weeklyReview?.waterDaysMet ?? 0}/{weeklyReview?.waterDaysTotal ?? 7}
             </p>
-            <p className="font-semibold">Active days: {weeklyReview?.activeDays ?? 0}/7</p>
-            <p className="font-semibold">Weight trend: {trendLabel(weeklyReview?.weightTrend ?? null)}</p>
+            <p className="font-semibold">Dias activos: {weeklyReview?.activeDays ?? 0}/7</p>
+            <p className="font-semibold">Tendencia de peso: {trendLabel(weeklyReview?.weightTrend ?? null)}</p>
             <p className="text-xs text-muted-foreground">
-              Weekly change:{" "}
+              Cambio semanal:{" "}
               {weeklyReview?.weightWeeklyChange === null || weeklyReview?.weightWeeklyChange === undefined
                 ? "--"
                 : `${weeklyReview.weightWeeklyChange > 0 ? "+" : ""}${weeklyReview.weightWeeklyChange.toFixed(2)} kg`}
             </p>
             <Button asChild variant="outline" size="sm">
-              <Link to="/weekly-review">Open weekly review</Link>
+              <Link to="/weekly-review">Abrir revision semanal</Link>
             </Button>
           </CardContent>
         </Card>
@@ -488,8 +488,8 @@ const Stats = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Weight Trend</CardTitle>
-            <CardDescription>Body weight and moving average over time</CardDescription>
+            <CardTitle>Tendencia de peso</CardTitle>
+            <CardDescription>Peso corporal y promedio movil en el tiempo</CardDescription>
           </div>
           <div className="flex gap-2">
             {(["7d", "30d", "90d", "all"] as Range[]).map((r) => (
@@ -501,7 +501,7 @@ const Stats = () => {
         </CardHeader>
         <CardContent>
           {chartData.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No weight data for this range.</p>
+            <p className="text-sm text-muted-foreground">No hay datos de peso para este rango.</p>
           ) : (
             <div className="h-[320px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -511,7 +511,7 @@ const Stats = () => {
                   <YAxis domain={["auto", "auto"]} />
                   <Tooltip
                     labelFormatter={(v) => new Date(String(v)).toLocaleDateString()}
-                    formatter={(value: number, name: string) => [`${value} kg`, name === "weight" ? "Weight" : "Moving avg 7d"]}
+                    formatter={(value: number, name: string) => [`${value} kg`, name === "weight" ? "Peso" : "Promedio movil 7d"]}
                   />
                   <Line type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={2} dot />
                   <Line type="monotone" dataKey="movingAvg7" stroke="hsl(var(--muted-foreground))" strokeWidth={2} dot={false} />
@@ -525,12 +525,12 @@ const Stats = () => {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Nutrition trends (7d)</CardTitle>
+            <CardTitle>Tendencias de alimentacion (7d)</CardTitle>
             <CardDescription>Ultima semana de calorias y macros.</CardDescription>
           </CardHeader>
           <CardContent>
             {!nutrition7d?.days?.length ? (
-              <p className="text-sm text-muted-foreground">No nutrition data yet.</p>
+              <p className="text-sm text-muted-foreground">Aun no hay datos de alimentacion.</p>
             ) : (
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -560,12 +560,12 @@ const Stats = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Nutrition trends (30d)</CardTitle>
+            <CardTitle>Tendencias de alimentacion (30d)</CardTitle>
             <CardDescription>Calorias y macros por dia.</CardDescription>
           </CardHeader>
           <CardContent>
             {!nutrition30d?.days?.length ? (
-              <p className="text-sm text-muted-foreground">No nutrition data yet.</p>
+              <p className="text-sm text-muted-foreground">Aun no hay datos de alimentacion.</p>
             ) : (
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -596,11 +596,11 @@ const Stats = () => {
         <Card>
           <CardHeader>
             <CardTitle>Biofeedback (30d)</CardTitle>
-            <CardDescription>Energy, stress and sleep quality by day.</CardDescription>
+            <CardDescription>Energia, estres y calidad de sueno por dia.</CardDescription>
           </CardHeader>
           <CardContent>
             {biofeedbackChartData.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No biofeedback data yet.</p>
+              <p className="text-sm text-muted-foreground">Aun no hay datos de biofeedback.</p>
             ) : (
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -621,12 +621,12 @@ const Stats = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Body fat trend</CardTitle>
-            <CardDescription>Navy body fat estimation from body measurements.</CardDescription>
+            <CardTitle>Tendencia de grasa corporal</CardTitle>
+            <CardDescription>Estimacion de grasa corporal desde medidas corporales.</CardDescription>
           </CardHeader>
           <CardContent>
             {bodyFatChartData.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No body measurements with body fat yet.</p>
+              <p className="text-sm text-muted-foreground">Aun no hay medidas corporales con grasa corporal.</p>
             ) : (
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -636,7 +636,7 @@ const Stats = () => {
                     <YAxis />
                     <Tooltip
                       labelFormatter={(v) => new Date(String(v)).toLocaleDateString()}
-                      formatter={(value: number) => [`${value}%`, "Body fat"]}
+                       formatter={(value: number) => [`${value}%`, "Grasa corporal"]}
                     />
                     <Line type="monotone" dataKey="body_fat_pct" stroke="hsl(var(--primary))" strokeWidth={2} dot />
                   </LineChart>
@@ -650,7 +650,7 @@ const Stats = () => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Change vs 30d</CardTitle>
+            <CardTitle className="text-sm">Cambio vs 30d</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">{delta30 === null ? "--" : `${delta30 > 0 ? "+" : ""}${delta30.toFixed(1)} kg`}</p>
@@ -658,7 +658,7 @@ const Stats = () => {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Weekly average</CardTitle>
+            <CardTitle className="text-sm">Promedio semanal</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">{weeklyAvg === null ? "--" : `${weeklyAvg.toFixed(1)} kg`}</p>
@@ -666,7 +666,7 @@ const Stats = () => {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Previous moving avg 7d</CardTitle>
+            <CardTitle className="text-sm">Promedio movil previo 7d</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">

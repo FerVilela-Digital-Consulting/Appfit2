@@ -74,11 +74,11 @@ const Goals = () => {
   const handleSaveGoal = async () => {
     const numericTarget = Number(targetWeight);
     if (!Number.isFinite(numericTarget) || numericTarget < 20 || numericTarget > 400) {
-      toast.error("Target weight must be between 20 and 400 kg.");
+      toast.error("El peso objetivo debe estar entre 20 y 400 kg.");
       return;
     }
     if (!targetDate) {
-      toast.error("Target date is required.");
+      toast.error("La fecha objetivo es obligatoria.");
       return;
     }
 
@@ -94,12 +94,12 @@ const Goals = () => {
       await updateProfile(payload);
       if (isGuest) {
         saveGuestWeightGoal(payload);
-        toast.info("Guest mode: changes won't be saved to your account.");
+        toast.info("Modo invitado: los cambios no se guardaran en tu cuenta.");
       } else {
-        toast.success("Weight goal saved.");
+        toast.success("Meta de peso guardada.");
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to save goal.");
+      toast.error(error?.message || "No se pudo guardar la meta.");
     }
   };
 
@@ -110,36 +110,36 @@ const Goals = () => {
       <div className="flex items-center gap-3">
         <Target className="w-7 h-7 text-primary" />
         <div>
-          <h1 className="text-3xl font-bold">Goals</h1>
-          <p className="text-sm text-muted-foreground">Create and manage your weight goal.</p>
+          <h1 className="text-3xl font-bold">Objetivos</h1>
+          <p className="text-sm text-muted-foreground">Crea y gestiona tu meta de peso.</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Goal Progress</CardTitle>
-          <CardDescription>Source of truth: initial weight is the first body weight record, fallback to onboarding weight.</CardDescription>
+          <CardTitle>Progreso de meta</CardTitle>
+          <CardDescription>Referencia: el peso inicial es el primer registro corporal; si no existe, se usa el del onboarding.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-5">
             <div>
-              <p className="text-muted-foreground">Current</p>
+               <p className="text-muted-foreground">Actual</p>
               <p className="font-semibold">{formatNumber(latestWeight)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Initial</p>
+               <p className="text-muted-foreground">Inicial</p>
               <p className="font-semibold">{formatNumber(initialWeight)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Target</p>
+               <p className="text-muted-foreground">Objetivo</p>
               <p className="font-semibold">{formatNumber(targetWeightValue)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Remaining</p>
+               <p className="text-muted-foreground">Restante</p>
               <p className="font-semibold">{remaining}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Progress</p>
+               <p className="text-muted-foreground">Progreso</p>
               <p className="font-semibold">{progress === null ? "--" : `${progress.toFixed(0)}%`}</p>
             </div>
           </div>
@@ -149,13 +149,13 @@ const Goals = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>{targetWeightValue === null ? "Create goal" : "Edit goal"}</CardTitle>
-          <CardDescription>Set your target weight and date.</CardDescription>
+          <CardTitle>{targetWeightValue === null ? "Crear meta" : "Editar meta"}</CardTitle>
+          <CardDescription>Define tu peso objetivo y fecha meta.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="targetWeight">Target weight (kg)</Label>
+              <Label htmlFor="targetWeight">Peso objetivo (kg)</Label>
               <Input
                 id="targetWeight"
                 type="number"
@@ -167,25 +167,25 @@ const Goals = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="targetDate">Target date</Label>
+              <Label htmlFor="targetDate">Fecha objetivo</Label>
               <Input id="targetDate" type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} />
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Goal direction</Label>
+            <Label>Direccion de la meta</Label>
             <Select value={goalDirection} onValueChange={(value: GoalDirection) => setGoalDirection(value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="lose">Lose</SelectItem>
-                <SelectItem value="gain">Gain</SelectItem>
-                <SelectItem value="maintain">Maintain</SelectItem>
+                <SelectItem value="lose">Bajar</SelectItem>
+                <SelectItem value="gain">Subir</SelectItem>
+                <SelectItem value="maintain">Mantener</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          {isGuest && <p className="text-xs text-amber-700">Guest mode: data won't be saved to your account.</p>}
-          <Button onClick={handleSaveGoal}>Save goal</Button>
+          {isGuest && <p className="text-xs text-amber-700">Modo invitado: los datos no se guardaran en tu cuenta.</p>}
+          <Button onClick={handleSaveGoal}>Guardar meta</Button>
         </CardContent>
       </Card>
     </div>

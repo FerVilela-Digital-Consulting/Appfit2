@@ -60,10 +60,10 @@ const Sidebar = () => {
           type="button"
           onClick={() => setIsEditModalOpen(true)}
           className="relative mb-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
-          aria-label="Edit profile"
+          aria-label="Editar perfil"
         >
           <Avatar className="w-20 h-20 ring-3 ring-primary/20">
-            <AvatarImage src={profile?.avatar_url || undefined} alt="User avatar" className="object-cover" />
+            <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar de usuario" className="object-cover" />
             <AvatarFallback>{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
         </button>

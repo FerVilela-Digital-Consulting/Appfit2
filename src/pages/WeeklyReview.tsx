@@ -98,7 +98,7 @@ const WeeklyReview = () => {
       <div className="flex items-center gap-3">
         <ClipboardList className="w-8 h-8 text-primary" />
         <div>
-          <h1 className="text-3xl font-bold">Weekly Review</h1>
+          <h1 className="text-3xl font-bold">Revision semanal</h1>
           <p className="text-sm text-muted-foreground">Resumen automatico de los ultimos 7 dias + observaciones.</p>
         </div>
       </div>

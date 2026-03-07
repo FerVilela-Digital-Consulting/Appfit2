@@ -12,7 +12,7 @@ const DashboardHeader = () => {
   const options: Intl.DateTimeFormatOptions = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
   const dateStr = today.toLocaleDateString(language === "es" ? "es-ES" : "en-US", options);
 
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const days = language === "es" ? ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const currentDay = today.getDay();
   // Convert Sunday=0 to index 6, Mon=1 to 0, etc.
   const activeDayIndex = currentDay === 0 ? 6 : currentDay - 1;
@@ -28,7 +28,7 @@ const DashboardHeader = () => {
       await signOut();
       navigate("/auth", { replace: true });
     } catch (error: any) {
-      toast.error(error?.message || "Could not sign out.");
+      toast.error(error?.message || "No se pudo cerrar sesion.");
     }
   };
 
@@ -65,8 +65,8 @@ const DashboardHeader = () => {
         <button
           className="w-10 h-10 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors"
           onClick={handleAuthAction}
-          aria-label={isGuest ? "Go to auth" : "Sign out"}
-          title={isGuest ? "Switch account" : "Sign out"}
+          aria-label={isGuest ? "Ir a iniciar sesion" : "Cerrar sesion"}
+          title={isGuest ? "Cambiar cuenta" : "Cerrar sesion"}
         >
           <LogOut className="w-5 h-5" />
         </button>

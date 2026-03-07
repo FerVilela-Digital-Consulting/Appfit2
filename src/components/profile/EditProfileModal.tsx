@@ -58,12 +58,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
         if (!file) return;
 
         if (isGuest) {
-            toast.info("Guest mode: avatar upload is disabled.");
+            toast.info("Modo invitado: la carga de avatar esta deshabilitada.");
             return;
         }
 
         if (!file.type.startsWith("image/")) {
-            toast.error("Please choose an image file.");
+            toast.error("Selecciona un archivo de imagen.");
             return;
         }
 
@@ -75,7 +75,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
                 setRemoveAvatar(false);
             }
         };
-        reader.onerror = () => toast.error("Could not read image file.");
+        reader.onerror = () => toast.error("No se pudo leer el archivo de imagen.");
         reader.readAsDataURL(file);
     };
 
@@ -85,12 +85,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
         const parsedWeight = weight ? Number(weight) : null;
 
         if (parsedHeight !== null && (!Number.isFinite(parsedHeight) || parsedHeight <= 0)) {
-            toast.error("Height must be a positive number.");
+            toast.error("La altura debe ser un numero positivo.");
             return;
         }
 
         if (parsedWeight !== null && (!Number.isFinite(parsedWeight) || parsedWeight <= 0)) {
-            toast.error("Weight must be a positive number.");
+            toast.error("El peso debe ser un numero positivo.");
             return;
         }
 
@@ -116,13 +116,13 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
             });
 
             if (isGuest) {
-                toast.info("Guest mode: changes won't be saved.");
+                toast.info("Modo invitado: los cambios no se guardaran.");
             } else {
-                toast.success("Profile updated successfully");
+                toast.success("Perfil actualizado correctamente");
             }
             onOpenChange(false);
         } catch (error: any) {
-            toast.error(error?.message || "Failed to update profile");
+            toast.error(error?.message || "No se pudo actualizar el perfil");
         } finally {
             setIsSaving(false);
         }
@@ -132,27 +132,27 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Edit Profile</DialogTitle>
+                    <DialogTitle>Editar perfil</DialogTitle>
                     <DialogDescription>
                         {isGuest
-                            ? "Make changes to your temporary guest profile here."
-                            : "Update your profile details and fitness goals."}
+                            ? "Realiza cambios en tu perfil temporal de invitado."
+                            : "Actualiza los datos de tu perfil y objetivos fitness."}
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSave} className="space-y-4 py-4">
                     {isGuest && (
                         <Alert>
-                            <AlertDescription>Guest mode: changes won't be saved.</AlertDescription>
+                            <AlertDescription>Modo invitado: los cambios no se guardaran.</AlertDescription>
                         </Alert>
                     )}
 
                     <div className="flex items-center gap-4">
                         <Avatar className="h-16 w-16">
-                            <AvatarImage src={avatarPreview || undefined} alt="Profile avatar" />
+                            <AvatarImage src={avatarPreview || undefined} alt="Avatar de perfil" />
                             <AvatarFallback>{(fullName || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="space-y-2 flex-1">
-                            <Label htmlFor="avatar">Profile Photo</Label>
+                            <Label htmlFor="avatar">Foto de perfil</Label>
                             <Input
                                 id="avatar"
                                 type="file"
@@ -172,24 +172,24 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
                                         setRemoveAvatar(true);
                                     }}
                                 >
-                                    Remove photo
+                                    Quitar foto
                                 </Button>
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="fullName">Full Name</Label>
+                        <Label htmlFor="fullName">Nombre completo</Label>
                         <Input
                             id="fullName"
-                            placeholder="Full Name"
+                            placeholder="Nombre completo"
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="birthDate">Birth Date</Label>
+                        <Label htmlFor="birthDate">Fecha de nacimiento</Label>
                         <Input
                             id="birthDate"
                             type="date"
@@ -201,7 +201,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="weight" className="flex items-center gap-2">
-                                <Scale className="h-4 w-4" /> Weight (kg)
+                                <Scale className="h-4 w-4" /> Peso (kg)
                             </Label>
                             <Input
                                 id="weight"
@@ -213,7 +213,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="height" className="flex items-center gap-2">
-                                <Ruler className="h-4 w-4" /> Height (cm)
+                                <Ruler className="h-4 w-4" /> Altura (cm)
                             </Label>
                             <Input
                                 id="height"
@@ -227,27 +227,27 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
 
                     <div className="space-y-2">
                         <Label htmlFor="goalType" className="flex items-center gap-2">
-                            <Target className="h-4 w-4" /> Fitness Goal
+                            <Target className="h-4 w-4" /> Objetivo fitness
                         </Label>
                         <Select value={goalType} onValueChange={setGoalType}>
                             <SelectTrigger id="goalType">
-                                <SelectValue placeholder="Select your goal" />
+                                <SelectValue placeholder="Selecciona tu objetivo" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Build Muscles">Build Muscles</SelectItem>
-                                <SelectItem value="Lose Weight">Lose Weight</SelectItem>
-                                <SelectItem value="Keep Fit">Keep Fit</SelectItem>
-                                <SelectItem value="Improve Endurance">Improve Endurance</SelectItem>
+                                <SelectItem value="Build Muscles">Ganar musculo</SelectItem>
+                                <SelectItem value="Lose Weight">Bajar de peso</SelectItem>
+                                <SelectItem value="Keep Fit">Mantenerse en forma</SelectItem>
+                                <SelectItem value="Improve Endurance">Mejorar resistencia</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     <DialogFooter className="pt-4">
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                            Cancel
+                            Cancelar
                         </Button>
                         <Button type="submit" disabled={isSaving}>
-                            {isSaving ? "Saving..." : "Save Changes"}
+                            {isSaving ? "Guardando..." : "Guardar cambios"}
                         </Button>
                     </DialogFooter>
                 </form>

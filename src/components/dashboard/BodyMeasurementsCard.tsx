@@ -58,7 +58,7 @@ const BodyMeasurementsCard = ({
     return (
       <Card className={`rounded-2xl border-border/60 bg-card/80 shadow-sm ${className ?? ""}`}>
         <CardHeader>
-          <CardTitle>Body Measurements Overview</CardTitle>
+          <CardTitle>Resumen de medidas corporales</CardTitle>
           <CardDescription>Visualizacion corporal y variacion de medidas.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -72,13 +72,13 @@ const BodyMeasurementsCard = ({
     return (
       <Card className={`rounded-2xl border-border/60 bg-card/80 shadow-sm ${className ?? ""}`}>
         <CardHeader>
-          <CardTitle>Body Measurements Overview</CardTitle>
-          <CardDescription>No body measurements yet</CardDescription>
+          <CardTitle>Resumen de medidas corporales</CardTitle>
+          <CardDescription>Aun no hay medidas corporales</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">Registra cuello, cintura, cadera, brazo y muslo para ver el maniqui interactivo.</p>
           <Button asChild>
-            <Link to="/measurements">Add Measurements</Link>
+            <Link to="/measurements">Agregar medidas</Link>
           </Button>
         </CardContent>
       </Card>
@@ -94,7 +94,7 @@ const BodyMeasurementsCard = ({
   const points: MeasurementPoint[] = [
     {
       key: "neck",
-      label: "Neck",
+      label: "Cuello",
       valueText: `${latest.neck_cm.toFixed(1)} cm`,
       deltaText: formatDelta(neckDelta),
       x: 50,
@@ -103,7 +103,7 @@ const BodyMeasurementsCard = ({
     },
     {
       key: "arm",
-      label: "Arm",
+      label: "Brazo",
       valueText: latest.arm_cm ? `${Number(latest.arm_cm).toFixed(1)} cm` : "--",
       deltaText: formatDelta(armDelta),
       x: 28,
@@ -112,7 +112,7 @@ const BodyMeasurementsCard = ({
     },
     {
       key: "waist",
-      label: "Waist",
+      label: "Cintura",
       valueText: `${latest.waist_cm.toFixed(1)} cm`,
       deltaText: formatDelta(waistDelta),
       x: 50,
@@ -121,7 +121,7 @@ const BodyMeasurementsCard = ({
     },
     {
       key: "hip",
-      label: "Hip",
+      label: "Cadera",
       valueText: latest.hip_cm ? `${Number(latest.hip_cm).toFixed(1)} cm` : "--",
       deltaText: formatDelta(hipDelta),
       x: 50,
@@ -130,7 +130,7 @@ const BodyMeasurementsCard = ({
     },
     {
       key: "thigh",
-      label: "Thigh",
+      label: "Muslo",
       valueText: latest.thigh_cm ? `${Number(latest.thigh_cm).toFixed(1)} cm` : "--",
       deltaText: formatDelta(thighDelta),
       x: 45,
@@ -143,7 +143,7 @@ const BodyMeasurementsCard = ({
     <Card className={`rounded-2xl border-border/60 bg-card/80 shadow-sm ${className ?? ""}`}>
       <CardHeader className="flex flex-row items-center justify-between gap-3">
         <div>
-          <CardTitle>Body Measurements Overview</CardTitle>
+          <CardTitle>Resumen de medidas corporales</CardTitle>
           <CardDescription>Ultima medicion: {latest.date_key}</CardDescription>
         </div>
         <Button asChild variant="outline" size="sm">
@@ -156,21 +156,21 @@ const BodyMeasurementsCard = ({
         </div>
         <div className="w-full space-y-2">
           <div className="rounded-lg border border-border/60 p-3">
-            <p className="text-xs text-muted-foreground">Latest Weight</p>
+            <p className="text-xs text-muted-foreground">Peso mas reciente</p>
             <p className="text-lg font-semibold">{latestWeight !== null ? `${latestWeight.toFixed(1)} kg` : "--"}</p>
           </div>
           <div className="rounded-lg border border-border/60 p-3">
-            <p className="text-xs text-muted-foreground">Body Fat Est.</p>
+            <p className="text-xs text-muted-foreground">Grasa corporal est.</p>
             <p className="text-lg font-semibold">
               {latest.body_fat_pct !== null && latest.body_fat_pct !== undefined ? `${Number(latest.body_fat_pct).toFixed(1)}%` : "--"}
             </p>
           </div>
           <div className="rounded-lg border border-border/60 p-3">
-            <p className="text-xs text-muted-foreground">Weekly Change</p>
+            <p className="text-xs text-muted-foreground">Cambio semanal</p>
             <p className="text-sm font-medium">
               {weeklyWaistDeltaCm === null
                 ? "--"
-                : `${weeklyWaistDeltaCm > 0 ? "+" : ""}${weeklyWaistDeltaCm.toFixed(1)} cm waist`}
+                : `${weeklyWaistDeltaCm > 0 ? "+" : ""}${weeklyWaistDeltaCm.toFixed(1)} cm cintura`}
             </p>
           </div>
         </div>

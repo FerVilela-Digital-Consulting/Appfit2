@@ -36,7 +36,7 @@ const WeightCard = ({ latest, initial, initialDate, weeklyDelta, movingAvg7 = nu
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Scale className="h-5 w-5 text-primary" />
-          Weight
+          Peso
         </CardTitle>
         <CardDescription>Peso actual, cambio 7d, media movil y tendencia.</CardDescription>
       </CardHeader>
@@ -64,7 +64,7 @@ const WeightCard = ({ latest, initial, initialDate, weeklyDelta, movingAvg7 = nu
             <Link to="/weight">Registrar peso</Link>
           </Button>
           <Button asChild variant="outline" size="sm">
-            <Link to="/statistics">Ver Statistics</Link>
+            <Link to="/statistics">Ver estadisticas</Link>
           </Button>
         </div>
       </CardContent>

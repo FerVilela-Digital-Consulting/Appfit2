@@ -39,11 +39,11 @@ const ProfileSummaryCard = ({
     <Card className="sticky top-24">
       <CardHeader className="items-center text-center">
         <Avatar className="w-20 h-20 ring-2 ring-primary/30">
-          <AvatarImage src={avatarUrl || undefined} alt="Profile avatar" />
+          <AvatarImage src={avatarUrl || undefined} alt="Avatar de perfil" />
           <AvatarFallback>{name.slice(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
         <CardTitle className="text-xl">{name}</CardTitle>
-        {showGuestWarning && <p className="text-xs text-amber-700">Guest mode: data won&apos;t be saved.</p>}
+        {showGuestWarning && <p className="text-xs text-amber-700">Modo invitado: los datos no se guardaran.</p>}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-3 text-center">
@@ -78,7 +78,7 @@ const ProfileSummaryCard = ({
 
         {hasMissing && (
           <Button variant="outline" className="w-full" onClick={onEditProfile}>
-            Complete profile
+            Completar perfil
           </Button>
         )}
       </CardContent>

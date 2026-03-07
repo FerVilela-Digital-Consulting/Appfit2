@@ -35,7 +35,7 @@ const NutritionCard = () => {
     <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Nutrition hoy</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Alimentacion hoy</p>
           <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
         </div>
         <p className="text-2xl font-semibold">
@@ -57,7 +57,7 @@ const NutritionCard = () => {
           Ultima comida: {lastEntry ? `${lastEntry.food_name} (${Math.round(lastEntry.calories)} kcal)` : "Sin registros"}
         </p>
         <Button asChild size="sm" variant="outline" className="w-full">
-          <Link to="/nutrition">Ir a Nutrition</Link>
+          <Link to="/nutrition">Ir a alimentacion</Link>
         </Button>
       </CardContent>
     </Card>

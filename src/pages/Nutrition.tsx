@@ -324,8 +324,8 @@ const Nutrition = () => {
     <div className="container max-w-6xl py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Nutrition</h1>
-          <p className="text-sm text-muted-foreground">Food diary diario por comida y seguimiento de macros.</p>
+          <h1 className="text-3xl font-bold">Alimentacion</h1>
+          <p className="text-sm text-muted-foreground">Diario por comida y seguimiento de macros.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setSelectedDate((prev) => addDays(prev, -1))}>
@@ -496,7 +496,7 @@ const Nutrition = () => {
                   const computed = calculateNutritionFromFood(selectedFood as FoodDatabaseItem, amount);
                   return (
                     <p className="text-xs text-muted-foreground">
-                      Preview: {computed.calories} kcal | P {computed.protein_g} | C {computed.carbs_g} | G {computed.fat_g}
+                      Vista previa: {computed.calories} kcal | P {computed.protein_g} | C {computed.carbs_g} | G {computed.fat_g}
                     </p>
                   );
                 })()}
@@ -523,7 +523,7 @@ const Nutrition = () => {
                   Guardar en favoritos
                 </label>
                 <p className="text-xs text-muted-foreground">
-                  Preview: {Number(calories || 0)} kcal | P {Number(protein || 0)} | C {Number(carbs || 0)} | G {Number(fat || 0)}
+                  Vista previa: {Number(calories || 0)} kcal | P {Number(protein || 0)} | C {Number(carbs || 0)} | G {Number(fat || 0)}
                 </p>
               </div>
             )}

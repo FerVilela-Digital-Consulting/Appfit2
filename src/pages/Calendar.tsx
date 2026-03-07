@@ -270,7 +270,7 @@ const Calendar = () => {
     mutationFn: async () => {
       const parsedWeight = Number(quickWeightKg);
       if (!Number.isFinite(parsedWeight) || parsedWeight < 20 || parsedWeight > 400) {
-        throw new Error("Weight must be between 20 and 400 kg.");
+        throw new Error("El peso debe estar entre 20 y 400 kg.");
       }
 
       if (isGuest) {
@@ -490,7 +490,7 @@ const Calendar = () => {
                         {day?.hasSleep && <Moon className="h-3 w-3 text-indigo-500" aria-label={t("calendar.summary.sleep")} />}
                         {day?.hasBiofeedback && <HeartPulse className="h-3 w-3 text-rose-500" aria-label="Biofeedback" />}
                         {day?.hasNote && <FileText className="h-3 w-3 text-amber-500" aria-label="Daily note" />}
-                        {day?.hasNutrition && <UtensilsCrossed className="h-3 w-3 text-emerald-400" aria-label="Nutrition" />}
+                        {day?.hasNutrition && <UtensilsCrossed className="h-3 w-3 text-emerald-400" aria-label="Alimentacion" />}
                         {day?.metSleepGoal && <CheckCircle2 className="h-3 w-3 text-emerald-500" aria-hidden="true" />}
                       </div>
                     </button>
@@ -598,7 +598,7 @@ const Calendar = () => {
                   </div>
 
                   <div className="rounded-md border p-3 space-y-2">
-                    <p className="text-sm text-muted-foreground">Nutrition</p>
+                    <p className="text-sm text-muted-foreground">Alimentacion</p>
                     {!selectedNutrition || selectedNutrition.totals.calories <= 0 ? (
                       <p className="text-sm text-muted-foreground">Sin registros de alimentacion.</p>
                     ) : (
@@ -612,12 +612,12 @@ const Calendar = () => {
                       </>
                     )}
                     <Button asChild variant="outline" size="sm">
-                      <Link to={`/nutrition?date=${selectedDateKey}`}>Abrir Nutrition</Link>
+                      <Link to={`/nutrition?date=${selectedDateKey}`}>Abrir alimentacion</Link>
                     </Button>
                   </div>
 
                   <div className="rounded-md border p-3 space-y-2">
-                    <p className="text-sm text-muted-foreground">Daily Notes</p>
+                    <p className="text-sm text-muted-foreground">Notas diarias</p>
                     <Input
                       value={noteTitle}
                       onChange={(event) => setNoteTitle(event.target.value)}

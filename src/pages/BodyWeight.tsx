@@ -121,11 +121,11 @@ const BodyWeight = () => {
   const validate = () => {
     const numericWeight = Number(weightKg);
     if (!measuredAt) {
-      toast.error("Date is required.");
+      toast.error("La fecha es obligatoria.");
       return null;
     }
     if (!Number.isFinite(numericWeight) || numericWeight < 20 || numericWeight > 400) {
-      toast.error("Weight must be between 20 and 400 kg.");
+      toast.error("El peso debe estar entre 20 y 400 kg.");
       return null;
     }
     return numericWeight;
@@ -168,7 +168,7 @@ const BodyWeight = () => {
           queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
           queryClient.invalidateQueries({ queryKey: ["stats"] }),
         ]);
-        toast.info("Guest mode: weight entries won't be saved to your account.");
+        toast.info("Modo invitado: los registros de peso no se guardaran en tu cuenta.");
         resetForm();
         return;
       }
@@ -183,10 +183,10 @@ const BodyWeight = () => {
         await deleteMutation.mutateAsync(editingEntryId);
       }
 
-      toast.success("Weight entry saved.");
+      toast.success("Registro de peso guardado.");
       resetForm();
     } catch (error: any) {
-      toast.error(error?.message || "Failed to save weight entry.");
+      toast.error(error?.message || "No se pudo guardar el registro de peso.");
     }
   };
 
@@ -214,9 +214,9 @@ const BodyWeight = () => {
       } else {
         await deleteMutation.mutateAsync(deleteTarget.id);
       }
-      toast.success("Weight entry deleted.");
+      toast.success("Registro de peso eliminado.");
     } catch (error: any) {
-      toast.error(error?.message || "Failed to delete weight entry.");
+      toast.error(error?.message || "No se pudo eliminar el registro de peso.");
     } finally {
       setDeleteTarget(null);
     }
@@ -237,10 +237,10 @@ const BodyWeight = () => {
       <div className="flex items-center gap-3">
         <Scale className="w-8 h-8 text-primary" />
         <div>
-          <h1 className="text-3xl font-bold">Weight</h1>
+          <h1 className="text-3xl font-bold">Peso</h1>
           <p className="text-sm text-muted-foreground">
-            Track your body weight over time.
-            {latestWeight !== null ? ` Latest: ${latestWeight} kg` : ""}
+            Sigue la evolucion de tu peso corporal.
+            {latestWeight !== null ? ` Ultimo: ${latestWeight} kg` : ""}
           </p>
           <p className="text-xs text-muted-foreground">
             Media movil 7d:{" "}
@@ -254,7 +254,7 @@ const BodyWeight = () => {
             | Tendencia: {trendLabel}
           </p>
           {isGuest && (
-            <p className="text-xs text-amber-700 mt-1">Guest mode: weight entries won't be saved to your account.</p>
+            <p className="text-xs text-amber-700 mt-1">Modo invitado: los registros de peso no se guardaran en tu cuenta.</p>
           )}
         </div>
       </div>
@@ -262,7 +262,7 @@ const BodyWeight = () => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Moving average 7d</CardTitle>
+            <CardTitle className="text-sm">Promedio movil 7d</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">
@@ -274,7 +274,7 @@ const BodyWeight = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Weekly change</CardTitle>
+            <CardTitle className="text-sm">Cambio semanal</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">
@@ -286,7 +286,7 @@ const BodyWeight = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Trend classification</CardTitle>
+            <CardTitle className="text-sm">Clasificacion de tendencia</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">{trendLabel}</p>
@@ -296,14 +296,14 @@ const BodyWeight = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>{editingEntryId ? "Edit Entry" : "Add Entry"}</CardTitle>
-          <CardDescription>Save one entry per day.</CardDescription>
+          <CardTitle>{editingEntryId ? "Editar registro" : "Agregar registro"}</CardTitle>
+          <CardDescription>Guarda un registro por dia.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSave} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="measuredAt">Date</Label>
+                <Label htmlFor="measuredAt">Fecha</Label>
                 <Input
                   id="measuredAt"
                   type="date"
@@ -313,7 +313,7 @@ const BodyWeight = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="weightKg">Weight (kg)</Label>
+                <Label htmlFor="weightKg">Peso (kg)</Label>
                 <Input
                   id="weightKg"
                   type="number"
@@ -327,21 +327,21 @@ const BodyWeight = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes (optional)</Label>
+              <Label htmlFor="notes">Notas (opcional)</Label>
               <Textarea
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="How did you feel today?"
+                placeholder="Como te sentiste hoy?"
               />
             </div>
             <div className="flex gap-2">
               <Button type="submit" disabled={saveMutation.isPending || deleteMutation.isPending}>
-                {editingEntryId ? "Update Entry" : "Save Entry"}
+                {editingEntryId ? "Actualizar registro" : "Guardar registro"}
               </Button>
               {editingEntryId && (
                 <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancel Edit
+                  Cancelar edicion
                 </Button>
               )}
             </div>
@@ -351,21 +351,21 @@ const BodyWeight = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Entries</CardTitle>
+          <CardTitle>Registros recientes</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading && !isGuest ? (
-            <p className="text-sm text-muted-foreground">Loading entries...</p>
+            <p className="text-sm text-muted-foreground">Cargando registros...</p>
           ) : displayedEntries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No entries yet.</p>
+            <p className="text-sm text-muted-foreground">Aun no hay registros.</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Weight</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Peso</TableHead>
+                  <TableHead>Notas</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -376,10 +376,10 @@ const BodyWeight = () => {
                     <TableCell>{entry.notes || "-"}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button size="sm" variant="outline" onClick={() => handleEdit(entry)}>
-                        Edit
+                        Editar
                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(entry)}>
-                        Delete
+                        Eliminar
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -393,14 +393,14 @@ const BodyWeight = () => {
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete weight entry?</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar registro de peso?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone.
+              Esta accion no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Eliminar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
