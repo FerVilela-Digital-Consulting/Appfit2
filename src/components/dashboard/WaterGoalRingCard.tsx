@@ -1,8 +1,17 @@
-import { Droplets } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Droplets, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
+import { useAuth } from "@/context/AuthContext";
+import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
+import { addWaterIntake } from "@/services/waterIntake";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type WaterGoalRingCardProps = {
   waterMl: number;
@@ -13,6 +22,14 @@ type WaterGoalRingCardProps = {
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
 const WaterGoalRingCard = ({ waterMl, goalMl, loading = false }: WaterGoalRingCardProps) => {
+  const queryClient = useQueryClient();
+  const { user, isGuest, profile } = useAuth();
+  const timeZone = (profile as { timezone?: string } | null)?.timezone || DEFAULT_WATER_TIMEZONE;
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customValue, setCustomValue] = useState("");
+  const [customUnit, setCustomUnit] = useState<"ml" | "l">("ml");
+  const today = useMemo(() => new Date(), []);
+
   const safeGoal = Math.max(1, Number(goalMl || 0));
   const safeWater = Math.max(0, Number(waterMl || 0));
   const progress = clamp((safeWater / safeGoal) * 100, 0, 100);
@@ -20,6 +37,46 @@ const WaterGoalRingCard = ({ waterMl, goalMl, loading = false }: WaterGoalRingCa
   const circumference = 2 * Math.PI * radius;
   const strokeOffset = circumference - (progress / 100) * circumference;
   const isGoalMet = safeWater >= safeGoal;
+
+  const addWaterMutation = useMutation({
+    mutationFn: (consumedMl: number) =>
+      addWaterIntake({
+        userId: user?.id ?? null,
+        consumed_ml: consumedMl,
+        date: today,
+        timeZone,
+        isGuest,
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
+        queryClient.invalidateQueries({ queryKey: ["water_day_total"] }),
+        queryClient.invalidateQueries({ queryKey: ["water_logs_day"] }),
+      ]);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "No se pudo registrar el agua.");
+    },
+  });
+
+  const handleQuickCup = async () => {
+    await addWaterMutation.mutateAsync(250);
+    toast.success("+250 ml agregados.");
+  };
+
+  const handleAddCustom = async () => {
+    const numeric = Number(customValue);
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+      toast.error("Ingresa una cantidad valida.");
+      return;
+    }
+    const ml = customUnit === "l" ? Math.round(numeric * 1000) : Math.round(numeric);
+    await addWaterMutation.mutateAsync(ml);
+    setCustomOpen(false);
+    setCustomValue("");
+    setCustomUnit("ml");
+    toast.success(`+${ml} ml agregados.`);
+  };
 
   return (
     <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
@@ -58,10 +115,55 @@ const WaterGoalRingCard = ({ waterMl, goalMl, loading = false }: WaterGoalRingCa
 
         <p className="mb-3 text-center text-xs text-muted-foreground">Objetivo diario: {safeGoal} ml</p>
 
-        <Button asChild size="sm" variant="outline" className="w-full">
+        <div className="grid grid-cols-2 gap-2">
+          <Button size="sm" onClick={handleQuickCup} disabled={addWaterMutation.isPending || loading}>
+            <Plus className="mr-1 h-4 w-4" />
+            Vaso
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setCustomOpen(true)} disabled={addWaterMutation.isPending || loading}>
+            Personalizado
+          </Button>
+        </div>
+
+        <Button asChild size="sm" variant="outline" className="w-full mt-2">
           <Link to="/water">Ir a Agua</Link>
         </Button>
       </CardContent>
+
+      <Dialog open={customOpen} onOpenChange={setCustomOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Agregar agua rapido</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <Input
+              type="number"
+              min="1"
+              step="1"
+              value={customValue}
+              onChange={(e) => setCustomValue(e.target.value)}
+              placeholder="Cantidad"
+            />
+            <Select value={customUnit} onValueChange={(value: "ml" | "l") => setCustomUnit(value)}>
+              <SelectTrigger className="w-[90px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ml">ml</SelectItem>
+                <SelectItem value="l">L</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCustomOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAddCustom} disabled={addWaterMutation.isPending}>
+              Agregar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
