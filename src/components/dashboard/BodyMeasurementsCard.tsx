@@ -116,7 +116,7 @@ const BodyMeasurementsCard = ({
       valueText: `${latest.waist_cm.toFixed(1)} cm`,
       deltaText: formatDelta(waistDelta),
       x: 59,
-      y: 42,
+      y: 39,
       tone: measurementTone("waist", waistDelta, goalDirection),
     },
     {
@@ -125,7 +125,7 @@ const BodyMeasurementsCard = ({
       valueText: latest.hip_cm ? `${Number(latest.hip_cm).toFixed(1)} cm` : "--",
       deltaText: formatDelta(hipDelta),
       x: 60,
-      y: 50,
+      y: 47,
       tone: measurementTone("hip", hipDelta, goalDirection),
     },
     {
@@ -133,7 +133,7 @@ const BodyMeasurementsCard = ({
       label: "Muslo",
       valueText: latest.thigh_cm ? `${Number(latest.thigh_cm).toFixed(1)} cm` : "--",
       deltaText: formatDelta(thighDelta),
-      x: 31,
+      x: 35,
       y: 68,
       tone: measurementTone("thigh", thighDelta, goalDirection),
     },
