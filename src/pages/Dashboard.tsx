@@ -131,25 +131,24 @@ const Dashboard = () => {
         streakDays={core?.activeDays7 ?? 0}
       />
 
-      <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
-        <section id="nutrition">
+      <div className="grid gap-4 xl:grid-cols-[1.55fr_1fr] xl:items-start">
+        <section id="nutrition" className="min-w-0">
           <TodayMealsModule />
         </section>
-        <section id="water">
-          <WaterCard showHistoryButton={false} />
-        </section>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        <section id="weight">
-          <TodayWeightModule />
-        </section>
-        <section id="sleep">
-          <SleepCard />
-        </section>
-        <section id="biofeedback">
-          <TodayBiofeedbackModule />
-        </section>
+        <div className="grid gap-4 xl:grid-cols-2">
+          <section id="water" className="xl:col-span-2">
+            <WaterCard showHistoryButton={false} />
+          </section>
+          <section id="weight">
+            <TodayWeightModule />
+          </section>
+          <section id="sleep">
+            <SleepCard />
+          </section>
+          <section id="biofeedback" className="xl:col-span-2">
+            <TodayBiofeedbackModule />
+          </section>
+        </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr_1fr]">
