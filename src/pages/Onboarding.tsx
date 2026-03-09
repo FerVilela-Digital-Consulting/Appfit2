@@ -108,7 +108,7 @@ const Onboarding = () => {
       ]);
 
       toast.success("Onboarding completado.");
-      navigate("/dashboard", { replace: true });
+      navigate("/today", { replace: true });
     } catch (error: any) {
       toast.error(error?.message || "No se pudo completar el onboarding.");
     } finally {

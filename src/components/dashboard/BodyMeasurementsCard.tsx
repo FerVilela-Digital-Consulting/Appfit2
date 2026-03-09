@@ -78,7 +78,7 @@ const BodyMeasurementsCard = ({
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">Registra cuello, cintura, cadera, brazo y muslo para ver el maniqui interactivo.</p>
           <Button asChild>
-            <Link to="/measurements">Agregar medidas</Link>
+            <Link to="/body">Agregar medidas</Link>
           </Button>
         </CardContent>
       </Card>
@@ -147,12 +147,12 @@ const BodyMeasurementsCard = ({
           <CardDescription>Ultima medicion: {latest.date_key}</CardDescription>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link to="/measurements">Editar medidas</Link>
+          <Link to="/body">Editar medidas</Link>
         </Button>
       </CardHeader>
       <CardContent className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="flex justify-center lg:justify-start">
-          <BodyMannequin points={points} onPointClick={() => navigate("/measurements")} />
+          <BodyMannequin points={points} onPointClick={() => navigate("/body")} />
         </div>
         <div className="w-full space-y-2">
           <div className="rounded-lg border border-border/60 p-3">

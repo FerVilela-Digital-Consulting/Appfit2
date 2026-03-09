@@ -9,12 +9,12 @@ export type DailyMetricTaskDefinition = {
 };
 
 export const DAILY_METRIC_TASK_DEFINITIONS: DailyMetricTaskDefinition[] = [
-  { key: "water", label: "Registrar agua", route: "/water" },
-  { key: "sleep", label: "Registrar sueno", route: "/sleep" },
-  { key: "weight", label: "Registrar peso", route: "/weight" },
-  { key: "biofeedback", label: "Registrar biofeedback", route: "/biofeedback" },
-  { key: "notes", label: "Registrar nota diaria", route: "/dashboard" },
-  { key: "measurements", label: "Registrar medidas corporales", route: "/measurements" },
+  { key: "water", label: "Registrar agua", route: "/today#water" },
+  { key: "sleep", label: "Registrar sueno", route: "/today#sleep" },
+  { key: "weight", label: "Registrar peso", route: "/today#weight" },
+  { key: "biofeedback", label: "Registrar biofeedback", route: "/today#biofeedback" },
+  { key: "notes", label: "Registrar nota diaria", route: "/today" },
+  { key: "measurements", label: "Registrar medidas corporales", route: "/body" },
 ];
 
 export const DEFAULT_DAILY_METRIC_TASKS: DailyMetricTaskKey[] = ["water", "sleep", "weight", "biofeedback"];

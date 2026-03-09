@@ -40,8 +40,8 @@ const RequireOnboarding = () => {
 
     if (onboardingCompleted === true) {
         if (location.pathname === '/onboarding') {
-            console.log("[RequireOnboarding] Redirecting to /dashboard");
-            return <Navigate to="/dashboard" replace />;
+            console.log("[RequireOnboarding] Redirecting to /today");
+            return <Navigate to="/today" replace />;
         }
     }
 

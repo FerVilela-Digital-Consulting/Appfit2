@@ -1,6 +1,13 @@
 export type AppLanguage = "en" | "es";
 
 export type TranslationKey =
+  | "nav.today"
+  | "nav.nutrition"
+  | "nav.body"
+  | "nav.progress"
+  | "nav.calendar"
+  | "nav.fitnessProfile"
+  | "nav.settings"
   | "nav.dashboard"
   | "nav.profile"
   | "nav.goals"
@@ -8,12 +15,9 @@ export type TranslationKey =
   | "nav.water"
   | "nav.weight"
   | "nav.sleep"
-  | "nav.nutrition"
   | "nav.biofeedback"
   | "nav.measurements"
   | "nav.weeklyReview"
-  | "nav.calendar"
-  | "nav.settings"
   | "sidebar.editProfile"
   | "sidebar.guest"
   | "sidebar.user"
@@ -133,6 +137,10 @@ type Dict = Record<TranslationKey, string>;
 
 export const translations: Record<AppLanguage, Dict> = {
   en: {
+    "nav.today": "Today",
+    "nav.body": "Body",
+    "nav.progress": "Progress",
+    "nav.fitnessProfile": "Fitness Profile",
     "nav.dashboard": "Dashboard",
     "nav.profile": "Profile",
     "nav.goals": "Goals",
@@ -262,6 +270,10 @@ export const translations: Record<AppLanguage, Dict> = {
     "common.minutes": "Minutes",
   },
   es: {
+    "nav.today": "Hoy",
+    "nav.body": "Cuerpo",
+    "nav.progress": "Progreso",
+    "nav.fitnessProfile": "Perfil Fitness",
     "nav.dashboard": "Inicio",
     "nav.profile": "Perfil",
     "nav.goals": "Objetivos",

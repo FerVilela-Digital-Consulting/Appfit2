@@ -16,6 +16,7 @@ type ActivityDay = {
   hasWeight: boolean;
   hasBiofeedback: boolean;
   hasNote: boolean;
+  hasNutrition: boolean;
 };
 
 type Props = {
@@ -76,7 +77,7 @@ const CalendarMiniWidget = ({ month, onMonthChange, activity, loading = false }:
               const day = activity?.get(key);
               const inMonth = isSameMonth(date, month);
               const isSelected = key === selectedDateKey;
-              const hasAny = Boolean(day?.hasWater || day?.hasSleep || day?.hasWeight || day?.hasBiofeedback || day?.hasNote);
+              const hasAny = Boolean(day?.hasWater || day?.hasSleep || day?.hasWeight || day?.hasBiofeedback || day?.hasNote || day?.hasNutrition);
               return (
                 <button
                   key={key}
@@ -98,6 +99,7 @@ const CalendarMiniWidget = ({ month, onMonthChange, activity, loading = false }:
                       {day?.hasWeight ? <span className="h-1 w-1 rounded-full bg-amber-500" /> : null}
                       {day?.hasBiofeedback ? <span className="h-1 w-1 rounded-full bg-rose-500" /> : null}
                       {day?.hasNote ? <span className="h-1 w-1 rounded-full bg-emerald-500" /> : null}
+                      {day?.hasNutrition ? <span className="h-1 w-1 rounded-full bg-lime-500" /> : null}
                     </span>
                   </div>
                 </button>
@@ -113,7 +115,7 @@ const CalendarMiniWidget = ({ month, onMonthChange, activity, loading = false }:
           </p>
           <p className="text-muted-foreground">
             Peso: {selected?.weightKg !== null && selected?.weightKg !== undefined ? `${selected.weightKg} kg` : "--"} | Bio:{" "}
-            {selected?.hasBiofeedback ? "si" : "no"} | Nota: {selected?.hasNote ? "si" : "no"}
+            {selected?.hasBiofeedback ? "si" : "no"} | Nota: {selected?.hasNote ? "si" : "no"} | Nutricion: {selected?.hasNutrition ? "si" : "no"}
           </p>
         </div>
       </CardContent>

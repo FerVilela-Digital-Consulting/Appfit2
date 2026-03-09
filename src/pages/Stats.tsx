@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { startOfWeek } from "date-fns";
 import { Link } from "react-router-dom";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp } from "lucide-react";
+import { ClipboardList, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
 import { calculateGoalProgress, resolveInitialWeight, type GoalDirection } from "@/features/goals/goalProgress";
@@ -17,13 +19,17 @@ import { getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
 import { getBiofeedbackRange, getBiofeedbackWeeklyAverages } from "@/services/dailyBiofeedback";
 import { getBodyMeasurementsRange, getLatestBodyMeasurement } from "@/services/bodyMeasurements";
 import { getNutritionGoals, getNutritionRangeSummary } from "@/services/nutrition";
-import { getWeeklyReviewSummary } from "@/services/weeklyReview";
+import { getWeeklyReviewObservation, getWeeklyReviewSummary, upsertWeeklyReviewObservation } from "@/services/weeklyReview";
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
 import GuestWarningBanner from "@/components/GuestWarningBanner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type Range = "7d" | "30d" | "90d" | "all";
+type HydrationState = "dry" | "retention" | "variable";
+type TrainingPerformance = "better" | "same" | "worse";
 
 const formatNumber = (n: number | null) => (n === null ? "--" : n.toFixed(1));
 
@@ -42,6 +48,7 @@ const trendLabel = (trend: "up" | "down" | "stable" | null) => {
 
 const Stats = () => {
   const { user, isGuest, profile } = useAuth();
+  const queryClient = useQueryClient();
   const timeZone = (profile as any)?.timezone || DEFAULT_WATER_TIMEZONE;
   const metabolicProfileKey = [
     profile?.weight ?? "",
@@ -54,6 +61,11 @@ const Stats = () => {
     profile?.goal_type ?? "",
   ].join("|");
   const [range, setRange] = useState<Range>("30d");
+  const weekStartDate = useMemo(() => startOfWeek(new Date(), { weekStartsOn: 1 }), []);
+  const weekKey = weekStartDate.toISOString().slice(0, 10);
+  const [hydrationState, setHydrationState] = useState<HydrationState>("variable");
+  const [trainingPerformance, setTrainingPerformance] = useState<TrainingPerformance>("same");
+  const [weeklyNotes, setWeeklyNotes] = useState("");
 
   const { data: chartEntries = [] } = useQuery({
     queryKey: ["body_metrics", user?.id, range],
@@ -216,6 +228,12 @@ const Stats = () => {
     enabled: Boolean(user?.id) || isGuest,
   });
 
+  const { data: weeklyObservation } = useQuery({
+    queryKey: ["weekly_review_observation", user?.id, weekKey, isGuest],
+    queryFn: () => getWeeklyReviewObservation(user?.id ?? null, weekStartDate, { isGuest }),
+    enabled: Boolean(user?.id) || isGuest,
+  });
+
   const { data: nutritionGoals } = useQuery({
     queryKey: ["stats_nutrition_goals", user?.id, isGuest, metabolicProfileKey],
     queryFn: () =>
@@ -282,9 +300,56 @@ const Stats = () => {
 
   const hasInitialFallback = initialWeight === null;
 
+  useEffect(() => {
+    if (!weeklyObservation) {
+      setHydrationState("variable");
+      setTrainingPerformance("same");
+      setWeeklyNotes("");
+      return;
+    }
+    setHydrationState(weeklyObservation.hydration_state);
+    setTrainingPerformance(weeklyObservation.training_performance);
+    setWeeklyNotes(weeklyObservation.notes || "");
+  }, [weeklyObservation]);
+
+  const saveWeeklyReviewMutation = useMutation({
+    mutationFn: async () =>
+      upsertWeeklyReviewObservation(
+        {
+          userId: user?.id ?? null,
+          weekStartDate,
+          hydration_state: hydrationState,
+          training_performance: trainingPerformance,
+          notes: weeklyNotes.trim() || null,
+        },
+        { isGuest },
+      ),
+    onSuccess: async () => {
+      toast.success("Revision semanal guardada.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["weekly_review_observation"] }),
+        queryClient.invalidateQueries({ queryKey: ["weekly_review_summary"] }),
+        queryClient.invalidateQueries({ queryKey: ["stats_weekly_review"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
+        queryClient.invalidateQueries({ queryKey: ["stats"] }),
+      ]);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "No se pudo guardar la revision semanal.");
+    },
+  });
+
   return (
     <div className="container max-w-6xl py-8 space-y-6">
       {isGuest && <GuestWarningBanner />}
+
+      <div className="flex items-center gap-3">
+        <TrendingUp className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-bold">Progreso</h1>
+          <p className="text-sm text-muted-foreground">Analisis longitudinal, tendencias y revision semanal en un solo contexto.</p>
+        </div>
+      </div>
 
       <Card>
         <CardHeader>
@@ -292,7 +357,7 @@ const Stats = () => {
             <TrendingUp className="h-5 w-5 text-primary" />
             Resumen de meta de peso
           </CardTitle>
-          <CardDescription>Las metas se gestionan en el modulo de objetivos.</CardDescription>
+          <CardDescription>Las metas se gestionan en Perfil Fitness.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-6">
@@ -325,7 +390,7 @@ const Stats = () => {
           {hasInitialFallback && (
             <div className="flex flex-wrap gap-2">
               <Button asChild variant="outline">
-                <Link to="/weight">Registrar peso</Link>
+                <Link to="/today#weight">Registrar peso</Link>
               </Button>
               <Button asChild variant="outline">
                 <Link to="/onboarding">Completar onboarding</Link>
@@ -334,7 +399,7 @@ const Stats = () => {
           )}
 
           <Button asChild>
-            <Link to="/goals">{target === null ? "Crear meta" : "Gestionar meta"}</Link>
+            <Link to="/fitness-profile">{target === null ? "Crear meta" : "Gestionar meta"}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -402,7 +467,7 @@ const Stats = () => {
           </div>
           <div className="md:col-span-4">
             <Button asChild variant="outline">
-              <Link to="/sleep">Sueno</Link>
+              <Link to="/today#sleep">Sueno</Link>
             </Button>
           </div>
         </CardContent>
@@ -448,7 +513,7 @@ const Stats = () => {
             <p className="font-semibold">Calidad de sueno: {biofeedbackWeek?.avg_sleep_quality ?? 0}/10</p>
             <p className="text-xs text-muted-foreground">Dias registrados: {biofeedbackWeek?.days_logged ?? 0}/7</p>
             <Button asChild variant="outline" size="sm">
-              <Link to="/biofeedback">Abrir biofeedback</Link>
+              <Link to="/today#biofeedback">Abrir biofeedback</Link>
             </Button>
           </CardContent>
         </Card>
@@ -476,7 +541,7 @@ const Stats = () => {
                 : `${Number(latestMeasurement.lean_mass_kg).toFixed(1)} kg`}
             </p>
             <Button asChild variant="outline" size="sm">
-              <Link to="/measurements">Abrir medidas</Link>
+              <Link to="/body">Abrir medidas</Link>
             </Button>
           </CardContent>
         </Card>
@@ -496,9 +561,6 @@ const Stats = () => {
                 ? "--"
                 : `${weeklyReview.weightWeeklyChange > 0 ? "+" : ""}${weeklyReview.weightWeeklyChange.toFixed(2)} kg`}
             </p>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/weekly-review">Abrir revision semanal</Link>
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -695,6 +757,86 @@ const Stats = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card id="weekly-review">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-primary" />
+            Revision semanal
+          </CardTitle>
+          <CardDescription>Observaciones cualitativas para contextualizar las tendencias de la semana.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="rounded-lg border p-3">
+              <p className="text-xs text-muted-foreground">Adherencia agua</p>
+              <p className="text-2xl font-semibold">
+                {weeklyReview?.waterDaysMet ?? 0}/{weeklyReview?.waterDaysTotal ?? 7}
+              </p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <p className="text-xs text-muted-foreground">Sueno promedio</p>
+              <p className="text-2xl font-semibold">{weeklyReview ? (weeklyReview.avgSleepMinutes / 60).toFixed(1) : "0.0"} h</p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <p className="text-xs text-muted-foreground">Dias activos</p>
+              <p className="text-2xl font-semibold">{weeklyReview?.activeDays ?? 0}/7</p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <p className="text-xs text-muted-foreground">Peso semanal</p>
+              <p className="text-2xl font-semibold">
+                {weeklyReview?.weightWeeklyChange === null || weeklyReview?.weightWeeklyChange === undefined
+                  ? "--"
+                  : `${weeklyReview.weightWeeklyChange > 0 ? "+" : ""}${weeklyReview.weightWeeklyChange.toFixed(2)} kg`}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="hydration-state">Estado hidrico</Label>
+              <select
+                id="hydration-state"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                value={hydrationState}
+                onChange={(event) => setHydrationState(event.target.value as HydrationState)}
+              >
+                <option value="dry">Seco</option>
+                <option value="retention">Retencion</option>
+                <option value="variable">Variable</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="training-performance">Rendimiento entrenamiento</Label>
+              <select
+                id="training-performance"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                value={trainingPerformance}
+                onChange={(event) => setTrainingPerformance(event.target.value as TrainingPerformance)}
+              >
+                <option value="better">Mejor</option>
+                <option value="same">Igual</option>
+                <option value="worse">Peor</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="weekly-notes">Notas de la semana</Label>
+            <Textarea
+              id="weekly-notes"
+              value={weeklyNotes}
+              onChange={(event) => setWeeklyNotes(event.target.value)}
+              placeholder="Factores que explican el rendimiento, adherencia o recuperacion de esta semana..."
+            />
+          </div>
+
+          <Button onClick={() => saveWeeklyReviewMutation.mutate()} disabled={saveWeeklyReviewMutation.isPending}>
+            {saveWeeklyReviewMutation.isPending ? "Guardando..." : "Guardar revision semanal"}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };

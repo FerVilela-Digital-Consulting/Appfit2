@@ -1,11 +1,10 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "@/layouts/MainLayout";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import RequireOnboarding from "@/routes/RequireOnboarding";
 import Dashboard from "@/pages/Dashboard";
 import Index from "@/pages/Index";
 import Profile from "@/pages/Profile";
-import Goals from "@/pages/Goals";
 import Schedule from "@/pages/Schedule";
 import Achievements from "@/pages/Achievements";
 import Stats from "@/pages/Stats";
@@ -17,7 +16,6 @@ import Calendar from "@/pages/Calendar";
 import DailyBiofeedback from "@/pages/DailyBiofeedback";
 import BodyMeasurements from "@/pages/BodyMeasurements";
 import Nutrition from "@/pages/Nutrition";
-import WeeklyReview from "@/pages/WeeklyReview";
 import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/NotFound";
 
@@ -34,18 +32,22 @@ const AppRoutes = () => {
 
         <Route element={<RequireOnboarding />}>
           <Route element={<MainLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/goals" element={<Goals />} />
+            <Route path="/today" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Navigate to="/today" replace />} />
+            <Route path="/fitness-profile" element={<Profile />} />
+            <Route path="/profile" element={<Navigate to="/fitness-profile" replace />} />
+            <Route path="/goals" element={<Navigate to="/fitness-profile" replace />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/achievements" element={<Achievements />} />
-            <Route path="/statistics" element={<Stats />} />
+            <Route path="/progress" element={<Stats />} />
+            <Route path="/statistics" element={<Navigate to="/progress" replace />} />
+            <Route path="/weekly-review" element={<Navigate to="/progress" replace />} />
             <Route path="/water" element={<Water />} />
             <Route path="/sleep" element={<Sleep />} />
             <Route path="/biofeedback" element={<DailyBiofeedback />} />
-            <Route path="/measurements" element={<BodyMeasurements />} />
+            <Route path="/body" element={<BodyMeasurements />} />
+            <Route path="/measurements" element={<Navigate to="/body" replace />} />
             <Route path="/nutrition" element={<Nutrition />} />
-            <Route path="/weekly-review" element={<WeeklyReview />} />
             <Route path="/weight" element={<BodyWeight />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/settings" element={<Settings />} />

@@ -269,3 +269,21 @@ end;
 $$;
 
 grant execute on function public.reset_user_account(uuid, boolean) to authenticated;
+
+create or replace function public.reset_user_account(
+  p_keep_preferences boolean,
+  p_user_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform public.reset_user_account(p_user_id, p_keep_preferences);
+end;
+$$;
+
+grant execute on function public.reset_user_account(boolean, uuid) to authenticated;
+
+notify pgrst, 'reload schema';

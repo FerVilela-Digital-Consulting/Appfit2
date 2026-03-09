@@ -38,7 +38,7 @@ const WeeklySummaryCard = ({
   bioStress = 0,
   bioSleep = 0,
   activeDays = 0,
-  weeklyReviewHref = "/statistics",
+  weeklyReviewHref = "/progress",
   loading = false,
   error,
 }: Props) => {
@@ -107,13 +107,13 @@ const WeeklySummaryCard = ({
         )}
         <div className="flex gap-2">
           <Button asChild variant="outline" size="sm">
-            <Link to="/statistics">Ver detalle semanal</Link>
+            <Link to="/progress">Ver detalle semanal</Link>
           </Button>
           <Button asChild variant="outline" size="sm">
-            <Link to="/water">Agua</Link>
+            <Link to="/today#water">Agua</Link>
           </Button>
           <Button asChild variant="outline" size="sm">
-            <Link to="/sleep">Sueno</Link>
+            <Link to="/today#sleep">Sueno</Link>
           </Button>
           <Button asChild variant="outline" size="sm">
             <Link to={weeklyReviewHref}>Revision semanal</Link>

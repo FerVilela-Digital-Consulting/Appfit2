@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { BarChart3, Bell, CalendarDays, Droplets, Home, LogOut, Menu, Moon, Plus, Scale, Settings, Target, UtensilsCrossed } from "lucide-react";
+import { BarChart3, Bell, CalendarDays, Home, LogOut, Menu, Plus, Ruler, Settings, Target, UtensilsCrossed } from "lucide-react";
 import { usePreferences } from "@/context/PreferencesContext";
 import { useAuth } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -10,6 +10,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import type { TranslationKey } from "@/i18n/translations";
 
 const resolvePageTitle = (pathname: string, t: (key: TranslationKey) => string) => {
+  if (pathname.startsWith("/today")) return t("nav.today");
+  if (pathname.startsWith("/progress")) return t("nav.progress");
+  if (pathname.startsWith("/body")) return t("nav.body");
+  if (pathname.startsWith("/fitness-profile")) return t("nav.fitnessProfile");
   if (pathname.startsWith("/dashboard")) return t("nav.dashboard");
   if (pathname.startsWith("/goals")) return t("nav.goals");
   if (pathname.startsWith("/weight")) return t("nav.weight");
@@ -23,7 +27,7 @@ const resolvePageTitle = (pathname: string, t: (key: TranslationKey) => string) 
   if (pathname.startsWith("/calendar")) return t("nav.calendar");
   if (pathname.startsWith("/profile")) return t("nav.profile");
   if (pathname.startsWith("/settings")) return t("nav.settings");
-  return t("header.dashboard");
+  return t("nav.today");
 };
 
 const DashboardHeader = () => {
@@ -40,14 +44,12 @@ const DashboardHeader = () => {
   const currentDay = today.getDay();
   const activeDayIndex = currentDay === 0 ? 6 : currentDay - 1;
   const mobileNavItems = [
-    { label: t("nav.dashboard"), path: "/dashboard", icon: Home },
-    { label: t("nav.goals"), path: "/goals", icon: Target },
-    { label: t("nav.water"), path: "/water", icon: Droplets },
-    { label: t("nav.sleep"), path: "/sleep", icon: Moon },
+    { label: t("nav.today"), path: "/today", icon: Home },
     { label: t("nav.nutrition"), path: "/nutrition", icon: UtensilsCrossed },
-    { label: t("nav.weight"), path: "/weight", icon: Scale },
-    { label: t("nav.statistics"), path: "/statistics", icon: BarChart3 },
+    { label: t("nav.body"), path: "/body", icon: Ruler },
+    { label: t("nav.progress"), path: "/progress", icon: BarChart3 },
     { label: t("nav.calendar"), path: "/calendar", icon: CalendarDays },
+    { label: t("nav.fitnessProfile"), path: "/fitness-profile", icon: Target },
     { label: t("nav.settings"), path: "/settings", icon: Settings },
   ];
 
@@ -131,10 +133,10 @@ const DashboardHeader = () => {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Registro rapido</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => navigate("/water")}>Agregar agua</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => navigate("/sleep")}>Agregar sueno</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => navigate("/weight")}>Agregar peso</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => navigate("/nutrition")}>Agregar comida</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => navigate("/today#water")}>Agregar agua</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => navigate("/today#sleep")}>Agregar sueno</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => navigate("/today#weight")}>Agregar peso</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => navigate("/today#nutrition")}>Agregar comida</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <button className="w-10 h-10 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors relative">

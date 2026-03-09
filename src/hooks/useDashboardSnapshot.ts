@@ -8,6 +8,7 @@ import { getBodyWeightSnapshot, getGuestBodyMetrics, getWeightTrendAnalysis, lis
 import { getBiofeedbackRange, getDailyBiofeedback } from "@/services/dailyBiofeedback";
 import { getBodyMeasurementsRange, getLatestBodyMeasurement } from "@/services/bodyMeasurements";
 import { getDailyNote, getLatestDailyNote, listDailyNotesByRange, upsertDailyNote } from "@/services/dailyNotes";
+import { getNutritionRangeSummary } from "@/services/nutrition";
 import { getGoalProgress, getUserGoal } from "@/services/goals";
 import { getSleepDay, getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
 import { getWaterDayTotal, getWaterGoal, getWaterRangeTotals } from "@/services/waterIntake";
@@ -40,12 +41,16 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
   const monthActivityQuery = useQuery({
     queryKey: ["dashboard_snapshot", "month_activity", userId, formatDateKey(gridStart), formatDateKey(gridEnd), isGuest, timeZone],
     queryFn: async () => {
-      const [waterTotals, sleepTotals, bioRows, notesRows, weightRows] = await Promise.all([
+      const [waterTotals, sleepTotals, bioRows, notesRows, weightRows, nutritionRange] = await Promise.all([
         getWaterRangeTotals(userId, gridStart, gridEnd, { isGuest, timeZone }),
         getSleepRangeTotals(userId, gridStart, gridEnd, { isGuest, timeZone }),
         getBiofeedbackRange(userId, gridStart, gridEnd, { isGuest, timeZone }),
         listDailyNotesByRange(userId, gridStart, gridEnd, { isGuest, timeZone }),
         isGuest ? Promise.resolve(getGuestBodyMetrics()) : listBodyMetricsByRange(userId, "all", false),
+        getNutritionRangeSummary(userId, gridStart, gridEnd, { isGuest, timeZone }).catch(() => ({
+          days: [],
+          averages: { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+        })),
       ]);
 
       const waterMap = new Map<string, number>();
@@ -62,6 +67,8 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
           weightMap.set(row.measured_at, Number(row.weight_kg));
         }
       });
+      const nutritionMap = new Map<string, number>();
+      nutritionRange.days.forEach((row) => nutritionMap.set(row.date_key, Number(row.calories || 0)));
 
       const days = new Map<
         string,
@@ -75,6 +82,7 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
           hasWeight: boolean;
           hasBiofeedback: boolean;
           hasNote: boolean;
+          hasNutrition: boolean;
         }
       >();
 
@@ -84,6 +92,7 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
         const waterMl = waterMap.get(dateKey) ?? 0;
         const sleepMinutes = sleepMap.get(dateKey) ?? 0;
         const weightKg = weightMap.get(dateKey) ?? null;
+        const nutritionCalories = nutritionMap.get(dateKey) ?? 0;
         days.set(dateKey, {
           dateKey,
           waterMl,
@@ -94,6 +103,7 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
           hasWeight: weightKg !== null,
           hasBiofeedback: bioMap.get(dateKey) ?? false,
           hasNote: notesMap.get(dateKey) ?? false,
+          hasNutrition: nutritionCalories > 0,
         });
         cursor = addDays(cursor, 1);
       }

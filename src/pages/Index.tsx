@@ -33,7 +33,7 @@ const Index = () => {
             <div className="w-full max-w-sm space-y-4">
                 <Button
                     className="w-full h-10 px-6 font-medium"
-                    onClick={() => navigate(user || isGuest ? "/dashboard" : "/auth")}
+                    onClick={() => navigate(user || isGuest ? "/today" : "/auth")}
                 >
                     {user || isGuest ? "Welcome to Dashboard" : "Get Started"}
                 </Button>
@@ -45,7 +45,7 @@ const Index = () => {
                     onClick={() => {
                         console.log("[Navigation Flow] Continuing as Guest.");
                         continueAsGuest();
-                        navigate("/dashboard");
+                        navigate("/today");
                     }}
                 >
                     Continue as Guest

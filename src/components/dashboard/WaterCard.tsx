@@ -382,7 +382,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
 
         {showHistoryButton && (
           <Button asChild variant="outline" size="sm">
-            <Link to="/water">Ver historial</Link>
+            <Link to="/calendar">Ver historial</Link>
           </Button>
         )}
       </CardContent>

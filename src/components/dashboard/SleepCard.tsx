@@ -115,7 +115,7 @@ const SleepCard = () => {
             {t("sleep.card.quickButton")}
           </Button>
           <Button asChild variant="outline" size="sm">
-            <Link to="/sleep">{t("nav.sleep")}</Link>
+            <Link to="/calendar">{t("nav.calendar")}</Link>
           </Button>
         </div>
       </CardContent>

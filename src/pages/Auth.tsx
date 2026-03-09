@@ -25,7 +25,7 @@ const Auth = () => {
 
     useEffect(() => {
         if (user || (isGuest && !allowGuestAuth)) {
-            navigate("/dashboard", { replace: true });
+            navigate("/today", { replace: true });
         }
     }, [user, isGuest, allowGuestAuth, navigate]);
 
@@ -43,7 +43,7 @@ const Auth = () => {
             if (mode === "login") {
                 await signIn(email, password);
                 toast.success("Welcome back!");
-                navigate("/dashboard", { replace: true });
+                navigate("/today", { replace: true });
             } else {
                 const { requiresEmailConfirmation } = await signUp(email, password);
                 if (requiresEmailConfirmation) {
@@ -52,7 +52,7 @@ const Auth = () => {
                     return;
                 }
                 toast.success("Account created successfully!");
-                navigate("/dashboard", { replace: true });
+                navigate("/today", { replace: true });
             }
         } catch (error: any) {
             console.error("Auth error:", error);
@@ -165,7 +165,7 @@ const Auth = () => {
                             className="w-full"
                             onClick={() => {
                                 continueAsGuest();
-                                navigate("/dashboard");
+                                navigate("/today");
                             }}
                         >
                             Continue as Guest

@@ -54,7 +54,7 @@ const GoalCard = ({ target, progress, remainingKg, loading = false, error }: Pro
           </>
         )}
         <Button asChild size="sm">
-          <Link to="/goals">{target === null ? "Crear meta" : "Editar meta"}</Link>
+          <Link to="/fitness-profile">{target === null ? "Crear meta" : "Editar meta"}</Link>
         </Button>
       </CardContent>
     </Card>

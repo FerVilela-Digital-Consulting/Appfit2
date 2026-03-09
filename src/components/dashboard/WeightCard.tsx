@@ -61,10 +61,10 @@ const WeightCard = ({ latest, initial, initialDate, weeklyDelta, movingAvg7 = nu
         )}
         <div className="flex gap-2">
           <Button asChild size="sm">
-            <Link to="/weight">Registrar peso</Link>
+            <Link to="/today#weight">Registrar peso</Link>
           </Button>
           <Button asChild variant="outline" size="sm">
-            <Link to="/statistics">Ver estadisticas</Link>
+            <Link to="/progress">Ver progreso</Link>
           </Button>
         </div>
       </CardContent>

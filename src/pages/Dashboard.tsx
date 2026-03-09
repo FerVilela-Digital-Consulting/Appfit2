@@ -1,47 +1,24 @@
 import { useState } from "react";
-import type { ComponentType } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { startOfMonth } from "date-fns";
-import { BarChart3, Droplets, LayoutDashboard, Moon, Scale, Target, UtensilsCrossed } from "lucide-react";
-import { Link } from "react-router-dom";
+import { CalendarDays, CheckCircle2, Crosshair, TimerReset } from "lucide-react";
 import { toast } from "sonner";
 
-import BodyMeasurementsCard from "@/components/dashboard/BodyMeasurementsCard";
 import CalendarMiniWidget from "@/components/dashboard/CalendarMiniWidget";
-import DailyMetricsTodoCard from "@/components/dashboard/DailyMetricsTodoCard";
-import GoalCard from "@/components/dashboard/GoalCard";
-import NutritionCard from "@/components/dashboard/NutritionCard";
 import RecoveryCard from "@/components/dashboard/RecoveryCard";
-import SleepInsightsCard from "@/components/dashboard/SleepInsightsCard";
 import TacticalNotesCard from "@/components/dashboard/TacticalNotesCard";
-import TremorAnalyticsPanel from "@/components/dashboard/TremorAnalyticsPanel";
 import TodayStatusRow from "@/components/dashboard/TodayStatusRow";
-import WaterGoalRingCard from "@/components/dashboard/WaterGoalRingCard";
-import WeeklyTrendsCard from "@/components/dashboard/WeeklyTrendsCard";
-import WeightCard from "@/components/dashboard/WeightCard";
-import { Button } from "@/components/ui/button";
+import SleepCard from "@/components/dashboard/SleepCard";
+import WaterCard from "@/components/dashboard/WaterCard";
+import TodayBiofeedbackModule from "@/components/daily/TodayBiofeedbackModule";
+import TodayMealsModule from "@/components/daily/TodayMealsModule";
+import TodayWeightModule from "@/components/daily/TodayWeightModule";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
-
-type TabKey = "overview" | "analytics";
-
-const tabItems: Array<{ key: TabKey; label: string; icon: ComponentType<{ className?: string }> }> = [
-  { key: "overview", label: "Resumen", icon: LayoutDashboard },
-  { key: "analytics", label: "Analisis", icon: BarChart3 },
-];
-
-const quickActions: Array<{ label: string; href: string; icon: ComponentType<{ className?: string }> }> = [
-  { label: "Registrar agua", href: "/water", icon: Droplets },
-  { label: "Registrar sueno", href: "/sleep", icon: Moon },
-  { label: "Registrar comida", href: "/nutrition", icon: UtensilsCrossed },
-  { label: "Registrar peso", href: "/weight", icon: Scale },
-  { label: "Ajustar objetivos", href: "/goals", icon: Target },
-];
 
 const Dashboard = () => {
   const queryClient = useQueryClient();
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
-  const [tab, setTab] = useState<TabKey>("overview");
   const snapshot = useDashboardSnapshot(currentMonth);
 
   const saveNoteMutation = useMutation({
@@ -59,161 +36,129 @@ const Dashboard = () => {
   });
 
   const core = snapshot.core;
-  const goalRemaining =
-    core?.goal?.target_weight_kg !== null &&
-    core?.goal?.target_weight_kg !== undefined &&
-    core?.latestWeight !== null &&
-    core?.latestWeight !== undefined
-      ? Number(core.goal.target_weight_kg) - Number(core.latestWeight)
-      : null;
+  const completionCount =
+    Number((core?.waterTodayMl ?? 0) > 0) +
+    Number((core?.sleepDay?.total_minutes ?? 0) > 0) +
+    Number((core?.latestWeight ?? null) !== null) +
+    Number(Boolean(core?.bioToday)) +
+    Number((core?.noteToday?.content ?? "").trim().length > 0);
 
   return (
     <div className="space-y-6 py-4">
-      <Card className="rounded-3xl border-border/60 bg-gradient-to-br from-card to-card/70 shadow-sm">
-        <CardContent className="p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Hola, {core?.displayName ?? "Usuario"}</h1>
-            <p className="text-sm text-muted-foreground">{core?.todayLabel ?? "Cargando fecha..."}</p>
+      <Card className="overflow-hidden rounded-[32px] border-border/60 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.12),_transparent_30%),linear-gradient(180deg,_rgba(15,23,42,0.98),_rgba(15,23,42,0.92))] text-slate-100 shadow-[0_30px_80px_-40px_rgba(59,130,246,0.4)]">
+        <CardContent className="grid gap-6 p-6 xl:grid-cols-[1.5fr_0.9fr]">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-lime-300">
+              <Crosshair className="h-3.5 w-3.5" />
+              Daily Check-In
+            </div>
+            <div>
+              <h1 className="text-3xl font-black tracking-tight">Hoy es tu centro operativo</h1>
+              <p className="mt-2 max-w-2xl text-sm text-slate-300">
+                Registra peso, hidratacion, sueno, biofeedback y comidas del dia desde una sola pantalla. El objetivo es completar el tracking diario en menos de un minuto.
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+                <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Fecha</div>
+                <div className="mt-2 text-lg font-semibold text-white">{core?.todayLabel ?? "Cargando..."}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+                <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Modulos completos</div>
+                <div className="mt-2 flex items-center gap-2 text-lg font-semibold text-white">
+                  <CheckCircle2 className="h-4 w-4 text-lime-300" />
+                  {completionCount}/5
+                </div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+                <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Consistencia 7d</div>
+                <div className="mt-2 flex items-center gap-2 text-lg font-semibold text-white">
+                  <TimerReset className="h-4 w-4 text-cyan-300" />
+                  {core?.activeDays7 ?? 0} dias activos
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 rounded-full border border-border/60 bg-background/60 p-1">
-            {tabItems.map((item) => {
-              const active = tab === item.key;
-              return (
-                <Button
-                  key={item.key}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setTab(item.key)}
-                  className={`rounded-full px-4 ${active ? "bg-primary text-primary-foreground hover:bg-primary" : "text-muted-foreground"}`}
-                >
-                  <item.icon className="h-4 w-4 mr-2" />
-                  {item.label}
-                </Button>
-              );
-            })}
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Recuperacion</div>
+              <div className="mt-2 text-4xl font-black text-white">{core?.recovery.score ?? 0}</div>
+              <p className="mt-2 text-sm text-slate-300">{core?.recovery.status ?? "Analizando..."}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-slate-500">
+                <CalendarDays className="h-3.5 w-3.5" />
+                Enfoque
+              </div>
+              <p className="mt-2 text-sm text-slate-300">
+                Primero registra el dia. Luego usa Progreso y Calendario para interpretar tendencias y revisar adherencia.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {tab === "overview" && <DailyMetricsTodoCard core={core} />}
+      <TodayStatusRow
+        loading={snapshot.coreLoading}
+        waterMl={core?.waterTodayMl ?? 0}
+        waterGoalMl={core?.waterGoalMl ?? 2000}
+        sleepMinutes={core?.sleepDay?.total_minutes ?? 0}
+        sleepGoalMinutes={core?.sleepGoalMinutes ?? 480}
+        energy={core?.bioToday?.daily_energy ?? null}
+        stress={core?.bioToday?.perceived_stress ?? null}
+        streakDays={core?.activeDays7 ?? 0}
+      />
 
-      {tab === "overview" && (
-        <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
-          <CardContent className="p-4 space-y-3">
-            <p className="text-sm font-semibold">Accesos rapidos</p>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-              {quickActions.map((action) => (
-                <Button key={action.href} asChild variant="outline" className="justify-start">
-                  <Link to={action.href}>
-                    <action.icon className="mr-2 h-4 w-4" />
-                    {action.label}
-                  </Link>
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+        <section id="nutrition">
+          <TodayMealsModule />
+        </section>
+        <section id="water">
+          <WaterCard showHistoryButton={false} />
+        </section>
+      </div>
 
-      {(tab === "overview" || tab === "analytics") && (
-        <TodayStatusRow
+      <div className="grid gap-4 xl:grid-cols-3">
+        <section id="weight">
+          <TodayWeightModule />
+        </section>
+        <section id="sleep">
+          <SleepCard />
+        </section>
+        <section id="biofeedback">
+          <TodayBiofeedbackModule />
+        </section>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr_1fr]">
+        <TacticalNotesCard
           loading={snapshot.coreLoading}
-          waterMl={core?.waterTodayMl ?? 0}
-          waterGoalMl={core?.waterGoalMl ?? 2000}
-          sleepMinutes={core?.sleepDay?.total_minutes ?? 0}
-          sleepGoalMinutes={core?.sleepGoalMinutes ?? 480}
-          energy={core?.bioToday?.daily_energy ?? null}
-          stress={core?.bioToday?.perceived_stress ?? null}
-          streakDays={core?.activeDays7 ?? 0}
+          todayNote={core?.noteToday ?? null}
+          latestNote={core?.noteLatest ?? null}
+          onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
         />
-      )}
-
-      {tab === "overview" && (
-        <>
-          <div className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">
-            <RecoveryCard
-              loading={snapshot.coreLoading}
-              score={core?.recovery.score ?? 0}
-              status={core?.recovery.status ?? "Recuperacion Moderada"}
-              drivers={core?.recovery.drivers ?? []}
-              subscores={
-                core?.recovery.subscores ?? {
-                  sleep: 0,
-                  biofeedback: 0,
-                  hydration: 0,
-                  consistency: 0,
-                }
-              }
-            />
-            <CalendarMiniWidget
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              activity={snapshot.monthActivity}
-              loading={snapshot.monthActivityLoading}
-            />
-          </div>
-
-          <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-5">
-            <WeightCard
-              latest={core?.latestWeight ?? null}
-              initial={core?.initialWeight ?? null}
-              initialDate={core?.weightSnapshot.first?.measured_at ?? null}
-              weeklyDelta={core?.weightTrend.weeklyChange ?? null}
-              movingAvg7={core?.weightTrend.movingAvg7 ?? null}
-              trend={core?.weightTrend.trend === "up" ? "subiendo" : core?.weightTrend.trend === "down" ? "bajando" : "estable"}
-              loading={snapshot.coreLoading}
-              error={snapshot.coreError}
-            />
-            <GoalCard
-              target={core?.goal?.target_weight_kg ?? null}
-              progress={core?.goalProgress ?? null}
-              remainingKg={goalRemaining}
-              loading={snapshot.coreLoading}
-              error={snapshot.coreError}
-            />
-            <WaterGoalRingCard
-              waterMl={core?.waterTodayMl ?? 0}
-              goalMl={core?.waterGoalMl ?? 2000}
-              loading={snapshot.coreLoading}
-            />
-            <NutritionCard />
-            <SleepInsightsCard
-              sleepMinutes={core?.sleepDay?.total_minutes ?? 0}
-              goalMinutes={core?.sleepGoalMinutes ?? 480}
-              quality={core?.bioToday?.sleep_quality ?? null}
-              weekTotals={core?.sleep7d ?? []}
-              loading={snapshot.coreLoading}
-            />
-          </div>
-
-          <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
-            <BodyMeasurementsCard
-              className="h-full"
-              loading={snapshot.coreLoading}
-              latest={core?.latestMeasurement ?? null}
-              previous={core?.previousMeasurement ?? null}
-              latestWeight={core?.latestWeight ?? null}
-              weeklyWaistDeltaCm={core?.weeklyWaistDeltaCm ?? null}
-              goalDirection={core?.goal?.goal_direction ?? null}
-            />
-            <WeeklyTrendsCard loading={snapshot.coreLoading} data={snapshot.trends} />
-          </div>
-
-          <TacticalNotesCard
-            loading={snapshot.coreLoading}
-            todayNote={core?.noteToday ?? null}
-            latestNote={core?.noteLatest ?? null}
-            onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
-          />
-        </>
-      )}
-
-      {tab === "analytics" && (
-        <div className="space-y-4">
-          <TremorAnalyticsPanel trends={snapshot.trends} core={core} />
-          <WeeklyTrendsCard loading={snapshot.coreLoading} data={snapshot.trends} />
-        </div>
-      )}
+        <RecoveryCard
+          loading={snapshot.coreLoading}
+          score={core?.recovery.score ?? 0}
+          status={core?.recovery.status ?? "Recuperacion Moderada"}
+          drivers={core?.recovery.drivers ?? []}
+          subscores={
+            core?.recovery.subscores ?? {
+              sleep: 0,
+              biofeedback: 0,
+              hydration: 0,
+              consistency: 0,
+            }
+          }
+        />
+        <CalendarMiniWidget
+          month={currentMonth}
+          onMonthChange={setCurrentMonth}
+          activity={snapshot.monthActivity}
+          loading={snapshot.monthActivityLoading}
+        />
+      </div>
     </div>
   );
 };

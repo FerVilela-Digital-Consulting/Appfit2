@@ -1,20 +1,14 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, Check, Languages, LogOut, Palette, RotateCcw, Settings as SettingsIcon, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Check, AlertTriangle, Languages, LogOut, Palette, RotateCcw, Settings as SettingsIcon, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
 import { usePreferences } from "@/context/PreferencesContext";
-import { GOAL_OPTIONS } from "@/lib/metabolismOptions";
-import ProfileCalibrationPanel from "@/components/profile/ProfileCalibrationPanel";
 import { clearUserDayData, clearUserHistory, resetUserAccount, RESETTABLE_DAY_SCOPES, type ResettableDayScope } from "@/services/dataManagement";
 import { MINECRAFT_WOOL_COLORS } from "@/theme/accentPalette";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,32 +20,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const getTodayDateKey = () => new Date().toISOString().slice(0, 10);
 
 const Settings = () => {
-  const { user, profile, updateProfile, refreshProfile, isGuest, loading, signOut, exitGuest } = useAuth();
+  const { user, profile, refreshProfile, isGuest, loading, signOut, exitGuest, updateProfile } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { t, language, themePreference, accentColorId, setLanguagePreference, setThemePreference, setAccentColorPreference } =
     usePreferences();
 
-  const [fullName, setFullName] = useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [weight, setWeight] = useState("");
-  const [height, setHeight] = useState("");
-  const [biologicalSex, setBiologicalSex] = useState<"male" | "female">("male");
-  const [activityLevel, setActivityLevel] = useState<"low" | "moderate" | "high" | "very_high" | "hyperactive">("moderate");
-  const [nutritionGoalType, setNutritionGoalType] = useState<"lose" | "lose_slow" | "maintain" | "gain_slow" | "gain">("maintain");
-  const [sleepGoalMinutes, setSleepGoalMinutes] = useState("");
-  const [calorieGoal, setCalorieGoal] = useState("");
-  const [proteinGoal, setProteinGoal] = useState("");
-  const [carbGoal, setCarbGoal] = useState("");
-  const [fatGoal, setFatGoal] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false);
   const [resetDate, setResetDate] = useState(getTodayDateKey());
   const [selectedResetScopes, setSelectedResetScopes] = useState<ResettableDayScope[]>(["water", "sleep", "nutrition"]);
@@ -61,29 +45,11 @@ const Settings = () => {
   const [hardResetConfirm, setHardResetConfirm] = useState("");
   const [isHardResetDialogOpen, setIsHardResetDialogOpen] = useState(false);
 
-  useEffect(() => {
-    if (!profile) return;
-
-    setFullName(profile.full_name || "");
-    setBirthDate(profile.birth_date || "");
-    setWeight(profile.weight?.toString() || "");
-    setHeight(profile.height?.toString() || "");
-    setBiologicalSex((profile.biological_sex as "male" | "female" | null) ?? "male");
-    setActivityLevel((profile.activity_level as "low" | "moderate" | "high" | "very_high" | "hyperactive" | null) ?? "moderate");
-    setNutritionGoalType((profile.nutrition_goal_type as "lose" | "lose_slow" | "maintain" | "gain_slow" | "gain" | null) ?? "maintain");
-    setSleepGoalMinutes(profile.sleep_goal_minutes?.toString() || "480");
-    setCalorieGoal((profile as any).calorie_goal?.toString() || "2000");
-    setProteinGoal((profile as any).protein_goal_g?.toString() || "150");
-    setCarbGoal((profile as any).carb_goal_g?.toString() || "250");
-    setFatGoal((profile as any).fat_goal_g?.toString() || "70");
-  }, [profile]);
-
   const invalidateDataQueries = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["nutrition_day_summary"] }),
       queryClient.invalidateQueries({ queryKey: ["nutrition_target_breakdown"] }),
       queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
-      queryClient.invalidateQueries({ queryKey: ["dashboard_tremor_nutrition_7d"] }),
       queryClient.invalidateQueries({ queryKey: ["stats_nutrition_goals"] }),
       queryClient.invalidateQueries({ queryKey: ["calendar_day_nutrition"] }),
       queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
@@ -96,6 +62,8 @@ const Settings = () => {
       queryClient.invalidateQueries({ queryKey: ["body_measurements_latest"] }),
       queryClient.invalidateQueries({ queryKey: ["body_measurements_range"] }),
       queryClient.invalidateQueries({ queryKey: ["nutrition_favorites"] }),
+      queryClient.invalidateQueries({ queryKey: ["stats"] }),
+      queryClient.invalidateQueries({ queryKey: ["weekly_review_summary"] }),
     ]);
   };
 
@@ -124,102 +92,6 @@ const Settings = () => {
       fat_goal_g: 70,
       onboarding_completed: true,
     });
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const parsedHeight = height ? Number(height) : null;
-    const parsedWeight = weight ? Number(weight) : null;
-    const parsedBirthDate = birthDate ? new Date(`${birthDate}T00:00:00`) : null;
-    const parsedSleepGoal = sleepGoalMinutes ? Number(sleepGoalMinutes) : 480;
-    const parsedCalorieGoal = calorieGoal ? Number(calorieGoal) : 2000;
-    const parsedProteinGoal = proteinGoal ? Number(proteinGoal) : 150;
-    const parsedCarbGoal = carbGoal ? Number(carbGoal) : 250;
-    const parsedFatGoal = fatGoal ? Number(fatGoal) : 70;
-
-    if (parsedBirthDate && Number.isNaN(parsedBirthDate.getTime())) {
-      toast.error("La fecha de nacimiento no es valida.");
-      return;
-    }
-
-    if (parsedBirthDate) {
-      const now = new Date();
-      let age = now.getFullYear() - parsedBirthDate.getFullYear();
-      const monthDiff = now.getMonth() - parsedBirthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < parsedBirthDate.getDate())) {
-        age -= 1;
-      }
-      if (age < 12 || age > 95) {
-        toast.error("La edad debe estar entre 12 y 95 anios.");
-        return;
-      }
-    }
-
-    if (parsedHeight !== null && (!Number.isFinite(parsedHeight) || parsedHeight <= 0)) {
-      toast.error(t("settings.heightError"));
-      return;
-    }
-
-    if (parsedWeight !== null && (!Number.isFinite(parsedWeight) || parsedWeight <= 0)) {
-      toast.error(t("settings.weightError"));
-      return;
-    }
-
-    if (!Number.isFinite(parsedSleepGoal) || parsedSleepGoal <= 0 || parsedSleepGoal > 1440) {
-      toast.error(t("settings.sleepGoalError"));
-      return;
-    }
-
-    if (!Number.isFinite(parsedCalorieGoal) || parsedCalorieGoal <= 0) {
-      toast.error("La meta de calorias debe ser mayor que 0.");
-      return;
-    }
-
-    if (!Number.isFinite(parsedProteinGoal) || parsedProteinGoal < 0) {
-      toast.error("La meta de proteina no puede ser negativa.");
-      return;
-    }
-
-    if (!Number.isFinite(parsedCarbGoal) || parsedCarbGoal < 0) {
-      toast.error("La meta de carbs no puede ser negativa.");
-      return;
-    }
-
-    if (!Number.isFinite(parsedFatGoal) || parsedFatGoal < 0) {
-      toast.error("La meta de grasas no puede ser negativa.");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      await updateProfile({
-        full_name: fullName,
-        birth_date: birthDate || null,
-        weight: parsedWeight,
-        height: parsedHeight,
-        biological_sex: biologicalSex,
-        activity_level: activityLevel,
-        nutrition_goal_type: nutritionGoalType,
-        goal_type: GOAL_OPTIONS.find((option) => option.value === nutritionGoalType)?.legacyGoalTypeLabel ?? "Maintain Weight",
-        sleep_goal_minutes: parsedSleepGoal,
-        calorie_goal: parsedCalorieGoal,
-        protein_goal_g: parsedProteinGoal,
-        carb_goal_g: parsedCarbGoal,
-        fat_goal_g: parsedFatGoal,
-      });
-
-      await invalidateDataQueries();
-
-      if (isGuest) {
-        toast.info("Modo invitado: los cambios no se guardan de forma permanente.");
-      } else {
-        toast.success(t("settings.success"));
-      }
-    } catch (error: any) {
-      toast.error(error?.message || t("settings.fail"));
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   const handleLanguageChange = async (value: string) => {
@@ -352,100 +224,19 @@ const Settings = () => {
   }
 
   const selectedAccent = MINECRAFT_WOOL_COLORS.find((color) => color.id === accentColorId);
-  const selectedAccentLabel =
-    language === "es" ? selectedAccent?.label.es ?? "Sin color" : selectedAccent?.label.en ?? "No color";
+  const selectedAccentLabel = language === "es" ? selectedAccent?.label.es ?? "Sin color" : selectedAccent?.label.en ?? "No color";
 
   return (
-    <div className="container max-w-2xl space-y-8 py-8 animate-in fade-in duration-500">
-      <div className="mb-2 flex items-center gap-3">
+    <div className="container max-w-5xl space-y-8 py-8">
+      <div className="flex items-center gap-3">
         <SettingsIcon className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold text-foreground">{t("settings.title")}</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{t("settings.title")}</h1>
+          <p className="text-sm text-muted-foreground">
+            Preferencias de la aplicacion, gestion de datos y opciones de cuenta. El plan fitness vive ahora en Perfil Fitness.
+          </p>
+        </div>
       </div>
-
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle>{t("settings.profileTitle")}</CardTitle>
-          <CardDescription>{t("settings.profileDescription")}</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSave}>
-          <CardContent className="space-y-6">
-            {isGuest && (
-              <Alert>
-                <AlertDescription>{t("settings.guestWarning")}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="flex items-center gap-4">
-              <Avatar className="h-14 w-14">
-                <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar de perfil" />
-                <AvatarFallback>{(fullName || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <p className="text-sm text-muted-foreground">{t("settings.avatarFromProfile")}</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fullName" className="flex items-center gap-2">
-                <User className="h-4 w-4" /> {t("settings.fullName")}
-              </Label>
-              <Input id="fullName" placeholder="Tu nombre" value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-background/50" />
-            </div>
-
-            <ProfileCalibrationPanel
-              birthDate={birthDate}
-              onBirthDateChange={setBirthDate}
-              biologicalSex={biologicalSex}
-              onBiologicalSexChange={setBiologicalSex}
-              weight={weight}
-              onWeightChange={setWeight}
-              height={height}
-              onHeightChange={setHeight}
-              activityLevel={activityLevel}
-              onActivityLevelChange={setActivityLevel}
-              nutritionGoalType={nutritionGoalType}
-              onNutritionGoalTypeChange={setNutritionGoalType}
-            />
-
-            <div className="space-y-2">
-              <Label htmlFor="sleepGoal">{t("settings.sleepGoal")}</Label>
-              <Input
-                id="sleepGoal"
-                type="number"
-                min="1"
-                max="1440"
-                placeholder="480"
-                value={sleepGoalMinutes}
-                onChange={(e) => setSleepGoalMinutes(e.target.value)}
-                className="bg-background/50"
-              />
-              <p className="text-xs text-muted-foreground">{t("settings.sleepGoalHint")}</p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="calorieGoal">Meta calorias (kcal)</Label>
-                <Input id="calorieGoal" type="number" min="1" value={calorieGoal} onChange={(e) => setCalorieGoal(e.target.value)} className="bg-background/50" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="proteinGoal">Meta proteina (g)</Label>
-                <Input id="proteinGoal" type="number" min="0" value={proteinGoal} onChange={(e) => setProteinGoal(e.target.value)} className="bg-background/50" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="carbGoal">Meta carbs (g)</Label>
-                <Input id="carbGoal" type="number" min="0" value={carbGoal} onChange={(e) => setCarbGoal(e.target.value)} className="bg-background/50" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="fatGoal">Meta grasas (g)</Label>
-                <Input id="fatGoal" type="number" min="0" value={fatGoal} onChange={(e) => setFatGoal(e.target.value)} className="bg-background/50" />
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="border-t border-border/50 pt-6">
-            <Button type="submit" className="ml-auto w-full md:w-auto" disabled={isSaving}>
-              {isSaving ? t("settings.saving") : t("settings.saveChanges")}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
 
       <Card className="glass-card">
         <CardHeader>
@@ -453,39 +244,47 @@ const Settings = () => {
           <CardDescription>{t("settings.preferencesDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="language" className="flex items-center gap-2">
-              <Languages className="h-4 w-4" />
-              {t("settings.language")}
-            </Label>
-            <p className="text-xs text-muted-foreground">{t("settings.languageDescription")}</p>
-            <Select value={language} onValueChange={handleLanguageChange}>
-              <SelectTrigger id="language" className="bg-background/50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">{t("settings.language.en")}</SelectItem>
-                <SelectItem value="es">{t("settings.language.es")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {isGuest && (
+            <Alert>
+              <AlertDescription>{t("settings.guestWarning")}</AlertDescription>
+            </Alert>
+          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="theme" className="flex items-center gap-2">
-              <Palette className="h-4 w-4" />
-              {t("settings.theme")}
-            </Label>
-            <p className="text-xs text-muted-foreground">{t("settings.themeDescription")}</p>
-            <Select value={themePreference} onValueChange={handleThemeChange}>
-              <SelectTrigger id="theme" className="bg-background/50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">{t("settings.theme.light")}</SelectItem>
-                <SelectItem value="dark">{t("settings.theme.dark")}</SelectItem>
-                <SelectItem value="system">{t("settings.theme.system")}</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="language" className="flex items-center gap-2">
+                <Languages className="h-4 w-4" />
+                {t("settings.language")}
+              </Label>
+              <p className="text-xs text-muted-foreground">{t("settings.languageDescription")}</p>
+              <Select value={language} onValueChange={handleLanguageChange}>
+                <SelectTrigger id="language" className="bg-background/50">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">{t("settings.language.en")}</SelectItem>
+                  <SelectItem value="es">{t("settings.language.es")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="theme" className="flex items-center gap-2">
+                <Palette className="h-4 w-4" />
+                {t("settings.theme")}
+              </Label>
+              <p className="text-xs text-muted-foreground">{t("settings.themeDescription")}</p>
+              <Select value={themePreference} onValueChange={handleThemeChange}>
+                <SelectTrigger id="theme" className="bg-background/50">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="light">{t("settings.theme.light")}</SelectItem>
+                  <SelectItem value="dark">{t("settings.theme.dark")}</SelectItem>
+                  <SelectItem value="system">{t("settings.theme.system")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -560,15 +359,6 @@ const Settings = () => {
               })}
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              Categorias seleccionadas:{" "}
-              {selectedResetScopes.length > 0
-                ? RESETTABLE_DAY_SCOPES.filter((scope) => selectedResetScopes.includes(scope.key))
-                    .map((scope) => scope.label)
-                    .join(", ")
-                : "ninguna"}
-            </p>
-
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" disabled={isClearingDay || selectedResetScopes.length === 0}>
@@ -579,7 +369,7 @@ const Settings = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Limpiar datos del {resetDate}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Se eliminaran solo las categorias marcadas para esa fecha. Esta accion no afecta tu perfil ni tus preferencias.
+                    Se eliminaran solo las categorias marcadas para esa fecha. Esta accion no afecta tu plan fitness ni tus preferencias.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -598,7 +388,7 @@ const Settings = () => {
               <h3 className="font-medium">Limpiar historial completo</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              Borra registros diarios, medidas, peso y revisiones semanales, pero conserva tu perfil, metas base e idioma.
+              Borra registros diarios, medidas, peso y revisiones semanales, pero conserva tu cuenta, tu plan base y tus preferencias.
             </p>
 
             <AlertDialog>
@@ -611,7 +401,7 @@ const Settings = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Limpiar historial completo</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta accion eliminara el historial operativo del usuario, pero mantendra la cuenta, las preferencias y la calibracion base.
+                    Esta accion eliminara el historial operativo del usuario, pero mantendra la cuenta, las preferencias y la configuracion base del plan.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

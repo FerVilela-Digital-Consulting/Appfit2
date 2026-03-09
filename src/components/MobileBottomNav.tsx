@@ -1,15 +1,15 @@
-import { BarChart3, Droplets, Home, Moon, UtensilsCrossed } from "lucide-react";
+import { BarChart3, Home, Ruler, Target, UtensilsCrossed } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { usePreferences } from "@/context/PreferencesContext";
 
 const MobileBottomNav = () => {
   const { t } = usePreferences();
   const mobileItems = [
-    { label: t("nav.dashboard"), path: "/dashboard", icon: Home },
-    { label: t("nav.water"), path: "/water", icon: Droplets },
-    { label: t("nav.sleep"), path: "/sleep", icon: Moon },
+    { label: t("nav.today"), path: "/today", icon: Home },
     { label: t("nav.nutrition"), path: "/nutrition", icon: UtensilsCrossed },
-    { label: t("nav.statistics"), path: "/statistics", icon: BarChart3 },
+    { label: t("nav.body"), path: "/body", icon: Ruler },
+    { label: t("nav.progress"), path: "/progress", icon: BarChart3 },
+    { label: t("nav.fitnessProfile"), path: "/fitness-profile", icon: Target },
   ];
 
   return (

@@ -1,4 +1,4 @@
-import { Home, BarChart3, Settings, Scale, Droplets, UserRound, CalendarDays, Moon, Ruler, HeartPulse, ClipboardList, UtensilsCrossed, Target } from "lucide-react";
+import { BarChart3, CalendarDays, Home, Settings, Target, UtensilsCrossed, Ruler } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -13,43 +13,14 @@ const Sidebar = () => {
   const { t } = usePreferences();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const menuGroups = [
-    {
-      title: "Inicio",
-      items: [
-        { title: t("nav.dashboard"), icon: Home, path: "/dashboard" },
-        { title: t("nav.goals"), icon: Target, path: "/goals" },
-      ],
-    },
-    {
-      title: "Tracking diario",
-      items: [
-        { title: t("nav.weight"), icon: Scale, path: "/weight" },
-        { title: t("nav.water"), icon: Droplets, path: "/water" },
-        { title: t("nav.sleep"), icon: Moon, path: "/sleep" },
-        { title: t("nav.nutrition"), icon: UtensilsCrossed, path: "/nutrition" },
-        { title: t("nav.biofeedback"), icon: HeartPulse, path: "/biofeedback" },
-      ],
-    },
-    {
-      title: "Cuerpo",
-      items: [{ title: t("nav.measurements"), icon: Ruler, path: "/measurements" }],
-    },
-    {
-      title: "Analisis",
-      items: [
-        { title: t("nav.statistics"), icon: BarChart3, path: "/statistics" },
-        { title: t("nav.weeklyReview"), icon: ClipboardList, path: "/weekly-review" },
-        { title: t("nav.calendar"), icon: CalendarDays, path: "/calendar" },
-      ],
-    },
-    {
-      title: "Configuracion",
-      items: [
-        { title: t("nav.profile"), icon: UserRound, path: "/profile" },
-        { title: t("nav.settings"), icon: Settings, path: "/settings" },
-      ],
-    },
+  const menuItems = [
+    { title: t("nav.today"), icon: Home, path: "/today" },
+    { title: t("nav.nutrition"), icon: UtensilsCrossed, path: "/nutrition" },
+    { title: t("nav.body"), icon: Ruler, path: "/body" },
+    { title: t("nav.progress"), icon: BarChart3, path: "/progress" },
+    { title: t("nav.calendar"), icon: CalendarDays, path: "/calendar" },
+    { title: t("nav.fitnessProfile"), icon: Target, path: "/fitness-profile" },
+    { title: t("nav.settings"), icon: Settings, path: "/settings" },
   ];
 
   const displayName = isGuest ? t("sidebar.guest") : profile?.full_name?.trim() || user?.email || t("sidebar.user");
@@ -89,34 +60,28 @@ const Sidebar = () => {
       </div>
 
       <nav className="flex-1 px-4 py-6 overflow-y-auto">
-        <div className="space-y-5 pb-4">
-          {menuGroups.map((group) => (
-            <section key={group.title}>
-              <p className="px-4 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {group.title}
-              </p>
-              <ul className="space-y-1">
-                {group.items.map((item) => (
-                  <li key={item.title}>
-                    <NavLink
-                      to={item.path}
-                      className={({ isActive }) =>
-                        `w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                          isActive
-                            ? "bg-accent text-accent-foreground"
-                            : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
-                        }`
-                      }
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
+        <section className="space-y-2 pb-4">
+          <p className="px-4 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Workspace</p>
+          <ul className="space-y-1">
+            {menuItems.map((item) => (
+              <li key={item.title}>
+                <NavLink
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      isActive
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
+                    }`
+                  }
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.title}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </section>
       </nav>
 
       <EditProfileModal open={isEditModalOpen} onOpenChange={setIsEditModalOpen} />

@@ -1,20 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays, format } from "date-fns";
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CirclePlus,
+  Database,
+  Flame,
+  PencilLine,
+  ShieldPlus,
+  Trash2,
+} from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNutritionTargets } from "@/hooks/useNutritionTargets";
-import { ACTIVITY_OPTIONS, GOAL_OPTIONS } from "@/lib/metabolismOptions";
+import { cn } from "@/lib/utils";
 import { DEFAULT_WATER_TIMEZONE, getDateKeyForTimezone } from "@/features/water/waterUtils";
 import {
   addNutritionEntry,
@@ -27,24 +36,56 @@ import {
   listRecentNutritionEntries,
   saveFavoriteFood,
   searchFoodDatabase,
-  type NutritionEntry,
   type FoodDatabaseItem,
+  type NutritionEntry,
   type NutritionMealType,
 } from "@/services/nutrition";
 
-const MEAL_SECTIONS: Array<{ key: NutritionMealType; label: string }> = [
-  { key: "breakfast", label: "Desayuno" },
-  { key: "lunch", label: "Almuerzo" },
-  { key: "dinner", label: "Cena" },
-  { key: "snack", label: "Snacks" },
+const MEAL_SECTIONS: Array<{
+  key: NutritionMealType;
+  label: string;
+  accentClass: string;
+  railClass: string;
+}> = [
+  { key: "breakfast", label: "Desayuno", accentClass: "text-lime-300", railClass: "bg-lime-400" },
+  { key: "lunch", label: "Almuerzo / principal", accentClass: "text-cyan-300", railClass: "bg-cyan-400" },
+  { key: "dinner", label: "Cena", accentClass: "text-amber-300", railClass: "bg-amber-400" },
+  { key: "snack", label: "Snacks / soporte", accentClass: "text-fuchsia-300", railClass: "bg-fuchsia-400" },
 ];
 
+const DAY_ARCHETYPE_OPTIONS: Array<{ value: "base" | "heavy" | "recovery"; label: string }> = [
+  { value: "heavy", label: "Torso" },
+  { value: "base", label: "Base" },
+  { value: "recovery", label: "Descanso" },
+];
+
+const ACTIVITY_LABELS: Record<string, string> = {
+  low: "Bajo",
+  moderate: "Moderado",
+  high: "Alto",
+  very_high: "Muy alto",
+  hyperactive: "Hiperactivo",
+};
+
+const GOAL_LABELS: Record<string, string> = {
+  lose: "Perder peso",
+  lose_slow: "Perder peso lentamente",
+  maintain: "Mantener peso",
+  gain_slow: "Aumentar peso lentamente",
+  gain: "Aumentar peso",
+};
+
 type AddMode = "manual" | "database" | "favorite" | "yesterday" | "recent";
+
+const formatMetric = (value: number | null | undefined, suffix = "", digits = 0) => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "--";
+  return `${Number(value).toFixed(digits)}${suffix}`;
+};
 
 const Nutrition = () => {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
-  const { user, isGuest, profile, updateProfile } = useAuth();
+  const { user, isGuest, profile } = useAuth();
   const userId = user?.id ?? null;
   const timeZone = (profile as { timezone?: string } | null)?.timezone || DEFAULT_WATER_TIMEZONE;
   const metabolicProfileKey = [
@@ -57,16 +98,21 @@ const Nutrition = () => {
     profile?.day_archetype ?? "",
     profile?.goal_type ?? "",
   ].join("|");
+
   const [selectedDate, setSelectedDate] = useState(() => {
     const fromQuery = searchParams.get("date");
-    if (fromQuery && /^\d{4}-\d{2}-\d{2}$/.test(fromQuery)) {
-      return new Date(`${fromQuery}T12:00:00`);
-    }
+    if (fromQuery && /^\d{4}-\d{2}-\d{2}$/.test(fromQuery)) return new Date(`${fromQuery}T12:00:00`);
     return new Date();
   });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeMeal, setActiveMeal] = useState<NutritionMealType>("breakfast");
   const [mode, setMode] = useState<AddMode>("manual");
+  const [expandedMeals, setExpandedMeals] = useState<Record<NutritionMealType, boolean>>({
+    breakfast: true,
+    lunch: true,
+    dinner: false,
+    snack: false,
+  });
 
   const [foodName, setFoodName] = useState("");
   const [servingSize, setServingSize] = useState("100");
@@ -79,22 +125,15 @@ const Nutrition = () => {
   const [sugar, setSugar] = useState("0");
   const [sodium, setSodium] = useState("0");
   const [potassium, setPotassium] = useState("0");
-  const [selectedFavoriteId, setSelectedFavoriteId] = useState<string>("");
-  const [selectedYesterdayId, setSelectedYesterdayId] = useState<string>("");
-  const [selectedRecentId, setSelectedRecentId] = useState<string>("");
+  const [selectedFavoriteId, setSelectedFavoriteId] = useState("");
+  const [selectedYesterdayId, setSelectedYesterdayId] = useState("");
+  const [selectedRecentId, setSelectedRecentId] = useState("");
   const [searchFood, setSearchFood] = useState("");
   const [foodCategory, setFoodCategory] = useState("all");
   const [selectedFoodDatabaseId, setSelectedFoodDatabaseId] = useState("");
   const [consumedAmount, setConsumedAmount] = useState("100");
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
-  const [birthDate, setBirthDate] = useState("");
-  const [profileWeightKg, setProfileWeightKg] = useState("");
-  const [profileHeightCm, setProfileHeightCm] = useState("");
-  const [biologicalSex, setBiologicalSex] = useState<"male" | "female">("male");
-  const [activityLevel, setActivityLevel] = useState<"low" | "moderate" | "high" | "very_high" | "hyperactive">("moderate");
-  const [nutritionGoalType, setNutritionGoalType] = useState<"lose" | "lose_slow" | "maintain" | "gain_slow" | "gain">("maintain");
   const [dayArchetype, setDayArchetype] = useState<"base" | "heavy" | "recovery">("base");
-  const [calorieOverride, setCalorieOverride] = useState("");
 
   const todayKey = getDateKeyForTimezone(selectedDate, timeZone);
   const previousDate = addDays(selectedDate, -1);
@@ -109,20 +148,8 @@ const Nutrition = () => {
   useEffect(() => {
     const targetProfile = nutritionTargets.metabolicProfile;
     if (!targetProfile) return;
-
-    setBirthDate(targetProfile.birthDate || "");
-    setProfileWeightKg(String(targetProfile.weightKg ?? ""));
-    setProfileHeightCm(String(targetProfile.heightCm ?? ""));
-    setBiologicalSex(targetProfile.sex);
-    setActivityLevel(targetProfile.activityLevel);
-    setNutritionGoalType(targetProfile.goalType);
     setDayArchetype(targetProfile.dayArchetype);
-    setCalorieOverride(
-      targetProfile.isCalorieOverrideEnabled && targetProfile.calorieOverride !== null ? String(targetProfile.calorieOverride) : "",
-    );
   }, [nutritionTargets.metabolicProfile]);
-  const selectedActivity = useMemo(() => ACTIVITY_OPTIONS.find((option) => option.value === activityLevel), [activityLevel]);
-  const selectedGoal = useMemo(() => GOAL_OPTIONS.find((option) => option.value === nutritionGoalType), [nutritionGoalType]);
 
   const summaryQuery = useQuery({
     queryKey: ["nutrition_day_summary", userId, todayKey, isGuest, timeZone, metabolicProfileKey],
@@ -211,79 +238,49 @@ const Nutrition = () => {
     },
   });
 
-  const saveMetabolicConfigMutation = useMutation({
-    mutationFn: async () => {
-      const parsedWeight = Number(profileWeightKg);
-      const parsedHeight = Number(profileHeightCm);
-      const parsedOverride = calorieOverride.trim() ? Number(calorieOverride) : null;
-      const parsedBirthDate = birthDate ? new Date(`${birthDate}T00:00:00`) : null;
-
-      if (!Number.isFinite(parsedWeight) || parsedWeight <= 0) {
-        throw new Error("Peso invalido.");
-      }
-      if (!Number.isFinite(parsedHeight) || parsedHeight <= 0) {
-        throw new Error("Altura invalida.");
-      }
-      if (parsedOverride !== null && (!Number.isFinite(parsedOverride) || parsedOverride <= 0)) {
-        throw new Error("Override calorico invalido.");
-      }
-      if (parsedBirthDate && Number.isNaN(parsedBirthDate.getTime())) {
-        throw new Error("Fecha de nacimiento invalida.");
-      }
-      if (parsedBirthDate) {
-        const now = new Date();
-        let age = now.getFullYear() - parsedBirthDate.getFullYear();
-        const monthDiff = now.getMonth() - parsedBirthDate.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < parsedBirthDate.getDate())) {
-          age -= 1;
-        }
-        if (age < 12 || age > 95) {
-          throw new Error("La edad debe estar entre 12 y 95 anios.");
-        }
-      }
-
-      await updateProfile({
-        birth_date: birthDate || null,
-        weight: parsedWeight,
-        height: parsedHeight,
-        biological_sex: biologicalSex,
-        activity_level: activityLevel,
-        nutrition_goal_type: nutritionGoalType,
-        goal_type: GOAL_OPTIONS.find((option) => option.value === nutritionGoalType)?.legacyGoalTypeLabel ?? "Maintain Weight",
-        day_archetype: dayArchetype,
-      } as any);
-
-      await nutritionTargets.setDayArchetype(dayArchetype);
-      await nutritionTargets.setCalorieOverride(parsedOverride);
-    },
-    onSuccess: async () => {
-      toast.success("Configuracion metabolica actualizada.");
-      await invalidateNutrition();
-    },
-    onError: (error: any) => toast.error(error?.message || "No se pudo actualizar la configuracion metabolica."),
-  });
-
-  const openDialogForMeal = (meal: NutritionMealType) => {
-    setActiveMeal(meal);
-    setMode("manual");
-    setDialogOpen(true);
-  };
-
   const daySummary = summaryQuery.data;
   const goals = daySummary?.goals;
   const totals = daySummary?.totals;
   const target = daySummary?.targetBreakdown ?? nutritionTargets.target;
   const remaining = daySummary?.remaining;
-  const caloriesPct = goals ? Math.min(100, Math.round((totals!.calories / Math.max(goals.calorie_goal, 1)) * 100)) : 0;
-  const proteinPct = goals ? Math.min(100, Math.round((totals!.protein_g / Math.max(goals.protein_goal_g, 1)) * 100)) : 0;
-  const carbsPct = goals ? Math.min(100, Math.round((totals!.carbs_g / Math.max(goals.carb_goal_g, 1)) * 100)) : 0;
-  const fatPct = goals ? Math.min(100, Math.round((totals!.fat_g / Math.max(goals.fat_goal_g, 1)) * 100)) : 0;
+  const metabolicProfile = nutritionTargets.metabolicProfile;
+  const caloriesPct = goals && totals ? Math.min(100, Math.round((totals.calories / Math.max(goals.calorie_goal, 1)) * 100)) : 0;
+  const proteinPct = goals && totals ? Math.min(100, Math.round((totals.protein_g / Math.max(goals.protein_goal_g, 1)) * 100)) : 0;
+  const carbsPct = goals && totals ? Math.min(100, Math.round((totals.carbs_g / Math.max(goals.carb_goal_g, 1)) * 100)) : 0;
+  const fatPct = goals && totals ? Math.min(100, Math.round((totals.fat_g / Math.max(goals.fat_goal_g, 1)) * 100)) : 0;
 
   const yesterdayEntries = useMemo(() => {
     const grouped = yesterdayQuery.data;
     if (!grouped) return [] as NutritionEntry[];
     return [...grouped.breakfast, ...grouped.lunch, ...grouped.dinner, ...grouped.snack];
   }, [yesterdayQuery.data]);
+
+  const selectedFoodPreview = useMemo(() => {
+    const selectedFood = (foodSearchQuery.data || []).find((row) => row.id === selectedFoodDatabaseId);
+    const amount = Number(consumedAmount);
+    if (!selectedFood || !Number.isFinite(amount) || amount <= 0) return null;
+    return calculateNutritionFromFood(selectedFood as FoodDatabaseItem, amount);
+  }, [foodSearchQuery.data, selectedFoodDatabaseId, consumedAmount]);
+
+  const mealOverview = useMemo(
+    () =>
+      MEAL_SECTIONS.map((meal) => ({
+        meal,
+        entries: daySummary?.groups[meal.key] || [],
+        subtotal: daySummary?.mealTotals[meal.key],
+      })),
+    [daySummary],
+  );
+
+  const openDialogForMeal = (meal: NutritionMealType, initialMode: AddMode = "manual") => {
+    setActiveMeal(meal);
+    setMode(initialMode);
+    setDialogOpen(true);
+  };
+
+  const toggleMeal = (meal: NutritionMealType) => {
+    setExpandedMeals((current) => ({ ...current, [meal]: !current[meal] }));
+  };
 
   const handleAddEntry = async () => {
     if (mode === "manual") {
@@ -306,7 +303,6 @@ const Nutrition = () => {
         timeZone,
       } as const;
       await addMutation.mutateAsync(payload);
-
       if (saveAsFavorite) {
         await saveFavoriteMutation.mutateAsync({
           name: payload.food_name,
@@ -326,33 +322,27 @@ const Nutrition = () => {
 
     if (mode === "database") {
       const food = (foodSearchQuery.data || []).find((row) => row.id === selectedFoodDatabaseId);
-      if (!food) {
+      if (!food || !selectedFoodPreview) {
         toast.error("Selecciona un alimento de la base.");
         return;
       }
-      const amount = Number(consumedAmount);
-      if (!Number.isFinite(amount) || amount <= 0) {
-        toast.error("Ingresa una cantidad valida.");
-        return;
-      }
-      const computed = calculateNutritionFromFood(food as FoodDatabaseItem, amount);
       await addMutation.mutateAsync({
         userId,
         date: selectedDate,
         meal_type: activeMeal,
         food_name: food.food_name,
-        serving_size: computed.serving_size,
-        serving_unit: computed.serving_unit,
-        calories: computed.calories,
-        protein_g: computed.protein_g,
-        carbs_g: computed.carbs_g,
-        fat_g: computed.fat_g,
-        fiber_g: computed.fiber_g,
-        sugar_g: computed.sugar_g,
-        sodium_mg: computed.sodium_mg,
-        potassium_mg: computed.potassium_mg,
-        micronutrients: computed.micronutrients,
-        nutrient_density_score: computed.nutrient_density_score,
+        serving_size: selectedFoodPreview.serving_size,
+        serving_unit: selectedFoodPreview.serving_unit,
+        calories: selectedFoodPreview.calories,
+        protein_g: selectedFoodPreview.protein_g,
+        carbs_g: selectedFoodPreview.carbs_g,
+        fat_g: selectedFoodPreview.fat_g,
+        fiber_g: selectedFoodPreview.fiber_g,
+        sugar_g: selectedFoodPreview.sugar_g,
+        sodium_mg: selectedFoodPreview.sodium_mg,
+        potassium_mg: selectedFoodPreview.potassium_mg,
+        micronutrients: selectedFoodPreview.micronutrients,
+        nutrient_density_score: selectedFoodPreview.nutrient_density_score,
         notes: `Base food_database (${food.category})`,
         isGuest,
         timeZone,
@@ -447,399 +437,247 @@ const Nutrition = () => {
   };
 
   return (
-    <div className="container max-w-6xl py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Alimentacion</h1>
-          <p className="text-sm text-muted-foreground">Diario por comida y seguimiento de macros.</p>
-        </div>
-      <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setSelectedDate((prev) => addDays(prev, -1))}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <p className="text-sm font-medium min-w-36 text-center">{format(selectedDate, "dd/MM/yyyy")}</p>
-          <Button variant="outline" size="sm" onClick={() => setSelectedDate((prev) => addDays(prev, 1))}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Configuracion metabolica</CardTitle>
-            <CardDescription>Mifflin-St Jeor + actividad + meta + arquetipo diario.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label>Sexo biologico</Label>
-                <Select value={biologicalSex} onValueChange={(value) => setBiologicalSex(value as "male" | "female")}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Masculino</SelectItem>
-                    <SelectItem value="female">Femenino</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>Fecha de nacimiento</Label>
-                <Input type="date" value={birthDate} onChange={(event) => setBirthDate(event.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>Peso (kg)</Label>
-                <Input type="number" min="1" value={profileWeightKg} onChange={(event) => setProfileWeightKg(event.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>Altura (cm)</Label>
-                <Input type="number" min="1" value={profileHeightCm} onChange={(event) => setProfileHeightCm(event.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>Nivel de actividad</Label>
-                <Select value={activityLevel} onValueChange={(value) => setActivityLevel(value as typeof activityLevel)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACTIVITY_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">{selectedActivity?.description}</p>
-              </div>
-              <div className="space-y-1">
-                <Label>Objetivo nutricional</Label>
-                <Select value={nutritionGoalType} onValueChange={(value) => setNutritionGoalType(value as typeof nutritionGoalType)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GOAL_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">{selectedGoal?.description}</p>
-              </div>
-              <div className="space-y-1">
-                <Label>Arquetipo del dia</Label>
-                <Select value={dayArchetype} onValueChange={(value) => setDayArchetype(value as typeof dayArchetype)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="base">Base</SelectItem>
-                    <SelectItem value="heavy">Heavy (+150 kcal)</SelectItem>
-                    <SelectItem value="recovery">Recovery (-300 kcal)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>Override calorico (opcional)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  placeholder="Vacio = calculo automatico"
-                  value={calorieOverride}
-                  onChange={(event) => setCalorieOverride(event.target.value)}
-                />
-              </div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(132,204,22,0.12),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(34,211,238,0.1),_transparent_24%),linear-gradient(180deg,_#020617,_#040b18_48%,_#07101e)] px-6 py-8 text-slate-100">
+      <div className="mx-auto max-w-[1540px] space-y-6">
+        <section className="flex items-start justify-between rounded-[28px] border border-white/10 bg-slate-950/70 px-8 py-8 shadow-[0_30px_80px_-45px_rgba(56,189,248,0.28)]">
+          <div className="space-y-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-lime-300/70">Sistema Titan Blue</p>
+              <h1 className="text-4xl font-black uppercase tracking-tight text-white">Nutricion & Combustible</h1>
+              <p className="text-sm uppercase tracking-[0.24em] text-slate-500">El rendimiento no es negociable</p>
             </div>
-            <Button onClick={() => saveMetabolicConfigMutation.mutate()} disabled={saveMetabolicConfigMutation.isPending || nutritionTargets.isSaving}>
-              Guardar configuracion metabolica
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Detalle del calculo</CardTitle>
-            <CardDescription>Motor metabolico activo para este dia.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>Edad: {nutritionTargets.metabolicProfile?.age ?? "--"} anios</p>
-            <p>BMR: {target?.bmr ?? "--"} kcal</p>
-            <p>TDEE: {target?.tdee ?? "--"} kcal</p>
-            <p>Multiplicador actividad: {target?.activityMultiplier ?? "--"}</p>
-            <p>Multiplicador meta: {target?.goalMultiplier ?? "--"}</p>
-            <p>Delta arquetipo: {target?.archetypeDelta ?? "--"} kcal</p>
-            <p>Calorias target (meta): {target?.calorieTarget ?? "--"} kcal</p>
-            <p>Calorias finales: {target?.finalTargetCalories ?? "--"} kcal</p>
-            <p>
-              Proteina: {target?.proteinGrams ?? "--"} g ({target?.proteinCalories ?? "--"} kcal)
-            </p>
-            <p>
-              Grasas: {target?.fatGrams ?? "--"} g ({target?.fatCalories ?? "--"} kcal)
-            </p>
-            <p>
-              Carbohidratos: {target?.carbGrams ?? "--"} g ({target?.carbCalories ?? "--"} kcal)
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Resumen diario</CardTitle>
-          <CardDescription>Calorias y macros consumidos vs objetivo.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-4">
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Calorias</p>
-              <p className="text-2xl font-semibold">
-                {totals?.calories ?? 0} / {goals?.calorie_goal ?? 2000}
-              </p>
-              <Progress value={caloriesPct} className="mt-2" />
-            </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Proteina (g)</p>
-              <p className="text-2xl font-semibold">
-                {totals?.protein_g ?? 0} / {goals?.protein_goal_g ?? 150}
-              </p>
-              <Progress value={proteinPct} className="mt-2" />
-            </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Carbohidratos (g)</p>
-              <p className="text-2xl font-semibold">
-                {totals?.carbs_g ?? 0} / {goals?.carb_goal_g ?? 250}
-              </p>
-              <Progress value={carbsPct} className="mt-2" />
-            </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Grasas (g)</p>
-              <p className="text-2xl font-semibold">
-                {totals?.fat_g ?? 0} / {goals?.fat_goal_g ?? 70}
-              </p>
-              <Progress value={fatPct} className="mt-2" />
+            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
+              {DAY_ARCHETYPE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setDayArchetype(option.value)}
+                  className={cn(
+                    "rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition-colors",
+                    dayArchetype === option.value ? "bg-lime-400 text-slate-950" : "text-slate-400 hover:bg-white/[0.05] hover:text-white",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Fibra: {totals?.fiber_g ?? 0} g | Azucar: {totals?.sugar_g ?? 0} g
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Sodio: {totals?.sodium_mg ?? 0} mg | Potasio: {totals?.potassium_mg ?? 0} mg | Ratio Na/K:{" "}
-            {totals?.sodium_potassium_ratio ?? "--"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Densidad nutricional: {daySummary?.nutrientDensityScore ?? "--"} | Restante: {remaining?.calories ?? "--"} kcal, P{" "}
-            {remaining?.protein_g ?? "--"} g, C {remaining?.carbs_g ?? "--"} g, G {remaining?.fat_g ?? "--"} g
-          </p>
-        </CardContent>
-      </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {MEAL_SECTIONS.map((meal) => {
-          const entries = daySummary?.groups[meal.key] || [];
-          const subtotal = daySummary?.mealTotals[meal.key];
-          return (
-            <Card key={meal.key}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">{meal.label}</CardTitle>
-                  <Button size="sm" onClick={() => openDialogForMeal(meal.key)}>
-                    <Plus className="mr-1 h-4 w-4" />
-                    Agregar comida
-                  </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-300 hover:bg-white/[0.05] hover:text-white" onClick={() => setSelectedDate((prev) => addDays(prev, -1))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="min-w-40 text-center">
+                <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Bitacora</div>
+                <div className="text-sm font-semibold text-white">{format(selectedDate, "dd/MM/yyyy")}</div>
+              </div>
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-300 hover:bg-white/[0.05] hover:text-white" onClick={() => setSelectedDate((prev) => addDays(prev, 1))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="rounded-2xl border border-lime-400/25 bg-lime-400/10 px-4 py-3 text-right">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-lime-300/70">Acumulado</div>
+              <div className="text-2xl font-black text-lime-300">{formatMetric(totals?.calories, " kcal")}</div>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-6 xl:grid-cols-[1.65fr_0.8fr]">
+          <section className="space-y-5">
+            <div className="rounded-[28px] border border-white/10 bg-slate-950/70">
+              <div className="flex items-center justify-between border-b border-white/5 px-6 py-5">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Logbook</p>
+                  <h2 className="mt-1 text-2xl font-bold text-white">Registro operativo de comidas</h2>
                 </div>
-                <CardDescription>
-                  {subtotal?.calories ?? 0} kcal | P {subtotal?.protein_g ?? 0}g | C {subtotal?.carbs_g ?? 0}g | G{" "}
-                  {subtotal?.fat_g ?? 0}g
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {entries.length === 0 && <p className="text-sm text-muted-foreground">Sin registros en esta comida.</p>}
-                {entries.map((entry) => (
-                  <div key={entry.id} className="rounded-md border p-2">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium">{entry.food_name}</p>
-                      <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(entry.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                <Button onClick={() => openDialogForMeal("breakfast")} className="rounded-2xl bg-lime-400 px-4 text-slate-950 hover:bg-lime-300">
+                  <CirclePlus className="mr-2 h-4 w-4" />
+                  Anadir nueva comida
+                </Button>
+              </div>
+
+              <div className="space-y-4 px-4 py-4">
+                {mealOverview.map(({ meal, entries, subtotal }, index) => (
+                  <article key={meal.key} className="overflow-hidden rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(15,23,42,0.82))]">
+                    <div className="flex items-center gap-4 px-5 py-4">
+                      <div className={cn("h-16 w-1.5 rounded-full", meal.railClass)} />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Registro {index + 1}</div>
+                        <div className={cn("mt-1 text-xl font-bold uppercase", meal.accentClass)}>{meal.label}</div>
+                      </div>
+                      <div className="grid min-w-[290px] grid-cols-4 gap-3">
+                        <div className="rounded-2xl border border-white/8 bg-slate-950/70 px-3 py-2 text-center"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Pro</div><div className="text-sm font-semibold text-emerald-300">{formatMetric(subtotal?.protein_g, "g")}</div></div>
+                        <div className="rounded-2xl border border-white/8 bg-slate-950/70 px-3 py-2 text-center"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Cho</div><div className="text-sm font-semibold text-cyan-300">{formatMetric(subtotal?.carbs_g, "g")}</div></div>
+                        <div className="rounded-2xl border border-white/8 bg-slate-950/70 px-3 py-2 text-center"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Fat</div><div className="text-sm font-semibold text-amber-300">{formatMetric(subtotal?.fat_g, "g")}</div></div>
+                        <div className="rounded-2xl border border-white/8 bg-slate-950/70 px-3 py-2 text-center"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Kcal</div><div className="text-sm font-semibold text-white">{formatMetric(subtotal?.calories)}</div></div>
+                      </div>
+                      <button type="button" onClick={() => toggleMeal(meal.key)} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-slate-300">
+                        <ChevronDown className={cn("h-5 w-5 transition-transform", expandedMeals[meal.key] && "rotate-180")} />
+                      </button>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {entry.serving_size} {entry.serving_unit} | {entry.calories} kcal | P {entry.protein_g} | C {entry.carbs_g} | G{" "}
-                      {entry.fat_g} | Na {entry.sodium_mg ?? 0} mg | K {entry.potassium_mg ?? 0} mg
-                    </p>
-                  </div>
+
+                    {expandedMeals[meal.key] && (
+                      <div className="border-t border-white/5 px-5 pb-5 pt-3">
+                        <div className="overflow-hidden rounded-2xl border border-white/8 bg-slate-950/80">
+                          <table className="w-full text-left">
+                            <thead className="border-b border-white/6 bg-white/[0.03]">
+                              <tr className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                                <th className="px-4 py-3">Alimento</th>
+                                <th className="px-3 py-3 text-right">Cant</th>
+                                <th className="px-3 py-3 text-right">P</th>
+                                <th className="px-3 py-3 text-right">C</th>
+                                <th className="px-3 py-3 text-right">F</th>
+                                <th className="px-3 py-3 text-right">Kcal</th>
+                                <th className="px-4 py-3 text-right">Accion</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {entries.length === 0 ? (
+                                <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">Sin registros en esta comida.</td></tr>
+                              ) : (
+                                entries.map((entry) => (
+                                  <tr key={entry.id} className="border-b border-white/5 last:border-b-0">
+                                    <td className="px-4 py-3"><div className="font-medium text-white">{entry.food_name}</div><div className="text-xs text-slate-500">Na {formatMetric(entry.sodium_mg, "mg")} | K {formatMetric(entry.potassium_mg, "mg")}</div></td>
+                                    <td className="px-3 py-3 text-right text-sm text-slate-300">{entry.serving_size} {entry.serving_unit}</td>
+                                    <td className="px-3 py-3 text-right text-sm font-medium text-emerald-300">{entry.protein_g}</td>
+                                    <td className="px-3 py-3 text-right text-sm font-medium text-cyan-300">{entry.carbs_g}</td>
+                                    <td className="px-3 py-3 text-right text-sm font-medium text-amber-300">{entry.fat_g}</td>
+                                    <td className="px-3 py-3 text-right text-sm font-semibold text-white">{entry.calories}</td>
+                                    <td className="px-4 py-3 text-right"><Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(entry.id)} className="rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-300"><Trash2 className="h-4 w-4" /></Button></td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="mt-3 grid grid-cols-3 gap-3">
+                          <button type="button" onClick={() => openDialogForMeal(meal.key, "manual")} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-300"><PencilLine className="mr-2 inline h-4 w-4" />Carga manual</button>
+                          <button type="button" onClick={() => openDialogForMeal(meal.key, "database")} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-300"><Database className="mr-2 inline h-4 w-4" />Buscar alimento</button>
+                          <button type="button" onClick={() => openDialogForMeal(meal.key, "favorite")} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-300"><ShieldPlus className="mr-2 inline h-4 w-4" />Usar favorito</button>
+                        </div>
+                      </div>
+                    )}
+                  </article>
                 ))}
-              </CardContent>
-            </Card>
-          );
-        })}
+              </div>
+            </div>
+          </section>
+
+          <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
+            <div className="rounded-[28px] border border-white/10 bg-slate-950/70 p-5">
+              <div className="flex items-center justify-between">
+                <div><p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-lime-300/70">Telemetria metabolica</p><h3 className="mt-1 text-lg font-bold text-white">Control de biometria</h3></div>
+                <div className="rounded-xl bg-lime-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-lime-300">
+                  {GOAL_LABELS[metabolicProfile?.goalType ?? "maintain"] ?? "Objetivo"}
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-4"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">BMR</div><div className="mt-2 text-3xl font-black text-white">{formatMetric(target?.bmr)}</div><div className="text-xs text-slate-500">reposo</div></div>
+                <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-4"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">TDEE</div><div className="mt-2 text-3xl font-black text-white">{formatMetric(target?.tdee)}</div><div className="text-xs text-slate-500">mantenimiento</div></div>
+              </div>
+              <div className="mt-4 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-500">
+                <span>Peso: {formatMetric(metabolicProfile?.weightKg, " kg", 1)}</span>
+                <span>Actividad: {ACTIVITY_LABELS[metabolicProfile?.activityLevel ?? "moderate"] ?? "--"}</span>
+              </div>
+            </div>
+
+            <div className="rounded-[28px] border border-white/10 bg-slate-950/70 p-5">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Balance energetico</div>
+              <div className="mt-4 flex items-end justify-between"><div><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Consumido</div><div className="text-4xl font-black text-white">{formatMetric(totals?.calories)}</div></div><div className="text-right"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Meta</div><div className="text-3xl font-black text-lime-300">{formatMetric(goals?.calorie_goal)}</div></div></div>
+              <Progress value={caloriesPct} className="mt-4 h-3 bg-slate-800" />
+              <div className="mt-3 flex justify-between text-xs text-slate-500"><span>Restante</span><span>{formatMetric(remaining?.calories, " kcal")}</span></div>
+            </div>
+
+            <div className="rounded-[28px] border border-white/10 bg-slate-950/70 p-5">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Macros</div>
+              <div className="mt-4 space-y-4">
+                <div><div className="mb-2 flex justify-between text-sm"><span className="font-medium text-emerald-300">Proteinas</span><span className="text-slate-400">{formatMetric(totals?.protein_g, "g")} / {formatMetric(goals?.protein_goal_g, "g")}</span></div><Progress value={proteinPct} className="h-2.5 bg-slate-800 [&>div]:bg-emerald-400" /></div>
+                <div><div className="mb-2 flex justify-between text-sm"><span className="font-medium text-cyan-300">Carbohidratos</span><span className="text-slate-400">{formatMetric(totals?.carbs_g, "g")} / {formatMetric(goals?.carb_goal_g, "g")}</span></div><Progress value={carbsPct} className="h-2.5 bg-slate-800 [&>div]:bg-cyan-400" /></div>
+                <div><div className="mb-2 flex justify-between text-sm"><span className="font-medium text-amber-300">Grasas</span><span className="text-slate-400">{formatMetric(totals?.fat_g, "g")} / {formatMetric(goals?.fat_goal_g, "g")}</span></div><Progress value={fatPct} className="h-2.5 bg-slate-800 [&>div]:bg-amber-400" /></div>
+              </div>
+            </div>
+
+            <div className="rounded-[28px] border border-white/10 bg-slate-950/70 p-5">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500"><Flame className="h-3.5 w-3.5 text-lime-300" />Perfil metabolico</div>
+              <div className="mt-4 grid gap-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Sexo</div>
+                    <div className="mt-2 text-sm text-white">{metabolicProfile?.sex === "female" ? "Femenino" : "Masculino"}</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Edad</div>
+                    <div className="mt-2 text-sm text-white">{metabolicProfile?.age ?? "--"} anios</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Peso</div>
+                    <div className="mt-2 text-sm text-white">{formatMetric(metabolicProfile?.weightKg, " kg", 1)}</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Altura</div>
+                    <div className="mt-2 text-sm text-white">{formatMetric(metabolicProfile?.heightCm, " cm", 0)}</div>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Actividad</div>
+                  <div className="mt-2 text-sm text-white">{ACTIVITY_LABELS[metabolicProfile?.activityLevel ?? "moderate"] ?? "--"}</div>
+                </div>
+                <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Objetivo</div>
+                  <div className="mt-2 text-sm text-white">{GOAL_LABELS[metabolicProfile?.goalType ?? "maintain"] ?? "--"}</div>
+                </div>
+                <Button asChild className="rounded-2xl bg-lime-400 text-slate-950 hover:bg-lime-300">
+                  <Link to="/fitness-profile">Abrir Perfil Fitness</Link>
+                </Button>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Agregar comida ({MEAL_SECTIONS.find((m) => m.key === activeMeal)?.label})</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <Label>Modo rapido</Label>
-            <Select value={mode} onValueChange={(value) => setMode(value as AddMode)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="manual">Manual</SelectItem>
-                <SelectItem value="database">Buscar en base</SelectItem>
-                <SelectItem value="favorite">Favorito</SelectItem>
-                <SelectItem value="yesterday">Duplicar de ayer</SelectItem>
-                <SelectItem value="recent">Reutilizar reciente</SelectItem>
-              </SelectContent>
-            </Select>
-
+        <DialogContent className="max-w-3xl border-white/10 bg-slate-950 text-slate-100">
+          <DialogHeader><DialogTitle className="text-xl font-bold">Agregar comida - {MEAL_SECTIONS.find((m) => m.key === activeMeal)?.label}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-[200px_1fr] gap-4">
+              <div className="space-y-2"><Label className="text-slate-400">Modo de carga</Label><Select value={mode} onValueChange={(value) => setMode(value as AddMode)}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="manual">Carga manual</SelectItem><SelectItem value="database">Base de alimentos</SelectItem><SelectItem value="favorite">Favoritos</SelectItem><SelectItem value="yesterday">Duplicar de ayer</SelectItem><SelectItem value="recent">Recientes</SelectItem></SelectContent></Select></div>
+              <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-slate-400"><div className="font-medium text-white">Contexto activo</div><div className="mt-1">Comida destino: {MEAL_SECTIONS.find((m) => m.key === activeMeal)?.label}</div></div>
+            </div>
             {mode === "database" && (
-              <div className="space-y-2">
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <Input value={searchFood} onChange={(e) => setSearchFood(e.target.value)} placeholder="Buscar alimento..." />
-                  <Select value={foodCategory} onValueChange={setFoodCategory}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
-                      {(categoriesQuery.data || []).map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Select value={selectedFoodDatabaseId} onValueChange={setSelectedFoodDatabaseId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona alimento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(foodSearchQuery.data || []).map((food) => (
-                      <SelectItem key={food.id} value={food.id}>
-                        {food.food_name} ({food.calories} kcal/{food.serving_size}
-                        {food.serving_unit})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <Input
-                    value={consumedAmount}
-                    onChange={(e) => setConsumedAmount(e.target.value)}
-                    type="number"
-                    min="0"
-                    placeholder="Cantidad consumida"
-                  />
-                  <div className="flex items-center rounded-md border px-3 text-sm text-muted-foreground">
-                    {(foodSearchQuery.data || []).find((row) => row.id === selectedFoodDatabaseId)?.serving_unit || "g"}
-                  </div>
-                </div>
-
-                {(() => {
-                  const selectedFood = (foodSearchQuery.data || []).find((row) => row.id === selectedFoodDatabaseId);
-                  if (!selectedFood) return null;
-                  const amount = Number(consumedAmount);
-                  if (!Number.isFinite(amount) || amount <= 0) return null;
-                  const computed = calculateNutritionFromFood(selectedFood as FoodDatabaseItem, amount);
-                  return (
-                    <p className="text-xs text-muted-foreground">
-                      Vista previa: {computed.calories} kcal | P {computed.protein_g} | C {computed.carbs_g} | G {computed.fat_g} | Na{" "}
-                      {computed.sodium_mg} | K {computed.potassium_mg}
-                    </p>
-                  );
-                })()}
+              <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                <div className="grid grid-cols-[1fr_220px] gap-3"><Input value={searchFood} onChange={(e) => setSearchFood(e.target.value)} placeholder="Buscar alimento..." className="border-white/10 bg-slate-900 text-white" /><Select value={foodCategory} onValueChange={setFoodCategory}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todas</SelectItem>{(categoriesQuery.data || []).map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select></div>
+                <Select value={selectedFoodDatabaseId} onValueChange={setSelectedFoodDatabaseId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona alimento" /></SelectTrigger><SelectContent>{(foodSearchQuery.data || []).map((food) => <SelectItem key={food.id} value={food.id}>{food.food_name} ({food.calories} kcal/{food.serving_size}{food.serving_unit})</SelectItem>)}</SelectContent></Select>
+                <div className="grid grid-cols-[1fr_120px] gap-3"><Input value={consumedAmount} onChange={(e) => setConsumedAmount(e.target.value)} type="number" min="0" placeholder="Cantidad consumida" className="border-white/10 bg-slate-900 text-white" /><div className="flex items-center justify-center rounded-xl border border-white/10 bg-slate-900 text-sm text-slate-400">{(foodSearchQuery.data || []).find((row) => row.id === selectedFoodDatabaseId)?.serving_unit || "g"}</div></div>
+                {selectedFoodPreview && <div className="rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-4 text-sm text-slate-300">Vista previa: {selectedFoodPreview.calories} kcal | P {selectedFoodPreview.protein_g} | C {selectedFoodPreview.carbs_g} | G {selectedFoodPreview.fat_g}</div>}
               </div>
             )}
-
             {mode === "manual" && (
-              <div className="space-y-2">
-                <Input value={foodName} onChange={(e) => setFoodName(e.target.value)} placeholder="Nombre alimento" />
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <Input value={servingSize} onChange={(e) => setServingSize(e.target.value)} type="number" min="0" placeholder="Porcion" />
-                  <Input value={servingUnit} onChange={(e) => setServingUnit(e.target.value)} placeholder="unidad" className="w-24" />
+              <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                <Input value={foodName} onChange={(e) => setFoodName(e.target.value)} placeholder="Nombre alimento" className="border-white/10 bg-slate-900 text-white" />
+                <div className="grid grid-cols-[1fr_110px] gap-3"><Input value={servingSize} onChange={(e) => setServingSize(e.target.value)} type="number" min="0" placeholder="Porcion" className="border-white/10 bg-slate-900 text-white" /><Input value={servingUnit} onChange={(e) => setServingUnit(e.target.value)} placeholder="unidad" className="border-white/10 bg-slate-900 text-white" /></div>
+                <div className="grid grid-cols-4 gap-3">
+                  <Input value={calories} onChange={(e) => setCalories(e.target.value)} type="number" min="0" placeholder="kcal" className="border-white/10 bg-slate-900 text-white" />
+                  <Input value={protein} onChange={(e) => setProtein(e.target.value)} type="number" min="0" placeholder="Proteina g" className="border-white/10 bg-slate-900 text-white" />
+                  <Input value={carbs} onChange={(e) => setCarbs(e.target.value)} type="number" min="0" placeholder="Carbs g" className="border-white/10 bg-slate-900 text-white" />
+                  <Input value={fat} onChange={(e) => setFat(e.target.value)} type="number" min="0" placeholder="Grasas g" className="border-white/10 bg-slate-900 text-white" />
+                  <Input value={fiber} onChange={(e) => setFiber(e.target.value)} type="number" min="0" placeholder="Fibra g" className="border-white/10 bg-slate-900 text-white" />
+                  <Input value={sugar} onChange={(e) => setSugar(e.target.value)} type="number" min="0" placeholder="Azucar g" className="border-white/10 bg-slate-900 text-white" />
+                  <Input value={sodium} onChange={(e) => setSodium(e.target.value)} type="number" min="0" placeholder="Sodio mg" className="border-white/10 bg-slate-900 text-white" />
+                  <Input value={potassium} onChange={(e) => setPotassium(e.target.value)} type="number" min="0" placeholder="Potasio mg" className="border-white/10 bg-slate-900 text-white" />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input value={calories} onChange={(e) => setCalories(e.target.value)} type="number" min="0" placeholder="kcal" />
-                  <Input value={protein} onChange={(e) => setProtein(e.target.value)} type="number" min="0" placeholder="Proteina g" />
-                  <Input value={carbs} onChange={(e) => setCarbs(e.target.value)} type="number" min="0" placeholder="Carbs g" />
-                  <Input value={fat} onChange={(e) => setFat(e.target.value)} type="number" min="0" placeholder="Grasas g" />
-                  <Input value={fiber} onChange={(e) => setFiber(e.target.value)} type="number" min="0" placeholder="Fibra g" />
-                  <Input value={sugar} onChange={(e) => setSugar(e.target.value)} type="number" min="0" placeholder="Azucar g" />
-                  <Input value={sodium} onChange={(e) => setSodium(e.target.value)} type="number" min="0" placeholder="Sodio mg" />
-                  <Input value={potassium} onChange={(e) => setPotassium(e.target.value)} type="number" min="0" placeholder="Potasio mg" />
-                </div>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />
-                  Guardar en favoritos
-                </label>
-                <p className="text-xs text-muted-foreground">
-                  Vista previa: {Number(calories || 0)} kcal | P {Number(protein || 0)} | C {Number(carbs || 0)} | G {Number(fat || 0)} |
-                  {" "}Na {Number(sodium || 0)} | K {Number(potassium || 0)}
-                </p>
+                <label className="flex items-center gap-2 text-sm text-slate-300"><input type="checkbox" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />Guardar en favoritos</label>
               </div>
             )}
-
-            {mode === "favorite" && (
-              <Select value={selectedFavoriteId} onValueChange={setSelectedFavoriteId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona favorito" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(favoritesQuery.data || []).map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.name} ({item.calories} kcal)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {mode === "yesterday" && (
-              <Select value={selectedYesterdayId} onValueChange={setSelectedYesterdayId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona comida de ayer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {yesterdayEntries.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.food_name} ({item.calories} kcal)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {mode === "recent" && (
-              <Select value={selectedRecentId} onValueChange={setSelectedRecentId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona reciente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(recentQuery.data || []).map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.food_name} ({item.calories} kcal)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            {mode === "favorite" && <Select value={selectedFavoriteId} onValueChange={setSelectedFavoriteId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona favorito" /></SelectTrigger><SelectContent>{(favoritesQuery.data || []).map((item) => <SelectItem key={item.id} value={item.id}>{item.name} ({item.calories} kcal)</SelectItem>)}</SelectContent></Select>}
+            {mode === "yesterday" && <Select value={selectedYesterdayId} onValueChange={setSelectedYesterdayId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona comida de ayer" /></SelectTrigger><SelectContent>{yesterdayEntries.map((item) => <SelectItem key={item.id} value={item.id}>{item.food_name} ({item.calories} kcal)</SelectItem>)}</SelectContent></Select>}
+            {mode === "recent" && <Select value={selectedRecentId} onValueChange={setSelectedRecentId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona reciente" /></SelectTrigger><SelectContent>{(recentQuery.data || []).map((item) => <SelectItem key={item.id} value={item.id}>{item.food_name} ({item.calories} kcal)</SelectItem>)}</SelectContent></Select>}
           </div>
-
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleAddEntry} disabled={addMutation.isPending}>
-              Guardar
-            </Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-white/10 bg-transparent text-slate-300 hover:bg-white/[0.05] hover:text-white">Cancelar</Button>
+            <Button onClick={handleAddEntry} disabled={addMutation.isPending} className="bg-lime-400 text-slate-950 hover:bg-lime-300">Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
