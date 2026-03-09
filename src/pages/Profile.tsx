@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Scale, Ruler, Target, Activity } from "lucide-react";
+import { User } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
-import { ACTIVITY_OPTIONS, GOAL_OPTIONS } from "@/lib/metabolismOptions";
+import { GOAL_OPTIONS } from "@/lib/metabolismOptions";
+import ProfileCalibrationPanel from "@/components/profile/ProfileCalibrationPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Profile = () => {
   const { profile, updateProfile, isGuest } = useAuth();
@@ -38,7 +38,6 @@ const Profile = () => {
   }, [profile]);
 
   const selectedGoal = useMemo(() => GOAL_OPTIONS.find((option) => option.value === nutritionGoalType), [nutritionGoalType]);
-  const selectedActivity = useMemo(() => ACTIVITY_OPTIONS.find((option) => option.value === activityLevel), [activityLevel]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,78 +142,29 @@ const Profile = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="fullName">Nombre completo</Label>
+              <Label htmlFor="fullName">Nombre completo</Label>
                 <Input id="fullName" placeholder="Ingresa tu nombre completo" value={fullName} onChange={(e) => setFullName(e.target.value)} />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="birthDate">Fecha de nacimiento</Label>
-                <Input id="birthDate" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+              <div className="md:col-span-2">
+                <ProfileCalibrationPanel
+                  birthDate={birthDate}
+                  onBirthDateChange={setBirthDate}
+                  biologicalSex={biologicalSex}
+                  onBiologicalSexChange={setBiologicalSex}
+                  weight={weight}
+                  onWeightChange={setWeight}
+                  height={height}
+                  onHeightChange={setHeight}
+                  activityLevel={activityLevel}
+                  onActivityLevelChange={setActivityLevel}
+                  nutritionGoalType={nutritionGoalType}
+                  onNutritionGoalTypeChange={setNutritionGoalType}
+                />
               </div>
 
-              <div className="space-y-2">
-                <Label>Sexo biologico</Label>
-                <Select value={biologicalSex} onValueChange={(value) => setBiologicalSex(value as "male" | "female")}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Masculino</SelectItem>
-                    <SelectItem value="female">Femenino</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="weight" className="flex items-center gap-2">
-                  <Scale className="h-4 w-4" /> Peso (kg)
-                </Label>
-                <Input id="weight" type="number" placeholder="70" value={weight} onChange={(e) => setWeight(e.target.value)} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="height" className="flex items-center gap-2">
-                  <Ruler className="h-4 w-4" /> Altura (cm)
-                </Label>
-                <Input id="height" type="number" placeholder="175" value={height} onChange={(e) => setHeight(e.target.value)} />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Target className="h-4 w-4" /> Objetivo fisico
-                </Label>
-                <Select value={nutritionGoalType} onValueChange={(value) => setNutritionGoalType(value as typeof nutritionGoalType)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GOAL_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-2 md:col-span-2">
                 <p className="text-xs text-muted-foreground">{selectedGoal?.description}</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Activity className="h-4 w-4" /> Nivel de actividad
-                </Label>
-                <Select value={activityLevel} onValueChange={(value) => setActivityLevel(value as typeof activityLevel)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACTIVITY_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">{selectedActivity?.description}</p>
               </div>
             </div>
           </CardContent>
