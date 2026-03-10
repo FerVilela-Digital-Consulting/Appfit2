@@ -645,7 +645,7 @@ const Nutrition = () => {
                   {GOAL_LABELS[metabolicProfile?.goalType ?? "maintain"] ?? "--"}
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-300">
-                  {daySummary?.weightSource === "profile_fallback" ? "Peso perfil" : "Peso real"}
+                  {daySummary?.weightSource === "profile_fallback" ? "Peso perfil" : "Peso registrado"}
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-3">
