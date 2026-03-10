@@ -16,7 +16,7 @@ import {
 import { getBiofeedbackRange, getDailyBiofeedback } from "@/services/dailyBiofeedback";
 import { listBodyMeasurements } from "@/services/bodyMeasurements";
 import { getDailyNote, getLatestDailyNote, listDailyNotesByRange, upsertDailyNote } from "@/services/dailyNotes";
-import { getNutritionRangeSummary } from "@/services/nutrition";
+import { getNutritionDaySummary, getNutritionRangeSummary } from "@/services/nutrition";
 import { getGoalProgress, getUserGoal } from "@/services/goals";
 import { getSleepDay, getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
 import { getWaterDayTotal, getWaterGoal, getWaterRangeTotals } from "@/services/waterIntake";
@@ -139,6 +139,7 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
         bio7d,
         notes7d,
         allMeasurements,
+        nutritionToday,
         noteToday,
         noteLatest,
       ] = await Promise.all([
@@ -154,6 +155,7 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
         getBiofeedbackRange(userId, sevenDaysAgo, today, { isGuest, timeZone }),
         listDailyNotesByRange(userId, sevenDaysAgo, today, { isGuest, timeZone }),
         listBodyMeasurements(userId, { isGuest }),
+        getNutritionDaySummary(userId, today, { isGuest, timeZone, profile: profile as any }).catch(() => null),
         getDailyNote(userId, today, { isGuest, timeZone }),
         getLatestDailyNote(userId, { isGuest }),
       ]);
@@ -228,6 +230,7 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
         recovery,
         latestMeasurement: measurementSummary.latest,
         latestMeasurementWeight: latestMeasurementWeight ? Number(latestMeasurementWeight.weight_kg) : null,
+        nutritionToday,
         measurementRange,
         previousMeasurement: measurementSummary.previous,
         waistComparison: measurementSummary.waistComparison,

@@ -13,6 +13,15 @@ type QuickAction = {
 
 type Props = {
   nextActionLabel?: string | null;
+  nutritionSummary?: {
+    profileName?: string | null;
+    archetypeLabel?: string | null;
+    targetCalories?: number | null;
+    consumedCalories?: number | null;
+    proteinGoal?: number | null;
+    carbsGoal?: number | null;
+    fatGoal?: number | null;
+  } | null;
 };
 
 const QUICK_ACTIONS: QuickAction[] = [
@@ -42,7 +51,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   },
 ];
 
-const DashboardQuickActions = ({ nextActionLabel }: Props) => {
+const DashboardQuickActions = ({ nextActionLabel, nutritionSummary }: Props) => {
   return (
     <Card className="rounded-[28px] border-border/60 bg-card/80 shadow-sm">
       <CardHeader>
@@ -61,6 +70,21 @@ const DashboardQuickActions = ({ nextActionLabel }: Props) => {
             </div>
           </div>
         </div>
+
+        {nutritionSummary ? (
+          <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Nutricion hoy</p>
+            <p className="mt-2 text-sm font-semibold">
+              {nutritionSummary.profileName || "Sin perfil"}{nutritionSummary.archetypeLabel ? ` · ${nutritionSummary.archetypeLabel}` : ""}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {nutritionSummary.consumedCalories ?? 0} / {nutritionSummary.targetCalories ?? 0} kcal
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              P {nutritionSummary.proteinGoal ?? 0}g | C {nutritionSummary.carbsGoal ?? 0}g | G {nutritionSummary.fatGoal ?? 0}g
+            </p>
+          </div>
+        ) : null}
 
         <div className="grid gap-3 sm:grid-cols-2">
           {QUICK_ACTIONS.map((action) => {

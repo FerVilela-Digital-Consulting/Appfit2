@@ -1,13 +1,15 @@
-
 import { DEFAULT_WATER_TIMEZONE, createDateKeyRange, getDateKeyForTimezone } from "@/features/water/waterUtils";
+import { getArchetypeLabel } from "@/features/nutrition/nutritionProfiles";
 import {
   calculateAgeFromBirthDate,
   calculateNutrientDensityScore,
   calculateNutritionTargets,
   calculateSodiumPotassiumRatio,
 } from "@/lib/nutritionCalculator";
+import { getWeightReferenceForDate } from "@/services/bodyMetrics";
 import { supabase } from "@/services/supabaseClient";
 import {
+  DailyNutritionLog,
   DailyNutritionTargetRow,
   FavoriteFood,
   FoodDatabaseItem,
@@ -18,9 +20,12 @@ import {
   NutritionMealType,
   NutritionMetabolicProfile,
   NutritionMicronutrients,
+  NutritionProfileRecord,
+  NutritionTargetResolution,
 } from "@/types/nutrition";
 
 export type {
+  DailyNutritionLog,
   DailyNutritionTargetRow,
   FavoriteFood,
   FoodDatabaseItem,
@@ -30,6 +35,7 @@ export type {
   NutritionMacroTotals,
   NutritionMealType,
   NutritionMetabolicProfile,
+  NutritionProfileRecord,
 };
 
 type NutritionProfileLike = {
@@ -48,8 +54,8 @@ type NutritionGoalOptions = {
   isGuest?: boolean;
   timeZone?: string;
   date?: Date;
-  dayArchetype?: NutritionDayArchetype;
   profile?: NutritionProfileLike | null;
+  includeArchivedProfiles?: boolean;
 };
 
 type NutritionGoalsLegacy = {
@@ -81,6 +87,20 @@ type NutritionEntryInsertParams = {
   timeZone?: string;
 };
 
+type UpsertNutritionProfileInput = {
+  id?: string;
+  name: string;
+  archetype: NutritionDayArchetype;
+  is_default?: boolean;
+};
+
+type ResolvePlanOptions = NutritionGoalOptions & {
+  forceProfileId?: string | null;
+  clearProfileSelection?: boolean;
+  forceDayArchetype?: NutritionDayArchetype;
+  forceCalorieOverride?: number | null;
+};
+
 const DEFAULT_NUTRITION_GOALS: NutritionGoalsLegacy = {
   calorie_goal: 2000,
   protein_goal_g: 150,
@@ -104,6 +124,8 @@ const DEFAULT_METABOLIC_PROFILE: NutritionMetabolicProfile = {
 const GUEST_NUTRITION_ENTRIES_KEY = "appfit_guest_nutrition_entries";
 const GUEST_NUTRITION_FAVORITES_KEY = "appfit_guest_nutrition_favorites";
 const GUEST_NUTRITION_GOALS_KEY = "appfit_guest_nutrition_goals";
+const GUEST_NUTRITION_PROFILES_KEY = "appfit_guest_nutrition_profiles";
+const GUEST_DAILY_LOGS_KEY = "appfit_guest_daily_nutrition_logs";
 const GUEST_DAY_ARCHETYPE_KEY = "appfit_guest_nutrition_day_archetype";
 const GUEST_DAY_OVERRIDE_KEY = "appfit_guest_nutrition_day_calorie_override";
 
@@ -124,21 +146,50 @@ const sanitizeNumber = (value: unknown, fallback = 0) => {
 };
 
 const assertNonNegative = (value: number, field: string) => {
-  if (!Number.isFinite(value) || value < 0) {
-    throw new Error(`${field} must be a non-negative number.`);
-  }
+  if (!Number.isFinite(value) || value < 0) throw new Error(`${field} must be a non-negative number.`);
 };
 
 const assertPositive = (value: number, field: string) => {
-  if (!Number.isFinite(value) || value <= 0) {
-    throw new Error(`${field} must be greater than 0.`);
-  }
+  if (!Number.isFinite(value) || value <= 0) throw new Error(`${field} must be greater than 0.`);
+};
+
+const normalizeSex = (value: string | null | undefined): "male" | "female" => {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (["female", "f", "woman", "mujer", "femenino"].includes(normalized)) return "female";
+  return "male";
+};
+
+const normalizeActivityLevel = (value: string | null | undefined): NutritionMetabolicProfile["activityLevel"] => {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (["low", "bajo", "sedentary"].includes(normalized)) return "low";
+  if (["moderate", "moderado", "medium"].includes(normalized)) return "moderate";
+  if (["high", "alto", "active"].includes(normalized)) return "high";
+  if (["very_high", "very high", "muy_alto", "muy alto"].includes(normalized)) return "very_high";
+  if (["hyperactive", "hiperactivo", "extreme"].includes(normalized)) return "hyperactive";
+  return "moderate";
+};
+
+const normalizeGoalType = (value: string | null | undefined): NutritionMetabolicProfile["goalType"] => {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (["lose_slow", "lose slow", "perder peso lentamente", "slow cut", "deficit moderado"].some((item) => normalized.includes(item))) return "lose_slow";
+  if (["lose", "lose weight", "bajar", "bajar de peso", "fat loss", "cut"].some((item) => normalized.includes(item))) return "lose";
+  if (["gain_slow", "gain slow", "aumentar peso lentamente", "superavit moderado"].some((item) => normalized.includes(item))) return "gain_slow";
+  if (["gain", "build", "muscle", "bulk", "aumentar", "ganar"].some((item) => normalized.includes(item))) return "gain";
+  return "maintain";
+};
+
+const normalizeDayArchetype = (value: string | null | undefined): NutritionDayArchetype => {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (["heavy", "pesado", "hard"].includes(normalized)) return "heavy";
+  if (["recovery", "descanso", "rest"].includes(normalized)) return "recovery";
+  return "base";
 };
 
 const normalizeEntry = (row: any): NutritionEntry => ({
   id: String(row.id),
   user_id: String(row.user_id),
   date_key: String(row.date_key),
+  daily_log_id: row.daily_log_id ? String(row.daily_log_id) : null,
   meal_type: row.meal_type as NutritionMealType,
   food_name: String(row.food_name ?? ""),
   serving_size: sanitizeNumber(row.serving_size),
@@ -152,10 +203,7 @@ const normalizeEntry = (row: any): NutritionEntry => ({
   sodium_mg: row.sodium_mg === null || row.sodium_mg === undefined ? null : sanitizeNumber(row.sodium_mg),
   potassium_mg: row.potassium_mg === null || row.potassium_mg === undefined ? null : sanitizeNumber(row.potassium_mg),
   micronutrients: row.micronutrients && typeof row.micronutrients === "object" ? (row.micronutrients as NutritionMicronutrients) : null,
-  nutrient_density_score:
-    row.nutrient_density_score === null || row.nutrient_density_score === undefined
-      ? null
-      : sanitizeNumber(row.nutrient_density_score),
+  nutrient_density_score: row.nutrient_density_score === null || row.nutrient_density_score === undefined ? null : sanitizeNumber(row.nutrient_density_score),
   notes: row.notes ?? null,
   created_at: String(row.created_at ?? new Date().toISOString()),
 });
@@ -174,10 +222,7 @@ const normalizeFavorite = (row: any): FavoriteFood => ({
   sodium_mg: row.sodium_mg === null || row.sodium_mg === undefined ? null : sanitizeNumber(row.sodium_mg),
   potassium_mg: row.potassium_mg === null || row.potassium_mg === undefined ? null : sanitizeNumber(row.potassium_mg),
   micronutrients: row.micronutrients && typeof row.micronutrients === "object" ? (row.micronutrients as NutritionMicronutrients) : null,
-  nutrient_density_score:
-    row.nutrient_density_score === null || row.nutrient_density_score === undefined
-      ? null
-      : sanitizeNumber(row.nutrient_density_score),
+  nutrient_density_score: row.nutrient_density_score === null || row.nutrient_density_score === undefined ? null : sanitizeNumber(row.nutrient_density_score),
   created_at: String(row.created_at ?? new Date().toISOString()),
 });
 
@@ -199,31 +244,58 @@ const normalizeFoodDatabaseItem = (row: any): FoodDatabaseItem => ({
   source: String(row.source ?? "USDA"),
   created_at: String(row.created_at ?? new Date().toISOString()),
 });
-const parseGuestEntries = (): NutritionEntry[] => {
-  const raw = localStorage.getItem(GUEST_NUTRITION_ENTRIES_KEY);
+
+const normalizeNutritionProfile = (row: any): NutritionProfileRecord => ({
+  id: String(row.id),
+  user_id: String(row.user_id ?? "guest"),
+  name: String(row.name ?? "Perfil"),
+  archetype: normalizeDayArchetype(row.archetype),
+  is_default: Boolean(row.is_default),
+  is_archived: Boolean(row.is_archived),
+  created_at: String(row.created_at ?? new Date().toISOString()),
+  updated_at: String(row.updated_at ?? row.created_at ?? new Date().toISOString()),
+});
+
+const normalizeDailyLog = (row: any): DailyNutritionLog => ({
+  id: String(row.id),
+  user_id: String(row.user_id ?? "guest"),
+  date_key: String(row.date_key),
+  nutrition_profile_id: row.nutrition_profile_id ? String(row.nutrition_profile_id) : null,
+  profile_name_snapshot: row.profile_name_snapshot ?? null,
+  archetype_snapshot: row.archetype_snapshot ? normalizeDayArchetype(row.archetype_snapshot) : null,
+  target_calories: row.target_calories === null || row.target_calories === undefined ? null : sanitizeNumber(row.target_calories),
+  target_protein_g: row.target_protein_g === null || row.target_protein_g === undefined ? null : sanitizeNumber(row.target_protein_g),
+  target_carbs_g: row.target_carbs_g === null || row.target_carbs_g === undefined ? null : sanitizeNumber(row.target_carbs_g),
+  target_fat_g: row.target_fat_g === null || row.target_fat_g === undefined ? null : sanitizeNumber(row.target_fat_g),
+  base_tdee: row.base_tdee === null || row.base_tdee === undefined ? null : sanitizeNumber(row.base_tdee),
+  weight_snapshot_kg: row.weight_snapshot_kg === null || row.weight_snapshot_kg === undefined ? null : sanitizeNumber(row.weight_snapshot_kg),
+  calorie_adjustment: row.calorie_adjustment === null || row.calorie_adjustment === undefined ? null : sanitizeNumber(row.calorie_adjustment),
+  calorie_override: row.calorie_override === null || row.calorie_override === undefined ? null : sanitizeNumber(row.calorie_override),
+  created_at: String(row.created_at ?? new Date().toISOString()),
+  updated_at: String(row.updated_at ?? row.created_at ?? new Date().toISOString()),
+});
+
+const parseJsonArray = <T>(key: string, normalizer: (row: any) => T): T[] => {
+  const raw = localStorage.getItem(key);
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw) as any[];
-    return Array.isArray(parsed) ? parsed.map(normalizeEntry) : [];
+    return Array.isArray(parsed) ? parsed.map(normalizer) : [];
   } catch {
     return [];
   }
 };
 
-const saveGuestEntries = (rows: NutritionEntry[]) => localStorage.setItem(GUEST_NUTRITION_ENTRIES_KEY, JSON.stringify(rows));
+const saveJsonArray = (key: string, rows: unknown[]) => localStorage.setItem(key, JSON.stringify(rows));
 
-const parseGuestFavorites = (): FavoriteFood[] => {
-  const raw = localStorage.getItem(GUEST_NUTRITION_FAVORITES_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as any[];
-    return Array.isArray(parsed) ? parsed.map(normalizeFavorite) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveGuestFavorites = (rows: FavoriteFood[]) => localStorage.setItem(GUEST_NUTRITION_FAVORITES_KEY, JSON.stringify(rows));
+const parseGuestEntries = () => parseJsonArray(GUEST_NUTRITION_ENTRIES_KEY, normalizeEntry);
+const saveGuestEntries = (rows: NutritionEntry[]) => saveJsonArray(GUEST_NUTRITION_ENTRIES_KEY, rows);
+const parseGuestFavorites = () => parseJsonArray(GUEST_NUTRITION_FAVORITES_KEY, normalizeFavorite);
+const saveGuestFavorites = (rows: FavoriteFood[]) => saveJsonArray(GUEST_NUTRITION_FAVORITES_KEY, rows);
+const parseGuestProfiles = () => parseJsonArray(GUEST_NUTRITION_PROFILES_KEY, normalizeNutritionProfile);
+const saveGuestProfiles = (rows: NutritionProfileRecord[]) => saveJsonArray(GUEST_NUTRITION_PROFILES_KEY, rows);
+const parseGuestDailyLogs = () => parseJsonArray(GUEST_DAILY_LOGS_KEY, normalizeDailyLog);
+const saveGuestDailyLogs = (rows: DailyNutritionLog[]) => saveJsonArray(GUEST_DAILY_LOGS_KEY, rows);
 const saveGuestGoals = (goals: NutritionGoalsLegacy) => localStorage.setItem(GUEST_NUTRITION_GOALS_KEY, JSON.stringify(goals));
 
 const parseGuestDayArchetypeMap = (): Record<string, NutritionDayArchetype> => {
@@ -231,10 +303,9 @@ const parseGuestDayArchetypeMap = (): Record<string, NutritionDayArchetype> => {
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw) as Record<string, string>;
-    if (!parsed || typeof parsed !== "object") return {};
     const result: Record<string, NutritionDayArchetype> = {};
-    Object.keys(parsed).forEach((key) => {
-      result[key] = normalizeDayArchetype(parsed[key]);
+    Object.entries(parsed || {}).forEach(([key, value]) => {
+      result[key] = normalizeDayArchetype(value);
     });
     return result;
   } catch {
@@ -250,13 +321,10 @@ const parseGuestDayOverrideMap = (): Record<string, number> => {
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw) as Record<string, number>;
-    if (!parsed || typeof parsed !== "object") return {};
     const next: Record<string, number> = {};
-    Object.entries(parsed).forEach(([key, value]) => {
+    Object.entries(parsed || {}).forEach(([key, value]) => {
       const numeric = Number(value);
-      if (Number.isFinite(numeric) && numeric > 0) {
-        next[key] = numeric;
-      }
+      if (Number.isFinite(numeric) && numeric > 0) next[key] = numeric;
     });
     return next;
   } catch {
@@ -281,22 +349,12 @@ const aggregateTotals = (entries: NutritionEntry[]): NutritionMacroTotals => {
         sodium_mg: acc.sodium_mg + sanitizeNumber(row.sodium_mg),
         potassium_mg: acc.potassium_mg + sanitizeNumber(row.potassium_mg),
       };
-
       if (row.nutrient_density_score !== null && row.nutrient_density_score !== undefined && Number.isFinite(row.nutrient_density_score)) {
         densityValues.push(Number(row.nutrient_density_score));
       }
       return next;
     },
-    {
-      calories: 0,
-      protein_g: 0,
-      carbs_g: 0,
-      fat_g: 0,
-      fiber_g: 0,
-      sugar_g: 0,
-      sodium_mg: 0,
-      potassium_mg: 0,
-    },
+    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fiber_g: 0, sugar_g: 0, sodium_mg: 0, potassium_mg: 0 },
   );
 
   return {
@@ -319,66 +377,8 @@ const roundTotals = (totals: NutritionMacroTotals): NutritionMacroTotals => ({
   sodium_mg: Math.round(totals.sodium_mg),
   potassium_mg: Math.round(totals.potassium_mg),
   sodium_potassium_ratio: totals.sodium_potassium_ratio === null ? null : Number(totals.sodium_potassium_ratio.toFixed(3)),
-  nutrient_density_score:
-    totals.nutrient_density_score === null ? null : Number(totals.nutrient_density_score.toFixed(1)),
+  nutrient_density_score: totals.nutrient_density_score === null ? null : Number(totals.nutrient_density_score.toFixed(1)),
 });
-
-const normalizeSex = (value: string | null | undefined): "male" | "female" => {
-  const normalized = String(value ?? "").trim().toLowerCase();
-  if (["female", "f", "woman", "mujer", "femenino"].includes(normalized)) return "female";
-  return "male";
-};
-
-const normalizeActivityLevel = (value: string | null | undefined): NutritionMetabolicProfile["activityLevel"] => {
-  const normalized = String(value ?? "").trim().toLowerCase();
-  if (["low", "bajo", "sedentary"].includes(normalized)) return "low";
-  if (["moderate", "moderado", "medium"].includes(normalized)) return "moderate";
-  if (["high", "alto", "active"].includes(normalized)) return "high";
-  if (["very_high", "very high", "muy_alto", "muy alto"].includes(normalized)) return "very_high";
-  if (["hyperactive", "hiperactivo", "extreme"].includes(normalized)) return "hyperactive";
-  return "moderate";
-};
-
-const normalizeGoalType = (value: string | null | undefined): NutritionMetabolicProfile["goalType"] => {
-  const normalized = String(value ?? "").trim().toLowerCase();
-  if (
-    [
-      "lose_slow",
-      "lose slow",
-      "perder peso lentamente",
-      "slow cut",
-      "deficit moderado",
-      "lose weight slowly",
-    ].some((item) => normalized.includes(item))
-  ) {
-    return "lose_slow";
-  }
-  if (["lose", "lose weight", "bajar", "bajar de peso", "fat loss", "cut"].some((item) => normalized.includes(item))) {
-    return "lose";
-  }
-  if (
-    [
-      "gain_slow",
-      "gain slow",
-      "aumentar peso lentamente",
-      "superavit moderado",
-      "gain weight slowly",
-    ].some((item) => normalized.includes(item))
-  ) {
-    return "gain_slow";
-  }
-  if (["gain", "build", "muscle", "bulk", "aumentar", "ganar"].some((item) => normalized.includes(item))) {
-    return "gain";
-  }
-  return "maintain";
-};
-
-const normalizeDayArchetype = (value: string | null | undefined): NutritionDayArchetype => {
-  const normalized = String(value ?? "").trim().toLowerCase();
-  if (["heavy", "pesado", "hard"].includes(normalized)) return "heavy";
-  if (["recovery", "descanso", "rest"].includes(normalized)) return "recovery";
-  return "base";
-};
 
 const toNutritionGoals = (target: ReturnType<typeof calculateNutritionTargets>): NutritionGoals => ({
   calorie_goal: target.finalTargetCalories,
@@ -400,34 +400,41 @@ const scaleMicronutrients = (micronutrients: NutritionMicronutrients | null, rat
   const scaled: NutritionMicronutrients = {};
   Object.entries(micronutrients).forEach(([key, value]) => {
     const numeric = Number(value);
-    if (Number.isFinite(numeric)) {
-      scaled[key] = Number((numeric * ratio).toFixed(2));
-    }
+    if (Number.isFinite(numeric)) scaled[key] = Number((numeric * ratio).toFixed(2));
   });
   return Object.keys(scaled).length > 0 ? scaled : null;
 };
 
-const getLatestWeightForDate = async (userId: string, dateKey: string) => {
-  const { data, error } = await supabase
-    .from("body_metrics")
-    .select("weight_kg")
+const listProfilesInternal = async (
+  userId: string | null,
+  options?: { isGuest?: boolean; includeArchived?: boolean },
+): Promise<NutritionProfileRecord[]> => {
+  const isGuest = options?.isGuest || false;
+  const includeArchived = options?.includeArchived || false;
+  if (isGuest) {
+    return parseGuestProfiles()
+      .filter((row) => includeArchived || !row.is_archived)
+      .sort((a, b) => Number(b.is_default) - Number(a.is_default) || a.name.localeCompare(b.name));
+  }
+  if (!userId) return [];
+
+  let query = supabase
+    .from("nutrition_profiles")
+    .select("*")
     .eq("user_id", userId)
-    .lte("measured_at", dateKey)
-    .order("measured_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error && !isSchemaError(error)) throw error;
-  return data?.weight_kg ? Number(data.weight_kg) : null;
+    .order("is_default", { ascending: false })
+    .order("created_at", { ascending: true });
+  if (!includeArchived) query = query.eq("is_archived", false);
+  const { data, error } = await query;
+  if (error) {
+    if (isSchemaError(error)) return [];
+    throw error;
+  }
+  return (data || []).map(normalizeNutritionProfile);
 };
 
 const getStoredDailyTarget = async (userId: string, dateKey: string): Promise<DailyNutritionTargetRow | null> => {
-  const { data, error } = await supabase
-    .from("daily_nutrition_targets")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("date_key", dateKey)
-    .limit(1)
-    .maybeSingle();
+  const { data, error } = await supabase.from("daily_nutrition_targets").select("*").eq("user_id", userId).eq("date_key", dateKey).limit(1).maybeSingle();
   if (error) {
     if (isSchemaError(error)) return null;
     throw error;
@@ -435,7 +442,19 @@ const getStoredDailyTarget = async (userId: string, dateKey: string): Promise<Da
   return (data as DailyNutritionTargetRow | null) ?? null;
 };
 
-const upsertDailyTarget = async (params: {
+const getStoredDailyLog = async (userId: string | null, dateKey: string, options?: { isGuest?: boolean }): Promise<DailyNutritionLog | null> => {
+  const isGuest = options?.isGuest || false;
+  if (isGuest) return parseGuestDailyLogs().find((row) => row.date_key === dateKey) ?? null;
+  if (!userId) return null;
+  const { data, error } = await supabase.from("daily_nutrition_logs").select("*").eq("user_id", userId).eq("date_key", dateKey).limit(1).maybeSingle();
+  if (error) {
+    if (isSchemaError(error)) return null;
+    throw error;
+  }
+  return data ? normalizeDailyLog(data) : null;
+};
+
+const persistDailyTarget = async (params: {
   userId: string;
   dateKey: string;
   target: ReturnType<typeof calculateNutritionTargets>;
@@ -462,10 +481,10 @@ const upsertDailyTarget = async (params: {
     is_manual_override: params.calorieOverride !== null,
     updated_at: new Date().toISOString(),
   };
-
   const { error } = await supabase.from("daily_nutrition_targets").upsert(payload, { onConflict: "user_id,date_key" });
   if (error && !isSchemaError(error)) throw error;
 };
+
 const persistDailySummary = async (params: {
   userId: string;
   dateKey: string;
@@ -492,132 +511,332 @@ const persistDailySummary = async (params: {
   if (error && !isSchemaError(error)) throw error;
 };
 
-const resolveMetabolicProfile = async (
+const upsertDailyLog = async (
   userId: string | null,
-  date: Date,
-  options?: NutritionGoalOptions & { forceDayArchetype?: NutritionDayArchetype; forceCalorieOverride?: number | null },
-) => {
+  payload: Omit<DailyNutritionLog, "id" | "created_at" | "updated_at">,
+  options?: { isGuest?: boolean },
+): Promise<DailyNutritionLog | null> => {
   const isGuest = options?.isGuest || false;
-  const timeZone = options?.timeZone || DEFAULT_WATER_TIMEZONE;
-  const dateKey = getDateKeyForTimezone(date, timeZone);
-
-  if (isGuest || !userId) {
-    const dayArchetypes = parseGuestDayArchetypeMap();
-    const dayOverrides = parseGuestDayOverrideMap();
-    const source = options?.profile ?? null;
-    const age = calculateAgeFromBirthDate(source?.birth_date) ?? DEFAULT_METABOLIC_PROFILE.age;
-    const dayArchetype = options?.forceDayArchetype ?? options?.dayArchetype ?? dayArchetypes[dateKey] ?? normalizeDayArchetype(source?.day_archetype);
-    const override = options?.forceCalorieOverride !== undefined ? options.forceCalorieOverride : dayOverrides[dateKey] ?? null;
-
-    return {
-      profile: {
-        sex: normalizeSex(source?.biological_sex),
-        age,
-        weightKg: sanitizeNumber(source?.weight, DEFAULT_METABOLIC_PROFILE.weightKg),
-        heightCm: sanitizeNumber(source?.height, DEFAULT_METABOLIC_PROFILE.heightCm),
-        activityLevel: normalizeActivityLevel(source?.activity_level),
-        goalType: normalizeGoalType(source?.nutrition_goal_type ?? source?.goal_direction ?? source?.goal_type),
-        dayArchetype,
-        birthDate: source?.birth_date ?? null,
-        calorieOverride: override,
-        isCalorieOverrideEnabled: override !== null,
-      },
-      dateKey,
-    };
+  if (isGuest) {
+    const logs = parseGuestDailyLogs();
+    const existingIndex = logs.findIndex((row) => row.date_key === payload.date_key);
+    const base = normalizeDailyLog({
+      id: existingIndex >= 0 ? logs[existingIndex].id : crypto.randomUUID(),
+      created_at: existingIndex >= 0 ? logs[existingIndex].created_at : new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...payload,
+    });
+    if (existingIndex >= 0) logs[existingIndex] = base;
+    else logs.unshift(base);
+    saveGuestDailyLogs(logs);
+    return base;
   }
+  if (!userId) return null;
 
-  let { data: profileData, error } = await supabase
+  const { data, error } = await supabase
+    .from("daily_nutrition_logs")
+    .upsert({ ...payload, user_id: userId, updated_at: new Date().toISOString() }, { onConflict: "user_id,date_key" })
+    .select("*")
+    .single();
+  if (error) {
+    if (isSchemaError(error)) return null;
+    throw error;
+  }
+  return normalizeDailyLog(data);
+};
+
+const getProfileSource = async (userId: string | null, options?: ResolvePlanOptions) => {
+  if (options?.profile) return options.profile;
+  if (options?.isGuest || !userId) return null;
+  let { data, error } = await supabase
     .from("profiles")
     .select("birth_date,weight,height,goal_type,goal_direction,biological_sex,activity_level,nutrition_goal_type,day_archetype")
     .eq("id", userId)
     .limit(1)
     .maybeSingle();
-
   if (error && isSchemaError(error)) {
-    const fallback = await supabase
-      .from("profiles")
-      .select("birth_date,weight,height,goal_type,goal_direction")
-      .eq("id", userId)
-      .limit(1)
-      .maybeSingle();
-    profileData = fallback.data as any;
+    const fallback = await supabase.from("profiles").select("birth_date,weight,height,goal_type,goal_direction").eq("id", userId).limit(1).maybeSingle();
+    data = fallback.data as any;
     error = fallback.error;
   }
   if (error) throw error;
-
-  const latestWeight = await getLatestWeightForDate(userId, dateKey);
-  const storedTarget = await getStoredDailyTarget(userId, dateKey);
-  const dayArchetype =
-    options?.forceDayArchetype ??
-    options?.dayArchetype ??
-    normalizeDayArchetype(storedTarget?.day_archetype ?? profileData?.day_archetype);
-  const override =
-    options?.forceCalorieOverride !== undefined ? options.forceCalorieOverride : storedTarget?.calorie_override ?? null;
-
-  return {
-    profile: {
-      sex: normalizeSex(profileData?.biological_sex),
-      age: calculateAgeFromBirthDate(profileData?.birth_date) ?? DEFAULT_METABOLIC_PROFILE.age,
-      weightKg: sanitizeNumber(latestWeight ?? profileData?.weight, DEFAULT_METABOLIC_PROFILE.weightKg),
-      heightCm: sanitizeNumber(profileData?.height, DEFAULT_METABOLIC_PROFILE.heightCm),
-      activityLevel: normalizeActivityLevel(profileData?.activity_level),
-      goalType: normalizeGoalType(profileData?.nutrition_goal_type ?? profileData?.goal_direction ?? profileData?.goal_type),
-      dayArchetype,
-      birthDate: profileData?.birth_date ?? null,
-      calorieOverride: override,
-      isCalorieOverrideEnabled: override !== null,
-    },
-    dateKey,
-  };
+  return (data as NutritionProfileLike | null) ?? null;
 };
 
-const computeAndPersistTarget = async (
+const resolveDayPlan = async (
   userId: string | null,
   date: Date,
-  options?: NutritionGoalOptions & { forceDayArchetype?: NutritionDayArchetype; forceCalorieOverride?: number | null },
-) => {
-  const resolved = await resolveMetabolicProfile(userId, date, options);
+  options?: ResolvePlanOptions,
+): Promise<{
+  profile: NutritionMetabolicProfile;
+  target: ReturnType<typeof calculateNutritionTargets>;
+  dateKey: string;
+  dailyLog: DailyNutritionLog | null;
+  selectedProfile: NutritionProfileRecord | null;
+  availableProfiles: NutritionProfileRecord[];
+  weightSource: "closest_on_or_before" | "latest_available" | "profile_fallback";
+}> => {
+  const isGuest = options?.isGuest || false;
+  const timeZone = options?.timeZone || DEFAULT_WATER_TIMEZONE;
+  const dateKey = getDateKeyForTimezone(date, timeZone);
+  const source = await getProfileSource(userId, options);
+  const availableProfiles = await listProfilesInternal(userId, { isGuest, includeArchived: options?.includeArchivedProfiles });
+  const existingLog = await getStoredDailyLog(userId, dateKey, { isGuest });
+  const storedTarget = !isGuest && userId ? await getStoredDailyTarget(userId, dateKey) : null;
+  const legacyDayArchetype = parseGuestDayArchetypeMap()[dateKey];
+  const legacyOverride = parseGuestDayOverrideMap()[dateKey] ?? null;
+
+  const selectedProfile =
+    options?.clearProfileSelection
+      ? availableProfiles.find((row) => row.is_default) ?? null
+      : options?.forceProfileId !== undefined
+        ? availableProfiles.find((row) => row.id === options.forceProfileId) ?? null
+        : availableProfiles.find((row) => row.id === existingLog?.nutrition_profile_id) ??
+          availableProfiles.find((row) => row.is_default) ??
+          availableProfiles[0] ??
+          null;
+
+  const dayArchetype =
+    options?.forceDayArchetype ??
+    selectedProfile?.archetype ??
+    existingLog?.archetype_snapshot ??
+    legacyDayArchetype ??
+    normalizeDayArchetype(storedTarget?.day_archetype ?? source?.day_archetype);
+
+  const calorieOverride =
+    options?.forceCalorieOverride !== undefined
+      ? options.forceCalorieOverride
+      : existingLog?.calorie_override ?? storedTarget?.calorie_override ?? legacyOverride ?? null;
+
+  const weightReference = await getWeightReferenceForDate(userId, date, isGuest);
+  const weightKg = sanitizeNumber(weightReference.entry?.weight_kg ?? source?.weight, DEFAULT_METABOLIC_PROFILE.weightKg);
+  const profile: NutritionMetabolicProfile = {
+    sex: normalizeSex(source?.biological_sex),
+    age: calculateAgeFromBirthDate(source?.birth_date, date) ?? DEFAULT_METABOLIC_PROFILE.age,
+    weightKg,
+    heightCm: sanitizeNumber(source?.height, DEFAULT_METABOLIC_PROFILE.heightCm),
+    activityLevel: normalizeActivityLevel(source?.activity_level),
+    goalType: normalizeGoalType(source?.nutrition_goal_type ?? source?.goal_direction ?? source?.goal_type),
+    dayArchetype,
+    birthDate: source?.birth_date ?? null,
+    calorieOverride,
+    isCalorieOverrideEnabled: calorieOverride !== null,
+  };
+
   const target = calculateNutritionTargets({
-    sex: resolved.profile.sex,
-    age: resolved.profile.age,
-    weightKg: resolved.profile.weightKg,
-    heightCm: resolved.profile.heightCm,
-    activityLevel: resolved.profile.activityLevel,
-    goalType: resolved.profile.goalType,
-    dayArchetype: resolved.profile.dayArchetype,
-    calorieOverride: resolved.profile.calorieOverride,
+    sex: profile.sex,
+    age: profile.age,
+    weightKg: profile.weightKg,
+    heightCm: profile.heightCm,
+    activityLevel: profile.activityLevel,
+    goalType: profile.goalType,
+    dayArchetype: profile.dayArchetype,
+    calorieOverride: profile.calorieOverride,
   });
 
-  if (options?.isGuest || !userId) {
+  const resolvedLog = await upsertDailyLog(
+    userId,
+    {
+      user_id: userId ?? "guest",
+      date_key: dateKey,
+      nutrition_profile_id: selectedProfile?.id ?? null,
+      profile_name_snapshot: selectedProfile?.name ?? getArchetypeLabel(dayArchetype),
+      archetype_snapshot: target.dayArchetype,
+      target_calories: target.finalTargetCalories,
+      target_protein_g: target.proteinGrams,
+      target_carbs_g: target.carbGrams,
+      target_fat_g: target.fatGrams,
+      base_tdee: target.tdee,
+      weight_snapshot_kg: profile.weightKg,
+      calorie_adjustment: target.archetypeDelta,
+      calorie_override: profile.calorieOverride,
+    },
+    { isGuest },
+  );
+
+  if (isGuest || !userId) {
     const dayArchetypes = parseGuestDayArchetypeMap();
-    dayArchetypes[resolved.dateKey] = target.dayArchetype;
+    dayArchetypes[dateKey] = target.dayArchetype;
     saveGuestDayArchetypeMap(dayArchetypes);
 
     const overrides = parseGuestDayOverrideMap();
-    if (resolved.profile.calorieOverride !== null && resolved.profile.calorieOverride !== undefined) {
-      overrides[resolved.dateKey] = resolved.profile.calorieOverride;
-    } else {
-      delete overrides[resolved.dateKey];
-    }
+    if (profile.calorieOverride !== null && profile.calorieOverride !== undefined) overrides[dateKey] = profile.calorieOverride;
+    else delete overrides[dateKey];
     saveGuestDayOverrideMap(overrides);
   } else {
-    await upsertDailyTarget({
-      userId,
-      dateKey: resolved.dateKey,
-      target,
-      calorieOverride: resolved.profile.calorieOverride,
-    });
+    await persistDailyTarget({ userId, dateKey, target, calorieOverride: profile.calorieOverride });
   }
 
-  return { profile: resolved.profile, target, dateKey: resolved.dateKey };
+  return {
+    profile,
+    target,
+    dateKey,
+    dailyLog: resolvedLog,
+    selectedProfile,
+    availableProfiles,
+    weightSource: weightReference.entry ? weightReference.source ?? "closest_on_or_before" : "profile_fallback",
+  };
 };
+
+export const listNutritionProfiles = async (
+  userId: string | null,
+  options?: { isGuest?: boolean; includeArchived?: boolean },
+) => listProfilesInternal(userId, options);
+
+export const upsertNutritionProfile = async (
+  userId: string | null,
+  payload: UpsertNutritionProfileInput,
+  options?: { isGuest?: boolean },
+): Promise<NutritionProfileRecord | null> => {
+  const isGuest = options?.isGuest || false;
+  const name = payload.name.trim();
+  if (!name) throw new Error("Profile name is required.");
+
+  if (isGuest) {
+    const profiles = parseGuestProfiles();
+    const next = normalizeNutritionProfile({
+      id: payload.id ?? crypto.randomUUID(),
+      user_id: "guest",
+      name,
+      archetype: payload.archetype,
+      is_default: Boolean(payload.is_default),
+      is_archived: false,
+      created_at: profiles.find((row) => row.id === payload.id)?.created_at ?? new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    const normalized = profiles
+      .filter((row) => row.id !== next.id)
+      .map((row) => ({ ...row, is_default: next.is_default ? false : row.is_default }));
+    saveGuestProfiles([next, ...normalized]);
+    return next;
+  }
+  if (!userId) return null;
+
+  if (payload.is_default) {
+    const { error: clearError } = await supabase.from("nutrition_profiles").update({ is_default: false }).eq("user_id", userId);
+    if (clearError && !isSchemaError(clearError)) throw clearError;
+  }
+
+  const base = {
+    user_id: userId,
+    name,
+    archetype: payload.archetype,
+    is_default: Boolean(payload.is_default),
+    is_archived: false,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (payload.id) {
+    const { data, error } = await supabase.from("nutrition_profiles").update(base).eq("id", payload.id).eq("user_id", userId).select("*").single();
+    if (error) throw error;
+    return normalizeNutritionProfile(data);
+  }
+
+  const { data, error } = await supabase.from("nutrition_profiles").insert(base).select("*").single();
+  if (error) throw error;
+  return normalizeNutritionProfile(data);
+};
+
+export const archiveNutritionProfile = async (
+  profileId: string,
+  userId: string | null,
+  options?: { isGuest?: boolean; archived?: boolean },
+) => {
+  const isGuest = options?.isGuest || false;
+  const archived = options?.archived ?? true;
+  if (!profileId) return;
+
+  if (isGuest) {
+    const next = parseGuestProfiles().map((row) =>
+      row.id === profileId ? { ...row, is_archived: archived, is_default: archived ? false : row.is_default, updated_at: new Date().toISOString() } : row,
+    );
+    saveGuestProfiles(next);
+    return;
+  }
+  if (!userId) return;
+
+  const payload = archived
+    ? { is_archived: true, is_default: false, updated_at: new Date().toISOString() }
+    : { is_archived: false, updated_at: new Date().toISOString() };
+  const { error } = await supabase.from("nutrition_profiles").update(payload).eq("id", profileId).eq("user_id", userId);
+  if (error) throw error;
+};
+
+export const setDefaultNutritionProfile = async (
+  profileId: string,
+  userId: string | null,
+  options?: { isGuest?: boolean },
+) => {
+  const isGuest = options?.isGuest || false;
+  if (!profileId) return;
+
+  if (isGuest) {
+    const next = parseGuestProfiles().map((row) => ({ ...row, is_default: row.id === profileId, is_archived: row.id === profileId ? false : row.is_archived }));
+    saveGuestProfiles(next);
+    return;
+  }
+  if (!userId) return;
+
+  const { error: clearError } = await supabase.from("nutrition_profiles").update({ is_default: false }).eq("user_id", userId);
+  if (clearError) throw clearError;
+  const { error } = await supabase.from("nutrition_profiles").update({ is_default: true, is_archived: false }).eq("id", profileId).eq("user_id", userId);
+  if (error) throw error;
+};
+
+export const deleteNutritionProfileSafe = async (
+  profileId: string,
+  userId: string | null,
+  options?: { isGuest?: boolean },
+): Promise<{ deleted: boolean; archived: boolean }> => {
+  const isGuest = options?.isGuest || false;
+  if (!profileId) return { deleted: false, archived: false };
+
+  if (isGuest) {
+    const logs = parseGuestDailyLogs();
+    const isUsed = logs.some((row) => row.nutrition_profile_id === profileId);
+    if (isUsed) {
+      await archiveNutritionProfile(profileId, userId, { isGuest, archived: true });
+      return { deleted: false, archived: true };
+    }
+    saveGuestProfiles(parseGuestProfiles().filter((row) => row.id !== profileId));
+    return { deleted: true, archived: false };
+  }
+  if (!userId) return { deleted: false, archived: false };
+
+  const { count, error: countError } = await supabase
+    .from("daily_nutrition_logs")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("nutrition_profile_id", profileId);
+  if (countError && !isSchemaError(countError)) throw countError;
+  if ((count ?? 0) > 0) {
+    await archiveNutritionProfile(profileId, userId, { archived: true });
+    return { deleted: false, archived: true };
+  }
+
+  const { error } = await supabase.from("nutrition_profiles").delete().eq("id", profileId).eq("user_id", userId);
+  if (error) throw error;
+  return { deleted: true, archived: false };
+};
+
+export const setNutritionProfileForDate = async (
+  userId: string | null,
+  date: Date,
+  profileId: string | null,
+  options?: NutritionGoalOptions,
+): Promise<NutritionTargetResolution> =>
+  resolveDayPlan(userId, date, {
+    ...options,
+    forceProfileId: profileId === "none" ? null : profileId,
+    clearProfileSelection: profileId === null,
+  });
 
 export const getNutritionMetabolicProfile = async (
   userId: string | null,
   date: Date,
   options?: NutritionGoalOptions,
 ): Promise<NutritionMetabolicProfile> => {
-  const resolved = await resolveMetabolicProfile(userId, date, options);
+  const resolved = await resolveDayPlan(userId, date, options);
   return resolved.profile;
 };
 
@@ -625,25 +844,23 @@ export const getNutritionTargetBreakdown = async (
   userId: string | null,
   date = new Date(),
   options?: NutritionGoalOptions,
-) => computeAndPersistTarget(userId, date, options);
+): Promise<NutritionTargetResolution> => resolveDayPlan(userId, date, options);
 
 export const setNutritionDayArchetype = async (
   userId: string | null,
   date: Date,
   dayArchetype: NutritionDayArchetype,
   options?: NutritionGoalOptions,
-) => computeAndPersistTarget(userId, date, { ...options, forceDayArchetype: dayArchetype });
+): Promise<NutritionTargetResolution> => resolveDayPlan(userId, date, { ...options, forceDayArchetype: dayArchetype, clearProfileSelection: true });
 
 export const setDailyCalorieOverride = async (
   userId: string | null,
   date: Date,
   calorieOverride: number | null,
   options?: NutritionGoalOptions,
-) => {
-  if (calorieOverride !== null) {
-    assertPositive(calorieOverride, "Calorie override");
-  }
-  return computeAndPersistTarget(userId, date, { ...options, forceCalorieOverride: calorieOverride });
+): Promise<NutritionTargetResolution> => {
+  if (calorieOverride !== null) assertPositive(calorieOverride, "Calorie override");
+  return resolveDayPlan(userId, date, { ...options, forceCalorieOverride: calorieOverride });
 };
 
 export const addNutritionEntry = async (params: NutritionEntryInsertParams): Promise<NutritionEntry | null> => {
@@ -674,8 +891,10 @@ export const addNutritionEntry = async (params: NutritionEntryInsertParams): Pro
   assertPositive(Number(serving_size), "Serving size");
   assertNonNegative(Number(calories), "Calories");
 
+  const dayPlan = await resolveDayPlan(userId, date, { isGuest, timeZone });
   const payload = {
     date_key: getDateKeyForTimezone(date, timeZone),
+    daily_log_id: dayPlan.dailyLog?.id ?? null,
     meal_type,
     food_name: name,
     serving_size: Number(serving_size),
@@ -735,13 +954,7 @@ export const updateNutritionEntry = async (
   }
   if (!userId) return null;
 
-  const { data, error } = await supabase
-    .from("nutrition_entries")
-    .update(updates as any)
-    .eq("id", id)
-    .eq("user_id", userId)
-    .select("*")
-    .single();
+  const { data, error } = await supabase.from("nutrition_entries").update(updates as any).eq("id", id).eq("user_id", userId).select("*").single();
   if (error) throw error;
   return normalizeEntry(data);
 };
@@ -759,6 +972,7 @@ export const deleteNutritionEntry = async (id: string, userId: string | null, op
   const { error } = await supabase.from("nutrition_entries").delete().eq("id", id).eq("user_id", userId);
   if (error) throw error;
 };
+
 export const getNutritionEntriesByMeal = async (
   userId: string | null,
   date: Date,
@@ -782,12 +996,7 @@ export const getNutritionEntriesByMeal = async (
     rows = (data || []).map(normalizeEntry);
   }
 
-  const groups: Record<NutritionMealType, NutritionEntry[]> = {
-    breakfast: [],
-    lunch: [],
-    dinner: [],
-    snack: [],
-  };
+  const groups: Record<NutritionMealType, NutritionEntry[]> = { breakfast: [], lunch: [], dinner: [], snack: [] };
   rows.forEach((row) => groups[row.meal_type].push(row));
   return groups;
 };
@@ -805,8 +1014,8 @@ export const getNutritionDaySummary = async (
   const groups = await getNutritionEntriesByMeal(userId, date, options);
   const allEntries = [...groups.breakfast, ...groups.lunch, ...groups.dinner, ...groups.snack];
   const totals = roundTotals(aggregateTotals(allEntries));
-  const { target, profile, dateKey } = await getNutritionTargetBreakdown(userId, date, options);
-  const goals = toNutritionGoals(target);
+  const resolved = await getNutritionTargetBreakdown(userId, date, options);
+  const goals = toNutritionGoals(resolved.target);
 
   const mealTotals: Record<NutritionMealType, NutritionMacroTotals> = {
     breakfast: roundTotals(aggregateTotals(groups.breakfast)),
@@ -816,7 +1025,7 @@ export const getNutritionDaySummary = async (
   };
 
   if (!options?.isGuest && userId) {
-    await persistDailySummary({ userId, dateKey, totals, mealCount: allEntries.length });
+    await persistDailySummary({ userId, dateKey: resolved.dateKey, totals, mealCount: allEntries.length });
   }
 
   return {
@@ -825,8 +1034,8 @@ export const getNutritionDaySummary = async (
     mealTotals,
     goals,
     lastEntry: [...allEntries].sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ?? null,
-    targetBreakdown: target,
-    metabolicProfile: profile,
+    targetBreakdown: resolved.target,
+    metabolicProfile: resolved.profile,
     remaining: {
       calories: Math.round(goals.calorie_goal - totals.calories),
       protein_g: Number((goals.protein_goal_g - totals.protein_g).toFixed(1)),
@@ -839,6 +1048,10 @@ export const getNutritionDaySummary = async (
       ratio: totals.sodium_potassium_ratio,
     },
     nutrientDensityScore: totals.nutrient_density_score,
+    dailyLog: resolved.dailyLog,
+    selectedProfile: resolved.selectedProfile,
+    availableProfiles: resolved.availableProfiles,
+    weightSource: resolved.weightSource,
   };
 };
 
@@ -918,12 +1131,7 @@ export const listRecentNutritionEntries = async (
   if (isGuest) return parseGuestEntries().sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, limit);
   if (!userId) return [];
 
-  const { data, error } = await supabase
-    .from("nutrition_entries")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const { data, error } = await supabase.from("nutrition_entries").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(limit);
   if (error) throw error;
   return (data || []).map(normalizeEntry);
 };
@@ -933,11 +1141,7 @@ export const getFavoriteFoods = async (userId: string | null, options?: { isGues
   if (isGuest) return parseGuestFavorites().sort((a, b) => b.created_at.localeCompare(a.created_at));
   if (!userId) return [];
 
-  const { data, error } = await supabase
-    .from("nutrition_favorites")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("nutrition_favorites").select("*").eq("user_id", userId).order("created_at", { ascending: false });
   if (error) throw error;
   return (data || []).map(normalizeFavorite);
 };
@@ -1043,12 +1247,8 @@ export const searchFoodDatabase = async (params?: {
   const limit = Math.max(1, Math.min(100, Number(params?.limit ?? 25)));
 
   let request = supabase.from("food_database").select("*").order("food_name", { ascending: true }).limit(limit);
-  if (category && category !== "all") {
-    request = request.eq("category", category);
-  }
-  if (query) {
-    request = request.ilike("food_name", `%${query}%`);
-  }
+  if (category && category !== "all") request = request.eq("category", category);
+  if (query) request = request.ilike("food_name", `%${query}%`);
 
   const { data, error } = await request;
   if (error) throw error;

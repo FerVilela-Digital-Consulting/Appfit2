@@ -11,6 +11,7 @@ export type NutritionEntry = {
   id: string;
   user_id: string;
   date_key: string;
+  daily_log_id: string | null;
   meal_type: NutritionMealType;
   food_name: string;
   serving_size: number;
@@ -136,6 +137,44 @@ export type NutritionMetabolicProfile = {
   isCalorieOverrideEnabled: boolean;
 };
 
+export type NutritionProfileRecord = {
+  id: string;
+  user_id: string;
+  name: string;
+  archetype: NutritionDayArchetype;
+  is_default: boolean;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DailyNutritionLog = {
+  id: string;
+  user_id: string;
+  date_key: string;
+  nutrition_profile_id: string | null;
+  profile_name_snapshot: string | null;
+  archetype_snapshot: NutritionDayArchetype | null;
+  target_calories: number | null;
+  target_protein_g: number | null;
+  target_carbs_g: number | null;
+  target_fat_g: number | null;
+  base_tdee: number | null;
+  weight_snapshot_kg: number | null;
+  calorie_adjustment: number | null;
+  calorie_override: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type NutritionDayContext = {
+  date_key: string;
+  dailyLog: DailyNutritionLog | null;
+  selectedProfile: NutritionProfileRecord | null;
+  availableProfiles: NutritionProfileRecord[];
+  weightSource: "closest_on_or_before" | "latest_available" | "profile_fallback";
+};
+
 export type DailyNutritionTargetRow = {
   id: string;
   user_id: string;
@@ -158,6 +197,16 @@ export type DailyNutritionTargetRow = {
   is_manual_override: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type NutritionTargetResolution = {
+  profile: NutritionMetabolicProfile;
+  target: NutritionTargetBreakdown;
+  dateKey: string;
+  dailyLog: DailyNutritionLog | null;
+  selectedProfile: NutritionProfileRecord | null;
+  availableProfiles: NutritionProfileRecord[];
+  weightSource: "closest_on_or_before" | "latest_available" | "profile_fallback";
 };
 
 export type DailyNutritionSummaryRow = {

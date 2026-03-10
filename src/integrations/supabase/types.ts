@@ -89,36 +89,462 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_nutrition_logs: {
+        Row: {
+          archetype_snapshot: string | null
+          base_tdee: number | null
+          calorie_adjustment: number | null
+          calorie_override: number | null
+          created_at: string
+          date_key: string
+          id: string
+          nutrition_profile_id: string | null
+          profile_name_snapshot: string | null
+          target_calories: number | null
+          target_carbs_g: number | null
+          target_fat_g: number | null
+          target_protein_g: number | null
+          updated_at: string
+          user_id: string
+          weight_snapshot_kg: number | null
+        }
+        Insert: {
+          archetype_snapshot?: string | null
+          base_tdee?: number | null
+          calorie_adjustment?: number | null
+          calorie_override?: number | null
+          created_at?: string
+          date_key: string
+          id?: string
+          nutrition_profile_id?: string | null
+          profile_name_snapshot?: string | null
+          target_calories?: number | null
+          target_carbs_g?: number | null
+          target_fat_g?: number | null
+          target_protein_g?: number | null
+          updated_at?: string
+          user_id: string
+          weight_snapshot_kg?: number | null
+        }
+        Update: {
+          archetype_snapshot?: string | null
+          base_tdee?: number | null
+          calorie_adjustment?: number | null
+          calorie_override?: number | null
+          created_at?: string
+          date_key?: string
+          id?: string
+          nutrition_profile_id?: string | null
+          profile_name_snapshot?: string | null
+          target_calories?: number | null
+          target_carbs_g?: number | null
+          target_fat_g?: number | null
+          target_protein_g?: number | null
+          updated_at?: string
+          user_id?: string
+          weight_snapshot_kg?: number | null
+        }
+        Relationships: []
+      }
+      daily_nutrition_summaries: {
+        Row: {
+          created_at: string
+          date_key: string
+          id: string
+          meal_count: number
+          nutrient_density_score: number | null
+          sodium_potassium_ratio: number | null
+          total_calories: number
+          total_carbs_g: number
+          total_fat_g: number
+          total_fiber_g: number
+          total_potassium_mg: number
+          total_protein_g: number
+          total_sodium_mg: number
+          total_sugar_g: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_key: string
+          id?: string
+          meal_count?: number
+          nutrient_density_score?: number | null
+          sodium_potassium_ratio?: number | null
+          total_calories?: number
+          total_carbs_g?: number
+          total_fat_g?: number
+          total_fiber_g?: number
+          total_potassium_mg?: number
+          total_protein_g?: number
+          total_sodium_mg?: number
+          total_sugar_g?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date_key?: string
+          id?: string
+          meal_count?: number
+          nutrient_density_score?: number | null
+          sodium_potassium_ratio?: number | null
+          total_calories?: number
+          total_carbs_g?: number
+          total_fat_g?: number
+          total_fiber_g?: number
+          total_potassium_mg?: number
+          total_protein_g?: number
+          total_sodium_mg?: number
+          total_sugar_g?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_nutrition_targets: {
+        Row: {
+          activity_multiplier: number
+          archetype_delta: number
+          bmr: number
+          calorie_override: number | null
+          calorie_target: number
+          carb_calories: number
+          carb_grams: number
+          created_at: string
+          date_key: string
+          day_archetype: string
+          fat_calories: number
+          fat_grams: number
+          final_target_calories: number
+          goal_multiplier: number
+          id: string
+          is_manual_override: boolean
+          protein_calories: number
+          protein_grams: number
+          tdee: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_multiplier: number
+          archetype_delta: number
+          bmr: number
+          calorie_override?: number | null
+          calorie_target: number
+          carb_calories: number
+          carb_grams: number
+          created_at?: string
+          date_key: string
+          day_archetype?: string
+          fat_calories: number
+          fat_grams: number
+          final_target_calories: number
+          goal_multiplier: number
+          id?: string
+          is_manual_override?: boolean
+          protein_calories: number
+          protein_grams: number
+          tdee: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_multiplier?: number
+          archetype_delta?: number
+          bmr?: number
+          calorie_override?: number | null
+          calorie_target?: number
+          carb_calories?: number
+          carb_grams?: number
+          created_at?: string
+          date_key?: string
+          day_archetype?: string
+          fat_calories?: number
+          fat_grams?: number
+          final_target_calories?: number
+          goal_multiplier?: number
+          id?: string
+          is_manual_override?: boolean
+          protein_calories?: number
+          protein_grams?: number
+          tdee?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      food_database: {
+        Row: {
+          calories: number
+          carbs_g: number
+          category: string
+          created_at: string
+          fat_g: number
+          fiber_g: number | null
+          food_name: string
+          id: string
+          micronutrients: Json | null
+          potassium_mg: number | null
+          protein_g: number
+          serving_size: number
+          serving_unit: string
+          sodium_mg: number | null
+          source: string | null
+          sugar_g: number | null
+        }
+        Insert: {
+          calories?: number
+          carbs_g?: number
+          category: string
+          created_at?: string
+          fat_g?: number
+          fiber_g?: number | null
+          food_name: string
+          id?: string
+          micronutrients?: Json | null
+          potassium_mg?: number | null
+          protein_g?: number
+          serving_size?: number
+          serving_unit?: string
+          sodium_mg?: number | null
+          source?: string | null
+          sugar_g?: number | null
+        }
+        Update: {
+          calories?: number
+          carbs_g?: number
+          category?: string
+          created_at?: string
+          fat_g?: number
+          fiber_g?: number | null
+          food_name?: string
+          id?: string
+          micronutrients?: Json | null
+          potassium_mg?: number | null
+          protein_g?: number
+          serving_size?: number
+          serving_unit?: string
+          sodium_mg?: number | null
+          source?: string | null
+          sugar_g?: number | null
+        }
+        Relationships: []
+      }
+      nutrition_entries: {
+        Row: {
+          calories: number
+          carbs_g: number
+          created_at: string
+          daily_log_id: string | null
+          date_key: string
+          fat_g: number
+          fiber_g: number | null
+          food_name: string
+          id: string
+          meal_type: string
+          micronutrients: Json | null
+          notes: string | null
+          nutrient_density_score: number | null
+          potassium_mg: number | null
+          protein_g: number
+          serving_size: number
+          serving_unit: string
+          sodium_mg: number | null
+          sugar_g: number | null
+          user_id: string
+        }
+        Insert: {
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          daily_log_id?: string | null
+          date_key: string
+          fat_g?: number
+          fiber_g?: number | null
+          food_name: string
+          id?: string
+          meal_type: string
+          micronutrients?: Json | null
+          notes?: string | null
+          nutrient_density_score?: number | null
+          potassium_mg?: number | null
+          protein_g?: number
+          serving_size: number
+          serving_unit: string
+          sodium_mg?: number | null
+          sugar_g?: number | null
+          user_id: string
+        }
+        Update: {
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          daily_log_id?: string | null
+          date_key?: string
+          fat_g?: number
+          fiber_g?: number | null
+          food_name?: string
+          id?: string
+          meal_type?: string
+          micronutrients?: Json | null
+          notes?: string | null
+          nutrient_density_score?: number | null
+          potassium_mg?: number | null
+          protein_g?: number
+          serving_size?: number
+          serving_unit?: string
+          sodium_mg?: number | null
+          sugar_g?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      nutrition_favorites: {
+        Row: {
+          calories: number
+          carbs_g: number
+          created_at: string
+          fat_g: number
+          fiber_g: number | null
+          id: string
+          micronutrients: Json | null
+          name: string
+          nutrient_density_score: number | null
+          potassium_mg: number | null
+          protein_g: number
+          serving_size: number
+          serving_unit: string
+          sodium_mg: number | null
+          user_id: string
+        }
+        Insert: {
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          fat_g?: number
+          fiber_g?: number | null
+          id?: string
+          micronutrients?: Json | null
+          name: string
+          nutrient_density_score?: number | null
+          potassium_mg?: number | null
+          protein_g?: number
+          serving_size: number
+          serving_unit: string
+          sodium_mg?: number | null
+          user_id: string
+        }
+        Update: {
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          fat_g?: number
+          fiber_g?: number | null
+          id?: string
+          micronutrients?: Json | null
+          name?: string
+          nutrient_density_score?: number | null
+          potassium_mg?: number | null
+          protein_g?: number
+          serving_size?: number
+          serving_unit?: string
+          sodium_mg?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      nutrition_profiles: {
+        Row: {
+          archetype: string
+          created_at: string
+          id: string
+          is_archived: boolean
+          is_default: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archetype: string
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archetype?: string
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          activity_level: string | null
           biological_sex: string | null
+          birth_date: string | null
+          calorie_goal: number | null
+          carb_goal_g: number | null
           dashboard_task_metrics: string[] | null
+          day_archetype: string | null
+          fat_goal_g: number | null
           full_name: string | null
           goal_direction: string | null
+          goal_type: string | null
           height: number | null
           id: string
+          nutrition_goal_type: string | null
+          protein_goal_g: number | null
           target_weight_kg: number | null
           timezone: string | null
           weight: number | null
         }
         Insert: {
+          activity_level?: string | null
           biological_sex?: string | null
+          birth_date?: string | null
+          calorie_goal?: number | null
+          carb_goal_g?: number | null
           dashboard_task_metrics?: string[] | null
+          day_archetype?: string | null
+          fat_goal_g?: number | null
           full_name?: string | null
           goal_direction?: string | null
+          goal_type?: string | null
           height?: number | null
           id: string
+          nutrition_goal_type?: string | null
+          protein_goal_g?: number | null
           target_weight_kg?: number | null
           timezone?: string | null
           weight?: number | null
         }
         Update: {
+          activity_level?: string | null
           biological_sex?: string | null
+          birth_date?: string | null
+          calorie_goal?: number | null
+          carb_goal_g?: number | null
           dashboard_task_metrics?: string[] | null
+          day_archetype?: string | null
+          fat_goal_g?: number | null
           full_name?: string | null
           goal_direction?: string | null
+          goal_type?: string | null
           height?: number | null
           id?: string
+          nutrition_goal_type?: string | null
+          protein_goal_g?: number | null
           target_weight_kg?: number | null
           timezone?: string | null
           weight?: number | null

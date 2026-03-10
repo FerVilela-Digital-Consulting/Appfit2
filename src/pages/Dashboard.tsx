@@ -20,6 +20,7 @@ import WaterCard from "@/components/dashboard/WaterCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
+import { NUTRITION_ARCHETYPE_META } from "@/features/nutrition/nutritionProfiles";
 
 const Dashboard = () => {
   const queryClient = useQueryClient();
@@ -127,7 +128,22 @@ const Dashboard = () => {
 
       <div className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
         <PhysicalProgressHub loading={snapshot.coreLoading} summary={core?.physicalSummary ?? null} />
-        <DashboardQuickActions nextActionLabel={nextActionLabel} />
+        <DashboardQuickActions
+          nextActionLabel={nextActionLabel}
+          nutritionSummary={
+            core?.nutritionToday
+              ? {
+                  profileName: core.nutritionToday.selectedProfile?.name ?? core.nutritionToday.dailyLog?.profile_name_snapshot ?? "Sin perfil",
+                  archetypeLabel: NUTRITION_ARCHETYPE_META[core.nutritionToday.targetBreakdown.dayArchetype].label,
+                  targetCalories: core.nutritionToday.goals.calorie_goal,
+                  consumedCalories: core.nutritionToday.totals.calories,
+                  proteinGoal: core.nutritionToday.goals.protein_goal_g,
+                  carbsGoal: core.nutritionToday.goals.carb_goal_g,
+                  fatGoal: core.nutritionToday.goals.fat_goal_g,
+                }
+              : null
+          }
+        />
       </div>
 
       <TodayStatusRow

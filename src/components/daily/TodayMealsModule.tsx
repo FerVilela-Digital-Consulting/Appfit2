@@ -133,6 +133,8 @@ const TodayMealsModule = () => {
   const daySummary = summaryQuery.data;
   const totals = daySummary?.totals;
   const goals = daySummary?.goals;
+  const dayProfileName = daySummary?.selectedProfile?.name ?? daySummary?.dailyLog?.profile_name_snapshot ?? "Sin perfil";
+  const dayArchetype = daySummary?.targetBreakdown?.dayArchetype ?? daySummary?.dailyLog?.archetype_snapshot ?? "base";
   const caloriesPct = goals && totals ? Math.min(100, Math.round((totals.calories / Math.max(goals.calorie_goal, 1)) * 100)) : 0;
 
   const mealOverview = useMemo(
@@ -270,6 +272,7 @@ const TodayMealsModule = () => {
               {formatNumber(totals?.carbs_g, "g")} / {formatNumber(goals?.carb_goal_g, "g")} | G{" "}
               {formatNumber(totals?.fat_g, "g")} / {formatNumber(goals?.fat_goal_g, "g")}
             </p>
+            <p className="mt-2 text-xs text-muted-foreground">Perfil activo: {dayProfileName} · {dayArchetype}</p>
           </div>
           <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Ritmo del día</p>

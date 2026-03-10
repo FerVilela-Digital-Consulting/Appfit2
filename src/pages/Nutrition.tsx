@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays, format } from "date-fns";
 import {
@@ -8,8 +8,10 @@ import {
   CirclePlus,
   Database,
   Flame,
+  FolderKanban,
   PencilLine,
   ShieldPlus,
+  Star,
   Trash2,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -17,46 +19,44 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useNutritionTargets } from "@/hooks/useNutritionTargets";
-import { cn } from "@/lib/utils";
 import { DEFAULT_WATER_TIMEZONE, getDateKeyForTimezone } from "@/features/water/waterUtils";
+import { NUTRITION_ARCHETYPE_META } from "@/features/nutrition/nutritionProfiles";
+import { cn } from "@/lib/utils";
 import {
   addNutritionEntry,
+  archiveNutritionProfile,
   calculateNutritionFromFood,
   deleteNutritionEntry,
+  deleteNutritionProfileSafe,
   getFavoriteFoods,
   getNutritionDaySummary,
   getNutritionEntriesByMeal,
   listFoodDatabaseCategories,
+  listNutritionProfiles,
   listRecentNutritionEntries,
   saveFavoriteFood,
   searchFoodDatabase,
+  setDefaultNutritionProfile,
+  setNutritionProfileForDate,
+  upsertNutritionProfile,
   type FoodDatabaseItem,
+  type NutritionDayArchetype,
   type NutritionEntry,
   type NutritionMealType,
+  type NutritionProfileRecord,
 } from "@/services/nutrition";
 
-const MEAL_SECTIONS: Array<{
-  key: NutritionMealType;
-  label: string;
-  accentClass: string;
-  railClass: string;
-}> = [
+const MEAL_SECTIONS: Array<{ key: NutritionMealType; label: string; accentClass: string; railClass: string }> = [
   { key: "breakfast", label: "Desayuno", accentClass: "text-lime-300", railClass: "bg-lime-400" },
   { key: "lunch", label: "Almuerzo / principal", accentClass: "text-cyan-300", railClass: "bg-cyan-400" },
   { key: "dinner", label: "Cena", accentClass: "text-amber-300", railClass: "bg-amber-400" },
   { key: "snack", label: "Snacks / soporte", accentClass: "text-fuchsia-300", railClass: "bg-fuchsia-400" },
-];
-
-const DAY_ARCHETYPE_OPTIONS: Array<{ value: "base" | "heavy" | "recovery"; label: string }> = [
-  { value: "heavy", label: "Torso" },
-  { value: "base", label: "Base" },
-  { value: "recovery", label: "Descanso" },
 ];
 
 const ACTIVITY_LABELS: Record<string, string> = {
@@ -104,7 +104,8 @@ const Nutrition = () => {
     if (fromQuery && /^\d{4}-\d{2}-\d{2}$/.test(fromQuery)) return new Date(`${fromQuery}T12:00:00`);
     return new Date();
   });
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [mealDialogOpen, setMealDialogOpen] = useState(false);
+  const [profilesDialogOpen, setProfilesDialogOpen] = useState(false);
   const [activeMeal, setActiveMeal] = useState<NutritionMealType>("breakfast");
   const [mode, setMode] = useState<AddMode>("manual");
   const [expandedMeals, setExpandedMeals] = useState<Record<NutritionMealType, boolean>>({
@@ -133,27 +134,24 @@ const Nutrition = () => {
   const [selectedFoodDatabaseId, setSelectedFoodDatabaseId] = useState("");
   const [consumedAmount, setConsumedAmount] = useState("100");
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
-  const [dayArchetype, setDayArchetype] = useState<"base" | "heavy" | "recovery">("base");
+
+  const [editingProfile, setEditingProfile] = useState<NutritionProfileRecord | null>(null);
+  const [profileName, setProfileName] = useState("");
+  const [profileArchetype, setProfileArchetype] = useState<NutritionDayArchetype>("base");
+  const [profileIsDefault, setProfileIsDefault] = useState(false);
 
   const todayKey = getDateKeyForTimezone(selectedDate, timeZone);
   const previousDate = addDays(selectedDate, -1);
-  const nutritionTargets = useNutritionTargets({
-    userId,
-    date: selectedDate,
-    isGuest,
-    timeZone,
-    profile: profile as any,
-  });
-
-  useEffect(() => {
-    const targetProfile = nutritionTargets.metabolicProfile;
-    if (!targetProfile) return;
-    setDayArchetype(targetProfile.dayArchetype);
-  }, [nutritionTargets.metabolicProfile]);
 
   const summaryQuery = useQuery({
     queryKey: ["nutrition_day_summary", userId, todayKey, isGuest, timeZone, metabolicProfileKey],
     queryFn: () => getNutritionDaySummary(userId, selectedDate, { isGuest, timeZone, profile: profile as any }),
+    enabled: Boolean(userId) || isGuest,
+  });
+
+  const profilesQuery = useQuery({
+    queryKey: ["nutrition_profiles", userId, isGuest],
+    queryFn: () => listNutritionProfiles(userId, { isGuest, includeArchived: true }),
     enabled: Boolean(userId) || isGuest,
   });
 
@@ -191,6 +189,7 @@ const Nutrition = () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["nutrition_day_summary"] }),
       queryClient.invalidateQueries({ queryKey: ["nutrition_target_breakdown"] }),
+      queryClient.invalidateQueries({ queryKey: ["nutrition_profiles"] }),
       queryClient.invalidateQueries({ queryKey: ["nutrition_recent_entries"] }),
       queryClient.invalidateQueries({ queryKey: ["nutrition_range_summary"] }),
       queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
@@ -205,7 +204,7 @@ const Nutrition = () => {
     mutationFn: (payload: Parameters<typeof addNutritionEntry>[0]) => addNutritionEntry(payload),
     onSuccess: async () => {
       toast.success("Comida registrada.");
-      setDialogOpen(false);
+      setMealDialogOpen(false);
       await invalidateNutrition();
     },
     onError: (error: any) => toast.error(error?.message || "No se pudo guardar la comida."),
@@ -238,12 +237,78 @@ const Nutrition = () => {
     },
   });
 
+  const profileSelectionMutation = useMutation({
+    mutationFn: (profileId: string | null) => setNutritionProfileForDate(userId, selectedDate, profileId, { isGuest, timeZone, profile: profile as any }),
+    onSuccess: async () => {
+      await invalidateNutrition();
+      toast.success("Perfil del dia actualizado.");
+    },
+    onError: (error: any) => toast.error(error?.message || "No se pudo actualizar el perfil del dia."),
+  });
+
+  const saveProfileMutation = useMutation({
+    mutationFn: () =>
+      upsertNutritionProfile(
+        userId,
+        {
+          id: editingProfile?.id,
+          name: profileName,
+          archetype: profileArchetype,
+          is_default: profileIsDefault,
+        },
+        { isGuest },
+      ),
+    onSuccess: async () => {
+      setProfilesDialogOpen(false);
+      setEditingProfile(null);
+      setProfileName("");
+      setProfileArchetype("base");
+      setProfileIsDefault(false);
+      await invalidateNutrition();
+      toast.success("Perfil nutricional guardado.");
+    },
+    onError: (error: any) => toast.error(error?.message || "No se pudo guardar el perfil."),
+  });
+
+  const archiveProfileMutation = useMutation({
+    mutationFn: (profileId: string) => archiveNutritionProfile(profileId, userId, { isGuest, archived: true }),
+    onSuccess: async () => {
+      await invalidateNutrition();
+      toast.success("Perfil archivado.");
+    },
+    onError: (error: any) => toast.error(error?.message || "No se pudo archivar el perfil."),
+  });
+
+  const deleteProfileMutation = useMutation({
+    mutationFn: (profileId: string) => deleteNutritionProfileSafe(profileId, userId, { isGuest }),
+    onSuccess: async (result) => {
+      await invalidateNutrition();
+      toast.success(result.archived ? "El perfil se archivo para proteger el historial." : "Perfil eliminado.");
+    },
+    onError: (error: any) => toast.error(error?.message || "No se pudo eliminar el perfil."),
+  });
+
+  const defaultProfileMutation = useMutation({
+    mutationFn: (profileId: string) => setDefaultNutritionProfile(profileId, userId, { isGuest }),
+    onSuccess: async () => {
+      await invalidateNutrition();
+      toast.success("Perfil marcado como predeterminado.");
+    },
+    onError: (error: any) => toast.error(error?.message || "No se pudo marcar el perfil predeterminado."),
+  });
+
   const daySummary = summaryQuery.data;
+  const profileOptions = profilesQuery.data ?? [];
   const goals = daySummary?.goals;
   const totals = daySummary?.totals;
-  const target = daySummary?.targetBreakdown ?? nutritionTargets.target;
+  const target = daySummary?.targetBreakdown;
   const remaining = daySummary?.remaining;
-  const metabolicProfile = nutritionTargets.metabolicProfile;
+  const metabolicProfile = daySummary?.metabolicProfile;
+  const selectedNutritionProfile = daySummary?.selectedProfile ?? null;
+  const activeDailyLog = daySummary?.dailyLog ?? null;
+  const activeArchetype = target?.dayArchetype ?? selectedNutritionProfile?.archetype ?? activeDailyLog?.archetype_snapshot ?? "base";
+  const archetypeMeta = NUTRITION_ARCHETYPE_META[activeArchetype];
+  const effectiveProfileLabel = selectedNutritionProfile?.name ?? activeDailyLog?.profile_name_snapshot ?? "Sin perfil explicito";
   const caloriesPct = goals && totals ? Math.min(100, Math.round((totals.calories / Math.max(goals.calorie_goal, 1)) * 100)) : 0;
   const proteinPct = goals && totals ? Math.min(100, Math.round((totals.protein_g / Math.max(goals.protein_goal_g, 1)) * 100)) : 0;
   const carbsPct = goals && totals ? Math.min(100, Math.round((totals.carbs_g / Math.max(goals.carb_goal_g, 1)) * 100)) : 0;
@@ -275,11 +340,27 @@ const Nutrition = () => {
   const openDialogForMeal = (meal: NutritionMealType, initialMode: AddMode = "manual") => {
     setActiveMeal(meal);
     setMode(initialMode);
-    setDialogOpen(true);
+    setMealDialogOpen(true);
   };
 
   const toggleMeal = (meal: NutritionMealType) => {
     setExpandedMeals((current) => ({ ...current, [meal]: !current[meal] }));
+  };
+
+  const openCreateProfile = () => {
+    setEditingProfile(null);
+    setProfileName("");
+    setProfileArchetype("base");
+    setProfileIsDefault(profileOptions.length === 0);
+    setProfilesDialogOpen(true);
+  };
+
+  const openEditProfile = (profileRow: NutritionProfileRecord) => {
+    setEditingProfile(profileRow);
+    setProfileName(profileRow.name);
+    setProfileArchetype(profileRow.archetype);
+    setProfileIsDefault(profileRow.is_default);
+    setProfilesDialogOpen(true);
   };
 
   const handleAddEntry = async () => {
@@ -439,99 +520,83 @@ const Nutrition = () => {
   return (
     <div className="app-shell min-h-screen px-6 py-8 text-slate-100">
       <div className="mx-auto max-w-[1540px] space-y-6">
-        <section className="app-surface-hero flex items-start justify-between rounded-[28px] px-8 py-8">
-          <div className="space-y-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-primary/80">Panel diario</p>
-              <h1 className="text-4xl font-black uppercase tracking-tight text-white">Nutricion & Combustible</h1>
-              <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Registro operativo y control de macros</p>
-            </div>
-            <div className="app-chip-muted flex items-center gap-3 rounded-2xl px-3 py-2">
-              {DAY_ARCHETYPE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setDayArchetype(option.value)}
-                  className={cn(
-                    "rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition-colors",
-                    dayArchetype === option.value ? "bg-primary text-primary-foreground" : "text-slate-400 hover:bg-white/[0.05] hover:text-white",
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="app-chip-muted flex items-center gap-2 rounded-2xl px-3 py-2">
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-300 hover:bg-white/[0.05] hover:text-white" onClick={() => setSelectedDate((prev) => addDays(prev, -1))}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="min-w-40 text-center">
-                <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Bitacora</div>
-                <div className="text-sm font-semibold text-white">{format(selectedDate, "dd/MM/yyyy")}</div>
+        <section className="app-surface-hero rounded-[28px] px-8 py-8">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+            <div className="space-y-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-primary/80">Panel diario</p>
+                <h1 className="text-4xl font-black uppercase tracking-tight text-white">Nutricion & Combustible</h1>
+                <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Perfil del dia, objetivos dinamicos y registro de comidas</p>
               </div>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-300 hover:bg-white/[0.05] hover:text-white" onClick={() => setSelectedDate((prev) => addDays(prev, 1))}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <div className="grid gap-3 md:grid-cols-[minmax(0,280px)_1fr_auto]">
+                <div className="app-chip-muted rounded-2xl px-3 py-3">
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">Perfil del dia</div>
+                  <Select value={selectedNutritionProfile?.id ?? "__fallback__"} onValueChange={(value) => profileSelectionMutation.mutate(value === "__fallback__" ? null : value)}>
+                    <SelectTrigger className="border-white/10 bg-slate-950 text-white"><SelectValue placeholder="Selecciona perfil" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__fallback__">Sin perfil explicito</SelectItem>
+                      {profileOptions.filter((row) => !row.is_archived).map((profileRow) => (
+                        <SelectItem key={profileRow.id} value={profileRow.id}>
+                          {profileRow.name} - {NUTRITION_ARCHETYPE_META[profileRow.archetype].shortLabel}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="app-chip-muted rounded-2xl px-4 py-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">Arquetipo activo</div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {Object.entries(NUTRITION_ARCHETYPE_META).map(([key, meta]) => (
+                      <div key={key} className={cn("rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em]", activeArchetype === key ? "border-primary/50 bg-primary/15 text-primary" : "border-white/10 text-slate-400")}>
+                        {meta.shortLabel}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-sm text-slate-300">{archetypeMeta.description}</p>
+                </div>
+                <Button type="button" onClick={openCreateProfile} className="h-auto rounded-2xl bg-white/[0.06] px-4 py-3 text-slate-100 hover:bg-white/[0.1]">
+                  <FolderKanban className="mr-2 h-4 w-4" />
+                  Nuevo perfil
+                </Button>
+              </div>
             </div>
-            <div className="app-chip rounded-2xl px-4 py-3 text-right">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/80">Acumulado</div>
-              <div className="text-2xl font-black text-primary">{formatMetric(totals?.calories, " kcal")}</div>
+
+            <div className="flex items-center gap-4">
+              <div className="app-chip-muted flex items-center gap-2 rounded-2xl px-3 py-2">
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-300 hover:bg-white/[0.05] hover:text-white" onClick={() => setSelectedDate((prev) => addDays(prev, -1))}><ChevronLeft className="h-4 w-4" /></Button>
+                <div className="min-w-40 text-center"><div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Bitacora</div><div className="text-sm font-semibold text-white">{format(selectedDate, "dd/MM/yyyy")}</div></div>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-300 hover:bg-white/[0.05] hover:text-white" onClick={() => setSelectedDate((prev) => addDays(prev, 1))}><ChevronRight className="h-4 w-4" /></Button>
+              </div>
+              <div className="app-chip rounded-2xl px-4 py-3 text-right"><div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/80">Acumulado</div><div className="text-2xl font-black text-primary">{formatMetric(totals?.calories, " kcal")}</div></div>
             </div>
           </div>
         </section>
-
         <div className="grid gap-6 xl:grid-cols-[1.65fr_0.8fr]">
           <section className="space-y-5">
             <div className="app-surface-panel rounded-[28px]">
               <div className="flex items-center justify-between border-b border-white/5 px-6 py-5">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Logbook</p>
-                  <h2 className="mt-1 text-2xl font-bold text-white">Registro operativo de comidas</h2>
-                </div>
-                <Button onClick={() => openDialogForMeal("breakfast")} className="rounded-2xl bg-primary px-4 text-primary-foreground hover:bg-primary/90">
-                  <CirclePlus className="mr-2 h-4 w-4" />
-                  Anadir nueva comida
-                </Button>
+                <div><p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Logbook</p><h2 className="mt-1 text-2xl font-bold text-white">Registro operativo de comidas</h2></div>
+                <Button onClick={() => openDialogForMeal("breakfast")} className="rounded-2xl bg-primary px-4 text-primary-foreground hover:bg-primary/90"><CirclePlus className="mr-2 h-4 w-4" />Anadir nueva comida</Button>
               </div>
-
               <div className="space-y-4 px-4 py-4">
                 {mealOverview.map(({ meal, entries, subtotal }, index) => (
                   <article key={meal.key} className="overflow-hidden rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(15,23,42,0.82))]">
                     <div className="flex items-center gap-4 px-5 py-4">
                       <div className={cn("h-16 w-1.5 rounded-full", meal.railClass)} />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Registro {index + 1}</div>
-                        <div className={cn("mt-1 text-xl font-bold uppercase", meal.accentClass)}>{meal.label}</div>
-                      </div>
+                      <div className="min-w-0 flex-1"><div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Registro {index + 1}</div><div className={cn("mt-1 text-xl font-bold uppercase", meal.accentClass)}>{meal.label}</div></div>
                       <div className="grid min-w-[290px] grid-cols-4 gap-3">
                         <div className="rounded-2xl border border-white/8 bg-slate-950/70 px-3 py-2 text-center"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Pro</div><div className="text-sm font-semibold text-emerald-300">{formatMetric(subtotal?.protein_g, "g")}</div></div>
                         <div className="rounded-2xl border border-white/8 bg-slate-950/70 px-3 py-2 text-center"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Cho</div><div className="text-sm font-semibold text-cyan-300">{formatMetric(subtotal?.carbs_g, "g")}</div></div>
                         <div className="rounded-2xl border border-white/8 bg-slate-950/70 px-3 py-2 text-center"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Fat</div><div className="text-sm font-semibold text-amber-300">{formatMetric(subtotal?.fat_g, "g")}</div></div>
                         <div className="rounded-2xl border border-white/8 bg-slate-950/70 px-3 py-2 text-center"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Kcal</div><div className="text-sm font-semibold text-white">{formatMetric(subtotal?.calories)}</div></div>
                       </div>
-                      <button type="button" onClick={() => toggleMeal(meal.key)} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-slate-300">
-                        <ChevronDown className={cn("h-5 w-5 transition-transform", expandedMeals[meal.key] && "rotate-180")} />
-                      </button>
+                      <button type="button" onClick={() => toggleMeal(meal.key)} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-slate-300"><ChevronDown className={cn("h-5 w-5 transition-transform", expandedMeals[meal.key] && "rotate-180")} /></button>
                     </div>
-
                     {expandedMeals[meal.key] && (
                       <div className="border-t border-white/5 px-5 pb-5 pt-3">
                         <div className="overflow-hidden rounded-2xl border border-white/8 bg-slate-950/80">
                           <table className="w-full text-left">
-                            <thead className="border-b border-white/6 bg-white/[0.03]">
-                              <tr className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
-                                <th className="px-4 py-3">Alimento</th>
-                                <th className="px-3 py-3 text-right">Cant</th>
-                                <th className="px-3 py-3 text-right">P</th>
-                                <th className="px-3 py-3 text-right">C</th>
-                                <th className="px-3 py-3 text-right">F</th>
-                                <th className="px-3 py-3 text-right">Kcal</th>
-                                <th className="px-4 py-3 text-right">Accion</th>
-                              </tr>
-                            </thead>
+                            <thead className="border-b border-white/6 bg-white/[0.03]"><tr className="text-[11px] uppercase tracking-[0.24em] text-slate-500"><th className="px-4 py-3">Alimento</th><th className="px-3 py-3 text-right">Cant</th><th className="px-3 py-3 text-right">P</th><th className="px-3 py-3 text-right">C</th><th className="px-3 py-3 text-right">F</th><th className="px-3 py-3 text-right">Kcal</th><th className="px-4 py-3 text-right">Accion</th></tr></thead>
                             <tbody>
                               {entries.length === 0 ? (
                                 <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">Sin registros en esta comida.</td></tr>
@@ -563,124 +628,24 @@ const Nutrition = () => {
               </div>
             </div>
           </section>
-
           <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
             <div className="app-surface-panel rounded-[28px] p-5">
-              <div className="flex items-center justify-between">
-                <div><p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary/80">Resumen metabólico</p><h3 className="mt-1 text-lg font-bold text-white">Base del plan diario</h3></div>
-                <div className="app-chip rounded-xl px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]">
-                  {GOAL_LABELS[metabolicProfile?.goalType ?? "maintain"] ?? "Objetivo"}
-                </div>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-4"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">BMR</div><div className="mt-2 text-3xl font-black text-white">{formatMetric(target?.bmr)}</div><div className="text-xs text-slate-500">reposo</div></div>
-                <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-4"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">TDEE</div><div className="mt-2 text-3xl font-black text-white">{formatMetric(target?.tdee)}</div><div className="text-xs text-slate-500">mantenimiento</div></div>
-              </div>
-              <div className="mt-4 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-500">
-                <span>Peso: {formatMetric(metabolicProfile?.weightKg, " kg", 1)}</span>
-                <span>Actividad: {ACTIVITY_LABELS[metabolicProfile?.activityLevel ?? "moderate"] ?? "--"}</span>
-              </div>
+              <div className="flex items-center justify-between"><div><p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary/80">Perfil del dia</p><h3 className="mt-1 text-lg font-bold text-white">{effectiveProfileLabel}</h3></div><div className="app-chip rounded-xl px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]">{archetypeMeta.label}</div></div>
+              <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-2xl border border-white/8 bg-slate-950/80 p-4"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">TDEE base</div><div className="mt-2 text-3xl font-black text-white">{formatMetric(target?.tdee)}</div><div className="text-xs text-slate-500">antes del arquetipo</div></div><div className="rounded-2xl border border-white/8 bg-slate-950/80 p-4"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Ajuste</div><div className="mt-2 text-3xl font-black text-white">{target ? `${target.archetypeDelta >= 0 ? "+" : ""}${target.archetypeDelta}` : "--"}</div><div className="text-xs text-slate-500">kcal del arquetipo</div></div></div>
+              <div className="mt-4 grid gap-2 text-xs uppercase tracking-[0.2em] text-slate-500"><div className="flex items-center justify-between"><span>Meta final</span><span>{formatMetric(goals?.calorie_goal, " kcal")}</span></div><div className="flex items-center justify-between"><span>Peso de calculo</span><span>{formatMetric(metabolicProfile?.weightKg, " kg", 1)}</span></div><div className="flex items-center justify-between"><span>Fuente del peso</span><span>{daySummary?.weightSource === "profile_fallback" ? "Perfil" : "Peso real"}</span></div></div>
             </div>
-
             <div className="app-surface-panel rounded-[28px] p-5">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Balance energetico</div>
-              <div className="mt-4 flex items-end justify-between"><div><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Consumido</div><div className="text-4xl font-black text-white">{formatMetric(totals?.calories)}</div></div><div className="text-right"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Meta</div><div className="text-3xl font-black text-primary">{formatMetric(goals?.calorie_goal)}</div></div></div>
-              <Progress value={caloriesPct} className="mt-4 h-3 bg-slate-800" />
-              <div className="mt-3 flex justify-between text-xs text-slate-500"><span>Restante</span><span>{formatMetric(remaining?.calories, " kcal")}</span></div>
+              <div className="flex items-center justify-between"><div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Perfiles guardados</div><Button type="button" size="sm" onClick={openCreateProfile} className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">Nuevo</Button></div>
+              <div className="mt-4 space-y-3">{profileOptions.length === 0 ? <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-5 text-sm text-slate-400">Crea perfiles como Torso, Pierna o Descanso. El perfil del dia recalcula metas sin duplicar tus comidas.</div> : profileOptions.map((profileRow) => <div key={profileRow.id} className="rounded-2xl border border-white/8 bg-slate-950/70 p-4"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-2"><span className="text-sm font-semibold text-white">{profileRow.name}</span>{profileRow.is_default ? <Star className="h-4 w-4 text-amber-300" /> : null}{profileRow.is_archived ? <span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Archivado</span> : null}</div><p className="mt-1 text-xs text-slate-400">{NUTRITION_ARCHETYPE_META[profileRow.archetype].description}</p></div><div className="rounded-xl border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">{NUTRITION_ARCHETYPE_META[profileRow.archetype].shortLabel}</div></div><div className="mt-3 flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" onClick={() => openEditProfile(profileRow)} className="border-white/10 bg-transparent text-slate-300">Editar</Button>{!profileRow.is_default ? <Button type="button" variant="outline" size="sm" onClick={() => defaultProfileMutation.mutate(profileRow.id)} className="border-white/10 bg-transparent text-slate-300">Predeterminado</Button> : null}{!profileRow.is_archived ? <Button type="button" variant="outline" size="sm" onClick={() => archiveProfileMutation.mutate(profileRow.id)} className="border-white/10 bg-transparent text-slate-300">Archivar</Button> : null}<Button type="button" variant="outline" size="sm" onClick={() => deleteProfileMutation.mutate(profileRow.id)} className="border-red-400/20 bg-transparent text-red-200">Eliminar</Button></div></div>)}</div>
             </div>
-
-            <div className="app-surface-panel rounded-[28px] p-5">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Macros</div>
-              <div className="mt-4 space-y-4">
-                <div><div className="mb-2 flex justify-between text-sm"><span className="font-medium text-emerald-300">Proteinas</span><span className="text-slate-400">{formatMetric(totals?.protein_g, "g")} / {formatMetric(goals?.protein_goal_g, "g")}</span></div><Progress value={proteinPct} className="h-2.5 bg-slate-800 [&>div]:bg-emerald-400" /></div>
-                <div><div className="mb-2 flex justify-between text-sm"><span className="font-medium text-cyan-300">Carbohidratos</span><span className="text-slate-400">{formatMetric(totals?.carbs_g, "g")} / {formatMetric(goals?.carb_goal_g, "g")}</span></div><Progress value={carbsPct} className="h-2.5 bg-slate-800 [&>div]:bg-cyan-400" /></div>
-                <div><div className="mb-2 flex justify-between text-sm"><span className="font-medium text-amber-300">Grasas</span><span className="text-slate-400">{formatMetric(totals?.fat_g, "g")} / {formatMetric(goals?.fat_goal_g, "g")}</span></div><Progress value={fatPct} className="h-2.5 bg-slate-800 [&>div]:bg-amber-400" /></div>
-              </div>
-            </div>
-
-            <div className="app-surface-panel rounded-[28px] p-5">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500"><Flame className="h-3.5 w-3.5 text-primary" />Perfil metabólico</div>
-              <div className="mt-4 grid gap-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
-                    <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Sexo</div>
-                    <div className="mt-2 text-sm text-white">{metabolicProfile?.sex === "female" ? "Femenino" : "Masculino"}</div>
-                  </div>
-                  <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
-                    <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Edad</div>
-                    <div className="mt-2 text-sm text-white">{metabolicProfile?.age ?? "--"} años</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
-                    <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Peso</div>
-                    <div className="mt-2 text-sm text-white">{formatMetric(metabolicProfile?.weightKg, " kg", 1)}</div>
-                  </div>
-                  <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
-                    <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Altura</div>
-                    <div className="mt-2 text-sm text-white">{formatMetric(metabolicProfile?.heightCm, " cm", 0)}</div>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
-                  <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Actividad</div>
-                  <div className="mt-2 text-sm text-white">{ACTIVITY_LABELS[metabolicProfile?.activityLevel ?? "moderate"] ?? "--"}</div>
-                </div>
-                <div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3">
-                  <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Objetivo</div>
-                  <div className="mt-2 text-sm text-white">{GOAL_LABELS[metabolicProfile?.goalType ?? "maintain"] ?? "--"}</div>
-                </div>
-                <Button asChild className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90">
-                  <Link to="/fitness-profile">Abrir Perfil Fitness</Link>
-                </Button>
-              </div>
-            </div>
+            <div className="app-surface-panel rounded-[28px] p-5"><div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Balance energetico</div><div className="mt-4 flex items-end justify-between"><div><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Consumido</div><div className="text-4xl font-black text-white">{formatMetric(totals?.calories)}</div></div><div className="text-right"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Meta</div><div className="text-3xl font-black text-primary">{formatMetric(goals?.calorie_goal)}</div></div></div><Progress value={caloriesPct} className="mt-4 h-3 bg-slate-800" /><div className="mt-3 flex justify-between text-xs text-slate-500"><span>Restante</span><span>{formatMetric(remaining?.calories, " kcal")}</span></div></div>
+            <div className="app-surface-panel rounded-[28px] p-5"><div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Macros</div><div className="mt-4 space-y-4"><div><div className="mb-2 flex justify-between text-sm"><span className="font-medium text-emerald-300">Proteinas</span><span className="text-slate-400">{formatMetric(totals?.protein_g, "g")} / {formatMetric(goals?.protein_goal_g, "g")}</span></div><Progress value={proteinPct} className="h-2.5 bg-slate-800 [&>div]:bg-emerald-400" /></div><div><div className="mb-2 flex justify-between text-sm"><span className="font-medium text-cyan-300">Carbohidratos</span><span className="text-slate-400">{formatMetric(totals?.carbs_g, "g")} / {formatMetric(goals?.carb_goal_g, "g")}</span></div><Progress value={carbsPct} className="h-2.5 bg-slate-800 [&>div]:bg-cyan-400" /></div><div><div className="mb-2 flex justify-between text-sm"><span className="font-medium text-amber-300">Grasas</span><span className="text-slate-400">{formatMetric(totals?.fat_g, "g")} / {formatMetric(goals?.fat_goal_g, "g")}</span></div><Progress value={fatPct} className="h-2.5 bg-slate-800 [&>div]:bg-amber-400" /></div></div></div>
+            <div className="app-surface-panel rounded-[28px] p-5"><div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500"><Flame className="h-3.5 w-3.5 text-primary" />Perfil metabolico</div><div className="mt-4 grid gap-3"><div className="grid grid-cols-2 gap-3"><div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Sexo</div><div className="mt-2 text-sm text-white">{metabolicProfile?.sex === "female" ? "Femenino" : "Masculino"}</div></div><div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Edad</div><div className="mt-2 text-sm text-white">{metabolicProfile?.age ?? "--"} anos</div></div></div><div className="grid grid-cols-2 gap-3"><div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Peso</div><div className="mt-2 text-sm text-white">{formatMetric(metabolicProfile?.weightKg, " kg", 1)}</div></div><div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Altura</div><div className="mt-2 text-sm text-white">{formatMetric(metabolicProfile?.heightCm, " cm", 0)}</div></div></div><div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Actividad</div><div className="mt-2 text-sm text-white">{ACTIVITY_LABELS[metabolicProfile?.activityLevel ?? "moderate"] ?? "--"}</div></div><div className="rounded-2xl border border-white/8 bg-slate-950/80 p-3"><div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Objetivo</div><div className="mt-2 text-sm text-white">{GOAL_LABELS[metabolicProfile?.goalType ?? "maintain"] ?? "--"}</div></div><Button asChild className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"><Link to="/fitness-profile">Abrir Perfil Fitness</Link></Button></div></div>
           </aside>
         </div>
       </div>
-
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="app-dialog-surface max-w-3xl">
-          <DialogHeader><DialogTitle className="text-xl font-bold">Agregar comida - {MEAL_SECTIONS.find((m) => m.key === activeMeal)?.label}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-[200px_1fr] gap-4">
-              <div className="space-y-2"><Label className="text-slate-400">Modo de carga</Label><Select value={mode} onValueChange={(value) => setMode(value as AddMode)}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="manual">Carga manual</SelectItem><SelectItem value="database">Base de alimentos</SelectItem><SelectItem value="favorite">Favoritos</SelectItem><SelectItem value="yesterday">Duplicar de ayer</SelectItem><SelectItem value="recent">Recientes</SelectItem></SelectContent></Select></div>
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-slate-400"><div className="font-medium text-white">Contexto activo</div><div className="mt-1">Comida destino: {MEAL_SECTIONS.find((m) => m.key === activeMeal)?.label}</div></div>
-            </div>
-            {mode === "database" && (
-              <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <div className="grid grid-cols-[1fr_220px] gap-3"><Input value={searchFood} onChange={(e) => setSearchFood(e.target.value)} placeholder="Buscar alimento..." className="border-white/10 bg-slate-900 text-white" /><Select value={foodCategory} onValueChange={setFoodCategory}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todas</SelectItem>{(categoriesQuery.data || []).map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select></div>
-                <Select value={selectedFoodDatabaseId} onValueChange={setSelectedFoodDatabaseId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona alimento" /></SelectTrigger><SelectContent>{(foodSearchQuery.data || []).map((food) => <SelectItem key={food.id} value={food.id}>{food.food_name} ({food.calories} kcal/{food.serving_size}{food.serving_unit})</SelectItem>)}</SelectContent></Select>
-                <div className="grid grid-cols-[1fr_120px] gap-3"><Input value={consumedAmount} onChange={(e) => setConsumedAmount(e.target.value)} type="number" min="0" placeholder="Cantidad consumida" className="border-white/10 bg-slate-900 text-white" /><div className="flex items-center justify-center rounded-xl border border-white/10 bg-slate-900 text-sm text-slate-400">{(foodSearchQuery.data || []).find((row) => row.id === selectedFoodDatabaseId)?.serving_unit || "g"}</div></div>
-                {selectedFoodPreview && <div className="rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-4 text-sm text-slate-300">Vista previa: {selectedFoodPreview.calories} kcal | P {selectedFoodPreview.protein_g} | C {selectedFoodPreview.carbs_g} | G {selectedFoodPreview.fat_g}</div>}
-              </div>
-            )}
-            {mode === "manual" && (
-              <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <Input value={foodName} onChange={(e) => setFoodName(e.target.value)} placeholder="Nombre alimento" className="border-white/10 bg-slate-900 text-white" />
-                <div className="grid grid-cols-[1fr_110px] gap-3"><Input value={servingSize} onChange={(e) => setServingSize(e.target.value)} type="number" min="0" placeholder="Porcion" className="border-white/10 bg-slate-900 text-white" /><Input value={servingUnit} onChange={(e) => setServingUnit(e.target.value)} placeholder="unidad" className="border-white/10 bg-slate-900 text-white" /></div>
-                <div className="grid grid-cols-4 gap-3">
-                  <Input value={calories} onChange={(e) => setCalories(e.target.value)} type="number" min="0" placeholder="kcal" className="border-white/10 bg-slate-900 text-white" />
-                  <Input value={protein} onChange={(e) => setProtein(e.target.value)} type="number" min="0" placeholder="Proteina g" className="border-white/10 bg-slate-900 text-white" />
-                  <Input value={carbs} onChange={(e) => setCarbs(e.target.value)} type="number" min="0" placeholder="Carbs g" className="border-white/10 bg-slate-900 text-white" />
-                  <Input value={fat} onChange={(e) => setFat(e.target.value)} type="number" min="0" placeholder="Grasas g" className="border-white/10 bg-slate-900 text-white" />
-                  <Input value={fiber} onChange={(e) => setFiber(e.target.value)} type="number" min="0" placeholder="Fibra g" className="border-white/10 bg-slate-900 text-white" />
-                  <Input value={sugar} onChange={(e) => setSugar(e.target.value)} type="number" min="0" placeholder="Azucar g" className="border-white/10 bg-slate-900 text-white" />
-                  <Input value={sodium} onChange={(e) => setSodium(e.target.value)} type="number" min="0" placeholder="Sodio mg" className="border-white/10 bg-slate-900 text-white" />
-                  <Input value={potassium} onChange={(e) => setPotassium(e.target.value)} type="number" min="0" placeholder="Potasio mg" className="border-white/10 bg-slate-900 text-white" />
-                </div>
-                <label className="flex items-center gap-2 text-sm text-slate-300"><input type="checkbox" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />Guardar en favoritos</label>
-              </div>
-            )}
-            {mode === "favorite" && <Select value={selectedFavoriteId} onValueChange={setSelectedFavoriteId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona favorito" /></SelectTrigger><SelectContent>{(favoritesQuery.data || []).map((item) => <SelectItem key={item.id} value={item.id}>{item.name} ({item.calories} kcal)</SelectItem>)}</SelectContent></Select>}
-            {mode === "yesterday" && <Select value={selectedYesterdayId} onValueChange={setSelectedYesterdayId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona comida de ayer" /></SelectTrigger><SelectContent>{yesterdayEntries.map((item) => <SelectItem key={item.id} value={item.id}>{item.food_name} ({item.calories} kcal)</SelectItem>)}</SelectContent></Select>}
-            {mode === "recent" && <Select value={selectedRecentId} onValueChange={setSelectedRecentId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona reciente" /></SelectTrigger><SelectContent>{(recentQuery.data || []).map((item) => <SelectItem key={item.id} value={item.id}>{item.food_name} ({item.calories} kcal)</SelectItem>)}</SelectContent></Select>}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-white/10 bg-transparent text-slate-300 hover:bg-white/[0.05] hover:text-white">Cancelar</Button>
-            <Button onClick={handleAddEntry} disabled={addMutation.isPending} className="bg-primary text-primary-foreground hover:bg-primary/90">Guardar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <Dialog open={profilesDialogOpen} onOpenChange={setProfilesDialogOpen}><DialogContent className="app-dialog-surface max-w-xl"><DialogHeader><DialogTitle>{editingProfile ? "Editar perfil nutricional" : "Crear perfil nutricional"}</DialogTitle></DialogHeader><div className="space-y-4"><div className="space-y-2"><Label>Nombre</Label><Input value={profileName} onChange={(event) => setProfileName(event.target.value)} placeholder="Ej. Pierna, Torso, Descanso" className="border-white/10 bg-slate-900 text-white" /></div><div className="space-y-2"><Label>Arquetipo</Label><Select value={profileArchetype} onValueChange={(value) => setProfileArchetype(value as NutritionDayArchetype)}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(NUTRITION_ARCHETYPE_META).map(([key, meta]) => <SelectItem key={key} value={key}>{meta.label}</SelectItem>)}</SelectContent></Select><div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-slate-300">{NUTRITION_ARCHETYPE_META[profileArchetype].description}</div></div><label className="flex items-center gap-3 text-sm text-slate-300"><Checkbox checked={profileIsDefault} onCheckedChange={(checked) => setProfileIsDefault(Boolean(checked))} />Marcar como perfil predeterminado</label></div><DialogFooter><Button variant="outline" onClick={() => setProfilesDialogOpen(false)} className="border-white/10 bg-transparent text-slate-300 hover:bg-white/[0.05] hover:text-white">Cancelar</Button><Button onClick={() => saveProfileMutation.mutate()} disabled={saveProfileMutation.isPending} className="bg-primary text-primary-foreground hover:bg-primary/90">Guardar perfil</Button></DialogFooter></DialogContent></Dialog>
+      <Dialog open={mealDialogOpen} onOpenChange={setMealDialogOpen}><DialogContent className="app-dialog-surface max-w-3xl"><DialogHeader><DialogTitle className="text-xl font-bold">Agregar comida - {MEAL_SECTIONS.find((m) => m.key === activeMeal)?.label}</DialogTitle></DialogHeader><div className="space-y-4"><div className="grid grid-cols-[200px_1fr] gap-4"><div className="space-y-2"><Label className="text-slate-400">Modo de carga</Label><Select value={mode} onValueChange={(value) => setMode(value as AddMode)}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="manual">Carga manual</SelectItem><SelectItem value="database">Base de alimentos</SelectItem><SelectItem value="favorite">Favoritos</SelectItem><SelectItem value="yesterday">Duplicar de ayer</SelectItem><SelectItem value="recent">Recientes</SelectItem></SelectContent></Select></div><div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-slate-400"><div className="font-medium text-white">Contexto activo</div><div className="mt-1">Comida destino: {MEAL_SECTIONS.find((m) => m.key === activeMeal)?.label}</div><div className="mt-1">Perfil del dia: {effectiveProfileLabel}</div></div></div>{mode === "database" && <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4"><div className="grid grid-cols-[1fr_220px] gap-3"><Input value={searchFood} onChange={(e) => setSearchFood(e.target.value)} placeholder="Buscar alimento..." className="border-white/10 bg-slate-900 text-white" /><Select value={foodCategory} onValueChange={setFoodCategory}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todas</SelectItem>{(categoriesQuery.data || []).map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select></div><Select value={selectedFoodDatabaseId} onValueChange={setSelectedFoodDatabaseId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona alimento" /></SelectTrigger><SelectContent>{(foodSearchQuery.data || []).map((food) => <SelectItem key={food.id} value={food.id}>{food.food_name} ({food.calories} kcal/{food.serving_size}{food.serving_unit})</SelectItem>)}</SelectContent></Select><div className="grid grid-cols-[1fr_120px] gap-3"><Input value={consumedAmount} onChange={(e) => setConsumedAmount(e.target.value)} type="number" min="0" placeholder="Cantidad consumida" className="border-white/10 bg-slate-900 text-white" /><div className="flex items-center justify-center rounded-xl border border-white/10 bg-slate-900 text-sm text-slate-400">{(foodSearchQuery.data || []).find((row) => row.id === selectedFoodDatabaseId)?.serving_unit || "g"}</div></div>{selectedFoodPreview && <div className="rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-4 text-sm text-slate-300">Vista previa: {selectedFoodPreview.calories} kcal | P {selectedFoodPreview.protein_g} | C {selectedFoodPreview.carbs_g} | G {selectedFoodPreview.fat_g}</div>}</div>}{mode === "manual" && <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4"><Input value={foodName} onChange={(e) => setFoodName(e.target.value)} placeholder="Nombre alimento" className="border-white/10 bg-slate-900 text-white" /><div className="grid grid-cols-[1fr_110px] gap-3"><Input value={servingSize} onChange={(e) => setServingSize(e.target.value)} type="number" min="0" placeholder="Porcion" className="border-white/10 bg-slate-900 text-white" /><Input value={servingUnit} onChange={(e) => setServingUnit(e.target.value)} placeholder="unidad" className="border-white/10 bg-slate-900 text-white" /></div><div className="grid grid-cols-4 gap-3"><Input value={calories} onChange={(e) => setCalories(e.target.value)} type="number" min="0" placeholder="kcal" className="border-white/10 bg-slate-900 text-white" /><Input value={protein} onChange={(e) => setProtein(e.target.value)} type="number" min="0" placeholder="Proteina g" className="border-white/10 bg-slate-900 text-white" /><Input value={carbs} onChange={(e) => setCarbs(e.target.value)} type="number" min="0" placeholder="Carbs g" className="border-white/10 bg-slate-900 text-white" /><Input value={fat} onChange={(e) => setFat(e.target.value)} type="number" min="0" placeholder="Grasas g" className="border-white/10 bg-slate-900 text-white" /><Input value={fiber} onChange={(e) => setFiber(e.target.value)} type="number" min="0" placeholder="Fibra g" className="border-white/10 bg-slate-900 text-white" /><Input value={sugar} onChange={(e) => setSugar(e.target.value)} type="number" min="0" placeholder="Azucar g" className="border-white/10 bg-slate-900 text-white" /><Input value={sodium} onChange={(e) => setSodium(e.target.value)} type="number" min="0" placeholder="Sodio mg" className="border-white/10 bg-slate-900 text-white" /><Input value={potassium} onChange={(e) => setPotassium(e.target.value)} type="number" min="0" placeholder="Potasio mg" className="border-white/10 bg-slate-900 text-white" /></div><label className="flex items-center gap-2 text-sm text-slate-300"><input type="checkbox" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />Guardar en favoritos</label></div>}{mode === "favorite" && <Select value={selectedFavoriteId} onValueChange={setSelectedFavoriteId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona favorito" /></SelectTrigger><SelectContent>{(favoritesQuery.data || []).map((item) => <SelectItem key={item.id} value={item.id}>{item.name} ({item.calories} kcal)</SelectItem>)}</SelectContent></Select>}{mode === "yesterday" && <Select value={selectedYesterdayId} onValueChange={setSelectedYesterdayId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona comida de ayer" /></SelectTrigger><SelectContent>{yesterdayEntries.map((item) => <SelectItem key={item.id} value={item.id}>{item.food_name} ({item.calories} kcal)</SelectItem>)}</SelectContent></Select>}{mode === "recent" && <Select value={selectedRecentId} onValueChange={setSelectedRecentId}><SelectTrigger className="border-white/10 bg-slate-900 text-white"><SelectValue placeholder="Selecciona reciente" /></SelectTrigger><SelectContent>{(recentQuery.data || []).map((item) => <SelectItem key={item.id} value={item.id}>{item.food_name} ({item.calories} kcal)</SelectItem>)}</SelectContent></Select>}</div><DialogFooter><Button variant="outline" onClick={() => setMealDialogOpen(false)} className="border-white/10 bg-transparent text-slate-300 hover:bg-white/[0.05] hover:text-white">Cancelar</Button><Button onClick={handleAddEntry} disabled={addMutation.isPending} className="bg-primary text-primary-foreground hover:bg-primary/90">Guardar</Button></DialogFooter></DialogContent></Dialog>
     </div>
   );
 };

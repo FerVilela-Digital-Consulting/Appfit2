@@ -32,6 +32,8 @@ const GUEST_KEYS = {
   nutritionEntries: "appfit_guest_nutrition_entries",
   nutritionFavorites: "appfit_guest_nutrition_favorites",
   nutritionGoals: "appfit_guest_nutrition_goals",
+  nutritionProfiles: "appfit_guest_nutrition_profiles",
+  nutritionDailyLogs: "appfit_guest_daily_nutrition_logs",
   nutritionDayArchetype: "appfit_guest_nutrition_day_archetype",
   nutritionDayOverride: "appfit_guest_nutrition_day_calorie_override",
   bodyMeasurements: "appfit_guest_body_measurements",
@@ -91,6 +93,7 @@ export const clearUserDayData = async (params: {
     if (scoped.has("sleep")) filterGuestArrayByDateKey(GUEST_KEYS.sleepLogs, dateKey);
     if (scoped.has("nutrition")) {
       filterGuestArrayByDateKey(GUEST_KEYS.nutritionEntries, dateKey);
+      filterGuestArrayByDateKey(GUEST_KEYS.nutritionDailyLogs, dateKey);
       filterGuestMapByDateKey(GUEST_KEYS.nutritionDayArchetype, dateKey);
       filterGuestMapByDateKey(GUEST_KEYS.nutritionDayOverride, dateKey);
     }
@@ -122,6 +125,7 @@ export const clearUserHistory = async (params: { userId: string | null; isGuest?
     localStorage.removeItem(GUEST_KEYS.waterLogs);
     localStorage.removeItem(GUEST_KEYS.sleepLogs);
     localStorage.removeItem(GUEST_KEYS.nutritionEntries);
+    localStorage.removeItem(GUEST_KEYS.nutritionDailyLogs);
     localStorage.removeItem(GUEST_KEYS.biofeedback);
     localStorage.removeItem(GUEST_KEYS.dailyNotes);
     localStorage.removeItem(GUEST_KEYS.bodyMeasurements);
@@ -156,6 +160,7 @@ export const resetUserAccount = async (params: {
     localStorage.removeItem(GUEST_KEYS.sleepGoal);
     localStorage.removeItem(GUEST_KEYS.nutritionFavorites);
     localStorage.removeItem(GUEST_KEYS.nutritionGoals);
+    localStorage.removeItem(GUEST_KEYS.nutritionProfiles);
     localStorage.removeItem(GUEST_KEYS.weightGoal);
     localStorage.removeItem(GUEST_KEYS.dailyMetricTasks);
     return;
