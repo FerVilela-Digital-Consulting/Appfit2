@@ -32,8 +32,7 @@ const mockGetBiofeedbackWeeklyAverages = vi.fn(() =>
   }),
 );
 const mockGetBiofeedbackRange = vi.fn(() => Promise.resolve([]));
-const mockGetLatestBodyMeasurement = vi.fn(() => Promise.resolve(null));
-const mockGetBodyMeasurementsRange = vi.fn(() => Promise.resolve([]));
+const mockListBodyMeasurements = vi.fn(() => Promise.resolve([]));
 const mockGetWeeklyReviewSummary = vi.fn(() =>
   Promise.resolve({
     weekStart: new Date("2026-03-02T00:00:00.000Z"),
@@ -71,8 +70,7 @@ vi.mock("@/services/dailyBiofeedback", () => ({
 }));
 
 vi.mock("@/services/bodyMeasurements", () => ({
-  getLatestBodyMeasurement: (...args: any[]) => mockGetLatestBodyMeasurement(...args),
-  getBodyMeasurementsRange: (...args: any[]) => mockGetBodyMeasurementsRange(...args),
+  listBodyMeasurements: (...args: any[]) => mockListBodyMeasurements(...args),
 }));
 
 vi.mock("@/services/weeklyReview", () => ({
@@ -124,8 +122,7 @@ describe("Stats page", () => {
     mockGetSleepRangeTotals.mockClear();
     mockGetBiofeedbackWeeklyAverages.mockClear();
     mockGetBiofeedbackRange.mockClear();
-    mockGetLatestBodyMeasurement.mockClear();
-    mockGetBodyMeasurementsRange.mockClear();
+    mockListBodyMeasurements.mockClear();
     mockGetWeeklyReviewSummary.mockClear();
 
     mockUseAuth.mockReset();
@@ -153,6 +150,7 @@ describe("Stats page", () => {
       }
       return Promise.resolve([]);
     });
+    mockListBodyMeasurements.mockResolvedValue([]);
 
     renderStats();
 
@@ -167,6 +165,7 @@ describe("Stats page", () => {
 
   it("shows fallback and CTA when initial weight is missing", async () => {
     mockListBodyMetricsByRange.mockResolvedValue([]);
+    mockListBodyMeasurements.mockResolvedValue([]);
     mockUseAuth.mockReturnValue({
       user: { id: "user-1" },
       isGuest: false,

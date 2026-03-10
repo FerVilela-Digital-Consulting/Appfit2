@@ -14,6 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
+      body_measurements: {
+        Row: {
+          arm_cm: number | null
+          body_fat_pct: number | null
+          created_at: string
+          date_key: string
+          fat_mass_kg: number | null
+          hip_cm: number | null
+          id: string
+          lean_mass_kg: number | null
+          neck_cm: number
+          notes: string | null
+          thigh_cm: number | null
+          user_id: string
+          waist_cm: number
+        }
+        Insert: {
+          arm_cm?: number | null
+          body_fat_pct?: number | null
+          created_at?: string
+          date_key: string
+          fat_mass_kg?: number | null
+          hip_cm?: number | null
+          id?: string
+          lean_mass_kg?: number | null
+          neck_cm: number
+          notes?: string | null
+          thigh_cm?: number | null
+          user_id: string
+          waist_cm: number
+        }
+        Update: {
+          arm_cm?: number | null
+          body_fat_pct?: number | null
+          created_at?: string
+          date_key?: string
+          fat_mass_kg?: number | null
+          hip_cm?: number | null
+          id?: string
+          lean_mass_kg?: number | null
+          neck_cm?: number
+          notes?: string | null
+          thigh_cm?: number | null
+          user_id?: string
+          waist_cm?: number
+        }
+        Relationships: []
+      }
+      body_metrics: {
+        Row: {
+          created_at: string | null
+          id: string
+          measured_at: string
+          notes: string | null
+          user_id: string
+          weight_kg: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          measured_at?: string
+          notes?: string | null
+          user_id: string
+          weight_kg: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          measured_at?: string
+          notes?: string | null
+          user_id?: string
+          weight_kg?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          biological_sex: string | null
+          dashboard_task_metrics: string[] | null
+          full_name: string | null
+          goal_direction: string | null
+          height: number | null
+          id: string
+          target_weight_kg: number | null
+          timezone: string | null
+          weight: number | null
+        }
+        Insert: {
+          biological_sex?: string | null
+          dashboard_task_metrics?: string[] | null
+          full_name?: string | null
+          goal_direction?: string | null
+          height?: number | null
+          id: string
+          target_weight_kg?: number | null
+          timezone?: string | null
+          weight?: number | null
+        }
+        Update: {
+          biological_sex?: string | null
+          dashboard_task_metrics?: string[] | null
+          full_name?: string | null
+          goal_direction?: string | null
+          height?: number | null
+          id?: string
+          target_weight_kg?: number | null
+          timezone?: string | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string | null

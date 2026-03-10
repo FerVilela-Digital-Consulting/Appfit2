@@ -108,7 +108,7 @@ export function BodyMannequin({
                 <p className="text-xs font-medium">{point.label}</p>
                 <p className="text-xs">{point.valueText ?? "Sin dato"}</p>
                 <p className="text-xs text-muted-foreground">
-                  {point.deltaText ? `${point.deltaText} since last measurement` : "Sin comparativa previa"}
+                  {point.deltaText ? `${point.deltaText} desde la medicion previa` : "Sin comparativa previa"}
                 </p>
               </TooltipContent>
             </Tooltip>

@@ -1,10 +1,10 @@
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { BodyMannequin, type MeasurementPoint } from "@/components/body/BodyMannequin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { WaistComparison } from "@/features/bodyMeasurements/measurementInsights";
 import type { BodyMeasurement } from "@/services/bodyMeasurements";
 
 type Props = {
@@ -13,7 +13,7 @@ type Props = {
   latest: BodyMeasurement | null;
   previous: BodyMeasurement | null;
   latestWeight: number | null;
-  weeklyWaistDeltaCm: number | null;
+  waistComparison: WaistComparison;
   goalDirection: "lose" | "gain" | "maintain" | null;
 };
 
@@ -50,10 +50,11 @@ const BodyMeasurementsCard = ({
   latest,
   previous,
   latestWeight,
-  weeklyWaistDeltaCm,
+  waistComparison,
   goalDirection,
 }: Props) => {
   const navigate = useNavigate();
+
   if (loading) {
     return (
       <Card className={`rounded-2xl border-border/60 bg-card/80 shadow-sm ${className ?? ""}`}>
@@ -73,7 +74,7 @@ const BodyMeasurementsCard = ({
       <Card className={`rounded-2xl border-border/60 bg-card/80 shadow-sm ${className ?? ""}`}>
         <CardHeader>
           <CardTitle>Resumen de medidas corporales</CardTitle>
-          <CardDescription>Aún no hay medidas corporales</CardDescription>
+          <CardDescription>Aun no hay medidas corporales</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">Registra cuello, cintura, cadera, brazo y muslo para ver el maniqui interactivo.</p>
@@ -156,22 +157,23 @@ const BodyMeasurementsCard = ({
         </div>
         <div className="w-full space-y-2">
           <div className="rounded-lg border border-border/60 p-3">
-            <p className="text-xs text-muted-foreground">Peso mas reciente</p>
+            <p className="text-xs text-muted-foreground">Peso de referencia</p>
             <p className="text-lg font-semibold">{latestWeight !== null ? `${latestWeight.toFixed(1)} kg` : "--"}</p>
           </div>
           <div className="rounded-lg border border-border/60 p-3">
-            <p className="text-xs text-muted-foreground">Grasa corporal est.</p>
+            <p className="text-xs text-muted-foreground">Grasa corporal estimada</p>
             <p className="text-lg font-semibold">
               {latest.body_fat_pct !== null && latest.body_fat_pct !== undefined ? `${Number(latest.body_fat_pct).toFixed(1)}%` : "--"}
             </p>
           </div>
           <div className="rounded-lg border border-border/60 p-3">
-            <p className="text-xs text-muted-foreground">Cambio semanal</p>
+            <p className="text-xs text-muted-foreground">Cambio de cintura</p>
             <p className="text-sm font-medium">
-              {weeklyWaistDeltaCm === null
+              {waistComparison.deltaCm === null
                 ? "--"
-                : `${weeklyWaistDeltaCm > 0 ? "+" : ""}${weeklyWaistDeltaCm.toFixed(1)} cm cintura`}
+                : `${waistComparison.deltaCm > 0 ? "+" : ""}${waistComparison.deltaCm.toFixed(1)} cm`}
             </p>
+            <p className="mt-1 text-xs text-muted-foreground">{waistComparison.label}</p>
           </div>
         </div>
       </CardContent>

@@ -5,6 +5,7 @@ import { CalendarDays, CheckCircle2, Crosshair, TimerReset } from "lucide-react"
 import { toast } from "sonner";
 
 import CalendarMiniWidget from "@/components/dashboard/CalendarMiniWidget";
+import BodyMeasurementsCard from "@/components/dashboard/BodyMeasurementsCard";
 import RecoveryCard from "@/components/dashboard/RecoveryCard";
 import TacticalNotesCard from "@/components/dashboard/TacticalNotesCard";
 import TodayStatusRow from "@/components/dashboard/TodayStatusRow";
@@ -152,6 +153,14 @@ const Dashboard = () => {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr_1fr]">
+        <BodyMeasurementsCard
+          loading={snapshot.coreLoading}
+          latest={core?.latestMeasurement ?? null}
+          previous={core?.previousMeasurement ?? null}
+          latestWeight={core?.latestMeasurementWeight ?? null}
+          waistComparison={core?.waistComparison ?? { deltaCm: null, label: "Sin referencia previa", referenceDateKey: null }}
+          goalDirection={core?.goal?.goal_direction ?? null}
+        />
         <TacticalNotesCard
           loading={snapshot.coreLoading}
           todayNote={core?.noteToday ?? null}

@@ -16,6 +16,11 @@ export type GuestWeightGoal = {
   goal_direction: "lose" | "gain" | "maintain" | null;
 };
 
+export type WeightReference = {
+  entry: BodyMetricEntry | null;
+  source: "closest_on_or_before" | "latest_available" | null;
+};
+
 export type UpsertBodyMetricInput = {
   userId: string | null;
   isGuest?: boolean;
@@ -162,6 +167,29 @@ export const saveGuestWeightGoal = (goal: GuestWeightGoal) => {
 
 const toAsc = (entries: BodyMetricEntry[]) => [...entries].sort((a, b) => a.measured_at.localeCompare(b.measured_at));
 
+export const resolveWeightReferenceFromEntries = (
+  entries: BodyMetricEntry[],
+  targetDateKey: string,
+): WeightReference => {
+  const sortedEntries = toAsc(entries);
+  if (sortedEntries.length === 0) {
+    return { entry: null, source: null };
+  }
+
+  const candidates = sortedEntries.filter((entry) => entry.measured_at <= targetDateKey);
+  if (candidates.length > 0) {
+    return {
+      entry: candidates[candidates.length - 1],
+      source: "closest_on_or_before",
+    };
+  }
+
+  return {
+    entry: sortedEntries[sortedEntries.length - 1],
+    source: "latest_available",
+  };
+};
+
 export const getAllBodyMetrics = async (userId: string | null, isGuest = false): Promise<BodyMetricEntry[]> => {
   if (isGuest) return toAsc(getGuestBodyMetrics());
   return listBodyMetricsByRange(userId, "all", isGuest);
@@ -188,6 +216,16 @@ export const getWeightClosestTo = async (
   const candidates = entries.filter((entry) => entry.measured_at <= key);
   if (candidates.length > 0) return candidates[candidates.length - 1];
   return entries[0];
+};
+
+export const getWeightReferenceForDate = async (
+  userId: string | null,
+  targetDate: Date,
+  isGuest = false,
+): Promise<WeightReference> => {
+  const entries = await getAllBodyMetrics(userId, isGuest);
+  const key = targetDate.toISOString().slice(0, 10);
+  return resolveWeightReferenceFromEntries(entries, key);
 };
 
 export const getBodyWeightSnapshot = async (userId: string | null, isGuest = false) => {

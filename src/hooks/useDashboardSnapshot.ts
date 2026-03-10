@@ -3,10 +3,17 @@ import { useQuery } from "@tanstack/react-query";
 import { addDays, endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from "date-fns";
 
 import { useAuth } from "@/context/AuthContext";
+import { deriveMeasurementSummary, filterMeasurementsByRangePreset } from "@/features/bodyMeasurements/measurementInsights";
 import { DEFAULT_WATER_TIMEZONE, getDateKeyForTimezone } from "@/features/water/waterUtils";
-import { getBodyWeightSnapshot, getGuestBodyMetrics, getWeightTrendAnalysis, listBodyMetricsByRange } from "@/services/bodyMetrics";
+import {
+  getBodyWeightSnapshot,
+  getGuestBodyMetrics,
+  getWeightTrendAnalysis,
+  listBodyMetricsByRange,
+  resolveWeightReferenceFromEntries,
+} from "@/services/bodyMetrics";
 import { getBiofeedbackRange, getDailyBiofeedback } from "@/services/dailyBiofeedback";
-import { getBodyMeasurementsRange, getLatestBodyMeasurement } from "@/services/bodyMeasurements";
+import { listBodyMeasurements } from "@/services/bodyMeasurements";
 import { getDailyNote, getLatestDailyNote, listDailyNotesByRange, upsertDailyNote } from "@/services/dailyNotes";
 import { getNutritionRangeSummary } from "@/services/nutrition";
 import { getGoalProgress, getUserGoal } from "@/services/goals";
@@ -118,9 +125,6 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
     queryFn: async () => {
       const sevenDaysAgo = new Date(today);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-      const thirtyDaysAgo = new Date(today);
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
-
       const [
         weightSnapshot,
         weightTrend,
@@ -133,8 +137,7 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
         bioToday,
         bio7d,
         notes7d,
-        latestMeasurement,
-        measurementRange,
+        allMeasurements,
         noteToday,
         noteLatest,
       ] = await Promise.all([
@@ -149,8 +152,7 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
         getDailyBiofeedback(userId, today, { isGuest, timeZone }),
         getBiofeedbackRange(userId, sevenDaysAgo, today, { isGuest, timeZone }),
         listDailyNotesByRange(userId, sevenDaysAgo, today, { isGuest, timeZone }),
-        getLatestBodyMeasurement(userId, { isGuest }),
-        getBodyMeasurementsRange(userId, thirtyDaysAgo, today, { isGuest, timeZone }),
+        listBodyMeasurements(userId, { isGuest }),
         getDailyNote(userId, today, { isGuest, timeZone }),
         getLatestDailyNote(userId, { isGuest }),
       ]);
@@ -187,16 +189,11 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
         activeDays7: activeDays7.size,
       });
 
-      const measurementRowsDesc = [...measurementRange].sort((a, b) => b.date_key.localeCompare(a.date_key));
-      const previousMeasurement = measurementRowsDesc.find((row) => row.id !== latestMeasurement?.id) ?? null;
-      const weekRefDate = new Date(today);
-      weekRefDate.setDate(weekRefDate.getDate() - 7);
-      const weekRefKey = formatDateKey(weekRefDate);
-      const weeklyReferenceMeasurement =
-        measurementRowsDesc.find((row) => row.date_key <= weekRefKey && row.id !== latestMeasurement?.id) ?? previousMeasurement;
-      const weeklyWaistDeltaCm =
-        latestMeasurement && weeklyReferenceMeasurement
-          ? Number((Number(latestMeasurement.waist_cm) - Number(weeklyReferenceMeasurement.waist_cm)).toFixed(1))
+      const measurementSummary = deriveMeasurementSummary(allMeasurements);
+      const measurementRange = filterMeasurementsByRangePreset(allMeasurements, "30d");
+      const latestMeasurementWeight =
+        measurementSummary.latest !== null
+          ? resolveWeightReferenceFromEntries(weightSnapshot.entries, measurementSummary.latest.date_key).entry
           : null;
 
       return {
@@ -219,10 +216,11 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
         notes7d,
         activeDays7: activeDays7.size,
         recovery,
-        latestMeasurement,
+        latestMeasurement: measurementSummary.latest,
+        latestMeasurementWeight: latestMeasurementWeight ? Number(latestMeasurementWeight.weight_kg) : null,
         measurementRange,
-        previousMeasurement,
-        weeklyWaistDeltaCm,
+        previousMeasurement: measurementSummary.previous,
+        waistComparison: measurementSummary.waistComparison,
         noteToday,
         noteLatest,
       };

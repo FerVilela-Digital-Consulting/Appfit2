@@ -17,7 +17,8 @@ import {
 } from "@/services/bodyMetrics";
 import { getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
 import { getBiofeedbackRange, getBiofeedbackWeeklyAverages } from "@/services/dailyBiofeedback";
-import { getBodyMeasurementsRange, getLatestBodyMeasurement } from "@/services/bodyMeasurements";
+import { deriveMeasurementSummary, filterMeasurementsByRangePreset } from "@/features/bodyMeasurements/measurementInsights";
+import { listBodyMeasurements } from "@/services/bodyMeasurements";
 import { getNutritionGoals, getNutritionRangeSummary } from "@/services/nutrition";
 import { getWeeklyReviewObservation, getWeeklyReviewSummary, upsertWeeklyReviewObservation } from "@/services/weeklyReview";
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
@@ -204,23 +205,14 @@ const Stats = () => {
     enabled: Boolean(user?.id) || isGuest,
   });
 
-  const { data: latestMeasurement } = useQuery({
-    queryKey: ["stats_latest_measurement", user?.id, isGuest],
-    queryFn: () => getLatestBodyMeasurement(user?.id ?? null, { isGuest }),
+  const { data: allBodyMeasurementRows = [] } = useQuery({
+    queryKey: ["body_measurements_all", user?.id, isGuest, "stats"],
+    queryFn: () => listBodyMeasurements(user?.id ?? null, { isGuest }),
     enabled: Boolean(user?.id) || isGuest,
   });
 
-  const { data: bodyMeasurementRows = [] } = useQuery({
-    queryKey: ["stats_measurements_range", user?.id, isGuest, timeZone],
-    queryFn: async () => {
-      const to = new Date();
-      to.setHours(0, 0, 0, 0);
-      const from = new Date(to);
-      from.setDate(from.getDate() - 180);
-      return getBodyMeasurementsRange(user?.id ?? null, from, to, { isGuest, timeZone });
-    },
-    enabled: Boolean(user?.id) || isGuest,
-  });
+  const latestMeasurement = useMemo(() => deriveMeasurementSummary(allBodyMeasurementRows).latest, [allBodyMeasurementRows]);
+  const bodyMeasurementRows = useMemo(() => filterMeasurementsByRangePreset(allBodyMeasurementRows, "180d"), [allBodyMeasurementRows]);
 
   const { data: weeklyReview } = useQuery({
     queryKey: ["stats_weekly_review", user?.id, isGuest, timeZone],
