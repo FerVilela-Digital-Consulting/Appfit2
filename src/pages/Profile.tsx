@@ -295,7 +295,7 @@ const Profile = () => {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[30px] border-border/60">
+        <Card className="rounded-[30px]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
@@ -304,12 +304,12 @@ const Profile = () => {
             <CardDescription>Resumen ejecutivo del plan actual.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="rounded-2xl border border-border/60 bg-background/50 p-4">
+            <div className="app-panel-block rounded-2xl p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Objetivo metabólico</p>
               <p className="mt-2 text-lg font-semibold">{selectedGoal?.label ?? "Mantener peso"}</p>
               <p className="text-sm text-muted-foreground">{selectedGoal?.description}</p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/50 p-4 text-sm">
+            <div className="app-panel-block rounded-2xl p-4 text-sm">
               <p>Sueño: {sleepGoalMinutes || "480"} min</p>
               <p>Calorías: {calorieGoal || "2000"} kcal</p>
               <p>Proteína: {proteinGoal || "150"} g</p>
@@ -353,7 +353,7 @@ const Profile = () => {
             />
 
             <div className="grid gap-6 xl:grid-cols-2">
-              <Card className="border-border/60 bg-background/40">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Objetivo de peso</CardTitle>
                   <CardDescription>Define la dirección, el peso meta y la fecha objetivo.</CardDescription>
@@ -388,7 +388,7 @@ const Profile = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-border/60 bg-background/40">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Metas metabólicas</CardTitle>
                   <CardDescription>Calorías, macros y sueño objetivo del plan.</CardDescription>
