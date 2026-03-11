@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startOfMonth } from "date-fns";
 import { CalendarDays, CheckCircle2, Crosshair, Dumbbell, Settings2, TimerReset } from "lucide-react";
@@ -41,6 +41,105 @@ import {
   getDashboardHomeWidgetPreferences,
   saveDashboardHomeWidgetPreferences,
 } from "@/services/dashboardHomePreferences";
+import { cn } from "@/lib/utils";
+
+type PackedDashboardCard = {
+  key: string;
+  preferredSpan: number;
+  minSpan: number;
+  node: ReactNode;
+};
+
+const DASHBOARD_GRID_COLUMNS = 12;
+
+const getDashboardSpanClass = (span: number) => {
+  switch (span) {
+    case 1:
+      return "xl:col-span-1";
+    case 2:
+      return "xl:col-span-2";
+    case 3:
+      return "xl:col-span-3";
+    case 4:
+      return "xl:col-span-4";
+    case 5:
+      return "xl:col-span-5";
+    case 6:
+      return "xl:col-span-6";
+    case 7:
+      return "xl:col-span-7";
+    case 8:
+      return "xl:col-span-8";
+    case 9:
+      return "xl:col-span-9";
+    case 10:
+      return "xl:col-span-10";
+    case 11:
+      return "xl:col-span-11";
+    default:
+      return "xl:col-span-12";
+  }
+};
+
+const normalizeDashboardRow = (row: PackedDashboardCard[]) => {
+  if (row.length === 1) return [{ ...row[0], span: DASHBOARD_GRID_COLUMNS }];
+
+  const baseSpans = row.map((item) => Math.min(item.minSpan, DASHBOARD_GRID_COLUMNS));
+  let usedColumns = baseSpans.reduce((sum, span) => sum + span, 0);
+  let remainingColumns = Math.max(DASHBOARD_GRID_COLUMNS - usedColumns, 0);
+  const weights = row.map((item, index) => Math.max(item.preferredSpan - baseSpans[index], 0));
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  const assigned = [...baseSpans];
+
+  if (remainingColumns > 0 && totalWeight > 0) {
+    const fractional = row.map((_, index) => {
+      const rawShare = (weights[index] / totalWeight) * remainingColumns;
+      const whole = Math.floor(rawShare);
+      assigned[index] += whole;
+      return { index, remainder: rawShare - whole };
+    });
+
+    remainingColumns = DASHBOARD_GRID_COLUMNS - assigned.reduce((sum, span) => sum + span, 0);
+    fractional
+      .sort((a, b) => b.remainder - a.remainder)
+      .slice(0, remainingColumns)
+      .forEach(({ index }) => {
+        assigned[index] += 1;
+      });
+  } else {
+    let cursor = 0;
+    while (remainingColumns > 0) {
+      assigned[cursor % assigned.length] += 1;
+      remainingColumns -= 1;
+      cursor += 1;
+    }
+  }
+
+  return row.map((item, index) => ({ ...item, span: assigned[index] }));
+};
+
+const packDashboardRows = (cards: PackedDashboardCard[]) => {
+  const rows: Array<Array<PackedDashboardCard & { span: number }>> = [];
+  let currentRow: PackedDashboardCard[] = [];
+  let currentWidth = 0;
+
+  cards.forEach((card) => {
+    if (currentRow.length > 0 && currentWidth + card.preferredSpan > DASHBOARD_GRID_COLUMNS) {
+      rows.push(normalizeDashboardRow(currentRow));
+      currentRow = [];
+      currentWidth = 0;
+    }
+
+    currentRow.push(card);
+    currentWidth += card.preferredSpan;
+  });
+
+  if (currentRow.length > 0) {
+    rows.push(normalizeDashboardRow(currentRow));
+  }
+
+  return rows;
+};
 
 const Dashboard = () => {
   const queryClient = useQueryClient();
@@ -184,24 +283,249 @@ const Dashboard = () => {
     () => [isWidgetVisible("hero_recovery"), isWidgetVisible("hero_focus")].some(Boolean),
     [selectedWidgetKeys],
   );
-  const visiblePrimaryWidgets = useMemo(
-    () => [isWidgetVisible("physical_progress"), isWidgetVisible("quick_actions")].some(Boolean),
-    [selectedWidgetKeys],
-  );
   const visibleStatusRow = isWidgetVisible("status_row");
-  const visibleDailyColumns = useMemo(
-    () => [isWidgetVisible("nutrition"), isWidgetVisible("water"), isWidgetVisible("weight"), isWidgetVisible("sleep"), isWidgetVisible("biofeedback")].some(Boolean),
-    [selectedWidgetKeys],
-  );
-  const visibleFooterWidgets = useMemo(
-    () => [isWidgetVisible("body_measurements"), isWidgetVisible("notes"), isWidgetVisible("recovery_card"), isWidgetVisible("calendar")].some(Boolean),
-    [selectedWidgetKeys],
-  );
+  const mainCards = useMemo(() => {
+    const cards: PackedDashboardCard[] = [];
+
+    if (isWidgetVisible("physical_progress")) {
+      cards.push({
+        key: "physical_progress",
+        preferredSpan: 8,
+        minSpan: 6,
+        node: <PhysicalProgressHub loading={snapshot.coreLoading} summary={core?.physicalSummary ?? null} />,
+      });
+    }
+
+    const quickActionsVisible = isWidgetVisible("quick_actions");
+    const physicalProgressVisible = isWidgetVisible("physical_progress");
+    const nutritionVisible = isWidgetVisible("nutrition");
+
+    if (quickActionsVisible && physicalProgressVisible) {
+      cards.push({
+        key: "quick_actions",
+        preferredSpan: 4,
+        minSpan: 4,
+        node: (
+          <DashboardQuickActions
+            nextActionLabel={nextActionLabel}
+            nutritionSummary={
+              core?.nutritionToday
+                ? {
+                    profileName: core.nutritionToday.selectedProfile?.name ?? core.nutritionToday.dailyLog?.profile_name_snapshot ?? "Sin perfil",
+                    archetypeLabel: NUTRITION_ARCHETYPE_META[core.nutritionToday.targetBreakdown.dayArchetype].label,
+                    targetCalories: core.nutritionToday.goals.calorie_goal,
+                    consumedCalories: core.nutritionToday.totals.calories,
+                    proteinGoal: core.nutritionToday.goals.protein_goal_g,
+                    carbsGoal: core.nutritionToday.goals.carb_goal_g,
+                    fatGoal: core.nutritionToday.goals.fat_goal_g,
+                  }
+                : null
+            }
+          />
+        ),
+      });
+    }
+
+    if (nutritionVisible) {
+      cards.push({
+        key: "nutrition",
+        preferredSpan: 8,
+        minSpan: 6,
+        node: (
+          <section id="nutrition" className="min-w-0">
+            <TodayMealsModule />
+          </section>
+        ),
+      });
+    }
+
+    if (quickActionsVisible && !physicalProgressVisible) {
+      cards.push({
+        key: "quick_actions",
+        preferredSpan: 4,
+        minSpan: 4,
+        node: (
+          <DashboardQuickActions
+            nextActionLabel={nextActionLabel}
+            nutritionSummary={
+              core?.nutritionToday
+                ? {
+                    profileName: core.nutritionToday.selectedProfile?.name ?? core.nutritionToday.dailyLog?.profile_name_snapshot ?? "Sin perfil",
+                    archetypeLabel: NUTRITION_ARCHETYPE_META[core.nutritionToday.targetBreakdown.dayArchetype].label,
+                    targetCalories: core.nutritionToday.goals.calorie_goal,
+                    consumedCalories: core.nutritionToday.totals.calories,
+                    proteinGoal: core.nutritionToday.goals.protein_goal_g,
+                    carbsGoal: core.nutritionToday.goals.carb_goal_g,
+                    fatGoal: core.nutritionToday.goals.fat_goal_g,
+                  }
+                : null
+            }
+          />
+        ),
+      });
+    }
+
+    if (isWidgetVisible("water")) {
+      cards.push({
+        key: "water",
+        preferredSpan: 6,
+        minSpan: 4,
+        node: (
+          <section id="water" className="min-w-0">
+            <WaterCard showHistoryButton={false} />
+          </section>
+        ),
+      });
+    }
+
+    if (isWidgetVisible("biofeedback")) {
+      cards.push({
+        key: "biofeedback",
+        preferredSpan: 6,
+        minSpan: 4,
+        node: (
+          <section id="biofeedback" className="min-w-0">
+            <TodayBiofeedbackModule />
+          </section>
+        ),
+      });
+    }
+
+    if (isWidgetVisible("weight")) {
+      cards.push({
+        key: "weight",
+        preferredSpan: 4,
+        minSpan: 4,
+        node: (
+          <section id="weight" className="min-w-0">
+            <TodayWeightModule />
+          </section>
+        ),
+      });
+    }
+
+    if (isWidgetVisible("sleep")) {
+      cards.push({
+        key: "sleep",
+        preferredSpan: 4,
+        minSpan: 4,
+        node: (
+          <section id="sleep" className="min-w-0">
+            <SleepCard />
+          </section>
+        ),
+      });
+    }
+
+    return cards;
+  }, [core?.nutritionToday, core?.physicalSummary, isWidgetVisible, nextActionLabel, snapshot.coreLoading]);
+
+  const insightCards = useMemo(() => {
+    const cards: PackedDashboardCard[] = [];
+
+    if (isWidgetVisible("body_measurements")) {
+      cards.push({
+        key: "body_measurements",
+        preferredSpan: 6,
+        minSpan: 4,
+        node: (
+          <BodyMeasurementsCard
+            loading={snapshot.coreLoading}
+            latest={core?.latestMeasurement ?? null}
+            previous={core?.previousMeasurement ?? null}
+            latestWeight={core?.latestMeasurementWeight ?? null}
+            waistComparison={core?.waistComparison ?? { deltaCm: null, label: "Sin referencia previa", referenceDateKey: null }}
+            goalDirection={core?.goal?.goal_direction ?? null}
+          />
+        ),
+      });
+    }
+
+    if (isWidgetVisible("notes")) {
+      cards.push({
+        key: "notes",
+        preferredSpan: 6,
+        minSpan: 4,
+        node: (
+          <TacticalNotesCard
+            loading={snapshot.coreLoading}
+            todayNote={core?.noteToday ?? null}
+            latestNote={core?.noteLatest ?? null}
+            onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
+          />
+        ),
+      });
+    }
+
+    if (isWidgetVisible("recovery_card")) {
+      cards.push({
+        key: "recovery_card",
+        preferredSpan: 6,
+        minSpan: 4,
+        node: (
+          <RecoveryCard
+            loading={snapshot.coreLoading}
+            score={core?.recovery.score ?? 0}
+            status={core?.recovery.status ?? "Recuperacion moderada"}
+            drivers={core?.recovery.drivers ?? []}
+            subscores={
+              core?.recovery.subscores ?? {
+                sleep: 0,
+                biofeedback: 0,
+                hydration: 0,
+                consistency: 0,
+              }
+            }
+          />
+        ),
+      });
+    }
+
+    if (isWidgetVisible("calendar")) {
+      cards.push({
+        key: "calendar",
+        preferredSpan: 6,
+        minSpan: 4,
+        node: (
+          <CalendarMiniWidget
+            month={currentMonth}
+            onMonthChange={setCurrentMonth}
+            activity={snapshot.monthActivity}
+            loading={snapshot.monthActivityLoading}
+          />
+        ),
+      });
+    }
+
+    return cards;
+  }, [
+    core?.goal?.goal_direction,
+    core?.latestMeasurement,
+    core?.latestMeasurementWeight,
+    core?.noteLatest,
+    core?.noteToday,
+    core?.previousMeasurement,
+    core?.recovery.drivers,
+    core?.recovery.score,
+    core?.recovery.status,
+    core?.recovery.subscores,
+    core?.waistComparison,
+    currentMonth,
+    isWidgetVisible,
+    saveNoteMutation,
+    snapshot.coreLoading,
+    snapshot.monthActivity,
+    snapshot.monthActivityLoading,
+    setCurrentMonth,
+  ]);
+
+  const packedMainRows = useMemo(() => packDashboardRows(mainCards), [mainCards]);
+  const packedInsightRows = useMemo(() => packDashboardRows(insightCards), [insightCards]);
 
   return (
     <div className="space-y-6 py-4">
       <Card className="app-surface-hero overflow-hidden rounded-[32px]">
-        <CardContent className="grid gap-6 p-6 xl:grid-cols-[1.5fr_0.9fr]">
+        <CardContent className={cn("grid gap-6 p-6", visibleRightCards && "xl:grid-cols-[1.5fr_0.9fr]")}>
           <div className="space-y-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="space-y-3">
@@ -401,30 +725,6 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {visiblePrimaryWidgets ? (
-        <div className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
-          {isWidgetVisible("physical_progress") ? <PhysicalProgressHub loading={snapshot.coreLoading} summary={core?.physicalSummary ?? null} /> : null}
-          {isWidgetVisible("quick_actions") ? (
-            <DashboardQuickActions
-              nextActionLabel={nextActionLabel}
-              nutritionSummary={
-                core?.nutritionToday
-                  ? {
-                      profileName: core.nutritionToday.selectedProfile?.name ?? core.nutritionToday.dailyLog?.profile_name_snapshot ?? "Sin perfil",
-                      archetypeLabel: NUTRITION_ARCHETYPE_META[core.nutritionToday.targetBreakdown.dayArchetype].label,
-                      targetCalories: core.nutritionToday.goals.calorie_goal,
-                      consumedCalories: core.nutritionToday.totals.calories,
-                      proteinGoal: core.nutritionToday.goals.protein_goal_g,
-                      carbsGoal: core.nutritionToday.goals.carb_goal_g,
-                      fatGoal: core.nutritionToday.goals.fat_goal_g,
-                    }
-                  : null
-              }
-            />
-          ) : null}
-        </div>
-      ) : null}
-
       {visibleStatusRow ? (
         <TodayStatusRow
           loading={snapshot.coreLoading}
@@ -438,84 +738,31 @@ const Dashboard = () => {
         />
       ) : null}
 
-      {visibleDailyColumns ? (
-        <div className="grid gap-4 xl:grid-cols-[1.55fr_1fr] xl:items-start">
-          {isWidgetVisible("nutrition") ? (
-            <section id="nutrition" className="min-w-0">
-              <TodayMealsModule />
-            </section>
-          ) : null}
-          {(isWidgetVisible("water") || isWidgetVisible("weight") || isWidgetVisible("sleep") || isWidgetVisible("biofeedback")) ? (
-            <div className="grid gap-4 xl:grid-cols-2">
-              {isWidgetVisible("water") ? (
-                <section id="water" className="xl:col-span-2">
-                  <WaterCard showHistoryButton={false} />
-                </section>
-              ) : null}
-              {isWidgetVisible("weight") ? (
-                <section id="weight">
-                  <TodayWeightModule />
-                </section>
-              ) : null}
-              {isWidgetVisible("sleep") ? (
-                <section id="sleep">
-                  <SleepCard />
-                </section>
-              ) : null}
-              {isWidgetVisible("biofeedback") ? (
-                <section id="biofeedback" className="xl:col-span-2">
-                  <TodayBiofeedbackModule />
-                </section>
-              ) : null}
+      {packedMainRows.length > 0 ? (
+        <div className="space-y-4">
+          {packedMainRows.map((row, rowIndex) => (
+            <div key={`main-row-${rowIndex}`} className="grid gap-4 xl:grid-cols-12 xl:items-start">
+              {row.map((card) => (
+                <div key={card.key} className={cn("min-w-0", getDashboardSpanClass(card.span))}>
+                  {card.node}
+                </div>
+              ))}
             </div>
-          ) : null}
+          ))}
         </div>
       ) : null}
 
-      {visibleFooterWidgets ? (
-        <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr_1fr]">
-          {isWidgetVisible("body_measurements") ? (
-            <BodyMeasurementsCard
-              loading={snapshot.coreLoading}
-              latest={core?.latestMeasurement ?? null}
-              previous={core?.previousMeasurement ?? null}
-              latestWeight={core?.latestMeasurementWeight ?? null}
-              waistComparison={core?.waistComparison ?? { deltaCm: null, label: "Sin referencia previa", referenceDateKey: null }}
-              goalDirection={core?.goal?.goal_direction ?? null}
-            />
-          ) : null}
-          {isWidgetVisible("notes") ? (
-            <TacticalNotesCard
-              loading={snapshot.coreLoading}
-              todayNote={core?.noteToday ?? null}
-              latestNote={core?.noteLatest ?? null}
-              onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
-            />
-          ) : null}
-          {isWidgetVisible("recovery_card") ? (
-            <RecoveryCard
-              loading={snapshot.coreLoading}
-              score={core?.recovery.score ?? 0}
-              status={core?.recovery.status ?? "Recuperacion moderada"}
-              drivers={core?.recovery.drivers ?? []}
-              subscores={
-                core?.recovery.subscores ?? {
-                  sleep: 0,
-                  biofeedback: 0,
-                  hydration: 0,
-                  consistency: 0,
-                }
-              }
-            />
-          ) : null}
-          {isWidgetVisible("calendar") ? (
-            <CalendarMiniWidget
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              activity={snapshot.monthActivity}
-              loading={snapshot.monthActivityLoading}
-            />
-          ) : null}
+      {packedInsightRows.length > 0 ? (
+        <div className="space-y-4">
+          {packedInsightRows.map((row, rowIndex) => (
+            <div key={`insight-row-${rowIndex}`} className="grid gap-4 xl:grid-cols-12 xl:items-start">
+              {row.map((card) => (
+                <div key={card.key} className={cn("min-w-0", getDashboardSpanClass(card.span))}>
+                  {card.node}
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       ) : null}
     </div>
