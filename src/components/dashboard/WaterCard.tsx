@@ -113,6 +113,8 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
       queryClient.invalidateQueries({ queryKey: ["water_logs_day", user?.id, dayKey] });
       queryClient.invalidateQueries({ queryKey: ["water_week_summary", user?.id, dayKey] });
       queryClient.invalidateQueries({ queryKey: ["water_range", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] });
+      queryClient.invalidateQueries({ queryKey: ["calendar_data"] });
     },
   });
 
@@ -123,6 +125,8 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
       queryClient.invalidateQueries({ queryKey: ["water_logs_day", user?.id, dayKey] });
       queryClient.invalidateQueries({ queryKey: ["water_week_summary", user?.id, dayKey] });
       queryClient.invalidateQueries({ queryKey: ["water_range", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] });
+      queryClient.invalidateQueries({ queryKey: ["calendar_data"] });
     },
   });
 
@@ -133,6 +137,8 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
       queryClient.invalidateQueries({ queryKey: ["water_logs_day", user?.id, dayKey] });
       queryClient.invalidateQueries({ queryKey: ["water_week_summary", user?.id, dayKey] });
       queryClient.invalidateQueries({ queryKey: ["water_range", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] });
+      queryClient.invalidateQueries({ queryKey: ["calendar_data"] });
       toast.success("Se reinicio el conteo de hoy.");
     },
   });
@@ -145,6 +151,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
         water_quick_options_ml: prev?.water_quick_options_ml ?? DEFAULT_WATER_PRESETS_ML,
       }));
       queryClient.invalidateQueries({ queryKey: ["water_week_summary", user?.id, dayKey] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] });
       toast.success("Meta de agua actualizada.");
     },
     onError: (error: any) => toast.error(error?.message || "No se pudo actualizar la meta."),
