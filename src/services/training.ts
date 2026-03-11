@@ -1,5 +1,6 @@
 import { DEFAULT_WATER_TIMEZONE, getDateKeyForTimezone } from "@/features/water/waterUtils";
 import { DAY_LABELS, DEFAULT_EXERCISE_SEEDS, DEFAULT_TEMPLATE_SEEDS } from "@/features/training/catalog";
+import { createClientId } from "@/lib/id";
 import { supabase } from "@/services/supabaseClient";
 import type {
   ActiveWorkoutExercise,
@@ -359,7 +360,7 @@ export const saveCustomExercise = async (
 ) => {
   validateExerciseInput(input);
   const payload: ExerciseRecord = {
-    id: input.id ?? crypto.randomUUID(),
+    id: input.id ?? createClientId(),
     name: input.name.trim(),
     muscle_group: input.muscle_group,
     secondary_muscles: input.secondary_muscles ?? [],
@@ -486,7 +487,7 @@ export const saveWorkout = async (userId: string | null, input: SaveWorkoutInput
 
   if (options?.isGuest) {
     const state = readGuestState();
-    const workoutId = input.id ?? crypto.randomUUID();
+    const workoutId = input.id ?? createClientId();
     const now = new Date().toISOString();
     const existing = state.workouts.find((row) => row.id === workoutId);
     const workout: WorkoutRecord = {
@@ -503,7 +504,7 @@ export const saveWorkout = async (userId: string | null, input: SaveWorkoutInput
       workoutExercises: [
         ...state.workoutExercises.filter((row) => row.workout_id !== workoutId),
         ...input.exercises.map((row) => ({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           workout_id: workoutId,
           exercise_id: row.exercise_id,
           order_index: row.order_index,
@@ -519,7 +520,7 @@ export const saveWorkout = async (userId: string | null, input: SaveWorkoutInput
   }
   if (!userId) throw new Error("No se encontro el usuario.");
 
-  const workoutId = input.id ?? crypto.randomUUID();
+  const workoutId = input.id ?? createClientId();
   try {
     const { data, error } = await supabase.rpc("save_workout_with_exercises", {
       p_user_id: userId,
@@ -667,7 +668,7 @@ export const saveWorkoutScheduleDay = async (
     const state = readGuestState();
     const existing = state.schedule.find((row) => row.day_of_week === dayOfWeek);
     const nextRow: WorkoutScheduleRecord = {
-      id: existing?.id ?? crypto.randomUUID(),
+      id: existing?.id ?? createClientId(),
       user_id: userId ?? "guest",
       day_of_week: dayOfWeek,
       workout_id: workoutId,
@@ -856,7 +857,7 @@ export const startWorkoutSession = async (userId: string | null, workoutId: stri
   if (options?.isGuest) {
     const state = readGuestState();
     const next: WorkoutSessionRecord = {
-      id: crypto.randomUUID(),
+      id: createClientId(),
       user_id: userId ?? "guest",
       workout_id: workoutId,
       started_at: new Date().toISOString(),
@@ -911,7 +912,7 @@ export const upsertExerciseSet = async (userId: string | null, input: UpsertExer
     throw new Error("La nota de la serie es demasiado larga.");
   }
   const payload: ExerciseSetRecord = {
-    id: crypto.randomUUID(),
+    id: createClientId(),
     session_id: input.session_id,
     exercise_id: input.exercise_id,
     set_number: input.set_number,
@@ -998,7 +999,7 @@ export const upsertSessionExerciseNote = async (
     const state = readGuestState();
     const existing = state.sessionNotes.find((row) => row.session_id === sessionId && row.exercise_id === exerciseId);
     const next: SessionExerciseNoteRecord = {
-      id: existing?.id ?? crypto.randomUUID(),
+      id: existing?.id ?? createClientId(),
       session_id: sessionId,
       exercise_id: exerciseId,
       notes,
@@ -1062,7 +1063,7 @@ const evaluateSessionPrs = async (userId: string | null, detail: WorkoutSessionD
     const current = existingMap.get(key);
     if (current && current.value_num >= metric.value_num) return;
     newPrs.push({
-      id: current?.id ?? crypto.randomUUID(),
+      id: current?.id ?? createClientId(),
       user_id: userId ?? "guest",
       exercise_id: metric.exercise_id,
       pr_type: metric.pr_type,

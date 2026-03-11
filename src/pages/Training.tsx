@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -28,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { DAY_LABELS, DIFFICULTY_LABELS, EQUIPMENT_LABELS, MOVEMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/features/training/catalog";
+import { createClientId } from "@/lib/id";
 import {
   deleteExerciseSet,
   deleteWorkout,
@@ -1051,6 +1052,9 @@ const Training = () => {
         <DialogContent className="max-w-5xl">
           <DialogHeader>
             <DialogTitle>{editingWorkoutId ? copy.editRoutine : copy.createRoutine}</DialogTitle>
+            <DialogDescription>
+              Define el nombre, la descripcion y los ejercicios que formaran parte de la rutina.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-5 xl:grid-cols-[0.95fr_1.2fr]">
             <div className="space-y-4">
@@ -1071,7 +1075,7 @@ const Training = () => {
                 <Button variant="outline" onClick={() => {
                   const exercise = exerciseLibrary.find((row) => row.id === exercisePickerId);
                   if (!exercise) return;
-                  setWorkoutExercises((current) => [...current, { clientId: crypto.randomUUID(), exercise_id: exercise.id, order_index: current.length, target_sets: 3, target_reps: "8-10", rest_seconds: 90, notes: "", exercise }]);
+                  setWorkoutExercises((current) => [...current, { clientId: createClientId(), exercise_id: exercise.id, order_index: current.length, target_sets: 3, target_reps: "8-10", rest_seconds: 90, notes: "", exercise }]);
                   setExercisePickerId("");
                 }} disabled={!exercisePickerId}>
                   <CirclePlus className="mr-2 h-4 w-4" />
@@ -1123,6 +1127,9 @@ const Training = () => {
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{copy.createCustomExercise}</DialogTitle>
+            <DialogDescription>
+              Guarda un ejercicio personalizado para reutilizarlo en la biblioteca y en tus rutinas.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
