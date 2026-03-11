@@ -80,7 +80,7 @@ const SleepCard = () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["sleep_day"] }),
         queryClient.invalidateQueries({ queryKey: ["sleep_range"] }),
-        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
         queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
       ]);
     },

@@ -90,7 +90,8 @@ const BodyWeight = () => {
           queryClient.invalidateQueries({ queryKey: ["nutrition_target_breakdown"] }),
           queryClient.invalidateQueries({ queryKey: ["stats_nutrition_goals"] }),
           queryClient.invalidateQueries({ queryKey: ["dashboard_tremor_nutrition_7d"] }),
-          queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
+          queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
           queryClient.invalidateQueries({ queryKey: ["stats"] }),
         ]);
       }
@@ -111,7 +112,8 @@ const BodyWeight = () => {
           queryClient.invalidateQueries({ queryKey: ["nutrition_target_breakdown"] }),
           queryClient.invalidateQueries({ queryKey: ["stats_nutrition_goals"] }),
           queryClient.invalidateQueries({ queryKey: ["dashboard_tremor_nutrition_7d"] }),
-          queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
+          queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
           queryClient.invalidateQueries({ queryKey: ["stats"] }),
         ]);
       }
@@ -177,7 +179,8 @@ const BodyWeight = () => {
           queryClient.invalidateQueries({ queryKey: ["nutrition_target_breakdown"] }),
           queryClient.invalidateQueries({ queryKey: ["stats_nutrition_goals"] }),
           queryClient.invalidateQueries({ queryKey: ["dashboard_tremor_nutrition_7d"] }),
-          queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
+          queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
           queryClient.invalidateQueries({ queryKey: ["stats"] }),
         ]);
         toast.info("Modo invitado: los registros de peso no se guardarán en tu cuenta.");
@@ -224,7 +227,8 @@ const BodyWeight = () => {
           queryClient.invalidateQueries({ queryKey: ["nutrition_target_breakdown"] }),
           queryClient.invalidateQueries({ queryKey: ["stats_nutrition_goals"] }),
           queryClient.invalidateQueries({ queryKey: ["dashboard_tremor_nutrition_7d"] }),
-          queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+          queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
+          queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
           queryClient.invalidateQueries({ queryKey: ["stats"] }),
         ]);
       } else {
