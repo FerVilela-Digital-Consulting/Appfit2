@@ -53,10 +53,11 @@ import {
   upsertExerciseSet,
   upsertSessionExerciseNote,
 } from "@/services/training";
-import type { ExerciseFilterInput, ExerciseRecord, SaveExerciseInput, SaveWorkoutInput } from "@/types/training";
+import type { ExerciseFilterInput, ExerciseRecord, SaveExerciseInput, SaveWorkoutInput, WorkoutDetail } from "@/types/training";
 
 type WorkoutExerciseDraft = SaveWorkoutInput["exercises"][number] & { clientId: string; exercise?: ExerciseRecord };
 type SetDraft = { weight: string; reps: string; rir: string; notes: string; completed: boolean };
+const MAX_ROUTINE_PREVIEW_EXERCISES = 4;
 
 const defaultExerciseForm: SaveExerciseInput = {
   name: "",
@@ -123,6 +124,9 @@ const TRAINING_COPY = {
     newRoutine: "New",
     noRoutines: "You do not have routines yet.",
     noDescription: "No description",
+    routineExercises: "Exercises",
+    noRoutineExercises: "No exercises",
+    moreExercisesSuffix: "more",
     start: "Start",
     edit: "Edit",
     delete: "Delete",
@@ -215,6 +219,9 @@ const TRAINING_COPY = {
     newRoutine: "Nueva",
     noRoutines: "Aun no tienes rutinas.",
     noDescription: "Sin descripcion",
+    routineExercises: "Ejercicios",
+    noRoutineExercises: "Sin ejercicios",
+    moreExercisesSuffix: "mas",
     start: "Iniciar",
     edit: "Editar",
     delete: "Eliminar",
@@ -322,6 +329,14 @@ const Training = () => {
   const exercisePrsQuery = useQuery({ queryKey: ["training", "exercise-prs", userId, selectedExerciseId, isGuest], queryFn: () => getExercisePrs(userId, selectedExerciseId!, options), enabled: Boolean(selectedExerciseId) && (Boolean(userId) || isGuest) });
 
   const workouts = workoutsQuery.data ?? [];
+  const workoutDetailsQuery = useQuery({
+    queryKey: ["training", "workout-previews", userId, isGuest, workouts.map((workout) => workout.id).join(",")],
+    queryFn: async () => {
+      const details = await Promise.all(workouts.map((workout) => getWorkoutDetail(userId, workout.id, options)));
+      return details.filter((detail): detail is WorkoutDetail => Boolean(detail));
+    },
+    enabled: (Boolean(userId) || isGuest) && workouts.length > 0,
+  });
   const templates = templatesQuery.data ?? [];
   const schedule = scheduleQuery.data ?? [];
   const today = todayQuery.data;
@@ -332,6 +347,13 @@ const Training = () => {
   const isTrainingLoading = trainingQueries.some((query) => query.isLoading);
   const trainingError = trainingQueries.find((query) => query.error)?.error ?? null;
   const formatExerciseName = (exercise: ExerciseRecord) => getLocalizedText(exercise.name_i18n, language, exercise.name);
+  const workoutDetailsMap = useMemo(() => new Map((workoutDetailsQuery.data ?? []).map((detail) => [detail.id, detail])), [workoutDetailsQuery.data]);
+  const getWorkoutPreviewText = (workoutId: string) => {
+    const exercises = workoutDetailsMap.get(workoutId)?.exercises ?? [];
+    if (exercises.length === 0) return copy.noRoutineExercises;
+    const names = exercises.slice(0, MAX_ROUTINE_PREVIEW_EXERCISES).map((row) => formatExerciseName(row.exercise));
+    return exercises.length > MAX_ROUTINE_PREVIEW_EXERCISES ? `${names.join(" | ")} +${exercises.length - MAX_ROUTINE_PREVIEW_EXERCISES} ${copy.moreExercisesSuffix}` : names.join(" | ");
+  };
 
   useEffect(() => {
     if (!selectedExerciseId && exerciseLibrary[0]?.id) setSelectedExerciseId(exerciseLibrary[0].id);
@@ -857,6 +879,10 @@ const Training = () => {
                       <div>
                         <div className="text-lg font-semibold">{workout.name}</div>
                         <div className="text-sm text-muted-foreground">{workout.description || copy.noDescription}</div>
+                        <div className="mt-3 rounded-xl border border-border/70 bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
+                          <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">{copy.routineExercises}</div>
+                          {getWorkoutPreviewText(workout.id)}
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" onClick={() => startSessionMutation.mutate(workout.id)} disabled={Boolean(activeSession) || startSessionMutation.isPending}><PlayCircle className="mr-2 h-4 w-4" />{copy.start}</Button>
