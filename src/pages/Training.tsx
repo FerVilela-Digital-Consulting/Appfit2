@@ -1095,9 +1095,33 @@ const Training = () => {
                     <Button variant="ghost" size="icon" onClick={() => setWorkoutExercises((current) => current.filter((row) => row.clientId !== exercise.clientId))}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
-                    <Input aria-label={copy.targetSets} value={String(exercise.target_sets)} onChange={(event) => setWorkoutExercises((current) => current.map((row) => row.clientId === exercise.clientId ? { ...row, target_sets: Math.max(1, toNumber(event.target.value)) } : row))} />
-                    <Input aria-label={copy.targetReps} value={exercise.target_reps} onChange={(event) => setWorkoutExercises((current) => current.map((row) => row.clientId === exercise.clientId ? { ...row, target_reps: event.target.value } : row))} />
-                    <Input value={String(exercise.rest_seconds)} onChange={(event) => setWorkoutExercises((current) => current.map((row) => row.clientId === exercise.clientId ? { ...row, rest_seconds: Math.max(0, toNumber(event.target.value)) } : row))} />
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Repeticiones</Label>
+                      <Input
+                        aria-label={copy.targetReps}
+                        placeholder="8-10"
+                        value={exercise.target_reps}
+                        onChange={(event) => setWorkoutExercises((current) => current.map((row) => row.clientId === exercise.clientId ? { ...row, target_reps: event.target.value } : row))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Series</Label>
+                      <Input
+                        aria-label={copy.targetSets}
+                        placeholder="3"
+                        value={String(exercise.target_sets)}
+                        onChange={(event) => setWorkoutExercises((current) => current.map((row) => row.clientId === exercise.clientId ? { ...row, target_sets: Math.max(1, toNumber(event.target.value)) } : row))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Descanso (s)</Label>
+                      <Input
+                        aria-label="Descanso en segundos"
+                        placeholder="90"
+                        value={String(exercise.rest_seconds)}
+                        onChange={(event) => setWorkoutExercises((current) => current.map((row) => row.clientId === exercise.clientId ? { ...row, rest_seconds: Math.max(0, toNumber(event.target.value)) } : row))}
+                      />
+                    </div>
                   </div>
                   <Textarea className="mt-3" value={exercise.notes ?? ""} onChange={(event) => setWorkoutExercises((current) => current.map((row) => row.clientId === exercise.clientId ? { ...row, notes: event.target.value } : row))} placeholder="Nota fija del ejercicio" />
                 </div>
