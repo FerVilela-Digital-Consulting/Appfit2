@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Activity, CheckCircle2, CirclePlus, Copy, PlayCircle, TimerReset, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useSearchParams } from "react-router-dom";
 
 import { useAuth } from "@/context/AuthContext";
 import { usePreferences } from "@/context/PreferencesContext";
@@ -58,6 +59,8 @@ import type { ExerciseFilterInput, ExerciseRecord, SaveExerciseInput, SaveWorkou
 type WorkoutExerciseDraft = SaveWorkoutInput["exercises"][number] & { clientId: string; exercise?: ExerciseRecord };
 type SetDraft = { weight: string; reps: string; rir: string; notes: string; completed: boolean };
 const MAX_ROUTINE_PREVIEW_EXERCISES = 4;
+const TRAINING_TABS = ["today", "routines", "library", "history", "progress"] as const;
+type TrainingTab = (typeof TRAINING_TABS)[number];
 
 const defaultExerciseForm: SaveExerciseInput = {
   name: "",
@@ -294,11 +297,14 @@ const Training = () => {
   const queryClient = useQueryClient();
   const { user, isGuest } = useAuth();
   const { language } = usePreferences();
+  const [searchParams, setSearchParams] = useSearchParams();
   const userId = user?.id ?? null;
   const options = useMemo(() => ({ isGuest, language }), [isGuest, language]);
   const copy = TRAINING_COPY[language];
+  const searchTab = searchParams.get("tab");
+  const initialTab = TRAINING_TABS.includes((searchTab ?? "") as TrainingTab) ? (searchTab as TrainingTab) : "today";
 
-  const [tab, setTab] = useState("today");
+  const [tab, setTab] = useState<TrainingTab>(initialTab);
   const [filters, setFilters] = useState<ExerciseFilterInput>({ search: "", muscleGroup: "all", equipment: "all", movementType: "all" });
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
   const [workoutDialogOpen, setWorkoutDialogOpen] = useState(false);
@@ -353,6 +359,21 @@ const Training = () => {
     if (exercises.length === 0) return copy.noRoutineExercises;
     const names = exercises.slice(0, MAX_ROUTINE_PREVIEW_EXERCISES).map((row) => formatExerciseName(row.exercise));
     return exercises.length > MAX_ROUTINE_PREVIEW_EXERCISES ? `${names.join(" | ")} +${exercises.length - MAX_ROUTINE_PREVIEW_EXERCISES} ${copy.moreExercisesSuffix}` : names.join(" | ");
+  };
+
+  useEffect(() => {
+    const nextTab = TRAINING_TABS.includes((searchTab ?? "") as TrainingTab) ? (searchTab as TrainingTab) : "today";
+    if (nextTab !== tab) setTab(nextTab);
+  }, [searchTab, tab]);
+
+  const handleTabChange = (nextTab: string) => {
+    if (!TRAINING_TABS.includes(nextTab as TrainingTab)) return;
+    setTab(nextTab as TrainingTab);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set("tab", nextTab);
+      return next;
+    }, { replace: true });
   };
 
   useEffect(() => {
@@ -617,7 +638,7 @@ const Training = () => {
       {isTrainingLoading ? <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">{copy.loading}</div> : null}
       {trainingError ? <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">{copy.failedLoad}: {getTrainingErrorMessage(trainingError)}</div> : null}
 
-      <Tabs value={tab} onValueChange={setTab} className="space-y-5">
+      <Tabs value={tab} onValueChange={handleTabChange} className="space-y-5">
         <TabsList className="grid h-auto w-full grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-2 lg:grid-cols-5">
           <TabsTrigger value="today">{copy.tabs.today}</TabsTrigger>
           <TabsTrigger value="routines">{copy.tabs.routines}</TabsTrigger>
