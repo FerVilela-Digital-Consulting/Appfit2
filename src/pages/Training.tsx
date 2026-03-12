@@ -615,12 +615,12 @@ const Training = () => {
   return (
     <div className="space-y-6 py-4">
       <Card className="app-surface-hero overflow-hidden border-border/60">
-        <CardContent className="grid gap-6 p-6 xl:grid-cols-[1.35fr_0.9fr]">
-          <div>
+        <CardContent className="grid gap-6 p-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+          <div className="space-y-3">
             <h1 className="text-2xl font-black tracking-tight md:text-3xl">{copy.title}</h1>
             <p className="app-surface-muted mt-2 max-w-2xl text-sm">{copy.subtitle}</p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 xl:self-start">
             <div className="app-surface-tile rounded-2xl p-4">
               <div className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">{copy.today}</div>
               <div className="app-surface-heading mt-2 text-lg font-semibold">

@@ -244,18 +244,18 @@ const Profile = () => {
 
   return (
     <div className="container max-w-6xl space-y-5 py-6 md:space-y-6 md:py-8">
-      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
         <Card className="app-surface-hero overflow-hidden rounded-[24px] md:rounded-[28px]">
-          <CardContent className="grid gap-5 p-6 md:grid-cols-[auto_1fr]">
-            <div className="flex items-start justify-center">
+          <CardContent className="grid gap-5 p-6 lg:grid-cols-[auto_minmax(0,1fr)]">
+            <div className="flex items-start justify-center lg:justify-start">
               <Avatar className="h-24 w-24">
                 <AvatarFallback className="app-surface-soft text-2xl">
                   {fullName ? getInitials(fullName) : <User className="h-12 w-12" />}
                 </AvatarFallback>
               </Avatar>
             </div>
-            <div className="space-y-4">
-              <div>
+            <div className="space-y-5">
+              <div className="max-w-3xl">
                 <div className="app-chip inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em]">
                   <Flag className="h-3.5 w-3.5" />
                   Perfil Fitness
@@ -266,7 +266,7 @@ const Profile = () => {
                 </p>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="app-surface-tile rounded-2xl p-4">
                   <p className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">Actual</p>
                   <p className="app-surface-heading mt-2 text-xl font-semibold">{formatNumber(latestWeight)}</p>
@@ -284,8 +284,8 @@ const Profile = () => {
                   <p className="app-surface-heading mt-2 text-xl font-semibold">{progress === null ? "--" : `${progress.toFixed(0)}%`}</p>
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="app-surface-muted flex items-center justify-between text-xs uppercase tracking-[0.22em]">
+              <div className="space-y-2 xl:max-w-[32rem]">
+                <div className="app-surface-muted flex flex-col gap-1 text-xs uppercase tracking-[0.22em] sm:flex-row sm:items-center sm:justify-between">
                   <span>Meta de peso</span>
                   <span>Restante {remaining}</span>
                 </div>
