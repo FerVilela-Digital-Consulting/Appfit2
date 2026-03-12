@@ -48,11 +48,6 @@ type TimelineItem = {
   accentClassName: string;
 };
 
-type TimelineLayoutItem = TimelineItem & {
-  laneIndex: number;
-  laneCount: number;
-};
-
 const formatDateKey = (date: Date) => format(date, "yyyy-MM-dd");
 const fromDateKey = (dateKey: string) => new Date(`${dateKey}T00:00:00`);
 const TIMELINE_HOUR_HEIGHT = 72;
@@ -395,79 +390,35 @@ const Calendar = () => {
     });
   }, [dayLogs, language, missingModules, selectedBiofeedback, selectedDateKey, selectedDay, selectedNutrition, selectedNote, selectedSleepDay?.logs]);
 
-  const timelineLayoutItems = useMemo<TimelineLayoutItem[]>(() => {
-    if (!timelineItems.length) return [];
-
-    const groups: TimelineItem[][] = [];
-    let currentGroup: TimelineItem[] = [];
-    let currentGroupEnd = -1;
-
-    timelineItems.forEach((item) => {
-      const itemEnd = item.startMinutes + item.durationMinutes;
-      if (!currentGroup.length || item.startMinutes < currentGroupEnd) {
-        currentGroup.push(item);
-        currentGroupEnd = Math.max(currentGroupEnd, itemEnd);
-        return;
-      }
-
-      groups.push(currentGroup);
-      currentGroup = [item];
-      currentGroupEnd = itemEnd;
-    });
-
-    if (currentGroup.length) groups.push(currentGroup);
-
-    return groups.flatMap((group) => {
-      const activeLanes: Array<{ laneIndex: number; endMinutes: number }> = [];
-      let maxLaneCount = 1;
-      const assigned = group.map((item) => {
-        const itemStart = item.startMinutes;
-        const itemEnd = item.startMinutes + item.durationMinutes;
-        const stillActive = activeLanes.filter((lane) => lane.endMinutes > itemStart);
-        const usedLanes = new Set(stillActive.map((lane) => lane.laneIndex));
-
-        let laneIndex = 0;
-        while (usedLanes.has(laneIndex)) laneIndex += 1;
-
-        activeLanes.length = 0;
-        activeLanes.push(...stillActive, { laneIndex, endMinutes: itemEnd });
-        maxLaneCount = Math.max(maxLaneCount, activeLanes.length);
-
-        return { item, laneIndex };
-      });
-
-      return assigned.map(({ item, laneIndex }) => ({
-        ...item,
-        laneIndex,
-        laneCount: maxLaneCount,
-      }));
-    });
-  }, [timelineItems]);
-
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const isTodaySelected = selectedDateKey === todayKey;
-  const currentTimeOffset = (nowMinutes / 60) * TIMELINE_HOUR_HEIGHT;
   const timelineHours = Array.from({ length: 24 }, (_, hour) => hour);
-  const activeTimelineItem = timelineLayoutItems.find((item) => item.id === selectedTimelineItemId) ?? timelineLayoutItems[0] ?? null;
+  const hourBuckets = useMemo(
+    () =>
+      timelineHours.map((hour) => ({
+        hour,
+        items: timelineItems.filter((item) => Math.floor(item.startMinutes / 60) === hour),
+      })),
+    [timelineHours, timelineItems],
+  );
+  const activeTimelineItem = timelineItems.find((item) => item.id === selectedTimelineItemId) ?? timelineItems[0] ?? null;
 
   useEffect(() => {
     setSelectedTimelineItemId((current) => {
-      if (current && timelineLayoutItems.some((item) => item.id === current)) return current;
-      return timelineLayoutItems[0]?.id ?? null;
+      if (current && timelineItems.some((item) => item.id === current)) return current;
+      return timelineItems[0]?.id ?? null;
     });
-  }, [timelineLayoutItems]);
+  }, [timelineItems]);
 
   useEffect(() => {
     if (calendarView !== "day") return;
     const container = timelineScrollRef.current;
     if (!container) return;
-    const firstItemOffset = timelineLayoutItems[0] ? (timelineLayoutItems[0].startMinutes / 60) * TIMELINE_HOUR_HEIGHT : 0;
-    const liveNow = new Date();
-    const liveOffset = ((liveNow.getHours() * 60 + liveNow.getMinutes()) / 60) * TIMELINE_HOUR_HEIGHT;
-    const targetOffset = isTodaySelected ? liveOffset : firstItemOffset;
+    const targetHour = isTodaySelected ? now.getHours() : timelineItems[0] ? Math.floor(timelineItems[0].startMinutes / 60) : 0;
+    const targetOffset = targetHour * TIMELINE_HOUR_HEIGHT;
     const nextScrollTop = Math.max(0, targetOffset - container.clientHeight * 0.35);
     container.scrollTo({ top: nextScrollTop, behavior: "smooth" });
-  }, [calendarView, isTodaySelected, selectedDateKey, timelineLayoutItems]);
+  }, [calendarView, isTodaySelected, now, selectedDateKey, timelineItems]);
 
   const refreshCalendar = () => Promise.all([
     queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
@@ -576,87 +527,75 @@ const Calendar = () => {
             </div>
           ) : null}
 
-          <div ref={timelineScrollRef} className="relative max-h-[68vh] overflow-y-auto rounded-[22px] border bg-background/60">
-            <div className="relative" style={{ height: `${TIMELINE_HOUR_HEIGHT * 24}px` }}>
-              {timelineHours.map((hour) => (
-                <div key={hour} className="absolute inset-x-0 flex border-t border-border/70" style={{ top: `${hour * TIMELINE_HOUR_HEIGHT}px`, height: `${TIMELINE_HOUR_HEIGHT}px` }}>
-                  <div className="w-16 shrink-0 border-r border-border/70 px-2 pt-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground md:w-20">
-                    {getHourLabel(hour, locale)}
-                  </div>
-                  <div className="flex-1" />
-                </div>
-              ))}
-
-              {isTodaySelected ? (
-                <div className="pointer-events-none absolute inset-x-0 z-20 flex items-center" style={{ top: `${currentTimeOffset}px` }}>
-                  <div className="ml-[3.55rem] h-3 w-3 rounded-full bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.15)] md:ml-[4.65rem]" />
-                  <div className="h-[2px] flex-1 bg-red-500" />
-                </div>
-              ) : null}
-
-              <div className="absolute inset-0 left-16 md:left-20">
-                {timelineLayoutItems.length === 0 ? (
-                  <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground">
-                    {language === "es" ? "Aun no hay bloques para este dia. Registra algo o crea una nota para empezar a poblar la agenda." : "No blocks for this day yet. Log something or create a note to start building the day."}
-                  </div>
-                ) : (
-                  timelineLayoutItems.map((item) => {
-                    const Icon = item.icon;
-                    const top = (item.startMinutes / 60) * TIMELINE_HOUR_HEIGHT;
-                    const height = Math.max(44, (item.durationMinutes / 60) * TIMELINE_HOUR_HEIGHT);
-                    const isActive = activeTimelineItem?.id === item.id;
-                    const laneWidth = 100 / item.laneCount;
-                    const sharedProps = {
-                      className: `h-full w-full rounded-[18px] border px-3 py-2 text-left shadow-sm transition hover:border-primary/60 ${item.surfaceClassName} ${isActive ? "ring-2 ring-primary/70" : ""}`,
-                    };
-                    const innerContent = (
-                      <>
-                        <div className="flex h-full items-start gap-3">
-                          <span className={`mt-0.5 h-full min-h-8 w-1.5 shrink-0 rounded-full ${item.accentClassName}`} />
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <p className="flex items-center gap-2 text-sm font-semibold">
-                              <Icon className="h-4 w-4 shrink-0" />
-                              <span className="truncate">{item.title}</span>
-                            </p>
-                            <p className="line-clamp-2 text-xs text-slate-300">{item.detail}</p>
-                            {item.laneCount > 1 ? (
-                              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">
-                                {language === "es" ? `Paralelo ${item.laneIndex + 1}/${item.laneCount}` : `Parallel ${item.laneIndex + 1}/${item.laneCount}`}
-                              </p>
-                            ) : null}
-                          </div>
-                          {item.badge ? <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-white/78">{item.badge}</span> : null}
-                        </div>
-                      </>
-                    );
-
-                    return (
-                      <div
-                        key={item.id}
-                        className="absolute px-1"
-                        style={{
-                          top: `${top}px`,
-                          left: `${item.laneIndex * laneWidth}%`,
-                          width: `${laneWidth}%`,
-                          height: `${height}px`,
-                          zIndex: isActive ? 15 : 10,
-                        }}
-                      >
-                        {item.href ? (
-                          <Link to={item.href} onClick={() => setSelectedTimelineItemId(item.id)} {...sharedProps}>
-                            {innerContent}
-                          </Link>
-                        ) : (
-                          <button type="button" onClick={() => setSelectedTimelineItemId(item.id)} {...sharedProps}>
-                            {innerContent}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
+          <div ref={timelineScrollRef} className="max-h-[68vh] overflow-y-auto rounded-[22px] border bg-background/60">
+            {hourBuckets.every((bucket) => bucket.items.length === 0) ? (
+              <div className="flex min-h-[22rem] items-center justify-center px-6 text-center text-sm text-muted-foreground">
+                {language === "es" ? "Aun no hay bloques para este dia. Registra algo o crea una nota para empezar a poblar la agenda." : "No blocks for this day yet. Log something or create a note to start building the day."}
               </div>
-            </div>
+            ) : (
+              hourBuckets.map(({ hour, items }) => {
+                const isCurrentHour = isTodaySelected && now.getHours() === hour;
+                const currentMinuteOffset = ((nowMinutes % 60) / 60) * TIMELINE_HOUR_HEIGHT;
+
+                return (
+                  <div key={hour} className="relative flex border-t border-border/70 first:border-t-0">
+                    <div className="w-16 shrink-0 border-r border-border/70 px-2 pt-3 text-[11px] uppercase tracking-[0.14em] text-muted-foreground md:w-20">
+                      {getHourLabel(hour, locale)}
+                    </div>
+                    <div className="relative min-h-[72px] flex-1 px-3 py-2">
+                      {isCurrentHour ? (
+                        <div className="pointer-events-none absolute inset-x-0 z-20 flex items-center" style={{ top: `${currentMinuteOffset}px` }}>
+                          <div className="ml-1.5 h-3 w-3 rounded-full bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.15)]" />
+                          <div className="h-[2px] flex-1 bg-red-500" />
+                        </div>
+                      ) : null}
+
+                      {items.length === 0 ? (
+                        <div className="h-[56px]" />
+                      ) : (
+                        <div className="space-y-2">
+                          {items.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = activeTimelineItem?.id === item.id;
+                            const sharedProps = {
+                              className: `w-full rounded-[18px] border px-3 py-3 text-left shadow-sm transition hover:border-primary/60 ${item.surfaceClassName} ${isActive ? "ring-2 ring-primary/70" : ""}`,
+                            };
+                            const innerContent = (
+                              <div className="flex items-start gap-3">
+                                <span className={`mt-0.5 h-12 w-1.5 shrink-0 rounded-full ${item.accentClassName}`} />
+                                <div className="min-w-0 flex-1 space-y-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="flex min-w-0 items-center gap-2 text-sm font-semibold">
+                                      <Icon className="h-4 w-4 shrink-0" />
+                                      <span className="truncate">{item.title}</span>
+                                    </p>
+                                    <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-slate-400">
+                                      {getTimelineRangeLabel(item.startMinutes, item.durationMinutes, locale)}
+                                    </span>
+                                  </div>
+                                  <p className="line-clamp-2 text-xs text-slate-300">{item.detail}</p>
+                                </div>
+                                {item.badge ? <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-white/78">{item.badge}</span> : null}
+                              </div>
+                            );
+
+                            return item.href ? (
+                              <Link key={item.id} to={item.href} onClick={() => setSelectedTimelineItemId(item.id)} {...sharedProps}>
+                                {innerContent}
+                              </Link>
+                            ) : (
+                              <button key={item.id} type="button" onClick={() => setSelectedTimelineItemId(item.id)} {...sharedProps}>
+                                {innerContent}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </CardContent>
       </Card>

@@ -55,9 +55,9 @@ import {
 
 const MEAL_SECTIONS: Array<{ key: NutritionMealType; label: string; accentClass: string; railClass: string }> = [
   { key: "breakfast", label: "Desayuno", accentClass: "text-lime-300", railClass: "bg-lime-400" },
-  { key: "lunch", label: "Almuerzo / principal", accentClass: "text-cyan-300", railClass: "bg-cyan-400" },
+  { key: "lunch", label: "Almuerzo", accentClass: "text-cyan-300", railClass: "bg-cyan-400" },
   { key: "dinner", label: "Cena", accentClass: "text-amber-300", railClass: "bg-amber-400" },
-  { key: "snack", label: "Snacks / soporte", accentClass: "text-fuchsia-300", railClass: "bg-fuchsia-400" },
+  { key: "snack", label: "Snack", accentClass: "text-fuchsia-300", railClass: "bg-fuchsia-400" },
 ];
 
 const ACTIVITY_LABELS: Record<string, string> = {
@@ -583,23 +583,23 @@ const Nutrition = () => {
               <div className="space-y-4 px-4 py-4">
                 {mealOverview.map(({ meal, entries, subtotal }, index) => (
                   <article key={meal.key} className="app-surface-tile overflow-hidden rounded-[20px] sm:rounded-[24px]">
-                    <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:px-5">
-                      <div className="min-w-0 flex-1">
+                    <div className="grid gap-4 px-4 py-4 sm:px-5 xl:grid-cols-[minmax(0,220px)_minmax(0,1fr)_auto] xl:items-center">
+                      <div className="min-w-0">
                         <div className="flex items-start gap-3">
                           <div className={cn("mt-1 h-14 w-1.5 shrink-0 rounded-full", meal.railClass)} />
-                          <div className="min-w-0">
+                          <div className="min-w-0 space-y-1">
                             <div className="app-surface-caption text-[11px] font-semibold uppercase tracking-[0.26em]">Registro {index + 1}</div>
-                            <div className={cn("mt-1 text-lg font-bold uppercase md:text-xl", meal.accentClass)}>{meal.label}</div>
+                            <div className={cn("text-lg font-bold uppercase leading-tight md:text-xl", meal.accentClass)}>{meal.label}</div>
                           </div>
                         </div>
                       </div>
-                      <div className="grid w-full min-w-0 grid-cols-2 gap-3 sm:min-w-[290px] sm:grid-cols-4">
+                      <div className="grid min-w-0 grid-cols-2 gap-3 lg:grid-cols-4">
                         <div className="app-panel-block rounded-2xl px-3 py-2 text-center"><div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Pro</div><div className="text-sm font-semibold text-emerald-300">{formatMetric(subtotal?.protein_g, "g")}</div></div>
                         <div className="app-panel-block rounded-2xl px-3 py-2 text-center"><div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Cho</div><div className="text-sm font-semibold text-cyan-300">{formatMetric(subtotal?.carbs_g, "g")}</div></div>
                         <div className="app-panel-block rounded-2xl px-3 py-2 text-center"><div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Fat</div><div className="text-sm font-semibold text-amber-300">{formatMetric(subtotal?.fat_g, "g")}</div></div>
                         <div className="app-panel-block rounded-2xl px-3 py-2 text-center"><div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Kcal</div><div className="app-surface-heading text-sm font-semibold">{formatMetric(subtotal?.calories)}</div></div>
                       </div>
-                      <button type="button" onClick={() => toggleMeal(meal.key)} className="app-surface-soft app-surface-muted self-end rounded-2xl p-3 sm:self-auto"><ChevronDown className={cn("h-5 w-5 transition-transform", expandedMeals[meal.key] && "rotate-180")} /></button>
+                      <button type="button" onClick={() => toggleMeal(meal.key)} className="app-surface-soft app-surface-muted justify-self-end rounded-2xl p-3"><ChevronDown className={cn("h-5 w-5 transition-transform", expandedMeals[meal.key] && "rotate-180")} /></button>
                     </div>
                     {expandedMeals[meal.key] && (
                       <div className="border-t border-border/40 px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
