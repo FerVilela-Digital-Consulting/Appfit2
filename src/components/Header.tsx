@@ -3,15 +3,12 @@ import {
   BarChart3,
   Bell,
   CalendarDays,
-  Dumbbell,
-  Home,
   LogOut,
   Menu,
   Plus,
   Ruler,
   Settings,
   Target,
-  UtensilsCrossed,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -66,11 +63,8 @@ const DashboardHeader = () => {
   const currentDay = today.getDay();
   const activeDayIndex = currentDay === 0 ? 6 : currentDay - 1;
   const mobileNavItems = [
-    { label: t("nav.today"), path: "/today", icon: Home },
-    { label: t("nav.training"), path: "/training", icon: Dumbbell },
-    { label: t("nav.nutrition"), path: "/nutrition", icon: UtensilsCrossed },
-    { label: t("nav.body"), path: "/body", icon: Ruler },
     { label: t("nav.progress"), path: "/progress", icon: BarChart3 },
+    { label: t("nav.body"), path: "/body", icon: Ruler },
     { label: t("nav.calendar"), path: "/calendar", icon: CalendarDays },
     { label: t("nav.fitnessProfile"), path: "/fitness-profile", icon: Target },
     { label: t("nav.settings"), path: "/settings", icon: Settings },
@@ -92,7 +86,10 @@ const DashboardHeader = () => {
   };
 
   return (
-    <header className="flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card px-3 py-3 md:h-16 md:px-8 md:py-0">
+    <header
+      className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card/95 px-3 py-3 shadow-sm backdrop-blur md:static md:z-auto md:h-16 md:bg-card md:px-8 md:py-0 md:shadow-none"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-6">
         <Sheet>
           <SheetTrigger asChild>
@@ -102,6 +99,9 @@ const DashboardHeader = () => {
           </SheetTrigger>
           <SheetContent side="left" className="w-[min(20rem,calc(100vw-1rem))] p-4">
             <SheetTitle>Navegacion</SheetTitle>
+            <div className="mt-2 rounded-2xl border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
+              Accesos secundarios y ajustes.
+            </div>
             <div className="mt-4 grid gap-2">
               {mobileNavItems.map((item) => (
                 <SheetClose asChild key={item.path}>
@@ -117,6 +117,18 @@ const DashboardHeader = () => {
                   </Button>
                 </SheetClose>
               ))}
+            </div>
+            <div className="mt-6 border-t border-border pt-4">
+              <SheetClose asChild>
+                <Button
+                  variant="ghost"
+                  className="min-h-11 w-full justify-start rounded-xl text-destructive hover:text-destructive"
+                  onClick={handleAuthAction}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {isGuest ? "Cambiar cuenta" : "Cerrar sesion"}
+                </Button>
+              </SheetClose>
             </div>
           </SheetContent>
         </Sheet>
@@ -167,7 +179,7 @@ const DashboardHeader = () => {
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
         </button>
         <button
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
+          className="hidden h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground md:flex"
           onClick={handleAuthAction}
           aria-label={isGuest ? "Ir a iniciar sesion" : "Cerrar sesion"}
           title={isGuest ? "Cambiar cuenta" : "Cerrar sesion"}
