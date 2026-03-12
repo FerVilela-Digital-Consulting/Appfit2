@@ -133,8 +133,22 @@ const DashboardHeader = () => {
           </SheetContent>
         </Sheet>
         <div className="min-w-0">
-          <h2 className="truncate text-base font-semibold text-card-foreground md:text-lg">{pageTitle || t("header.dashboard")}</h2>
-          <p className="hidden text-xs text-muted-foreground sm:block">{dateStr}</p>
+          <div className="md:hidden">
+            <p className="truncate text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              The <span className="text-primary">PRIME</span> Protocol
+            </p>
+            <h2 className="truncate text-base font-semibold text-card-foreground">{pageTitle || t("header.dashboard")}</h2>
+          </div>
+          <div className="hidden min-w-0 items-center gap-3 md:flex">
+            <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+              The <span className="text-primary">PRIME</span> Protocol
+            </p>
+            <span className="h-4 w-px bg-border/80" />
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-semibold text-card-foreground">{pageTitle || t("header.dashboard")}</h2>
+              <p className="text-xs text-muted-foreground">{dateStr}</p>
+            </div>
+          </div>
         </div>
         <div className="ml-4 hidden items-center gap-1 md:flex">
           {days.map((day, i) => (

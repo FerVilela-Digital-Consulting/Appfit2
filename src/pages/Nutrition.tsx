@@ -584,8 +584,15 @@ const Nutrition = () => {
                 {mealOverview.map(({ meal, entries, subtotal }, index) => (
                   <article key={meal.key} className="app-surface-tile overflow-hidden rounded-[24px]">
                     <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:px-5">
-                      <div className={cn("h-16 w-1.5 rounded-full", meal.railClass)} />
-                      <div className="min-w-0 flex-1"><div className="app-surface-caption text-[11px] font-semibold uppercase tracking-[0.26em]">Registro {index + 1}</div><div className={cn("mt-1 text-lg font-bold uppercase md:text-xl", meal.accentClass)}>{meal.label}</div></div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start gap-3">
+                          <div className={cn("mt-1 h-14 w-1.5 shrink-0 rounded-full", meal.railClass)} />
+                          <div className="min-w-0">
+                            <div className="app-surface-caption text-[11px] font-semibold uppercase tracking-[0.26em]">Registro {index + 1}</div>
+                            <div className={cn("mt-1 text-lg font-bold uppercase md:text-xl", meal.accentClass)}>{meal.label}</div>
+                          </div>
+                        </div>
+                      </div>
                       <div className="grid w-full min-w-0 grid-cols-2 gap-3 sm:min-w-[290px] sm:grid-cols-4">
                         <div className="app-panel-block rounded-2xl px-3 py-2 text-center"><div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Pro</div><div className="text-sm font-semibold text-emerald-300">{formatMetric(subtotal?.protein_g, "g")}</div></div>
                         <div className="app-panel-block rounded-2xl px-3 py-2 text-center"><div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Cho</div><div className="text-sm font-semibold text-cyan-300">{formatMetric(subtotal?.carbs_g, "g")}</div></div>
