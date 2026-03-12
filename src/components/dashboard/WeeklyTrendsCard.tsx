@@ -111,7 +111,7 @@ const WeeklyTrendsCard = ({ loading = false, data }: Props) => {
 
   if (loading) {
     return (
-      <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
+      <Card className="rounded-2xl border-border/50 bg-card/80">
         <CardHeader>
           <CardTitle>Tendencias semanales</CardTitle>
           <CardDescription>Evolución de los últimos 7 días.</CardDescription>
@@ -128,7 +128,7 @@ const WeeklyTrendsCard = ({ loading = false, data }: Props) => {
   const selectedDefinitions = DASHBOARD_TREND_METRIC_DEFINITIONS.filter((definition) => selectedMetrics.includes(definition.key));
 
   return (
-    <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm">
+    <Card className="rounded-2xl border-border/50 bg-card/80">
       <CardHeader className="space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div>

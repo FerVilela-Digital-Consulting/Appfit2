@@ -115,7 +115,7 @@ const TodayWeightModule = () => {
   }, [trendAnalysis]);
 
   return (
-    <Card className="h-full rounded-[24px] border-border/60 bg-card/80 shadow-sm md:rounded-[28px]">
+    <Card className="h-full rounded-[20px] border-border/50 bg-card/80 md:rounded-[24px]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Scale className="h-5 w-5 text-primary" />

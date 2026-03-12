@@ -1042,7 +1042,7 @@ const Training = () => {
                     </div>
                   ))}
                 </div>
-                <div className="h-72 rounded-2xl border p-4">
+                <div className="h-60 rounded-2xl border p-4 md:h-72">
                   {(exerciseProgressQuery.data ?? []).length === 0 ? (
                     <div className="text-sm text-muted-foreground">{copy.noProgress}</div>
                   ) : (

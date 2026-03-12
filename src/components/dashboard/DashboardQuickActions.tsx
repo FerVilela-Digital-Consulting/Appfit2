@@ -53,7 +53,7 @@ const QUICK_ACTIONS: QuickAction[] = [
 
 const DashboardQuickActions = ({ nextActionLabel, nutritionSummary }: Props) => {
   return (
-    <Card className="rounded-[28px] border-border/60 bg-card/80 shadow-sm">
+    <Card className="rounded-[22px] border-border/50 bg-card/80 md:rounded-[24px]">
       <CardHeader>
         <CardTitle>Acciones rapidas</CardTitle>
         <CardDescription>Desde aqui deberias poder registrar o revisar lo importante sin salir del dashboard.</CardDescription>

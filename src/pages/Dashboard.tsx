@@ -441,7 +441,7 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-5 py-3 md:space-y-6 md:py-4">
-      <Card className="app-surface-hero overflow-hidden rounded-[24px] md:rounded-[32px]">
+      <Card className="app-surface-hero overflow-hidden rounded-[22px] md:rounded-[28px]">
         <CardContent className={cn("grid gap-4 p-4 md:gap-6 md:p-6", visibleRightCards && "xl:grid-cols-[1.5fr_0.9fr]")}>
           <div className="space-y-4">
             <div className="flex flex-wrap items-start justify-between gap-3">

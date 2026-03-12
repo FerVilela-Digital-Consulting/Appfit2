@@ -65,7 +65,7 @@ const ProfileCalibrationPanel = ({
   const age = calculateAge(birthDate);
 
   return (
-    <section className="app-surface-hero overflow-hidden rounded-[28px]">
+    <section className="app-surface-hero overflow-hidden rounded-[24px] md:rounded-[28px]">
       <div className="border-b border-border/40 px-5 py-5 sm:px-6">
         <div className="app-surface-heading flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em]">
           <UserRound className="h-4 w-4 text-primary" />

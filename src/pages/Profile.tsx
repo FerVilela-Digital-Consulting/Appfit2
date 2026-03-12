@@ -245,7 +245,7 @@ const Profile = () => {
   return (
     <div className="container max-w-6xl space-y-5 py-6 md:space-y-6 md:py-8">
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="app-surface-hero overflow-hidden rounded-[30px]">
+        <Card className="app-surface-hero overflow-hidden rounded-[24px] md:rounded-[28px]">
           <CardContent className="grid gap-5 p-6 md:grid-cols-[auto_1fr]">
             <div className="flex items-start justify-center">
               <Avatar className="h-24 w-24">
@@ -295,7 +295,7 @@ const Profile = () => {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[30px]">
+        <Card className="rounded-[22px] md:rounded-[24px]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />

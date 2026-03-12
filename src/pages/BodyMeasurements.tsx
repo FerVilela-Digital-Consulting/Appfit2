@@ -452,7 +452,7 @@ const BodyMeasurements = () => {
             {chartData.length === 0 ? (
               <p className="text-sm text-muted-foreground">Aun no hay datos suficientes para {chartConfig.label.toLowerCase()}.</p>
             ) : (
-              <div className="h-[280px] w-full">
+              <div className="h-[220px] w-full md:h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />

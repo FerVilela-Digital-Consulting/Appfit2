@@ -18,7 +18,7 @@ const compactDelta = (value: number | null, unit: string) => {
 const PhysicalProgressHub = ({ loading = false, summary }: Props) => {
   if (loading) {
     return (
-      <Card className="rounded-[28px] border-border/60 bg-card/80 shadow-sm">
+      <Card className="rounded-[22px] border-border/50 bg-card/80 md:rounded-[24px]">
         <CardHeader>
           <CardTitle>Progreso fisico</CardTitle>
           <CardDescription>Lectura central del estado corporal.</CardDescription>
@@ -61,7 +61,7 @@ const PhysicalProgressHub = ({ loading = false, summary }: Props) => {
         ];
 
   return (
-    <Card className="rounded-[24px] border-border/60 bg-card/80 shadow-sm md:rounded-[28px]">
+    <Card className="rounded-[20px] border-border/50 bg-card/80 md:rounded-[24px]">
       <CardHeader className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:gap-4">
         <div>
           <CardTitle>Progreso fisico</CardTitle>

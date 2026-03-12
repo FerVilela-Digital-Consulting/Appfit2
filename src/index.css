@@ -61,12 +61,13 @@
     --surface-foreground: var(--foreground);
     --surface-muted: 215 18% 40%;
     --surface-caption: 215 14% 52%;
-    --surface-border: 214 20% 82%;
+    --surface-border: 214 18% 84%;
     --surface-soft: 210 30% 99%;
     --surface-strong: 210 24% 96%;
-    --surface-shadow: 0 24px 70px -45px hsl(var(--primary) / 0.22);
-    --surface-radius-lg: 2rem;
-    --surface-radius-md: 1.5rem;
+    --surface-shadow: 0 18px 42px -30px hsl(var(--foreground) / 0.12);
+    --surface-shadow-hero: 0 22px 56px -36px hsl(var(--foreground) / 0.16);
+    --surface-radius-lg: 1.75rem;
+    --surface-radius-md: 1.375rem;
     --surface-radius-sm: 1rem;
     --surface-panel-bg:
       linear-gradient(180deg, hsl(0 0% 100% / 0.94), hsl(210 30% 98% / 0.92));
@@ -115,12 +116,13 @@
     --surface-foreground: 210 20% 92%;
     --surface-muted: 215 18% 73%;
     --surface-caption: 215 12% 50%;
-    --surface-border: 220 14% 22%;
+    --surface-border: 220 14% 24%;
     --surface-soft: 224 32% 12%;
     --surface-strong: 223 38% 10%;
-    --surface-shadow: 0 26px 70px -42px hsl(var(--primary) / 0.3);
-    --surface-radius-lg: 2rem;
-    --surface-radius-md: 1.5rem;
+    --surface-shadow: 0 20px 48px -30px hsl(220 50% 2% / 0.28);
+    --surface-shadow-hero: 0 28px 64px -36px hsl(220 50% 2% / 0.36);
+    --surface-radius-lg: 1.75rem;
+    --surface-radius-md: 1.375rem;
     --surface-radius-sm: 1rem;
     --surface-panel-bg:
       linear-gradient(180deg, hsl(222 47% 11% / 0.88), hsl(224 43% 10% / 0.82));
@@ -180,32 +182,35 @@
 
   .glass-card,
   .app-surface-panel {
-    border: 1px solid hsl(var(--surface-border) / 0.82);
+    border: 1px solid hsl(var(--surface-border) / 0.68);
+    border-radius: var(--surface-radius-md);
     background:
-      radial-gradient(circle at top, hsl(var(--primary) / 0.08), transparent 32%),
+      radial-gradient(circle at top, hsl(var(--primary) / 0.05), transparent 34%),
       var(--surface-panel-bg);
     color: hsl(var(--surface-foreground));
     box-shadow: var(--surface-shadow);
-    backdrop-filter: blur(14px);
+    backdrop-filter: blur(8px);
   }
 
   .app-surface-hero {
-    border: 1px solid hsl(var(--surface-border) / 0.82);
+    border: 1px solid hsl(var(--surface-border) / 0.7);
+    border-radius: var(--surface-radius-lg);
     background:
-      radial-gradient(circle at top, hsl(var(--primary) / 0.16), transparent 34%),
+      radial-gradient(circle at top, hsl(var(--primary) / 0.1), transparent 36%),
       var(--surface-hero-bg);
     color: hsl(var(--surface-foreground));
-    box-shadow: 0 30px 80px -45px hsl(var(--primary) / 0.35);
-    backdrop-filter: blur(16px);
+    box-shadow: var(--surface-shadow-hero);
+    backdrop-filter: blur(10px);
   }
 
   .app-surface-tile {
-    border: 1px solid hsl(var(--surface-border) / 0.75);
+    border: 1px solid hsl(var(--surface-border) / 0.62);
+    border-radius: var(--surface-radius-md);
     background:
-      linear-gradient(180deg, hsl(var(--primary) / 0.04), transparent 38%),
+      linear-gradient(180deg, hsl(var(--primary) / 0.03), transparent 40%),
       var(--surface-tile-bg);
     color: hsl(var(--surface-foreground));
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(6px);
   }
 
   .app-chip {
@@ -221,12 +226,13 @@
   }
 
   .app-dialog-surface {
-    border: 1px solid hsl(var(--surface-border) / 0.82);
+    border: 1px solid hsl(var(--surface-border) / 0.7);
+    border-radius: var(--surface-radius-md);
     background:
-      radial-gradient(circle at top, hsl(var(--primary) / 0.12), transparent 28%),
+      radial-gradient(circle at top, hsl(var(--primary) / 0.08), transparent 30%),
       var(--surface-dialog-bg);
     color: hsl(var(--surface-foreground));
-    box-shadow: 0 28px 80px -45px hsl(var(--primary) / 0.32);
+    box-shadow: var(--surface-shadow-hero);
   }
 
   .app-surface-heading {
@@ -242,16 +248,18 @@
   }
 
   .app-surface-soft {
-    border: 1px solid hsl(var(--surface-border) / 0.72);
+    border: 1px solid hsl(var(--surface-border) / 0.6);
+    border-radius: var(--surface-radius-sm);
     background: hsl(var(--surface-soft) / 0.84);
     color: hsl(var(--surface-foreground));
   }
 
   .app-panel-block {
-    border: 1px solid hsl(var(--surface-border) / 0.75);
+    border: 1px solid hsl(var(--surface-border) / 0.58);
+    border-radius: var(--surface-radius-sm);
     background: hsl(var(--surface-soft) / 0.58);
     color: hsl(var(--surface-foreground));
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(4px);
   }
 
   .app-input-surface {
@@ -265,8 +273,9 @@
   }
 
   .app-outline-button {
-    border-color: hsl(var(--surface-border) / 0.82);
-    background: hsl(var(--surface-soft) / 0.7);
+    border-color: hsl(var(--surface-border) / 0.62);
+    border-radius: var(--surface-radius-sm);
+    background: hsl(var(--surface-soft) / 0.58);
     color: hsl(var(--surface-foreground));
   }
 

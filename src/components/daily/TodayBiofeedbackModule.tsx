@@ -123,7 +123,7 @@ const TodayBiofeedbackModule = () => {
   });
 
   return (
-    <Card className="h-full rounded-[28px] border-border/60 bg-card/80 shadow-sm">
+    <Card className="h-full rounded-[22px] border-border/50 bg-card/80 md:rounded-[24px]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <HeartPulse className="h-5 w-5 text-primary" />

@@ -59,7 +59,7 @@ const DashboardHeader = () => {
 
   return (
     <header
-      className="z-30 flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-card/95 px-3 py-3 shadow-sm backdrop-blur md:h-16 md:bg-card md:px-8 md:py-0 md:shadow-none"
+      className="z-30 flex min-h-[3.75rem] shrink-0 items-center justify-between gap-3 border-b border-border/70 bg-card/92 px-5 py-2.5 shadow-[0_8px_24px_-22px_hsl(var(--foreground)/0.28)] backdrop-blur md:h-16 md:bg-card md:px-8 md:py-0 md:shadow-none"
     >
       <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-6">
         <Sheet>
@@ -104,7 +104,7 @@ const DashboardHeader = () => {
           </SheetContent>
         </Sheet>
         <div className="min-w-0">
-          <p className="truncate text-sm font-black uppercase tracking-[0.24em] text-card-foreground md:text-xl md:tracking-[0.28em]">
+          <p className="truncate text-[0.92rem] font-black uppercase tracking-[0.22em] text-card-foreground md:text-xl md:tracking-[0.28em]">
             THE <span className="text-primary">PRIME</span> PROTOCOL
           </p>
         </div>

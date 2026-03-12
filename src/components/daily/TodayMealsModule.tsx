@@ -246,7 +246,7 @@ const TodayMealsModule = () => {
   };
 
   return (
-    <Card className="rounded-[24px] border-border/60 bg-card/80 shadow-sm md:rounded-[28px]">
+    <Card className="rounded-[20px] border-border/50 bg-card/80 md:rounded-[24px]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UtensilsCrossed className="h-5 w-5 text-primary" />

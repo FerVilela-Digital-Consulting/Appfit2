@@ -6,55 +6,44 @@ import { cn } from "@/lib/utils";
 const MobileBottomNav = () => {
   const { t } = usePreferences();
   const mobileItems = [
-    { label: t("nav.training"), path: "/training", icon: Dumbbell, emphasis: "side" as const },
-    { label: t("nav.today"), path: "/today", icon: Home, emphasis: "center" as const },
-    { label: t("nav.nutrition"), path: "/nutrition", icon: UtensilsCrossed, emphasis: "side" as const },
+    { label: t("nav.training"), path: "/training", icon: Dumbbell },
+    { label: t("nav.today"), path: "/today", icon: Home },
+    { label: t("nav.nutrition"), path: "/nutrition", icon: UtensilsCrossed },
   ];
 
   return (
     <nav
       aria-label="Navegacion principal movil"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 shadow-[0_-12px_30px_-24px_hsl(var(--foreground)/0.45)] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-card/92 shadow-[0_-10px_26px_-24px_hsl(var(--foreground)/0.35)] backdrop-blur md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="grid h-[4.75rem] grid-cols-3 px-3">
+      <ul className="grid h-[4.25rem] grid-cols-3 gap-2 px-5">
         {mobileItems.map((item) => (
-          <li key={item.path} className="flex items-start justify-center">
+          <li key={item.path} className="flex items-center justify-center">
             <NavLink
               to={item.path}
               className={({ isActive }) =>
                 cn(
-                  "flex h-full w-full flex-col items-center justify-center px-1 text-[10px] transition-colors",
-                  item.emphasis === "center"
-                    ? "relative -mt-4 gap-1.5"
-                    : "gap-1 text-muted-foreground",
-                  item.emphasis === "center" && (isActive ? "text-primary" : "text-foreground"),
-                  item.emphasis === "side" && (isActive ? "text-primary" : "text-muted-foreground"),
+                  "flex h-full w-full flex-col items-center justify-center gap-1 rounded-2xl px-2 text-[10px] transition-colors",
+                  isActive ? "text-foreground" : "text-muted-foreground",
                 )
               }
             >
               {({ isActive }) => (
                 <>
-                  {item.emphasis === "center" ? (
-                    <>
-                      <span
-                        className={cn(
-                          "flex h-14 w-14 items-center justify-center rounded-full border shadow-[0_14px_30px_-18px_hsl(var(--primary)/0.9)] transition-all",
-                          isActive
-                            ? "border-primary/60 bg-primary text-primary-foreground"
-                            : "border-border/70 bg-background text-foreground",
-                        )}
-                      >
-                        <item.icon className="h-5 w-5" />
-                      </span>
-                      <span className="line-clamp-1 text-[11px] font-semibold">{item.label}</span>
-                    </>
-                  ) : (
-                    <>
-                      <item.icon className="h-4 w-4" />
-                      <span className="line-clamp-1">{item.label}</span>
-                    </>
-                  )}
+                  <span
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-xl border transition-colors",
+                      isActive
+                        ? "border-primary/20 bg-primary/12 text-primary"
+                        : "border-transparent bg-transparent text-muted-foreground",
+                    )}
+                  >
+                    <item.icon className="h-[18px] w-[18px]" />
+                  </span>
+                  <span className={cn("line-clamp-1 text-[10px] font-medium", isActive ? "text-foreground" : "text-muted-foreground")}>
+                    {item.label}
+                  </span>
                 </>
               )}
             </NavLink>
