@@ -271,12 +271,12 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
         <Progress value={progress} />
 
         <div className="grid gap-2 md:grid-cols-[1fr_auto]">
-          <Button size="lg" onClick={() => handleAddQuick(250)} disabled={addMutation.isPending}>
+          <Button size="lg" className="w-full" onClick={() => handleAddQuick(250)} disabled={addMutation.isPending}>
             + 1 vaso (250 ml)
           </Button>
-          <div className="flex gap-2">
+          <div className="grid gap-2 sm:flex">
             <Select value={selectedPresetValue} onValueChange={setSelectedPresetValue}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="Opciones" />
               </SelectTrigger>
               <SelectContent>
@@ -289,6 +289,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
               </SelectContent>
             </Select>
             <Button
+              className="w-full sm:w-auto"
               variant="outline"
               onClick={() => {
                 if (selectedPresetValue === "custom") {
@@ -307,7 +308,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
         </div>
 
         <div className="grid gap-2 md:grid-cols-[1fr_auto]">
-          <div className="grid grid-cols-[1fr_auto] gap-2">
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
             <Input
               type="number"
               min="1"
@@ -317,7 +318,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
               onChange={(e) => setGoalInput(e.target.value)}
             />
             <Select value={goalUnit} onValueChange={(value: "ml" | "l") => setGoalUnit(value)}>
-              <SelectTrigger className="w-[90px]">
+              <SelectTrigger className="w-full sm:w-[90px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -326,7 +327,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" onClick={handleSaveGoal} disabled={updateGoalMutation.isPending}>
+          <Button className="w-full md:w-auto" variant="outline" onClick={handleSaveGoal} disabled={updateGoalMutation.isPending}>
             Guardar objetivo
           </Button>
         </div>
@@ -341,8 +342,9 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
 
         {todayLogs.length === 0 && <p className="text-xs text-muted-foreground">No hay consumos registrados hoy.</p>}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2 sm:flex sm:flex-wrap">
           <Button
+            className="w-full sm:w-auto"
             variant="ghost"
             size="sm"
             onClick={() => {
@@ -356,6 +358,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
             Deshacer ultimo ({todayLogs.length})
           </Button>
           <Button
+            className="w-full sm:w-auto"
             variant="ghost"
             size="sm"
             onClick={() => {
@@ -400,7 +403,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
             <DialogTitle>Agregar consumo personalizado</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-[1fr_auto] gap-2">
+            <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
               <Input
                 type="number"
                 min="1"
@@ -410,7 +413,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
                 placeholder="Cantidad"
               />
               <Select value={customUnit} onValueChange={(value: "ml" | "l") => setCustomUnit(value)}>
-                <SelectTrigger className="w-[90px]">
+                <SelectTrigger className="w-full sm:w-[90px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -432,10 +435,10 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCustomOpen(false)}>
+            <Button className="w-full sm:w-auto" variant="outline" onClick={() => setCustomOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleAddCustom} disabled={addMutation.isPending}>
+            <Button className="w-full sm:w-auto" onClick={handleAddCustom} disabled={addMutation.isPending}>
               Agregar
             </Button>
           </DialogFooter>

@@ -1,12 +1,33 @@
 import { useMemo } from "react";
-import { BarChart3, Bell, CalendarDays, Dumbbell, Home, LogOut, Menu, Plus, Ruler, Settings, Target, UtensilsCrossed } from "lucide-react";
-import { usePreferences } from "@/context/PreferencesContext";
-import { useAuth } from "@/context/AuthContext";
+import {
+  BarChart3,
+  Bell,
+  CalendarDays,
+  Dumbbell,
+  Home,
+  LogOut,
+  Menu,
+  Plus,
+  Ruler,
+  Settings,
+  Target,
+  UtensilsCrossed,
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+
+import { usePreferences } from "@/context/PreferencesContext";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { TranslationKey } from "@/i18n/translations";
 
 const resolvePageTitle = (pathname: string, t: (key: TranslationKey) => string) => {
@@ -41,7 +62,7 @@ const DashboardHeader = () => {
   const dateStr = today.toLocaleDateString(language === "es" ? "es-ES" : "en-US", options);
   const pageTitle = useMemo(() => resolvePageTitle(location.pathname, t), [location.pathname, t]);
 
-  const days = language === "es" ? ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const days = language === "es" ? ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const currentDay = today.getDay();
   const activeDayIndex = currentDay === 0 ? 6 : currentDay - 1;
   const mobileNavItems = [
@@ -66,27 +87,27 @@ const DashboardHeader = () => {
       await signOut();
       navigate("/auth", { replace: true });
     } catch (error: any) {
-      toast.error(error?.message || "No se pudo cerrar sesión.");
+      toast.error(error?.message || "No se pudo cerrar sesion.");
     }
   };
 
   return (
-    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 md:px-8">
-      <div className="flex items-center gap-6">
+    <header className="flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card px-3 py-3 md:h-16 md:px-8 md:py-0">
+      <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-6">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Abrir menú">
+            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Abrir menu">
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-4">
-            <SheetTitle>Navegación</SheetTitle>
+          <SheetContent side="left" className="w-[min(20rem,calc(100vw-1rem))] p-4">
+            <SheetTitle>Navegacion</SheetTitle>
             <div className="mt-4 grid gap-2">
               {mobileNavItems.map((item) => (
                 <SheetClose asChild key={item.path}>
                   <Button
                     variant="ghost"
-                    className="justify-start"
+                    className="min-h-11 justify-start rounded-xl"
                     onClick={() => {
                       navigate(item.path);
                     }}
@@ -99,20 +120,20 @@ const DashboardHeader = () => {
             </div>
           </SheetContent>
         </Sheet>
-        <div>
-          <h2 className="text-lg font-semibold text-card-foreground">{pageTitle || t("header.dashboard")}</h2>
-          <p className="text-xs text-muted-foreground">{dateStr}</p>
+        <div className="min-w-0">
+          <h2 className="truncate text-base font-semibold text-card-foreground md:text-lg">{pageTitle || t("header.dashboard")}</h2>
+          <p className="hidden text-xs text-muted-foreground sm:block">{dateStr}</p>
         </div>
-        <div className="hidden md:flex items-center gap-1 ml-4">
+        <div className="ml-4 hidden items-center gap-1 md:flex">
           {days.map((day, i) => (
             <span
               key={day}
-              className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium transition-colors ${
                 i === activeDayIndex
                   ? "bg-primary text-primary-foreground"
                   : i < activeDayIndex
-                  ? "bg-accent text-accent-foreground"
-                  : "bg-secondary text-muted-foreground"
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-secondary text-muted-foreground"
               }`}
             >
               {day.charAt(0)}
@@ -121,37 +142,37 @@ const DashboardHeader = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1 md:gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors"
-              aria-label="Registro rápido"
-              title="Registro rápido"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
+              aria-label="Registro rapido"
+              title="Registro rapido"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Registro rápido</DropdownMenuLabel>
+            <DropdownMenuLabel>Registro rapido</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => navigate("/today#water")}>Agregar agua</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => navigate("/today#sleep")}>Agregar sueño</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => navigate("/today#sleep")}>Agregar sueno</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => navigate("/today#weight")}>Agregar peso</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => navigate("/today#nutrition")}>Agregar comida</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <button className="w-10 h-10 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors relative">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" />
+        <button className="relative hidden h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground md:flex">
+          <Bell className="h-5 w-5" />
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
         </button>
         <button
-          className="w-10 h-10 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
           onClick={handleAuthAction}
-          aria-label={isGuest ? "Ir a iniciar sesión" : "Cerrar sesión"}
-          title={isGuest ? "Cambiar cuenta" : "Cerrar sesión"}
+          aria-label={isGuest ? "Ir a iniciar sesion" : "Cerrar sesion"}
+          title={isGuest ? "Cambiar cuenta" : "Cerrar sesion"}
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="h-5 w-5" />
         </button>
       </div>
     </header>

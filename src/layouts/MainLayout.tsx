@@ -18,7 +18,7 @@ const MainLayout = () => {
         <DashboardHeader />
         {isGuest && <GuestWarningBanner />}
 
-        <main className="flex-1 p-4 pb-24 md:p-8 md:pb-8">
+        <main className="flex-1 p-4 pb-32 md:p-8 md:pb-8">
           <Outlet />
         </main>
         <MobileBottomNav />

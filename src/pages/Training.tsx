@@ -639,12 +639,12 @@ const Training = () => {
       {trainingError ? <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">{copy.failedLoad}: {getTrainingErrorMessage(trainingError)}</div> : null}
 
       <Tabs value={tab} onValueChange={handleTabChange} className="space-y-5">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-2 lg:grid-cols-5">
-          <TabsTrigger value="today">{copy.tabs.today}</TabsTrigger>
-          <TabsTrigger value="routines">{copy.tabs.routines}</TabsTrigger>
-          <TabsTrigger value="library">{copy.tabs.library}</TabsTrigger>
-          <TabsTrigger value="history">{copy.tabs.history}</TabsTrigger>
-          <TabsTrigger value="progress">{copy.tabs.progress}</TabsTrigger>
+        <TabsList className="flex h-auto w-full gap-2 overflow-x-auto rounded-2xl bg-muted/60 p-2 lg:grid lg:grid-cols-5 lg:overflow-visible">
+          <TabsTrigger className="min-w-[9.5rem] lg:min-w-0" value="today">{copy.tabs.today}</TabsTrigger>
+          <TabsTrigger className="min-w-[9.5rem] lg:min-w-0" value="routines">{copy.tabs.routines}</TabsTrigger>
+          <TabsTrigger className="min-w-[9.5rem] lg:min-w-0" value="library">{copy.tabs.library}</TabsTrigger>
+          <TabsTrigger className="min-w-[9.5rem] lg:min-w-0" value="history">{copy.tabs.history}</TabsTrigger>
+          <TabsTrigger className="min-w-[9.5rem] lg:min-w-0" value="progress">{copy.tabs.progress}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="today" className="space-y-5">
@@ -656,37 +656,37 @@ const Training = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {!activeSession && scheduledWorkout ? (
-                  <div className="rounded-2xl border p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <div className="text-2xl font-bold">{scheduledWorkout.name}</div>
-                        <div className="text-sm text-muted-foreground">{scheduledWorkout.description || "Rutina programada para hoy."}</div>
-                      </div>
-                      <Button onClick={() => startSessionMutation.mutate(scheduledWorkout.id)} disabled={startSessionMutation.isPending}>
-                        <PlayCircle className="mr-2 h-4 w-4" />
-                        {copy.startWorkout}
-                      </Button>
+                    <div className="rounded-2xl border p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <div className="text-2xl font-bold">{scheduledWorkout.name}</div>
+                          <div className="text-sm text-muted-foreground">{scheduledWorkout.description || "Rutina programada para hoy."}</div>
+                        </div>
+                        <Button className="w-full sm:w-auto" onClick={() => startSessionMutation.mutate(scheduledWorkout.id)} disabled={startSessionMutation.isPending}>
+                          <PlayCircle className="mr-2 h-4 w-4" />
+                          {copy.startWorkout}
+                        </Button>
                     </div>
                   </div>
                 ) : null}
 
                 {activeSession ? (
                   <div className="space-y-4">
-                    <div className="rounded-2xl border p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <div className="text-xl font-bold">{activeSession.workout.name}</div>
-                          <div className="text-sm text-muted-foreground">{copy.startedAt} {formatDateTime(activeSession.started_at)}</div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" disabled={finishSessionMutation.isPending} onClick={() => finishSessionMutation.mutate({ sessionId: activeSession.id, status: "cancelled" })}>
-                            <XCircle className="mr-2 h-4 w-4" />
-                            {copy.cancel}
-                          </Button>
-                          <Button disabled={finishSessionMutation.isPending} onClick={() => finishSessionMutation.mutate({ sessionId: activeSession.id, status: "completed" })}>
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            {copy.finish}
-                          </Button>
+                      <div className="rounded-2xl border p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <div className="text-xl font-bold">{activeSession.workout.name}</div>
+                            <div className="text-sm text-muted-foreground">{copy.startedAt} {formatDateTime(activeSession.started_at)}</div>
+                          </div>
+                          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                            <Button className="w-full sm:w-auto" variant="outline" disabled={finishSessionMutation.isPending} onClick={() => finishSessionMutation.mutate({ sessionId: activeSession.id, status: "cancelled" })}>
+                              <XCircle className="mr-2 h-4 w-4" />
+                              {copy.cancel}
+                            </Button>
+                            <Button className="w-full sm:w-auto" disabled={finishSessionMutation.isPending} onClick={() => finishSessionMutation.mutate({ sessionId: activeSession.id, status: "completed" })}>
+                              <CheckCircle2 className="mr-2 h-4 w-4" />
+                              {copy.finish}
+                            </Button>
                         </div>
                       </div>
                       <Progress value={activeProgress.percent} className="mt-4 h-3" />
@@ -723,14 +723,15 @@ const Training = () => {
                             )}
                           </div>
 
-                          <div className="mt-4 flex gap-2">
+                          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                             <Textarea
+                              className="min-h-24"
                               value={noteDrafts[noteKey] ?? ""}
                               placeholder={copy.exerciseNote}
                               onChange={(event) => setNoteDrafts((current) => ({ ...current, [noteKey]: event.target.value }))}
                             />
                             <Button
-                              className="shrink-0"
+                              className="w-full shrink-0 sm:w-auto"
                               variant="outline"
                               disabled={saveSessionNoteMutation.isPending}
                               onClick={() => saveSessionNoteMutation.mutate({ sessionId: activeSession.id, exerciseId: exercise.exercise_id, notes: noteDrafts[noteKey] || null })}
@@ -753,7 +754,7 @@ const Training = () => {
                                       {draft.completed || existingSet?.completed ? copy.markDone : copy.markUndone}
                                     </Badge>
                                   </div>
-                                  <div className="grid gap-3 md:grid-cols-4">
+                                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                                     <Input
                                       aria-label={`${copy.weight} ${setNumber}`}
                                       value={draft.weight}
@@ -774,22 +775,23 @@ const Training = () => {
                                     />
                                     <Input
                                       aria-label={`${copy.notes} ${setNumber}`}
+                                      className="col-span-2 md:col-span-1"
                                       value={draft.notes}
                                       onChange={(event) => setDrafts((current) => ({ ...current, [key]: { ...draft, notes: event.target.value } }))}
                                       placeholder={copy.notes}
                                     />
                                   </div>
-                                  <div className="mt-3 flex flex-wrap gap-2">
-                                    <Button variant="outline" disabled={saveSetMutation.isPending} onClick={() => saveSet(activeSession.id, exercise.exercise_id, setNumber, 0, false)}>
+                                  <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
+                                    <Button className="w-full sm:w-auto" variant="outline" disabled={saveSetMutation.isPending} onClick={() => saveSet(activeSession.id, exercise.exercise_id, setNumber, 0, false)}>
                                       {copy.saveDraft}
                                     </Button>
-                                    <Button disabled={saveSetMutation.isPending} onClick={() => saveSet(activeSession.id, exercise.exercise_id, setNumber, exercise.rest_seconds, true)}>
+                                    <Button className="w-full sm:w-auto" disabled={saveSetMutation.isPending} onClick={() => saveSet(activeSession.id, exercise.exercise_id, setNumber, exercise.rest_seconds, true)}>
                                       {copy.markDone}
                                     </Button>
                                     {(existingSet || setNumber > exercise.target_sets) ? (
                                       <Button
                                         variant="ghost"
-                                        className="text-destructive hover:text-destructive"
+                                        className="w-full text-destructive hover:text-destructive sm:w-auto"
                                         disabled={deleteSetMutation.isPending}
                                         onClick={() => deleteSetMutation.mutate({ sessionId: activeSession.id, exerciseId: exercise.exercise_id, setNumber })}
                                       >
@@ -833,7 +835,7 @@ const Training = () => {
                 <CardContent className="space-y-3">
                   {schedule.map((day) => (
                     <div key={day.day_of_week} className="grid gap-2 rounded-2xl border p-3">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-3">
                         <span className="font-medium">{DAY_LABELS[day.day_of_week]}</span>
                         {day.day_of_week === new Date().getDay() ? <Badge variant="secondary">{copy.todayBadge}</Badge> : null}
                       </div>
@@ -868,9 +870,9 @@ const Training = () => {
                 <CardContent className="space-y-2">
                   {workouts.length === 0 ? renderPlaceholder(copy.firstCreateRoutine) : null}
                   {workouts.map((workout) => (
-                    <div key={workout.id} className="flex items-center justify-between rounded-xl border px-3 py-2">
+                    <div key={workout.id} className="flex flex-col gap-2 rounded-xl border px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                       <span>{workout.name}</span>
-                      <Button variant="outline" onClick={() => startSessionMutation.mutate(workout.id)} disabled={Boolean(activeSession) || startSessionMutation.isPending}>{copy.start}</Button>
+                      <Button className="w-full sm:w-auto" variant="outline" onClick={() => startSessionMutation.mutate(workout.id)} disabled={Boolean(activeSession) || startSessionMutation.isPending}>{copy.start}</Button>
                     </div>
                   ))}
                 </CardContent>
@@ -882,12 +884,12 @@ const Training = () => {
         <TabsContent value="routines" className="space-y-5">
           <div className="grid gap-5 xl:grid-cols-[1.2fr_0.9fr]">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle>{copy.personalRoutines}</CardTitle>
                   <CardDescription>{copy.personalRoutinesDescription}</CardDescription>
                 </div>
-                <Button onClick={() => { setEditingWorkoutId(null); setWorkoutDialogOpen(true); }}>
+                <Button className="w-full sm:w-auto" onClick={() => { setEditingWorkoutId(null); setWorkoutDialogOpen(true); }}>
                   <CirclePlus className="mr-2 h-4 w-4" />
                   {copy.newRoutine}
                 </Button>
@@ -905,10 +907,10 @@ const Training = () => {
                           {getWorkoutPreviewText(workout.id)}
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => startSessionMutation.mutate(workout.id)} disabled={Boolean(activeSession) || startSessionMutation.isPending}><PlayCircle className="mr-2 h-4 w-4" />{copy.start}</Button>
-                        <Button variant="outline" onClick={() => { setEditingWorkoutId(workout.id); setWorkoutDialogOpen(true); }} disabled={saveWorkoutMutation.isPending}>{copy.edit}</Button>
-                        <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteWorkoutId(workout.id)} disabled={deleteWorkoutMutation.isPending}><Trash2 className="mr-2 h-4 w-4" />{copy.delete}</Button>
+                      <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap">
+                        <Button className="w-full sm:w-auto" variant="outline" onClick={() => startSessionMutation.mutate(workout.id)} disabled={Boolean(activeSession) || startSessionMutation.isPending}><PlayCircle className="mr-2 h-4 w-4" />{copy.start}</Button>
+                        <Button className="w-full sm:w-auto" variant="outline" onClick={() => { setEditingWorkoutId(workout.id); setWorkoutDialogOpen(true); }} disabled={saveWorkoutMutation.isPending}>{copy.edit}</Button>
+                        <Button className="w-full text-destructive hover:text-destructive sm:w-auto" variant="ghost" onClick={() => setDeleteWorkoutId(workout.id)} disabled={deleteWorkoutMutation.isPending}><Trash2 className="mr-2 h-4 w-4" />{copy.delete}</Button>
                       </div>
                     </div>
                   </div>
@@ -941,15 +943,15 @@ const Training = () => {
 
         <TabsContent value="library" className="space-y-5">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>{copy.exerciseLibrary}</CardTitle>
                 <CardDescription>{copy.exerciseLibraryDescription}</CardDescription>
               </div>
-              <Button onClick={() => setCustomExerciseOpen(true)}><CirclePlus className="mr-2 h-4 w-4" />{copy.customExercise}</Button>
+              <Button className="w-full sm:w-auto" onClick={() => setCustomExerciseOpen(true)}><CirclePlus className="mr-2 h-4 w-4" />{copy.customExercise}</Button>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="grid gap-3 lg:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Input placeholder={copy.searchExercise} value={filters.search ?? ""} onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} />
                 <Select value={filters.muscleGroup ?? "all"} onValueChange={(value) => setFilters((current) => ({ ...current, muscleGroup: value as ExerciseFilterInput["muscleGroup"] }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1004,12 +1006,12 @@ const Training = () => {
                 {(historyQuery.data ?? []).length === 0 ? renderPlaceholder(copy.noHistory) : null}
               {(historyQuery.data ?? []).map((session) => (
                 <div key={session.id} className="rounded-2xl border p-4">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="font-semibold">{session.workout_name}</div>
                       <div className="text-sm text-muted-foreground">{formatDateTime(session.started_at)}</div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Badge variant={session.status === "completed" ? "default" : "secondary"}>{session.status}</Badge>
                       <Badge variant="outline">{Math.round(session.total_volume)} kg</Badge>
                     </div>
@@ -1032,7 +1034,7 @@ const Training = () => {
                   <SelectTrigger><SelectValue placeholder={copy.selectExercise} /></SelectTrigger>
                   <SelectContent>{exerciseLibrary.map((exercise) => <SelectItem key={exercise.id} value={exercise.id}>{formatExerciseName(exercise)}</SelectItem>)}</SelectContent>
                 </Select>
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                   {(exercisePrsQuery.data ?? []).map((pr) => (
                     <div key={pr.id} className="rounded-2xl border p-4">
                       <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{prLabelMap[pr.pr_type]}</div>
@@ -1066,11 +1068,11 @@ const Training = () => {
                 <CardDescription>{copy.exerciseHistoryDescription}</CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[640px] pr-3">
+                <ScrollArea className="h-[420px] pr-3 md:h-[640px]">
                   <div className="space-y-3">
                     {(exerciseHistoryQuery.data ?? []).map((entry) => (
                       <div key={entry.session_id} className="rounded-2xl border p-4">
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <div className="font-semibold">{entry.workout_name}</div>
                             <div className="text-sm text-muted-foreground">{formatDateTime(entry.started_at)}</div>
@@ -1079,7 +1081,7 @@ const Training = () => {
                         </div>
                         <div className="mt-3 space-y-2">
                           {entry.sets.map((set) => (
-                            <div key={set.id} className="flex items-center justify-between rounded-xl border px-3 py-2 text-sm">
+                            <div key={set.id} className="flex flex-col gap-1 rounded-xl border px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
                               <span>Set {set.set_number}</span>
                               <span>{set.weight} kg x {set.reps} reps</span>
                             </div>
@@ -1176,8 +1178,8 @@ const Training = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setWorkoutDialogOpen(false)}>{copy.cancel}</Button>
-            <Button onClick={() => saveWorkoutMutation.mutate({
+            <Button className="w-full sm:w-auto" variant="outline" onClick={() => setWorkoutDialogOpen(false)}>{copy.cancel}</Button>
+            <Button className="w-full sm:w-auto" onClick={() => saveWorkoutMutation.mutate({
               id: editingWorkoutId ?? undefined,
               name: workoutName,
               description: workoutDescription || null,
@@ -1249,8 +1251,8 @@ const Training = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCustomExerciseOpen(false)}>{copy.cancel}</Button>
-            <Button onClick={() => saveCustomExerciseMutation.mutate(customExerciseForm)} disabled={saveCustomExerciseMutation.isPending}>{copy.saveExercise}</Button>
+            <Button className="w-full sm:w-auto" variant="outline" onClick={() => setCustomExerciseOpen(false)}>{copy.cancel}</Button>
+            <Button className="w-full sm:w-auto" onClick={() => saveCustomExerciseMutation.mutate(customExerciseForm)} disabled={saveCustomExerciseMutation.isPending}>{copy.saveExercise}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

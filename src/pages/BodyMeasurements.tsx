@@ -553,49 +553,79 @@ const BodyMeasurements = () => {
           ) : visibleMeasurements.length === 0 ? (
             <p className="text-sm text-muted-foreground">Sin mediciones para el rango seleccionado.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Cintura</TableHead>
-                  <TableHead>Cuello</TableHead>
-                  <TableHead>Cadera</TableHead>
-                  <TableHead>Muslo</TableHead>
-                  <TableHead>Brazo</TableHead>
-                  <TableHead>% grasa</TableHead>
-                  <TableHead>Notas</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              <div className="space-y-3 md:hidden">
                 {[...visibleMeasurements].reverse().map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell>{row.date_key}</TableCell>
-                    <TableCell>{Number(row.waist_cm).toFixed(1)} cm</TableCell>
-                    <TableCell>{Number(row.neck_cm).toFixed(1)} cm</TableCell>
-                    <TableCell>{row.hip_cm ? `${Number(row.hip_cm).toFixed(1)} cm` : "--"}</TableCell>
-                    <TableCell>{row.thigh_cm ? `${Number(row.thigh_cm).toFixed(1)} cm` : "--"}</TableCell>
-                    <TableCell>{row.arm_cm ? `${Number(row.arm_cm).toFixed(1)} cm` : "--"}</TableCell>
-                    <TableCell>{row.body_fat_pct !== null ? `${Number(row.body_fat_pct).toFixed(1)}%` : "--"}</TableCell>
-                    <TableCell className="max-w-[280px] whitespace-normal text-sm text-muted-foreground">
-                      {row.notes?.trim() ? row.notes : "--"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleEdit(row)}>
-                          <Pencil className="mr-1 h-3.5 w-3.5" />
-                          Editar
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => setDeleteTarget({ id: row.id, dateKey: row.date_key })}>
-                          <Trash2 className="mr-1 h-3.5 w-3.5" />
-                          Eliminar
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <div key={row.id} className="rounded-2xl border p-4">
+                    <div className="font-semibold">{row.date_key}</div>
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                      <div className="rounded-xl border px-3 py-2">Cintura {Number(row.waist_cm).toFixed(1)} cm</div>
+                      <div className="rounded-xl border px-3 py-2">Cuello {Number(row.neck_cm).toFixed(1)} cm</div>
+                      <div className="rounded-xl border px-3 py-2">Cadera {row.hip_cm ? `${Number(row.hip_cm).toFixed(1)} cm` : "--"}</div>
+                      <div className="rounded-xl border px-3 py-2">Muslo {row.thigh_cm ? `${Number(row.thigh_cm).toFixed(1)} cm` : "--"}</div>
+                      <div className="rounded-xl border px-3 py-2">Brazo {row.arm_cm ? `${Number(row.arm_cm).toFixed(1)} cm` : "--"}</div>
+                      <div className="rounded-xl border px-3 py-2">% grasa {row.body_fat_pct !== null ? `${Number(row.body_fat_pct).toFixed(1)}%` : "--"}</div>
+                    </div>
+                    <p className="mt-3 text-sm text-muted-foreground">{row.notes?.trim() ? row.notes : "--"}</p>
+                    <div className="mt-4 grid gap-2">
+                      <Button className="w-full" size="sm" variant="outline" onClick={() => handleEdit(row)}>
+                        <Pencil className="mr-1 h-3.5 w-3.5" />
+                        Editar
+                      </Button>
+                      <Button className="w-full" size="sm" variant="destructive" onClick={() => setDeleteTarget({ id: row.id, dateKey: row.date_key })}>
+                        <Trash2 className="mr-1 h-3.5 w-3.5" />
+                        Eliminar
+                      </Button>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Cintura</TableHead>
+                      <TableHead>Cuello</TableHead>
+                      <TableHead>Cadera</TableHead>
+                      <TableHead>Muslo</TableHead>
+                      <TableHead>Brazo</TableHead>
+                      <TableHead>% grasa</TableHead>
+                      <TableHead>Notas</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[...visibleMeasurements].reverse().map((row) => (
+                      <TableRow key={row.id}>
+                        <TableCell>{row.date_key}</TableCell>
+                        <TableCell>{Number(row.waist_cm).toFixed(1)} cm</TableCell>
+                        <TableCell>{Number(row.neck_cm).toFixed(1)} cm</TableCell>
+                        <TableCell>{row.hip_cm ? `${Number(row.hip_cm).toFixed(1)} cm` : "--"}</TableCell>
+                        <TableCell>{row.thigh_cm ? `${Number(row.thigh_cm).toFixed(1)} cm` : "--"}</TableCell>
+                        <TableCell>{row.arm_cm ? `${Number(row.arm_cm).toFixed(1)} cm` : "--"}</TableCell>
+                        <TableCell>{row.body_fat_pct !== null ? `${Number(row.body_fat_pct).toFixed(1)}%` : "--"}</TableCell>
+                        <TableCell className="max-w-[280px] whitespace-normal text-sm text-muted-foreground">
+                          {row.notes?.trim() ? row.notes : "--"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="outline" onClick={() => handleEdit(row)}>
+                              <Pencil className="mr-1 h-3.5 w-3.5" />
+                              Editar
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => setDeleteTarget({ id: row.id, dateKey: row.date_key })}>
+                              <Trash2 className="mr-1 h-3.5 w-3.5" />
+                              Eliminar
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

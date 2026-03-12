@@ -13,20 +13,24 @@ const MobileBottomNav = () => {
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur md:hidden">
+    <nav
+      aria-label="Navegacion principal movil"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 shadow-[0_-12px_30px_-24px_hsl(var(--foreground)/0.45)] backdrop-blur md:hidden"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <ul className="grid h-16 grid-cols-5">
         {mobileItems.map((item) => (
           <li key={item.path}>
             <NavLink
               to={item.path}
               className={({ isActive }) =>
-                `flex h-full flex-col items-center justify-center gap-1 text-[11px] ${
+                `flex h-full flex-col items-center justify-center gap-1 px-1 text-[10px] ${
                   isActive ? "text-primary" : "text-muted-foreground"
                 }`
               }
             >
               <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
+              <span className="line-clamp-1">{item.label}</span>
             </NavLink>
           </li>
         ))}

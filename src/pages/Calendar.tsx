@@ -460,15 +460,15 @@ const Calendar = () => {
           <p className="text-sm text-muted-foreground">{t("calendar.description")}</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setCurrentMonth((prev) => addMonths(prev, -1))}>
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
+          <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => setCurrentMonth((prev) => addMonths(prev, -1))}>
             <ChevronLeft className="h-4 w-4 mr-1" />
             {t("calendar.prevMonth")}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setCurrentMonth(startOfMonth(new Date()))}>
+          <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => setCurrentMonth(startOfMonth(new Date()))}>
             {t("calendar.today")}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setCurrentMonth((prev) => addMonths(prev, 1))}>
+          <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => setCurrentMonth((prev) => addMonths(prev, 1))}>
             {t("calendar.nextMonth")}
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
@@ -521,49 +521,53 @@ const Calendar = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="grid grid-cols-7 gap-2 text-center text-xs text-muted-foreground">
-              {weekdayLabels.map((label) => (
-                <div key={label}>{label}</div>
-              ))}
-            </div>
+            <div className="overflow-x-auto pb-2">
+              <div className="min-w-[38rem] space-y-2">
+                <div className="grid grid-cols-7 gap-2 text-center text-xs text-muted-foreground">
+                  {weekdayLabels.map((label) => (
+                    <div key={label}>{label}</div>
+                  ))}
+                </div>
 
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">{t("calendar.loading")}</p>
-            ) : (
-              <div className="grid grid-cols-7 gap-2">
-                {visibleDays.map((dayDate) => {
-                  const key = formatDateKey(dayDate);
-                  const day = calendarData?.daily.get(key);
-                  const inCurrentMonth = isSameMonth(dayDate, currentMonth);
-                  const isSelected = key === selectedDateKey;
+                {isLoading ? (
+                  <p className="text-sm text-muted-foreground">{t("calendar.loading")}</p>
+                ) : (
+                  <div className="grid grid-cols-7 gap-2">
+                    {visibleDays.map((dayDate) => {
+                      const key = formatDateKey(dayDate);
+                      const day = calendarData?.daily.get(key);
+                      const inCurrentMonth = isSameMonth(dayDate, currentMonth);
+                      const isSelected = key === selectedDateKey;
 
-                  return (
-                    <button
-                      type="button"
-                      key={key}
-                      onClick={() => setSelectedDateKey(key)}
-                      className={`min-h-24 rounded-lg border p-2 text-left transition ${dayCellClasses(day, inCurrentMonth)} ${
-                        isSelected ? "ring-2 ring-primary" : "hover:border-primary/60"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{dayDate.getDate()}</span>
-                        {day?.metWaterGoal && <CheckCircle2 className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-1 text-xs">
-                        {day?.hasWater && <Droplets className="h-3 w-3 text-primary" aria-label={t("calendar.summary.water")} />}
-                        {day?.hasWeight && <Scale className="h-3 w-3 text-muted-foreground" aria-label={t("calendar.summary.weight")} />}
-                        {day?.hasSleep && <Moon className="h-3 w-3 text-indigo-500" aria-label={t("calendar.summary.sleep")} />}
-                        {day?.hasBiofeedback && <HeartPulse className="h-3 w-3 text-rose-500" aria-label="Biofeedback" />}
-                        {day?.hasNote && <FileText className="h-3 w-3 text-amber-500" aria-label="Daily note" />}
-                        {day?.hasNutrition && <UtensilsCrossed className="h-3 w-3 text-emerald-400" aria-label="Alimentacion" />}
-                        {day?.metSleepGoal && <CheckCircle2 className="h-3 w-3 text-emerald-500" aria-hidden="true" />}
-                      </div>
-                    </button>
-                  );
-                })}
+                      return (
+                        <button
+                          type="button"
+                          key={key}
+                          onClick={() => setSelectedDateKey(key)}
+                          className={`min-h-24 rounded-lg border p-2 text-left transition ${dayCellClasses(day, inCurrentMonth)} ${
+                            isSelected ? "ring-2 ring-primary" : "hover:border-primary/60"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">{dayDate.getDate()}</span>
+                            {day?.metWaterGoal && <CheckCircle2 className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-1 text-xs">
+                            {day?.hasWater && <Droplets className="h-3 w-3 text-primary" aria-label={t("calendar.summary.water")} />}
+                            {day?.hasWeight && <Scale className="h-3 w-3 text-muted-foreground" aria-label={t("calendar.summary.weight")} />}
+                            {day?.hasSleep && <Moon className="h-3 w-3 text-indigo-500" aria-label={t("calendar.summary.sleep")} />}
+                            {day?.hasBiofeedback && <HeartPulse className="h-3 w-3 text-rose-500" aria-label="Biofeedback" />}
+                            {day?.hasNote && <FileText className="h-3 w-3 text-amber-500" aria-label="Daily note" />}
+                            {day?.hasNutrition && <UtensilsCrossed className="h-3 w-3 text-emerald-400" aria-label="Alimentacion" />}
+                            {day?.metSleepGoal && <CheckCircle2 className="h-3 w-3 text-emerald-500" aria-hidden="true" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
 
@@ -582,14 +586,14 @@ const Calendar = () => {
                 <p className="text-sm text-muted-foreground">
                   Faltan: {selectedDayMissingModules.map((module) => module.label).join(", ")}.
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid gap-2 sm:flex sm:flex-wrap">
                   {selectedDayMissingModules.map((module) =>
                     module.mode === "link" ? (
-                      <Button key={module.key} asChild size="sm" variant="outline">
+                      <Button key={module.key} asChild size="sm" variant="outline" className="w-full sm:w-auto">
                         <Link to={module.target}>Registrar {module.label}</Link>
                       </Button>
                     ) : (
-                      <Button key={module.key} size="sm" variant="outline" onClick={() => scrollToQuickAdd(module.target)}>
+                      <Button key={module.key} size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => scrollToQuickAdd(module.target)}>
                         Registrar {module.label}
                       </Button>
                     ),
@@ -752,17 +756,17 @@ const Calendar = () => {
                   <Droplets className="h-4 w-4" />
                   {t("calendar.quickAdd.water")}
                 </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    value={quickWaterMl}
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      type="number"
+                      value={quickWaterMl}
                     onChange={(e) => setQuickWaterMl(e.target.value)}
                     placeholder={t("calendar.quickAdd.waterPlaceholder")}
                   />
-                  <Button onClick={() => addWaterMutation.mutate()} disabled={addWaterMutation.isPending}>
-                    {t("calendar.quickAdd.addWater")}
-                  </Button>
-                </div>
+                    <Button className="w-full sm:w-auto" onClick={() => addWaterMutation.mutate()} disabled={addWaterMutation.isPending}>
+                      {t("calendar.quickAdd.addWater")}
+                    </Button>
+                  </div>
               </div>
 
               <div id="quick-weight" className="space-y-2">
@@ -770,18 +774,18 @@ const Calendar = () => {
                   <Scale className="h-4 w-4" />
                   {t("calendar.quickAdd.weight")}
                 </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    value={quickWeightKg}
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      type="number"
+                      value={quickWeightKg}
                     onChange={(e) => setQuickWeightKg(e.target.value)}
                     step="0.1"
                     placeholder={t("calendar.quickAdd.weightPlaceholder")}
                   />
-                  <Button onClick={() => addWeightMutation.mutate()} disabled={addWeightMutation.isPending}>
-                    {t("calendar.quickAdd.addWeight")}
-                  </Button>
-                </div>
+                    <Button className="w-full sm:w-auto" onClick={() => addWeightMutation.mutate()} disabled={addWeightMutation.isPending}>
+                      {t("calendar.quickAdd.addWeight")}
+                    </Button>
+                  </div>
               </div>
 
               <div id="quick-sleep" className="space-y-2">
@@ -789,17 +793,17 @@ const Calendar = () => {
                   <Moon className="h-4 w-4" />
                   {t("calendar.quickAdd.sleep")}
                 </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    value={quickSleepMinutes}
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      type="number"
+                      value={quickSleepMinutes}
                     onChange={(e) => setQuickSleepMinutes(e.target.value)}
                     placeholder={t("calendar.quickAdd.sleepPlaceholder")}
                   />
-                  <Button onClick={() => addSleepMutation.mutate()} disabled={addSleepMutation.isPending}>
-                    {t("calendar.quickAdd.addSleep")}
-                  </Button>
-                </div>
+                    <Button className="w-full sm:w-auto" onClick={() => addSleepMutation.mutate()} disabled={addSleepMutation.isPending}>
+                      {t("calendar.quickAdd.addSleep")}
+                    </Button>
+                  </div>
               </div>
             </CardContent>
           </Card>

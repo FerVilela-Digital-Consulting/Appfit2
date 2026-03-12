@@ -379,33 +379,54 @@ const BodyWeight = () => {
           ) : displayedEntries.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aún no hay registros.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Peso</TableHead>
-                  <TableHead>Notas</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              <div className="space-y-3 md:hidden">
                 {displayedEntries.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell>{entry.measured_at}</TableCell>
-                    <TableCell>{entry.weight_kg} kg</TableCell>
-                    <TableCell>{entry.notes || "-"}</TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(entry)}>
+                  <div key={entry.id} className="rounded-2xl border p-4">
+                    <div className="font-semibold">{entry.measured_at}</div>
+                    <div className="mt-1 text-sm text-muted-foreground">{entry.weight_kg} kg</div>
+                    <p className="mt-3 text-sm text-muted-foreground">{entry.notes || "-"}</p>
+                    <div className="mt-4 grid gap-2">
+                      <Button className="w-full" size="sm" variant="outline" onClick={() => handleEdit(entry)}>
                         Editar
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(entry)}>
+                      <Button className="w-full" size="sm" variant="destructive" onClick={() => setDeleteTarget(entry)}>
                         Eliminar
                       </Button>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Peso</TableHead>
+                      <TableHead>Notas</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {displayedEntries.map((entry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell>{entry.measured_at}</TableCell>
+                        <TableCell>{entry.weight_kg} kg</TableCell>
+                        <TableCell>{entry.notes || "-"}</TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(entry)}>
+                            Editar
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(entry)}>
+                            Eliminar
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

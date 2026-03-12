@@ -320,14 +320,14 @@ const TodayMealsModule = () => {
                       </div>
                     ) : (
                       meal.entries.map((entry: NutritionEntry) => (
-                        <div key={entry.id} className="grid grid-cols-[1fr_auto] gap-3 rounded-xl border border-border/50 bg-background/50 p-3">
+                        <div key={entry.id} className="grid gap-3 rounded-xl border border-border/50 bg-background/50 p-3 sm:grid-cols-[1fr_auto]">
                           <div>
                             <div className="font-medium">{entry.food_name}</div>
                             <div className="text-xs text-muted-foreground">
                               {entry.serving_size} {entry.serving_unit} | P {entry.protein_g} | C {entry.carbs_g} | G {entry.fat_g}
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-between gap-3 sm:justify-start">
                             <div className="text-sm font-semibold">{entry.calories} kcal</div>
                             <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(entry.id)} disabled={deleteMutation.isPending}>
                               <Trash2 className="h-4 w-4" />
@@ -337,16 +337,16 @@ const TodayMealsModule = () => {
                       ))
                     )}
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Button variant="outline" onClick={() => openDialog(meal.key, "manual")}>
+                  <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
+                    <Button className="w-full sm:w-auto" variant="outline" onClick={() => openDialog(meal.key, "manual")}>
                       <PencilLine className="mr-2 h-4 w-4" />
                       Carga manual
                     </Button>
-                    <Button variant="outline" onClick={() => openDialog(meal.key, "favorite")}>
+                    <Button className="w-full sm:w-auto" variant="outline" onClick={() => openDialog(meal.key, "favorite")}>
                       <ShieldPlus className="mr-2 h-4 w-4" />
                       Favoritos
                     </Button>
-                    <Button variant="outline" onClick={() => openDialog(meal.key, "recent")}>
+                    <Button className="w-full sm:w-auto" variant="outline" onClick={() => openDialog(meal.key, "recent")}>
                       <Database className="mr-2 h-4 w-4" />
                       Recientes
                     </Button>
@@ -398,11 +398,11 @@ const TodayMealsModule = () => {
             {mode === "manual" && (
               <div className="space-y-3 rounded-2xl border border-border/60 bg-background/40 p-4">
                 <Input value={foodName} onChange={(event) => setFoodName(event.target.value)} placeholder="Nombre del alimento" />
-                <div className="grid gap-3 md:grid-cols-[1fr_120px]">
+                <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
                   <Input value={servingSize} onChange={(event) => setServingSize(event.target.value)} type="number" min="0" placeholder="Cantidad" />
                   <Input value={servingUnit} onChange={(event) => setServingUnit(event.target.value)} placeholder="unidad" />
                 </div>
-                <div className="grid gap-3 md:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                   <Input value={calories} onChange={(event) => setCalories(event.target.value)} type="number" min="0" placeholder="kcal" />
                   <Input value={protein} onChange={(event) => setProtein(event.target.value)} type="number" min="0" placeholder="Proteina" />
                   <Input value={carbs} onChange={(event) => setCarbs(event.target.value)} type="number" min="0" placeholder="Carbs" />
@@ -442,10 +442,10 @@ const TodayMealsModule = () => {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button className="w-full sm:w-auto" variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleAdd} disabled={addMutation.isPending}>
+            <Button className="w-full sm:w-auto" onClick={handleAdd} disabled={addMutation.isPending}>
               {addMutation.isPending ? "Guardando..." : "Guardar comida"}
             </Button>
           </DialogFooter>
