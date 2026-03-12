@@ -45,6 +45,12 @@ type TimelineItem = {
   icon: typeof Droplets;
   badge?: string;
   surfaceClassName: string;
+  accentClassName: string;
+};
+
+type TimelineLayoutItem = TimelineItem & {
+  laneIndex: number;
+  laneCount: number;
 };
 
 const formatDateKey = (date: Date) => format(date, "yyyy-MM-dd");
@@ -270,7 +276,8 @@ const Calendar = () => {
         durationMinutes: 30,
         variant: "logged",
         icon: Scale,
-        surfaceClassName: "border-slate-400/25 bg-slate-500/10 text-slate-50",
+        surfaceClassName: "border-slate-300/45 bg-slate-950 text-white shadow-[0_10px_24px_rgba(2,6,23,0.42)]",
+        accentClassName: "bg-slate-300",
         badge: language === "es" ? "Medicion" : "Measurement",
       });
     }
@@ -287,7 +294,8 @@ const Calendar = () => {
           durationMinutes: 25,
           variant: "logged",
           icon: Droplets,
-          surfaceClassName: "border-cyan-400/30 bg-cyan-500/12 text-cyan-50",
+          surfaceClassName: "border-cyan-400/55 bg-[#071824] text-white shadow-[0_10px_24px_rgba(6,25,39,0.42)]",
+          accentClassName: "bg-cyan-400",
           badge: `${log.consumed_ml} ml`,
         });
       });
@@ -305,7 +313,8 @@ const Calendar = () => {
           durationMinutes: placement.durationMinutes,
           variant: "logged",
           icon: Moon,
-          surfaceClassName: "border-indigo-400/30 bg-indigo-500/14 text-indigo-50",
+          surfaceClassName: "border-indigo-400/55 bg-[#101527] text-white shadow-[0_10px_24px_rgba(15,23,42,0.45)]",
+          accentClassName: "bg-indigo-400",
           badge: `${(Number(log.total_minutes || 0) / 60).toFixed(1)} h`,
         });
       });
@@ -319,7 +328,8 @@ const Calendar = () => {
         durationMinutes: 35,
         variant: "context",
         icon: HeartPulse,
-        surfaceClassName: "border-rose-400/30 bg-rose-500/12 text-rose-50",
+        surfaceClassName: "border-rose-400/55 bg-[#1b1020] text-white shadow-[0_10px_24px_rgba(31,10,24,0.45)]",
+        accentClassName: "bg-rose-400",
         badge: `${selectedBiofeedback.daily_energy}/10`,
       });
     }
@@ -338,7 +348,8 @@ const Calendar = () => {
           durationMinutes: Math.max(40, entries.length * 18),
           variant: "logged",
           icon: UtensilsCrossed,
-          surfaceClassName: "border-emerald-400/30 bg-emerald-500/12 text-emerald-50",
+          surfaceClassName: "border-emerald-400/55 bg-[#0c1b16] text-white shadow-[0_10px_24px_rgba(8,28,22,0.45)]",
+          accentClassName: "bg-emerald-400",
           badge: mealTotals?.calories ? `${mealTotals.calories} kcal` : undefined,
         });
       });
@@ -353,7 +364,8 @@ const Calendar = () => {
         durationMinutes: 50,
         variant: "context",
         icon: FileText,
-        surfaceClassName: "border-amber-400/30 bg-amber-500/12 text-amber-50",
+        surfaceClassName: "border-amber-400/60 bg-[#1d1608] text-white shadow-[0_10px_24px_rgba(36,27,8,0.48)]",
+        accentClassName: "bg-amber-400",
         badge: language === "es" ? "Nota" : "Note",
       });
     }
@@ -368,7 +380,8 @@ const Calendar = () => {
         variant: "pending",
         icon: CheckCircle2,
         href: module.href,
-        surfaceClassName: "border-primary/45 bg-primary/10 text-primary-foreground/95",
+        surfaceClassName: "border-primary/65 bg-[#201d11] text-white shadow-[0_10px_24px_rgba(41,33,6,0.42)]",
+        accentClassName: "bg-primary",
         badge: language === "es" ? "Pendiente" : "Pending",
       });
     });
@@ -382,30 +395,79 @@ const Calendar = () => {
     });
   }, [dayLogs, language, missingModules, selectedBiofeedback, selectedDateKey, selectedDay, selectedNutrition, selectedNote, selectedSleepDay?.logs]);
 
+  const timelineLayoutItems = useMemo<TimelineLayoutItem[]>(() => {
+    if (!timelineItems.length) return [];
+
+    const groups: TimelineItem[][] = [];
+    let currentGroup: TimelineItem[] = [];
+    let currentGroupEnd = -1;
+
+    timelineItems.forEach((item) => {
+      const itemEnd = item.startMinutes + item.durationMinutes;
+      if (!currentGroup.length || item.startMinutes < currentGroupEnd) {
+        currentGroup.push(item);
+        currentGroupEnd = Math.max(currentGroupEnd, itemEnd);
+        return;
+      }
+
+      groups.push(currentGroup);
+      currentGroup = [item];
+      currentGroupEnd = itemEnd;
+    });
+
+    if (currentGroup.length) groups.push(currentGroup);
+
+    return groups.flatMap((group) => {
+      const activeLanes: Array<{ laneIndex: number; endMinutes: number }> = [];
+      let maxLaneCount = 1;
+      const assigned = group.map((item) => {
+        const itemStart = item.startMinutes;
+        const itemEnd = item.startMinutes + item.durationMinutes;
+        const stillActive = activeLanes.filter((lane) => lane.endMinutes > itemStart);
+        const usedLanes = new Set(stillActive.map((lane) => lane.laneIndex));
+
+        let laneIndex = 0;
+        while (usedLanes.has(laneIndex)) laneIndex += 1;
+
+        activeLanes.length = 0;
+        activeLanes.push(...stillActive, { laneIndex, endMinutes: itemEnd });
+        maxLaneCount = Math.max(maxLaneCount, activeLanes.length);
+
+        return { item, laneIndex };
+      });
+
+      return assigned.map(({ item, laneIndex }) => ({
+        ...item,
+        laneIndex,
+        laneCount: maxLaneCount,
+      }));
+    });
+  }, [timelineItems]);
+
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const isTodaySelected = selectedDateKey === todayKey;
   const currentTimeOffset = (nowMinutes / 60) * TIMELINE_HOUR_HEIGHT;
   const timelineHours = Array.from({ length: 24 }, (_, hour) => hour);
-  const activeTimelineItem = timelineItems.find((item) => item.id === selectedTimelineItemId) ?? timelineItems[0] ?? null;
+  const activeTimelineItem = timelineLayoutItems.find((item) => item.id === selectedTimelineItemId) ?? timelineLayoutItems[0] ?? null;
 
   useEffect(() => {
     setSelectedTimelineItemId((current) => {
-      if (current && timelineItems.some((item) => item.id === current)) return current;
-      return timelineItems[0]?.id ?? null;
+      if (current && timelineLayoutItems.some((item) => item.id === current)) return current;
+      return timelineLayoutItems[0]?.id ?? null;
     });
-  }, [timelineItems]);
+  }, [timelineLayoutItems]);
 
   useEffect(() => {
     if (calendarView !== "day") return;
     const container = timelineScrollRef.current;
     if (!container) return;
-    const firstItemOffset = timelineItems[0] ? (timelineItems[0].startMinutes / 60) * TIMELINE_HOUR_HEIGHT : 0;
+    const firstItemOffset = timelineLayoutItems[0] ? (timelineLayoutItems[0].startMinutes / 60) * TIMELINE_HOUR_HEIGHT : 0;
     const liveNow = new Date();
     const liveOffset = ((liveNow.getHours() * 60 + liveNow.getMinutes()) / 60) * TIMELINE_HOUR_HEIGHT;
     const targetOffset = isTodaySelected ? liveOffset : firstItemOffset;
     const nextScrollTop = Math.max(0, targetOffset - container.clientHeight * 0.35);
     container.scrollTo({ top: nextScrollTop, behavior: "smooth" });
-  }, [calendarView, isTodaySelected, selectedDateKey, timelineItems]);
+  }, [calendarView, isTodaySelected, selectedDateKey, timelineLayoutItems]);
 
   const refreshCalendar = () => Promise.all([
     queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
@@ -533,47 +595,63 @@ const Calendar = () => {
               ) : null}
 
               <div className="absolute inset-0 left-16 md:left-20">
-                {timelineItems.length === 0 ? (
+                {timelineLayoutItems.length === 0 ? (
                   <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground">
                     {language === "es" ? "Aun no hay bloques para este dia. Registra algo o crea una nota para empezar a poblar la agenda." : "No blocks for this day yet. Log something or create a note to start building the day."}
                   </div>
                 ) : (
-                  timelineItems.map((item) => {
+                  timelineLayoutItems.map((item) => {
                     const Icon = item.icon;
                     const top = (item.startMinutes / 60) * TIMELINE_HOUR_HEIGHT;
                     const height = Math.max(44, (item.durationMinutes / 60) * TIMELINE_HOUR_HEIGHT);
                     const isActive = activeTimelineItem?.id === item.id;
+                    const laneWidth = 100 / item.laneCount;
                     const sharedProps = {
-                      className: `absolute left-2 right-3 rounded-[18px] border px-3 py-2 text-left shadow-sm transition hover:border-primary/60 ${item.surfaceClassName} ${isActive ? "ring-2 ring-primary/70" : ""}`,
-                      style: { top: `${top}px`, height: `${height}px` },
+                      className: `h-full w-full rounded-[18px] border px-3 py-2 text-left shadow-sm transition hover:border-primary/60 ${item.surfaceClassName} ${isActive ? "ring-2 ring-primary/70" : ""}`,
                     };
                     const innerContent = (
                       <>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 space-y-1">
+                        <div className="flex h-full items-start gap-3">
+                          <span className={`mt-0.5 h-full min-h-8 w-1.5 shrink-0 rounded-full ${item.accentClassName}`} />
+                          <div className="min-w-0 flex-1 space-y-1">
                             <p className="flex items-center gap-2 text-sm font-semibold">
                               <Icon className="h-4 w-4 shrink-0" />
                               <span className="truncate">{item.title}</span>
                             </p>
-                            <p className="line-clamp-2 text-xs text-white/78">{item.detail}</p>
+                            <p className="line-clamp-2 text-xs text-slate-300">{item.detail}</p>
+                            {item.laneCount > 1 ? (
+                              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">
+                                {language === "es" ? `Paralelo ${item.laneIndex + 1}/${item.laneCount}` : `Parallel ${item.laneIndex + 1}/${item.laneCount}`}
+                              </p>
+                            ) : null}
                           </div>
                           {item.badge ? <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-white/78">{item.badge}</span> : null}
                         </div>
                       </>
                     );
 
-                    if (item.href) {
-                      return (
-                        <Link key={item.id} to={item.href} onClick={() => setSelectedTimelineItemId(item.id)} {...sharedProps}>
-                          {innerContent}
-                        </Link>
-                      );
-                    }
-
                     return (
-                      <button key={item.id} type="button" onClick={() => setSelectedTimelineItemId(item.id)} {...sharedProps}>
-                        {innerContent}
-                      </button>
+                      <div
+                        key={item.id}
+                        className="absolute px-1"
+                        style={{
+                          top: `${top}px`,
+                          left: `${item.laneIndex * laneWidth}%`,
+                          width: `${laneWidth}%`,
+                          height: `${height}px`,
+                          zIndex: isActive ? 15 : 10,
+                        }}
+                      >
+                        {item.href ? (
+                          <Link to={item.href} onClick={() => setSelectedTimelineItemId(item.id)} {...sharedProps}>
+                            {innerContent}
+                          </Link>
+                        ) : (
+                          <button type="button" onClick={() => setSelectedTimelineItemId(item.id)} {...sharedProps}>
+                            {innerContent}
+                          </button>
+                        )}
+                      </div>
                     );
                   })
                 )}
