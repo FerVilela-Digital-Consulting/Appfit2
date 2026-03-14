@@ -253,70 +253,72 @@ const Profile = () => {
           description="Configura en una sola vista tus datos base, actividad, objetivo corporal, meta de peso y metas metabolicas."
         />
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
-        <Card className="app-surface-hero overflow-hidden rounded-[24px] md:rounded-[28px]">
-          <CardContent className="grid gap-6 p-6 md:p-8 lg:min-h-[15rem] lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
-            <div className="flex items-center justify-center lg:justify-start">
-              <Avatar className="h-24 w-24 md:h-28 md:w-28">
-                <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar de perfil" className="object-cover" />
-                <AvatarFallback className="app-surface-soft text-2xl">
-                  {fullName ? getInitials(fullName) : <User className="h-12 w-12" />}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-            <div className="space-y-6">
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="app-surface-tile rounded-2xl p-4">
-                  <p className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">Actual</p>
-                  <p className="app-surface-heading mt-2 text-xl font-semibold">{formatNumber(latestWeight)}</p>
+        <div className="space-y-6">
+          <Card className="app-surface-hero overflow-hidden rounded-[24px] md:rounded-[28px]">
+            <CardContent className="grid gap-6 p-6 md:p-8 lg:min-h-[15rem] lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
+              <div className="flex items-center justify-center lg:justify-start">
+                <Avatar className="h-24 w-24 md:h-28 md:w-28">
+                  <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar de perfil" className="object-cover" />
+                  <AvatarFallback className="app-surface-soft text-2xl">
+                    {fullName ? getInitials(fullName) : <User className="h-12 w-12" />}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="space-y-6">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="app-surface-tile rounded-2xl p-4">
+                    <p className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">Actual</p>
+                    <p className="app-surface-heading mt-2 text-xl font-semibold">{formatNumber(latestWeight)}</p>
+                  </div>
+                  <div className="app-surface-tile rounded-2xl p-4">
+                    <p className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">Inicial</p>
+                    <p className="app-surface-heading mt-2 text-xl font-semibold">{formatNumber(initialWeight)}</p>
+                  </div>
+                  <div className="app-surface-tile rounded-2xl p-4">
+                    <p className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">Objetivo</p>
+                    <p className="app-surface-heading mt-2 text-xl font-semibold">{formatNumber(targetWeightValue)}</p>
+                  </div>
+                  <div className="app-surface-tile rounded-2xl p-4">
+                    <p className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">Progreso</p>
+                    <p className="app-surface-heading mt-2 text-xl font-semibold">{progress === null ? "--" : `${progress.toFixed(0)}%`}</p>
+                  </div>
                 </div>
-                <div className="app-surface-tile rounded-2xl p-4">
-                  <p className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">Inicial</p>
-                  <p className="app-surface-heading mt-2 text-xl font-semibold">{formatNumber(initialWeight)}</p>
-                </div>
-                <div className="app-surface-tile rounded-2xl p-4">
-                  <p className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">Objetivo</p>
-                  <p className="app-surface-heading mt-2 text-xl font-semibold">{formatNumber(targetWeightValue)}</p>
-                </div>
-                <div className="app-surface-tile rounded-2xl p-4">
-                  <p className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">Progreso</p>
-                  <p className="app-surface-heading mt-2 text-xl font-semibold">{progress === null ? "--" : `${progress.toFixed(0)}%`}</p>
+                <div className="space-y-2 xl:max-w-[34rem]">
+                  <div className="app-surface-muted flex flex-col gap-1 text-xs uppercase tracking-[0.22em] sm:flex-row sm:items-center sm:justify-between">
+                    <span>Meta de peso</span>
+                    <span>Restante {remaining}</span>
+                  </div>
+                  <Progress value={progress ?? 0} className="app-progress-track h-3" />
                 </div>
               </div>
-              <div className="space-y-2 xl:max-w-[34rem]">
-                <div className="app-surface-muted flex flex-col gap-1 text-xs uppercase tracking-[0.22em] sm:flex-row sm:items-center sm:justify-between">
-                  <span>Meta de peso</span>
-                  <span>Restante {remaining}</span>
-                </div>
-                <Progress value={progress ?? 0} className="app-progress-track h-3" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="rounded-[22px] md:rounded-[24px]">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              Metas activas
-            </CardTitle>
-            <CardDescription>Resumen ejecutivo del plan actual.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="app-panel-block rounded-2xl p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Objetivo metabólico</p>
-              <p className="mt-2 text-lg font-semibold">{selectedGoal?.label ?? "Mantener peso"}</p>
-              <p className="text-sm text-muted-foreground">{selectedGoal?.description}</p>
-            </div>
-            <div className="app-panel-block rounded-2xl p-4 text-sm">
-              <p>Sueño: {sleepGoalMinutes || "480"} min</p>
-              <p>Calorías: {calorieGoal || "2000"} kcal</p>
-              <p>Proteína: {proteinGoal || "150"} g</p>
-              <p>Carbs: {carbGoal || "250"} g</p>
-              <p>Grasas: {fatGoal || "70"} g</p>
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="rounded-[22px] md:rounded-[24px]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-primary" />
+                Metas activas
+              </CardTitle>
+              <CardDescription>Resumen ejecutivo del plan actual.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+              <div className="app-panel-block rounded-2xl p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Objetivo metab?lico</p>
+                <p className="mt-2 text-lg font-semibold">{selectedGoal?.label ?? "Mantener peso"}</p>
+                <p className="text-sm text-muted-foreground">{selectedGoal?.description}</p>
+              </div>
+              <div className="app-panel-block rounded-2xl p-4 text-sm">
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                  <p>Sue?o: {sleepGoalMinutes || "480"} min</p>
+                  <p>Calor?as: {calorieGoal || "2000"} kcal</p>
+                  <p>Prote?na: {proteinGoal || "150"} g</p>
+                  <p>Carbs: {carbGoal || "250"} g</p>
+                  <p>Grasas: {fatGoal || "70"} g</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Card>
