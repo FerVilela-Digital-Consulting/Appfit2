@@ -491,41 +491,6 @@ const Dashboard = () => {
       <Card className="app-surface-hero overflow-hidden rounded-[22px] md:rounded-[28px]">
         <CardContent className={cn("grid gap-4 p-4 md:gap-6 md:p-6", visibleRightCards && "xl:grid-cols-[1.5fr_0.9fr]")}>
           <div className="space-y-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div />
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="app-outline-button rounded-2xl">
-                    <Settings2 className="mr-2 h-4 w-4" />
-                    Widgets visibles
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-[calc(100vw-2rem)] max-w-sm space-y-4 sm:w-96">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Centro operativo</p>
-                    <p className="text-xs text-muted-foreground">Controla que cards aparecen en la pestaña Centro operativo.</p>
-                    <div className="grid max-h-72 gap-2 overflow-auto pr-1">
-                      {DASHBOARD_HOME_WIDGET_DEFINITIONS.filter((widget) => widget.key !== "hero_modules").map((widget) => {
-                        const checked = selectedWidgetKeys.includes(widget.key);
-                        return (
-                          <div key={widget.key} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`dashboard-widget-${widget.key}`}
-                              checked={checked}
-                              onCheckedChange={(value) => handleToggleWidget(widget.key, Boolean(value))}
-                              disabled={saveWidgetPreferencesMutation.isPending}
-                            />
-                            <Label htmlFor={`dashboard-widget-${widget.key}`} className="text-sm font-normal">
-                              {widget.label}
-                            </Label>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
             {isWidgetVisible("hero_routine") ? (
             <div className="app-surface-tile rounded-2xl p-3 md:p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
