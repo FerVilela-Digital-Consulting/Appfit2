@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { DAY_LABELS, MUSCLE_GROUP_LABELS } from "@/features/training/catalog";
-import type { TrainingCopy } from "@/pages/training/trainingConstants";
-import type { ExerciseRecord, WorkoutDetail, WorkoutRecord, WorkoutScheduleDay, WorkoutSessionDetail } from "@/types/training";
+import { DAY_LABELS, MUSCLE_GROUP_LABELS } from "@/modules/training/catalog";
+import type { TrainingCopy } from "@/modules/training/ui/trainingConstants";
+import type { ExerciseRecord, WorkoutDetail, WorkoutRecord, WorkoutScheduleDay, WorkoutSessionDetail } from "@/modules/training/types";
 
 type SetDraft = {
   weight: string;

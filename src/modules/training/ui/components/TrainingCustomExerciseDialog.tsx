@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { DIFFICULTY_LABELS, EQUIPMENT_LABELS, MOVEMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/features/training/catalog";
-import type { TrainingCopy } from "@/pages/training/trainingConstants";
-import type { SaveExerciseInput } from "@/types/training";
+import { DIFFICULTY_LABELS, EQUIPMENT_LABELS, MOVEMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/modules/training/catalog";
+import type { TrainingCopy } from "@/modules/training/ui/trainingConstants";
+import type { SaveExerciseInput } from "@/modules/training/types";
 
 type TrainingCustomExerciseDialogProps = {
   copy: TrainingCopy;

@@ -1,15 +1,15 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrainingCustomExerciseDialog } from "@/pages/training/components/TrainingCustomExerciseDialog";
-import { TrainingDeleteWorkoutDialog } from "@/pages/training/components/TrainingDeleteWorkoutDialog";
-import { TrainingHistorySection } from "@/pages/training/components/TrainingHistorySection";
-import { TrainingLibrarySection } from "@/pages/training/components/TrainingLibrarySection";
-import { TrainingProgressSection } from "@/pages/training/components/TrainingProgressSection";
-import { TrainingRoutinesSection } from "@/pages/training/components/TrainingRoutinesSection";
-import { TrainingTodaySection } from "@/pages/training/components/TrainingTodaySection";
-import { TrainingWorkoutDialog } from "@/pages/training/components/TrainingWorkoutDialog";
-import { formatDateTime, formatRest, prLabelMap } from "@/pages/training/trainingConstants";
-import { useTrainingPageState } from "@/pages/training/useTrainingPageState";
+import { TrainingCustomExerciseDialog } from "@/modules/training/ui/components/TrainingCustomExerciseDialog";
+import { TrainingDeleteWorkoutDialog } from "@/modules/training/ui/components/TrainingDeleteWorkoutDialog";
+import { TrainingHistorySection } from "@/modules/training/ui/components/TrainingHistorySection";
+import { TrainingLibrarySection } from "@/modules/training/ui/components/TrainingLibrarySection";
+import { TrainingProgressSection } from "@/modules/training/ui/components/TrainingProgressSection";
+import { TrainingRoutinesSection } from "@/modules/training/ui/components/TrainingRoutinesSection";
+import { TrainingTodaySection } from "@/modules/training/ui/components/TrainingTodaySection";
+import { TrainingWorkoutDialog } from "@/modules/training/ui/components/TrainingWorkoutDialog";
+import { formatDateTime, formatRest, prLabelMap } from "@/modules/training/ui/trainingConstants";
+import { useTrainingPageState } from "@/modules/training/ui/useTrainingPageState";
 
 const Training = () => {
   const {

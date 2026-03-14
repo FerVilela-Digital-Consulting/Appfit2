@@ -2,9 +2,9 @@ import type { ComponentProps } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { TrainingLibrarySection } from "@/pages/training/components/TrainingLibrarySection";
-import { TRAINING_COPY } from "@/pages/training/trainingConstants";
-import type { ExerciseRecord } from "@/types/training";
+import { TrainingLibrarySection } from "@/modules/training/ui/components/TrainingLibrarySection";
+import { TRAINING_COPY } from "@/modules/training/ui/trainingConstants";
+import type { ExerciseRecord } from "@/modules/training/types";
 
 const copy = TRAINING_COPY.es;
 

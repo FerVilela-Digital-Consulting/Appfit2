@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NUTRITION_ARCHETYPE_META } from "@/features/nutrition/nutritionProfiles";
-import type { NutritionDayArchetype, NutritionProfileRecord } from "@/services/nutrition";
+import type { NutritionDayArchetype, NutritionProfileRecord } from "@/modules/nutrition/types";
 
 type NutritionProfileDialogProps = {
   open: boolean;

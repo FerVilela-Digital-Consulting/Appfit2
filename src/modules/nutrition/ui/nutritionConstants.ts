@@ -1,4 +1,4 @@
-import type { NutritionMealType } from "@/services/nutrition";
+import type { NutritionMealType } from "@/modules/nutrition/types";
 
 export const MEAL_SECTIONS: Array<{ key: NutritionMealType; label: string; accentClass: string; railClass: string }> = [
   { key: "breakfast", label: "Desayuno", accentClass: "text-lime-300", railClass: "bg-lime-400" },

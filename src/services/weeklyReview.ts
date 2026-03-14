@@ -5,7 +5,7 @@ import { getWaterGoal, getWaterRangeTotals } from "@/services/waterIntake";
 import { getSleepRangeTotals } from "@/services/sleep";
 import { getBiofeedbackRange } from "@/services/dailyBiofeedback";
 import { getWeightTrendAnalysis } from "@/services/bodyMetrics";
-import { getNutritionGoals, getNutritionRangeSummary } from "@/services/nutrition";
+import { getNutritionGoals, getNutritionRangeSummary } from "@/modules/nutrition/services";
 import { supabase } from "@/services/supabaseClient";
 
 export type WeeklyReviewRecord = {

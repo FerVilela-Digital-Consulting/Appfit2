@@ -1,4 +1,4 @@
-import type { ExerciseRecord, SaveWorkoutInput } from "@/types/training";
+import type { ExerciseRecord, SaveWorkoutInput } from "@/modules/training/types";
 
 export type WorkoutExerciseDraft = SaveWorkoutInput["exercises"][number] & {
   clientId: string;

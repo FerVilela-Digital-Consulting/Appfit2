@@ -4,14 +4,14 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { NUTRITION_ARCHETYPE_META } from "@/features/nutrition/nutritionProfiles";
-import { ACTIVITY_LABELS, formatMetric, GOAL_LABELS } from "@/pages/nutrition/nutritionConstants";
+import { ACTIVITY_LABELS, formatMetric, GOAL_LABELS } from "@/modules/nutrition/ui/nutritionConstants";
 import type {
   NutritionGoals,
   NutritionMacroTotals,
   NutritionMetabolicProfile,
   NutritionProfileRecord,
   NutritionTargetBreakdown,
-} from "@/services/nutrition";
+} from "@/modules/nutrition/types";
 
 type NutritionSidebarPanelProps = {
   effectiveProfileLabel: string;
@@ -54,7 +54,9 @@ export function NutritionSidebarPanel({
   onArchiveProfile,
   onDeleteProfile,
 }: NutritionSidebarPanelProps) {
-  const archetypeMeta = NUTRITION_ARCHETYPE_META[activeArchetype as keyof typeof NUTRITION_ARCHETYPE_META];
+  const archetypeMeta =
+    NUTRITION_ARCHETYPE_META[activeArchetype as keyof typeof NUTRITION_ARCHETYPE_META] ??
+    NUTRITION_ARCHETYPE_META.base;
 
   return (
     <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
@@ -122,23 +124,27 @@ export function NutritionSidebarPanel({
         <div className="mt-4 space-y-3">
           {profileOptions.length === 0 ? (
             <div className="app-panel-block app-surface-muted rounded-2xl border-dashed px-4 py-5 text-sm">Crea perfiles como Torso, Pierna o Descanso. El perfil del dia recalcula metas sin duplicar tus comidas.</div>
-          ) : profileOptions.map((profileRow) => (
-            <div key={profileRow.id} className="app-panel-block rounded-2xl p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2"><span className="app-surface-heading text-sm font-semibold">{profileRow.name}</span>{profileRow.is_default ? <Star className="h-4 w-4 text-amber-300" /> : null}{profileRow.is_archived ? <span className="app-surface-caption text-[10px] uppercase tracking-[0.2em]">Archivado</span> : null}</div>
-                  <p className="app-surface-muted mt-1 text-xs">{NUTRITION_ARCHETYPE_META[profileRow.archetype].description}</p>
+          ) : profileOptions.map((profileRow) => {
+            const profileArchetypeMeta = NUTRITION_ARCHETYPE_META[profileRow.archetype] ?? NUTRITION_ARCHETYPE_META.base;
+
+            return (
+              <div key={profileRow.id} className="app-panel-block rounded-2xl p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2"><span className="app-surface-heading text-sm font-semibold">{profileRow.name}</span>{profileRow.is_default ? <Star className="h-4 w-4 text-amber-300" /> : null}{profileRow.is_archived ? <span className="app-surface-caption text-[10px] uppercase tracking-[0.2em]">Archivado</span> : null}</div>
+                    <p className="app-surface-muted mt-1 text-xs">{profileArchetypeMeta.description}</p>
+                  </div>
+                  <div className="app-surface-soft app-surface-muted rounded-xl px-2 py-1 text-[10px] uppercase tracking-[0.2em]">{profileArchetypeMeta.shortLabel}</div>
                 </div>
-                <div className="app-surface-soft app-surface-muted rounded-xl px-2 py-1 text-[10px] uppercase tracking-[0.2em]">{NUTRITION_ARCHETYPE_META[profileRow.archetype].shortLabel}</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => onEditProfile(profileRow)} className="app-outline-button">Editar</Button>
+                  {!profileRow.is_default ? <Button type="button" variant="outline" size="sm" onClick={() => onSetDefaultProfile(profileRow.id)} className="app-outline-button">Predeterminado</Button> : null}
+                  {!profileRow.is_archived ? <Button type="button" variant="outline" size="sm" onClick={() => onArchiveProfile(profileRow.id)} className="app-outline-button">Archivar</Button> : null}
+                  <Button type="button" variant="outline" size="sm" onClick={() => onDeleteProfile(profileRow.id)} className="border-red-400/20 bg-transparent text-red-200">Eliminar</Button>
+                </div>
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => onEditProfile(profileRow)} className="app-outline-button">Editar</Button>
-                {!profileRow.is_default ? <Button type="button" variant="outline" size="sm" onClick={() => onSetDefaultProfile(profileRow.id)} className="app-outline-button">Predeterminado</Button> : null}
-                {!profileRow.is_archived ? <Button type="button" variant="outline" size="sm" onClick={() => onArchiveProfile(profileRow.id)} className="app-outline-button">Archivar</Button> : null}
-                <Button type="button" variant="outline" size="sm" onClick={() => onDeleteProfile(profileRow.id)} className="border-red-400/20 bg-transparent text-red-200">Eliminar</Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

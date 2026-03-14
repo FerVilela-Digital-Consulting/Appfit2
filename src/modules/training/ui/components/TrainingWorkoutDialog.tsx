@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MUSCLE_GROUP_LABELS } from "@/features/training/catalog";
+import { MUSCLE_GROUP_LABELS } from "@/modules/training/catalog";
 import { createClientId } from "@/lib/id";
-import { toNumber, type TrainingCopy } from "@/pages/training/trainingConstants";
-import type { WorkoutExerciseDraft } from "@/pages/training/types";
-import type { ExerciseRecord } from "@/types/training";
+import { toNumber, type TrainingCopy } from "@/modules/training/ui/trainingConstants";
+import type { WorkoutExerciseDraft } from "@/modules/training/ui/types";
+import type { ExerciseRecord } from "@/modules/training/types";
 
 type TrainingWorkoutDialogProps = {
   copy: TrainingCopy;

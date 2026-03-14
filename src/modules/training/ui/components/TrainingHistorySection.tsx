@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { TrainingCopy } from "@/pages/training/trainingConstants";
+import type { TrainingCopy } from "@/modules/training/ui/trainingConstants";
 
 type WorkoutHistoryItem = {
   id: string;

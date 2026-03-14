@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { TrainingProgressSection } from "@/pages/training/components/TrainingProgressSection";
-import { TRAINING_COPY, prLabelMap } from "@/pages/training/trainingConstants";
+import { TrainingProgressSection } from "@/modules/training/ui/components/TrainingProgressSection";
+import { TRAINING_COPY, prLabelMap } from "@/modules/training/ui/trainingConstants";
 
 describe("TrainingProgressSection", () => {
   it("shows placeholder when there is no progress data", () => {

@@ -4,7 +4,7 @@ import { AreaChart, BarChart, Card, DonutChart, Metric, Text, Title } from "@tre
 
 import { useAuth } from "@/context/AuthContext";
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
-import { getNutritionGoals, getNutritionRangeSummary } from "@/services/nutrition";
+import { getNutritionGoals, getNutritionRangeSummary } from "@/modules/nutrition/services";
 
 type TrendRow = {
   dateKey: string;

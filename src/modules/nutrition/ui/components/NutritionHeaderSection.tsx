@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NUTRITION_ARCHETYPE_META } from "@/features/nutrition/nutritionProfiles";
 import { cn } from "@/lib/utils";
-import { formatMetric } from "@/pages/nutrition/nutritionConstants";
-import type { NutritionProfileRecord } from "@/services/nutrition";
+import { formatMetric } from "@/modules/nutrition/ui/nutritionConstants";
+import type { NutritionProfileRecord } from "@/modules/nutrition/types";
 
 type NutritionHeaderSectionProps = {
   selectedDate: Date;

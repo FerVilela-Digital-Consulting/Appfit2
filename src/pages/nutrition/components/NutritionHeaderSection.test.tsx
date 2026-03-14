@@ -2,8 +2,8 @@ import type { ComponentProps } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { NutritionHeaderSection } from "@/pages/nutrition/components/NutritionHeaderSection";
-import type { NutritionProfileRecord } from "@/services/nutrition";
+import { NutritionHeaderSection } from "@/modules/nutrition/ui/components/NutritionHeaderSection";
+import type { NutritionProfileRecord } from "@/modules/nutrition/types";
 
 const profileOptions: NutritionProfileRecord[] = [
   {
@@ -60,10 +60,9 @@ describe("NutritionHeaderSection", () => {
 
   it("triggers date navigation and profile creation actions", () => {
     const { callbacks } = renderSection();
-
-    const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[0]);
-    fireEvent.click(buttons[1]);
+    const iconButtons = screen.getAllByRole("button", { name: "" });
+    fireEvent.click(iconButtons[0]);
+    fireEvent.click(iconButtons[1]);
     fireEvent.click(screen.getByRole("button", { name: /Nuevo perfil/i }));
 
     expect(callbacks.onPreviousDate).toHaveBeenCalled();

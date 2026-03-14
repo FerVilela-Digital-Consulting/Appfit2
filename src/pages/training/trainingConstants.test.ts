@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatRest, parseStoredJson, toNumber } from "@/pages/training/trainingConstants";
+import { formatRest, parseStoredJson, toNumber } from "@/modules/training/ui/trainingConstants";
 
 describe("trainingConstants helpers", () => {
   it("converts valid numeric strings and falls back to zero", () => {

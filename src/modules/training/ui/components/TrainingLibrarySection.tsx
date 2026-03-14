@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DIFFICULTY_LABELS, EQUIPMENT_LABELS, MOVEMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/features/training/catalog";
-import type { TrainingCopy } from "@/pages/training/trainingConstants";
-import type { ExerciseFilterInput, ExerciseRecord } from "@/types/training";
+import { DIFFICULTY_LABELS, EQUIPMENT_LABELS, MOVEMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/modules/training/catalog";
+import type { TrainingCopy } from "@/modules/training/ui/trainingConstants";
+import type { ExerciseFilterInput, ExerciseRecord } from "@/modules/training/types";
 
 type TrainingLibrarySectionProps = {
   copy: TrainingCopy;

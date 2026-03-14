@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { TrainingHistorySection } from "@/pages/training/components/TrainingHistorySection";
-import { TRAINING_COPY } from "@/pages/training/trainingConstants";
+import { TrainingHistorySection } from "@/modules/training/ui/components/TrainingHistorySection";
+import { TRAINING_COPY } from "@/modules/training/ui/trainingConstants";
 
 describe("TrainingHistorySection", () => {
   it("renders placeholder when history is empty", () => {

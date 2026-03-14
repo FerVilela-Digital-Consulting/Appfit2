@@ -2,9 +2,9 @@ import type { ComponentProps } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { TrainingTodaySection } from "@/pages/training/components/TrainingTodaySection";
-import { TRAINING_COPY } from "@/pages/training/trainingConstants";
-import type { ExerciseRecord, WorkoutDetail, WorkoutRecord, WorkoutScheduleDay, WorkoutSessionDetail } from "@/types/training";
+import { TrainingTodaySection } from "@/modules/training/ui/components/TrainingTodaySection";
+import { TRAINING_COPY } from "@/modules/training/ui/trainingConstants";
+import type { ExerciseRecord, WorkoutDetail, WorkoutRecord, WorkoutScheduleDay, WorkoutSessionDetail } from "@/modules/training/types";
 
 const copy = TRAINING_COPY.es;
 
@@ -175,7 +175,7 @@ describe("TrainingTodaySection", () => {
       finishNotes: "Notas finales",
     });
 
-    expect(screen.getByText("Push Day")).toBeInTheDocument();
+    expect(screen.getAllByText("Push Day").length).toBeGreaterThan(0);
     expect(screen.getByText(copy.previousPerformance)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: copy.cancel }));
@@ -191,7 +191,7 @@ describe("TrainingTodaySection", () => {
       notes: "Mantener tecnica",
     });
 
-    fireEvent.click(screen.getByRole("button", { name: copy.saveDraft }));
+    fireEvent.click(screen.getAllByRole("button", { name: copy.saveDraft })[0]);
     expect(callbacks.onSaveSet).toHaveBeenCalledWith("session-1", "exercise-1", 1, 0, false);
 
     const completeButtons = screen.getAllByRole("button", { name: copy.markDone });

@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { ExerciseHistoryEntry, ExercisePrRecord, ExerciseProgressPoint, ExerciseRecord } from "@/types/training";
-import type { TrainingCopy } from "@/pages/training/trainingConstants";
+import type { ExerciseHistoryEntry, ExercisePrRecord, ExerciseProgressPoint, ExerciseRecord } from "@/modules/training/types";
+import type { TrainingCopy } from "@/modules/training/ui/trainingConstants";
 
 type TrainingProgressSectionProps = {
   copy: TrainingCopy;

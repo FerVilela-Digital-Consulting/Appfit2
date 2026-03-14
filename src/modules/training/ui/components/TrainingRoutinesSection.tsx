@@ -4,8 +4,8 @@ import { CirclePlus, Copy, PlayCircle, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { LocalizedText, WorkoutRecord, WorkoutTemplateRecord } from "@/types/training";
-import type { TrainingCopy } from "@/pages/training/trainingConstants";
+import type { LocalizedText, WorkoutRecord, WorkoutTemplateRecord } from "@/modules/training/types";
+import type { TrainingCopy } from "@/modules/training/ui/trainingConstants";
 
 type TrainingRoutinesSectionProps = {
   copy: TrainingCopy;

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
-import { getNutritionDaySummary } from "@/services/nutrition";
+import { getNutritionDaySummary } from "@/modules/nutrition/services";
 
 const NutritionCard = () => {
   const { user, isGuest, profile } = useAuth();

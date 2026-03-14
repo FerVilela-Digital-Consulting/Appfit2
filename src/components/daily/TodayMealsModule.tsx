@@ -13,7 +13,7 @@ import {
   listRecentNutritionEntries,
   type NutritionEntry,
   type NutritionMealType,
-} from "@/services/nutrition";
+} from "@/modules/nutrition/services";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";

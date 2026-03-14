@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ACTIVITY_LABELS, formatMetric, GOAL_LABELS, MEAL_SECTIONS } from "@/pages/nutrition/nutritionConstants";
+import { ACTIVITY_LABELS, formatMetric, GOAL_LABELS, MEAL_SECTIONS } from "@/modules/nutrition/ui/nutritionConstants";
 
 describe("nutritionConstants", () => {
   it("defines the expected meal sections", () => {

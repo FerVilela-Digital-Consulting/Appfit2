@@ -1,8 +1,8 @@
 import { ChevronDown, CirclePlus, Database, PencilLine, ShieldPlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatMetric, type AddMode, type MEAL_SECTIONS } from "@/pages/nutrition/nutritionConstants";
-import type { NutritionEntry, NutritionMealType } from "@/services/nutrition";
+import { formatMetric, type AddMode, type MEAL_SECTIONS } from "@/modules/nutrition/ui/nutritionConstants";
+import type { NutritionEntry, NutritionMealType } from "@/modules/nutrition/types";
 
 type MealOverviewItem = {
   meal: { key: NutritionMealType; label: string; accentClass: string; railClass: string };

@@ -25,7 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useAuth } from "@/context/AuthContext";
 import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
 import { NUTRITION_ARCHETYPE_META } from "@/features/nutrition/nutritionProfiles";
-import { getTrainingTodaySummary } from "@/services/training";
+import { getTrainingTodaySummary } from "@/modules/training/services";
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
 import {
   DASHBOARD_CHECKIN_MODULE_DEFINITIONS,

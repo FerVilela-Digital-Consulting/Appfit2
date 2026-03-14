@@ -14,8 +14,8 @@ import {
   TRAINING_COPY,
   TRAINING_TABS,
   type TrainingTab,
-} from "@/pages/training/trainingConstants";
-import type { SetDraft, WorkoutExerciseDraft } from "@/pages/training/types";
+} from "@/modules/training/ui/trainingConstants";
+import type { SetDraft, WorkoutExerciseDraft } from "@/modules/training/ui/types";
 import {
   deleteExerciseSet,
   deleteWorkout,
@@ -39,8 +39,8 @@ import {
   startWorkoutSession,
   upsertExerciseSet,
   upsertSessionExerciseNote,
-} from "@/services/training";
-import type { ExerciseFilterInput, ExerciseRecord, SaveExerciseInput, SaveWorkoutInput, WorkoutDetail } from "@/types/training";
+} from "@/modules/training/services";
+import type { ExerciseFilterInput, ExerciseRecord, SaveExerciseInput, SaveWorkoutInput, WorkoutDetail } from "@/modules/training/types";
 
 export function useTrainingPageState() {
   const queryClient = useQueryClient();

@@ -3,8 +3,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
-import { NutritionSidebarPanel } from "@/pages/nutrition/components/NutritionSidebarPanel";
-import type { NutritionProfileRecord } from "@/services/nutrition";
+import { NutritionSidebarPanel } from "@/modules/nutrition/ui/components/NutritionSidebarPanel";
+import type { NutritionProfileRecord } from "@/modules/nutrition/types";
 
 const profileOptions: NutritionProfileRecord[] = [
   {
@@ -21,7 +21,7 @@ const profileOptions: NutritionProfileRecord[] = [
     id: "profile-2",
     user_id: "user-1",
     name: "Descanso",
-    archetype: "rest",
+    archetype: "recovery",
     is_default: false,
     is_archived: false,
     created_at: "2026-03-13T10:00:00.000Z",
@@ -142,9 +142,9 @@ describe("NutritionSidebarPanel", () => {
     const { callbacks } = renderPanel();
 
     fireEvent.click(screen.getByRole("button", { name: /Nuevo/i }));
-    fireEvent.click(screen.getByRole("button", { name: /Editar/i }));
+    fireEvent.click(screen.getAllByRole("button", { name: /Editar/i })[0]);
     fireEvent.click(screen.getByRole("button", { name: /Predeterminado/i }));
-    fireEvent.click(screen.getByRole("button", { name: /Archivar/i }));
+    fireEvent.click(screen.getAllByRole("button", { name: /Archivar/i })[0]);
     fireEvent.click(screen.getAllByRole("button", { name: /Eliminar/i })[0]);
 
     expect(callbacks.onCreateProfile).toHaveBeenCalled();

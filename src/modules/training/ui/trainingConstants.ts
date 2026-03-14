@@ -1,4 +1,4 @@
-import type { SaveExerciseInput } from "@/types/training";
+import type { SaveExerciseInput } from "@/modules/training/types";
 
 export const MAX_ROUTINE_PREVIEW_EXERCISES = 4;
 export const TRAINING_TABS = ["today", "routines", "library", "history", "progress"] as const;

@@ -8,7 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import type { TrainingCopy } from "@/pages/training/trainingConstants";
+import type { TrainingCopy } from "@/modules/training/ui/trainingConstants";
 
 type TrainingDeleteWorkoutDialogProps = {
   copy: TrainingCopy;

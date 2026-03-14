@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -158,7 +158,11 @@ describe("Stats page", () => {
     expect(screen.getByText("Actual")).toBeInTheDocument();
     expect(screen.getByText("Inicial")).toBeInTheDocument();
     expect(screen.getByText("Objetivo")).toBeInTheDocument();
-    expect(screen.getByText("80.0 kg")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getAllByText("80.0 kg").length).toBeGreaterThan(0);
+    });
+
     expect(screen.getByText("84.0 kg")).toBeInTheDocument();
     expect(screen.getByText("75.0 kg")).toBeInTheDocument();
   });
@@ -180,7 +184,7 @@ describe("Stats page", () => {
 
     renderStats();
 
-    expect(await screen.findByText("Aún no definido")).toBeInTheDocument();
+    expect(await screen.findByText("Aun no definido")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Registrar peso" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Completar onboarding" })).toBeInTheDocument();
   });

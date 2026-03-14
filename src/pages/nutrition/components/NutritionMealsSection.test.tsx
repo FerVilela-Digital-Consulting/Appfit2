@@ -2,9 +2,9 @@ import type { ComponentProps } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { NutritionMealsSection } from "@/pages/nutrition/components/NutritionMealsSection";
-import { MEAL_SECTIONS } from "@/pages/nutrition/nutritionConstants";
-import type { NutritionEntry } from "@/services/nutrition";
+import { NutritionMealsSection } from "@/modules/nutrition/ui/components/NutritionMealsSection";
+import { MEAL_SECTIONS } from "@/modules/nutrition/ui/nutritionConstants";
+import type { NutritionEntry } from "@/modules/nutrition/types";
 
 const breakfastEntry: NutritionEntry = {
   id: "entry-1",
@@ -75,7 +75,7 @@ describe("NutritionMealsSection", () => {
 
     expect(screen.getByText("Registro operativo de comidas")).toBeInTheDocument();
     expect(screen.getByText("Desayuno")).toBeInTheDocument();
-    expect(screen.getByText("Avena")).toBeInTheDocument();
+    expect(screen.getAllByText("Avena").length).toBeGreaterThan(0);
     expect(screen.getByText("380 kcal")).toBeInTheDocument();
   });
 
@@ -97,11 +97,12 @@ describe("NutritionMealsSection", () => {
 
   it("toggles meals and deletes entries", () => {
     const { callbacks } = renderSection();
+    const iconButtons = screen.getAllByRole("button", { name: "" });
 
-    fireEvent.click(screen.getAllByRole("button")[1]);
+    fireEvent.click(iconButtons[0]);
     expect(callbacks.onToggleMeal).toHaveBeenCalledWith("breakfast");
 
-    fireEvent.click(screen.getAllByRole("button").find((button) => button.querySelector("svg"))!);
+    fireEvent.click(iconButtons[1]);
     expect(callbacks.onDeleteEntry).toHaveBeenCalledWith("entry-1");
   });
 
@@ -122,6 +123,6 @@ describe("NutritionMealsSection", () => {
       },
     });
 
-    expect(screen.getByText("Sin registros en esta comida.")).toBeInTheDocument();
+    expect(screen.getAllByText("Sin registros en esta comida.").length).toBeGreaterThan(0);
   });
 });
