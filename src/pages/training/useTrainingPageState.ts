@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { createElement, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -384,7 +384,8 @@ export function useTrainingPageState() {
       .reduce((max, value) => Math.max(max, value), 0);
 
   const restRemaining = restEndsAt ? Math.max(0, Math.ceil((restEndsAt - Date.now()) / 1000)) : 0;
-  const renderPlaceholder = (message: string) => <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">{message}</div>;
+  const renderPlaceholder = (message: string) =>
+    createElement("div", { className: "rounded-2xl border border-dashed p-4 text-sm text-muted-foreground" }, message);
 
   const openCreateRoutine = () => {
     setEditingWorkoutId(null);
