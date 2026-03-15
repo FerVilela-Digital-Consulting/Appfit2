@@ -21,12 +21,14 @@ import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/NotFound";
 
 import Auth from "@/pages/Auth";
+import AuthCallback from "@/pages/AuthCallback";
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/onboarding" element={<Onboarding />} />

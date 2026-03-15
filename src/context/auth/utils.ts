@@ -14,3 +14,11 @@ export const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number, timeoutM
         reject(error);
       });
   });
+
+export const getEmailVerificationRedirectUrl = () => {
+  if (typeof window === "undefined") {
+    return "/auth/callback";
+  }
+
+  return new URL("/auth/callback", window.location.origin).toString();
+};

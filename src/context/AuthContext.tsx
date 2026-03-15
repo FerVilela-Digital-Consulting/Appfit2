@@ -12,7 +12,7 @@ import {
     deriveOnboardingCompleted,
 } from '@/context/auth/profile';
 import type { AuthContextType, Profile } from '@/context/auth/types';
-import { withTimeout } from '@/context/auth/utils';
+import { getEmailVerificationRedirectUrl, withTimeout } from '@/context/auth/utils';
 import { supabase } from '@/services/supabaseClient';
 import { toast } from 'sonner';
 
@@ -248,6 +248,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
+            options: {
+                emailRedirectTo: getEmailVerificationRedirectUrl(),
+            },
         });
 
         if (error) throw error;

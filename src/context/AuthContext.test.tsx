@@ -135,6 +135,9 @@ describe("AuthProvider", () => {
       expect(mockSignUp).toHaveBeenCalledWith({
         email: "user@test.com",
         password: "secret123",
+        options: {
+          emailRedirectTo: "http://localhost:3000/auth/callback",
+        },
       });
     });
 

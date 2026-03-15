@@ -89,9 +89,9 @@ const Auth = () => {
                         {pendingEmailConfirmation && (
                             <Alert variant="destructive">
                                 <AlertTriangle className="h-4 w-4" />
-                                <AlertTitle>Email confirmation is enabled</AlertTitle>
+                                <AlertTitle>Check your inbox to verify your email</AlertTitle>
                                 <AlertDescription>
-                                    Disable email confirmation in Supabase Auth settings to allow immediate login after registration.
+                                    Open the confirmation link we sent to your email. You will be redirected back to AppFit automatically.
                                 </AlertDescription>
                             </Alert>
                         )}
