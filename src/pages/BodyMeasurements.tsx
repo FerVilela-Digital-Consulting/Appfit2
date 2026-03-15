@@ -343,10 +343,10 @@ const BodyMeasurements = () => {
         {isGuest && <GuestWarningBanner />}
 
         <AppPageIntro
-          eyebrow="Body Metrics"
+          eyebrow="Métricas corporales"
           icon={<Ruler className="h-3.5 w-3.5" />}
           title="Cuerpo"
-          description="Perimetros, composicion corporal estimada y comparativas de progreso."
+          description="Perímetros, composición corporal estimada y comparativas de progreso."
         />
 
         <TooltipProvider delayDuration={120}>

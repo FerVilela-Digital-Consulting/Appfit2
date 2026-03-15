@@ -250,7 +250,7 @@ const Profile = () => {
           eyebrow="Perfil Fitness"
           icon={<Flag className="h-3.5 w-3.5" />}
           title={fullName || (isGuest ? "Usuario invitado" : "Mi plan metabolico")}
-          description="Configura en una sola vista tus datos base, actividad, objetivo corporal, meta de peso y metas metabolicas."
+          description="Configura en una sola vista tus datos base, actividad, objetivo corporal, meta de peso y metas metabólicas."
         />
 
         <div className="space-y-6">
@@ -304,16 +304,16 @@ const Profile = () => {
             </CardHeader>
             <CardContent className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
               <div className="app-panel-block rounded-2xl p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Objetivo metab?lico</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Objetivo metabólico</p>
                 <p className="mt-2 text-lg font-semibold">{selectedGoal?.label ?? "Mantener peso"}</p>
                 <p className="text-sm text-muted-foreground">{selectedGoal?.description}</p>
               </div>
               <div className="app-panel-block rounded-2xl p-4 text-sm">
                 <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-                  <p>Sue?o: {sleepGoalMinutes || "480"} min</p>
-                  <p>Calor?as: {calorieGoal || "2000"} kcal</p>
-                  <p>Prote?na: {proteinGoal || "150"} g</p>
-                  <p>Carbs: {carbGoal || "250"} g</p>
+                  <p>Sueño: {sleepGoalMinutes || "480"} min</p>
+                  <p>Calorías: {calorieGoal || "2000"} kcal</p>
+                  <p>Proteína: {proteinGoal || "150"} g</p>
+                  <p>Carbohidratos: {carbGoal || "250"} g</p>
                   <p>Grasas: {fatGoal || "70"} g</p>
                 </div>
               </div>
@@ -408,7 +408,7 @@ const Profile = () => {
                     <Input id="proteinGoal" type="number" min="0" value={proteinGoal} onChange={(event) => setProteinGoal(event.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="carbGoal">Carbs objetivo (g)</Label>
+                    <Label htmlFor="carbGoal">Carbohidratos objetivo (g)</Label>
                     <Input id="carbGoal" type="number" min="0" value={carbGoal} onChange={(event) => setCarbGoal(event.target.value)} />
                   </div>
                   <div className="space-y-2">

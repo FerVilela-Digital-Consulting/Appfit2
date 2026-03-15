@@ -398,7 +398,7 @@ const Calendar = () => {
     <div className="app-shell min-h-screen px-4 py-5 text-foreground sm:px-6 sm:py-8">
       <div className="mx-auto max-w-[1540px] space-y-6">
         <AppPageIntro
-          eyebrow="Activity Ledger"
+          eyebrow="Calendario operativo"
           title={t("calendar.title")}
           description={t("calendar.description")}
           actions={(

@@ -82,7 +82,7 @@ const Training = () => {
   return (
     <div className="app-shell min-h-screen px-4 py-5 text-foreground sm:px-6 sm:py-8">
       <div className="mx-auto max-w-[1540px] space-y-6">
-        <AppPageIntro eyebrow="Training Logbook" title={copy.title} description={copy.subtitle} />
+        <AppPageIntro eyebrow="Bitácora de entrenamiento" title={copy.title} description={copy.subtitle} />
 
         {isTrainingLoading ? <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">{copy.loading}</div> : null}
         {trainingError ? <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">{copy.failedLoad}: {trainingErrorMessage}</div> : null}

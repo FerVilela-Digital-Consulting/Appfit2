@@ -444,10 +444,10 @@ const Dashboard = () => {
     <div className="app-shell min-h-screen px-4 py-5 text-foreground sm:px-6 sm:py-8">
       <div className="mx-auto max-w-[1540px] space-y-6">
         <AppPageIntro
-          eyebrow="Daily Check-In"
+          eyebrow="Panel diario"
           icon={<Crosshair className="h-3.5 w-3.5" />}
           title="Centro operativo"
-          description="Registra peso, hidratacion, sueno, medidas, biofeedback y comidas desde una sola pantalla."
+          description="Registra peso, hidratación, sueño, medidas, biofeedback y comidas desde una sola pantalla."
           actions={<Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="app-outline-button rounded-2xl">

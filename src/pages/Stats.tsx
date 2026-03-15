@@ -60,10 +60,10 @@ const Stats = () => {
         {isGuest ? <GuestWarningBanner /> : null}
 
         <AppPageIntro
-          eyebrow="Trend Review"
+          eyebrow="Análisis de progreso"
           icon={<TrendingUp className="h-3.5 w-3.5" />}
           title="Progreso"
-          description="Analisis longitudinal, tendencias y revision semanal en un solo contexto."
+          description="Análisis longitudinal, tendencias y revisión semanal en un solo contexto."
         />
 
       <StatsGoalSummaryCard
