@@ -7,9 +7,9 @@ type RequireAccountRoleProps = {
 };
 
 const RequireAccountRole = ({ allowedRoles }: RequireAccountRoleProps) => {
-  const { user, loading, isGuest, accountRole } = useAuth();
+  const { user, loading, accountRoleLoading, isGuest, accountRole } = useAuth();
 
-  if (loading && !user) {
+  if ((loading && !user) || (user && accountRoleLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>

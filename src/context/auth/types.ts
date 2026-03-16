@@ -34,6 +34,7 @@ export interface Profile {
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
+  accountRoleLoading: boolean;
   onboardingCompleted: boolean | null;
   profile: Profile | null;
   accountRole: AccountRole;

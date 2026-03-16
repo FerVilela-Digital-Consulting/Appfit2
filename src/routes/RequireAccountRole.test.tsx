@@ -33,6 +33,7 @@ describe("RequireAccountRole", () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: true,
+      accountRoleLoading: false,
       isGuest: false,
       accountRole: "member",
     });
@@ -46,6 +47,7 @@ describe("RequireAccountRole", () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
+      accountRoleLoading: false,
       isGuest: true,
       accountRole: "member",
     });
@@ -59,6 +61,7 @@ describe("RequireAccountRole", () => {
     mockUseAuth.mockReturnValue({
       user: { id: "user-1" },
       loading: false,
+      accountRoleLoading: false,
       isGuest: false,
       accountRole: "member",
     });
@@ -72,6 +75,7 @@ describe("RequireAccountRole", () => {
     mockUseAuth.mockReturnValue({
       user: { id: "user-2" },
       loading: false,
+      accountRoleLoading: false,
       isGuest: false,
       accountRole: "admin_manager",
     });
@@ -79,5 +83,19 @@ describe("RequireAccountRole", () => {
     renderRequireAccountRole();
 
     expect(screen.getByText("Admin dashboard")).toBeInTheDocument();
+  });
+
+  it("waits for role metadata before redirecting an authenticated user", () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: "user-3" },
+      loading: false,
+      accountRoleLoading: true,
+      isGuest: false,
+      accountRole: "member",
+    });
+
+    const { container } = renderRequireAccountRole();
+
+    expect(container.querySelector(".animate-spin")).toBeInTheDocument();
   });
 });

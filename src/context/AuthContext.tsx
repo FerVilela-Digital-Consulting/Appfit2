@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import {
+    getCachedAccountRole,
     getCachedOnboarding,
     getCachedProfile,
+    setCachedAccountRole,
     setCachedOnboarding,
     setCachedProfile,
 } from '@/context/auth/cache';
@@ -32,6 +34,7 @@ type UserAccountRow = {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [accountRoleLoading, setAccountRoleLoading] = useState(false);
     const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
     const [authedProfile, setAuthedProfile] = useState<Profile | null>(null);
     const [accountRole, setAccountRole] = useState<AccountRole>("member");
@@ -140,6 +143,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(authUser);
         setIsGuest(false);
         localStorage.removeItem(GUEST_STORAGE_KEY);
+        setAccountRoleLoading(true);
+
+        const cachedAccountRole = getCachedAccountRole(authUser.id);
+        setAccountRole(cachedAccountRole ?? "member");
 
         let resolvedAccount: UserAccountRow | null = null;
         try {
@@ -152,7 +159,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.warn("Falling back to default member role while account metadata is unavailable.", error);
         }
 
-        setAccountRole(resolvedAccount?.account_role ?? "member");
+        const nextAccountRole = resolvedAccount?.account_role ?? cachedAccountRole ?? "member";
+        setAccountRole(nextAccountRole);
+        setCachedAccountRole(authUser.id, nextAccountRole);
+        setAccountRoleLoading(false);
 
         try {
             const resolvedProfile = await withTimeout(
@@ -217,6 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setUser(null);
                     setAuthedProfile(null);
                     setAccountRole("member");
+                    setAccountRoleLoading(false);
                     setGuestProfile(createGuestProfile());
                     setOnboardingCompleted(isGuest ? true : false);
                 }
@@ -226,6 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setUser(null);
                     setAuthedProfile(null);
                     setAccountRole("member");
+                    setAccountRoleLoading(false);
                     setGuestProfile(createGuestProfile());
                     setOnboardingCompleted(isGuest ? true : false);
                 }
@@ -251,6 +263,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         setUser(null);
                         setAuthedProfile(null);
                         setAccountRole("member");
+                        setAccountRoleLoading(false);
                         setOnboardingCompleted(false);
                     }
                 } catch (error) {
@@ -259,6 +272,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         setUser(null);
                         setAuthedProfile(null);
                         setAccountRole("member");
+                        setAccountRoleLoading(false);
                         setOnboardingCompleted(false);
                     }
                 } finally {
@@ -272,6 +286,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(null);
                 setAuthedProfile(null);
                 setAccountRole("member");
+                setAccountRoleLoading(false);
                 setGuestProfile(createGuestProfile());
                 setOnboardingCompleted(false);
                 setIsGuest(false);
@@ -335,6 +350,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setAuthedProfile(null);
         setAccountRole("member");
+        setAccountRoleLoading(false);
         setGuestProfile(createGuestProfile());
         setOnboardingCompleted(false);
 
@@ -349,6 +365,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setAuthedProfile(null);
         setAccountRole("member");
+        setAccountRoleLoading(false);
         setOnboardingCompleted(true);
         setGuestProfile(createGuestProfile());
     };
@@ -358,6 +375,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem(GUEST_STORAGE_KEY);
         setGuestProfile(createGuestProfile());
         setAccountRole("member");
+        setAccountRoleLoading(false);
         setOnboardingCompleted(false);
     };
 
@@ -479,6 +497,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         <AuthContext.Provider value={{
             user,
             loading,
+            accountRoleLoading,
             onboardingCompleted,
             profile,
             accountRole,
