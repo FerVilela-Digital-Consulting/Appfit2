@@ -243,4 +243,30 @@ describe("AuthProvider", () => {
       });
     });
   });
+
+  it("does not refetch account and profile when the same auth event repeats immediately", async () => {
+    mockGetSession.mockResolvedValue({
+      data: {
+        session: {
+          user: { id: "user-9" },
+        },
+      },
+    });
+
+    renderAuthProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("loading")).toHaveTextContent("false");
+      expect(screen.getByTestId("user")).toHaveTextContent("user-9");
+    });
+
+    expect(mockMaybeSingle).toHaveBeenCalledTimes(2);
+
+    const authListener = mockOnAuthStateChange.mock.calls[0]?.[0];
+    await authListener?.("SIGNED_IN", {
+      user: { id: "user-9" },
+    });
+
+    expect(mockMaybeSingle).toHaveBeenCalledTimes(2);
+  });
 });

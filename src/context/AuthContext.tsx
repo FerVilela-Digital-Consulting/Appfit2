@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import {
     getCachedAccountRole,
@@ -23,6 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_STORAGE_KEY = 'appfit_is_guest';
 const AUTH_RESOLVE_TIMEOUT_MS = 8000;
 const PROFILE_FETCH_TIMEOUT_MS = 15000;
+const AUTH_SYNC_CACHE_WINDOW_MS = 30000;
 
 type ProfileRow = Partial<Profile> & Record<string, unknown>;
 type ProfileUpdatePayload = Partial<Profile> & { updated_at?: string };
@@ -40,6 +41,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [accountRole, setAccountRole] = useState<AccountRole>("member");
     const [guestProfile, setGuestProfile] = useState<Profile>(() => createGuestProfile());
     const [isGuest, setIsGuest] = useState(() => localStorage.getItem(GUEST_STORAGE_KEY) === 'true');
+    const currentUserIdRef = useRef<string | null>(null);
+    const currentAccountRoleRef = useRef<AccountRole>("member");
+    const hasAuthedProfileRef = useRef(false);
+    const lastSuccessfulSyncRef = useRef<{ userId: string; at: number } | null>(null);
+    const syncInFlightRef = useRef<Promise<void> | null>(null);
+    const syncInFlightUserIdRef = useRef<string | null>(null);
     const profile = isGuest ? guestProfile : authedProfile;
     const canAccessAdmin = accountRole === "admin_manager" || accountRole === "super_admin";
     const canManageAdminRoles = accountRole === "super_admin";
@@ -49,6 +56,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log(`[AuthFlow] ${message}`);
         }
     };
+
+    useEffect(() => {
+        currentUserIdRef.current = user?.id ?? null;
+    }, [user]);
+
+    useEffect(() => {
+        currentAccountRoleRef.current = accountRole;
+    }, [accountRole]);
+
+    useEffect(() => {
+        hasAuthedProfileRef.current = Boolean(authedProfile);
+    }, [authedProfile]);
 
     const fetchProfile = async (userId: string): Promise<Profile> => {
         let { data, error } = await supabase
@@ -138,65 +157,109 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     };
 
-    const syncAuthenticatedUser = async (authUser: User) => {
-        logFlow("Syncing authenticated user: " + authUser.id);
+    const syncAuthenticatedUser = async (authUser: User, options?: { force?: boolean; source?: string }) => {
+        logFlow(`Syncing authenticated user: ${authUser.id}${options?.source ? ` (${options.source})` : ''}`);
         setUser(authUser);
         setIsGuest(false);
         localStorage.removeItem(GUEST_STORAGE_KEY);
-        setAccountRoleLoading(true);
 
         const cachedAccountRole = getCachedAccountRole(authUser.id);
-        setAccountRole(cachedAccountRole ?? (user?.id === authUser.id ? accountRole : "member"));
+        const cachedProfile = getCachedProfile(authUser.id);
+        const cachedCompleted = getCachedOnboarding(authUser.id);
 
-        let resolvedAccount: UserAccountRow | null = null;
-        try {
-            resolvedAccount = await withTimeout(
-                fetchUserAccount(authUser.id),
-                AUTH_RESOLVE_TIMEOUT_MS,
-                "User account fetch timed out.",
-            );
-        } catch (error) {
-            console.warn("Falling back to default member role while account metadata is unavailable.", error);
+        if (cachedProfile) {
+            setAuthedProfile(cachedProfile);
+        }
+        if (cachedCompleted !== null) {
+            setOnboardingCompleted(cachedCompleted);
         }
 
-        const nextAccountRole = resolvedAccount?.account_role ?? cachedAccountRole ?? "member";
-        setAccountRole(nextAccountRole);
-        setCachedAccountRole(authUser.id, nextAccountRole);
-        setAccountRoleLoading(false);
+        setAccountRole(
+            cachedAccountRole ?? (currentUserIdRef.current === authUser.id ? currentAccountRoleRef.current : "member"),
+        );
+
+        const canReuseRecentSync =
+            !options?.force &&
+            lastSuccessfulSyncRef.current?.userId === authUser.id &&
+            Date.now() - lastSuccessfulSyncRef.current.at < AUTH_SYNC_CACHE_WINDOW_MS &&
+            (hasAuthedProfileRef.current || Boolean(cachedProfile));
+
+        if (canReuseRecentSync) {
+            logFlow(`Skipping network auth sync for ${authUser.id}; recent snapshot still valid.`);
+            setAccountRoleLoading(false);
+            return;
+        }
+
+        if (!options?.force && syncInFlightRef.current && syncInFlightUserIdRef.current === authUser.id) {
+            logFlow(`Reusing in-flight auth sync for ${authUser.id}.`);
+            await syncInFlightRef.current;
+            return;
+        }
+
+        setAccountRoleLoading(true);
+
+        const syncPromise = (async () => {
+            let resolvedAccount: UserAccountRow | null = null;
+            try {
+                resolvedAccount = await withTimeout(
+                    fetchUserAccount(authUser.id),
+                    AUTH_RESOLVE_TIMEOUT_MS,
+                    "User account fetch timed out.",
+                );
+            } catch (error) {
+                console.warn("Falling back to default member role while account metadata is unavailable.", error);
+            }
+
+            const nextAccountRole = resolvedAccount?.account_role ?? cachedAccountRole ?? "member";
+            setAccountRole(nextAccountRole);
+            setCachedAccountRole(authUser.id, nextAccountRole);
+
+            try {
+                const resolvedProfile = await withTimeout(
+                    fetchProfile(authUser.id),
+                    PROFILE_FETCH_TIMEOUT_MS,
+                    'Profile fetch timed out.'
+                );
+                const profileForOnboarding =
+                    typeof resolvedAccount?.onboarding_completed === "boolean"
+                        ? { ...resolvedProfile, onboarding_completed: resolvedAccount.onboarding_completed }
+                        : resolvedProfile;
+                const completed = resolveOnboardingCompleted(profileForOnboarding, cachedCompleted);
+                setOnboardingCompleted(completed);
+                setCachedOnboarding(authUser.id, completed);
+                lastSuccessfulSyncRef.current = { userId: authUser.id, at: Date.now() };
+            } catch (error) {
+                if (cachedProfile) {
+                    setAuthedProfile(cachedProfile);
+                }
+                const resolvedFallbackCompleted = cachedProfile
+                    ? resolveOnboardingCompleted(
+                        typeof resolvedAccount?.onboarding_completed === "boolean"
+                            ? { ...cachedProfile, onboarding_completed: resolvedAccount.onboarding_completed }
+                            : cachedProfile,
+                        cachedCompleted,
+                    )
+                    : cachedCompleted === true;
+                setOnboardingCompleted(prev => prev ?? resolvedFallbackCompleted);
+                if (error instanceof Error && error.message === 'Profile fetch timed out.') {
+                    console.warn('Profile fetch timed out. Using cached profile fallback when available.');
+                } else {
+                    console.error('Error fetching profile:', error);
+                }
+            } finally {
+                setAccountRoleLoading(false);
+            }
+        })();
+
+        syncInFlightRef.current = syncPromise;
+        syncInFlightUserIdRef.current = authUser.id;
 
         try {
-            const resolvedProfile = await withTimeout(
-                fetchProfile(authUser.id),
-                PROFILE_FETCH_TIMEOUT_MS,
-                'Profile fetch timed out.'
-            );
-            const cachedCompleted = getCachedOnboarding(authUser.id);
-            const profileForOnboarding =
-                typeof resolvedAccount?.onboarding_completed === "boolean"
-                    ? { ...resolvedProfile, onboarding_completed: resolvedAccount.onboarding_completed }
-                    : resolvedProfile;
-            const completed = resolveOnboardingCompleted(profileForOnboarding, cachedCompleted);
-            setOnboardingCompleted(completed);
-            setCachedOnboarding(authUser.id, completed);
-        } catch (error) {
-            const fallbackCompleted = getCachedOnboarding(authUser.id);
-            const cachedProfile = getCachedProfile(authUser.id);
-            if (cachedProfile) {
-                setAuthedProfile(cachedProfile);
-            }
-            const resolvedFallbackCompleted = cachedProfile
-                ? resolveOnboardingCompleted(
-                    typeof resolvedAccount?.onboarding_completed === "boolean"
-                        ? { ...cachedProfile, onboarding_completed: resolvedAccount.onboarding_completed }
-                        : cachedProfile,
-                    fallbackCompleted,
-                )
-                : fallbackCompleted === true;
-            setOnboardingCompleted(prev => prev ?? resolvedFallbackCompleted);
-            if (error instanceof Error && error.message === 'Profile fetch timed out.') {
-                console.warn('Profile fetch timed out. Using cached profile fallback when available.');
-            } else {
-                console.error('Error fetching profile:', error);
+            await syncPromise;
+        } finally {
+            if (syncInFlightRef.current === syncPromise) {
+                syncInFlightRef.current = null;
+                syncInFlightUserIdRef.current = null;
             }
         }
     };
@@ -221,7 +284,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 if (session?.user) {
                     logFlow("Initial session detected: " + session.user.id);
-                    await syncAuthenticatedUser(session.user);
+                    await syncAuthenticatedUser(session.user, { source: 'initializeAuth' });
                 } else {
                     logFlow("No initial session detected.");
                     setUser(null);
@@ -258,7 +321,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
                 try {
                     if (session?.user) {
-                        await syncAuthenticatedUser(session.user);
+                        await syncAuthenticatedUser(session.user, { source: event });
                     } else if (localStorage.getItem(GUEST_STORAGE_KEY) !== 'true') {
                         setUser(null);
                         setAuthedProfile(null);
