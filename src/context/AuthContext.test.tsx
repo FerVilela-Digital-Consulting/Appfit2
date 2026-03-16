@@ -244,6 +244,34 @@ describe("AuthProvider", () => {
     });
   });
 
+  it("signs out suspended accounts during auth sync", async () => {
+    mockGetSession.mockResolvedValue({
+      data: {
+        session: {
+          user: { id: "user-suspended" },
+        },
+      },
+    });
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: {
+        account_role: "member",
+        account_status: "suspended",
+        onboarding_completed: false,
+      },
+      error: null,
+    });
+    mockSignOut.mockResolvedValue({ error: null });
+
+    renderAuthProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("loading")).toHaveTextContent("false");
+      expect(screen.getByTestId("user")).toHaveTextContent("none");
+    });
+
+    expect(mockSignOut).toHaveBeenCalledTimes(1);
+  });
+
   it("does not refetch account and profile when the same auth event repeats immediately", async () => {
     mockGetSession.mockResolvedValue({
       data: {

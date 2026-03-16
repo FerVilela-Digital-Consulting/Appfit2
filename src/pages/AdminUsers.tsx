@@ -9,6 +9,24 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -20,15 +38,43 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
-import type { AccountRole } from "@/context/auth/types";
-import { adminQueryDefaults, getAdminRoleChangeAudit, getAdminUserDirectory, updateUserAccountRole } from "@/services/admin";
-import { getAdminNotificationAudit, reminderTemplates, sendAdminReminder, type NotificationKind } from "@/services/notifications";
+import type { AccountRole, AccountStatus } from "@/context/auth/types";
+import { adminQueryDefaults, getAdminRoleChangeAudit, getAdminUserDirectory, updateUserAccountRole, updateUserAccountStatus } from "@/services/admin";
+import { getAdminNotificationAudit, reminderTemplates, sendAdminNotification, sendAdminReminder, type NotificationKind, type NotificationSeverity } from "@/services/notifications";
 
 const roleMeta: Record<AccountRole, { label: string; variant: "default" | "secondary" | "outline" }> = {
   member: { label: "Usuario regular", variant: "secondary" },
   admin_manager: { label: "Admin designado", variant: "outline" },
   super_admin: { label: "Admin total", variant: "default" },
+};
+
+const accountStatusMeta: Record<AccountStatus, { label: string; className: string }> = {
+  active: {
+    label: "Activa",
+    className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700",
+  },
+  suspended: {
+    label: "Desactivada",
+    className: "border-amber-500/30 bg-amber-500/10 text-amber-700",
+  },
+};
+
+const manualNotificationPathOptions = [
+  { value: "none", label: "Sin accion" },
+  { value: "/today", label: "Panel diario" },
+  { value: "/fitness-profile", label: "Perfil fitness" },
+  { value: "/onboarding", label: "Onboarding" },
+  { value: "/settings", label: "Configuracion" },
+] as const;
+
+type ManualNotificationDraft = {
+  title: string;
+  body: string;
+  severity: NotificationSeverity;
+  actionPath: string;
+  actionLabel: string;
 };
 
 const availableSignalFilters = ["all", "with_any_signal", "missing_profile", "onboarding_inconsistent", "without_activity"] as const;
@@ -47,6 +93,16 @@ const getReminderKinds = (row: Awaited<ReturnType<typeof getAdminUserDirectory>>
   return kinds;
 };
 
+const createManualNotificationDraft = (email: string | null): ManualNotificationDraft => ({
+  title: "Mensaje desde administracion",
+  body: email
+    ? `Hola. Tenemos una actualizacion o recordatorio para tu cuenta ${email}.`
+    : "Hola. Tenemos una actualizacion o recordatorio para tu cuenta.",
+  severity: "info",
+  actionPath: "none",
+  actionLabel: "",
+});
+
 const AdminUsers = () => {
   const queryClient = useQueryClient();
   const { canManageAdminRoles, user } = useAuth();
@@ -54,6 +110,10 @@ const AdminUsers = () => {
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [signalFilter, setSignalFilter] = useState<SignalFilter>(resolveSignalFilter(searchParams.get("signal")));
+  const [manualNotificationTarget, setManualNotificationTarget] = useState<(Awaited<ReturnType<typeof getAdminUserDirectory>>[number]) | null>(null);
+  const [manualNotificationDraft, setManualNotificationDraft] = useState<ManualNotificationDraft>(createManualNotificationDraft(null));
+  const [accountStatusTarget, setAccountStatusTarget] = useState<(Awaited<ReturnType<typeof getAdminUserDirectory>>[number]) | null>(null);
+  const [accountStatusConfirm, setAccountStatusConfirm] = useState("");
 
   useEffect(() => {
     const querySignalFilter = resolveSignalFilter(searchParams.get("signal"));
@@ -113,6 +173,62 @@ const AdminUsers = () => {
     },
   });
 
+  const manualNotificationMutation = useMutation({
+    mutationFn: async ({
+      targetUserId,
+      draft,
+    }: {
+      targetUserId: string;
+      draft: ManualNotificationDraft;
+    }) => {
+      await sendAdminNotification({
+        targetUserId,
+        title: draft.title,
+        body: draft.body,
+        severity: draft.severity,
+        actionPath: draft.actionPath === "none" ? null : draft.actionPath,
+        actionLabel: draft.actionLabel || null,
+        metadata: {
+          target_surface: "admin_users",
+        },
+      });
+    },
+    onSuccess: () => {
+      toast.success("Notificacion enviada correctamente.");
+      setManualNotificationTarget(null);
+      setManualNotificationDraft(createManualNotificationDraft(null));
+      queryClient.invalidateQueries({ queryKey: ["admin_notification_audit"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "No se pudo enviar la notificacion.");
+    },
+  });
+
+  const updateAccountStatusMutation = useMutation({
+    mutationFn: async ({
+      userId,
+      nextStatus,
+    }: {
+      userId: string;
+      nextStatus: AccountStatus;
+    }) => {
+      await updateUserAccountStatus(userId, nextStatus);
+    },
+    onSuccess: (_, variables) => {
+      toast.success(
+        variables.nextStatus === "suspended"
+          ? "La cuenta quedo desactivada."
+          : "La cuenta fue reactivada.",
+      );
+      setAccountStatusTarget(null);
+      setAccountStatusConfirm("");
+      queryClient.invalidateQueries({ queryKey: ["admin_user_directory"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "No se pudo cambiar el estado de la cuenta.");
+    },
+  });
+
   const directoryRows = usersQuery.data ?? [];
 
   const signalSummary = useMemo(
@@ -161,6 +277,58 @@ const AdminUsers = () => {
     setSearchParams(nextSearchParams, { replace: true });
   };
 
+  const openManualNotificationDialog = (row: Awaited<ReturnType<typeof getAdminUserDirectory>>[number]) => {
+    setManualNotificationTarget(row);
+    setManualNotificationDraft(createManualNotificationDraft(row.email));
+  };
+
+  const closeManualNotificationDialog = () => {
+    setManualNotificationTarget(null);
+    setManualNotificationDraft(createManualNotificationDraft(null));
+  };
+
+  const openAccountStatusDialog = (row: Awaited<ReturnType<typeof getAdminUserDirectory>>[number]) => {
+    setAccountStatusTarget(row);
+    setAccountStatusConfirm("");
+  };
+
+  const expectedAccountStatusConfirmation = accountStatusTarget
+    ? `${accountStatusTarget.account_status === "active" ? "DESACTIVAR" : "REACTIVAR"} ${accountStatusTarget.email ?? accountStatusTarget.user_id}`.toUpperCase()
+    : "";
+
+  const handleSubmitManualNotification = () => {
+    if (!manualNotificationTarget) return;
+
+    if (manualNotificationDraft.title.trim().length < 4) {
+      toast.error("Escribe un titulo mas descriptivo para la notificacion.");
+      return;
+    }
+
+    if (manualNotificationDraft.body.trim().length < 8) {
+      toast.error("Escribe un mensaje mas claro para el usuario.");
+      return;
+    }
+
+    manualNotificationMutation.mutate({
+      targetUserId: manualNotificationTarget.user_id,
+      draft: manualNotificationDraft,
+    });
+  };
+
+  const handleConfirmAccountStatusChange = () => {
+    if (!accountStatusTarget) return;
+
+    if (accountStatusConfirm.trim().toUpperCase() !== expectedAccountStatusConfirmation) {
+      toast.error(`Escribe exactamente ${expectedAccountStatusConfirmation} para continuar.`);
+      return;
+    }
+
+    updateAccountStatusMutation.mutate({
+      userId: accountStatusTarget.user_id,
+      nextStatus: accountStatusTarget.account_status === "active" ? "suspended" : "active",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <AppPageIntro
@@ -196,8 +364,8 @@ const AdminUsers = () => {
           <CardTitle>Cuentas registradas</CardTitle>
           <CardDescription>
             {canManageAdminRoles
-              ? "Puedes reasignar roles, detectar cuentas en riesgo y enviar recordatorios internos desde esta vista."
-              : "Tienes acceso de lectura operativa y puedes enviar recordatorios internos a cuentas con senales."}
+              ? "Puedes reasignar roles, detectar cuentas en riesgo, enviar mensajes internos y desactivar cuentas desde esta vista."
+              : "Tienes acceso de lectura operativa y puedes enviar recordatorios internos o mensajes manuales a cuentas del sistema."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -265,8 +433,8 @@ const AdminUsers = () => {
             </div>
           ) : usersQuery.isError ? (
             <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">
-              No se pudo cargar el directorio de usuarios. Revisa que `get_admin_user_directory_detailed()` o la version legacy
-              `get_admin_user_directory()` existan en Supabase y que el schema cache este recargado.
+              No se pudo cargar el directorio de usuarios. Revisa que `get_admin_user_directory_operational()`, `get_admin_user_directory_detailed()`
+              o la version legacy `get_admin_user_directory()` existan en Supabase y que el schema cache este recargado.
             </div>
           ) : (
             <div className="rounded-2xl border border-border/60">
@@ -276,6 +444,7 @@ const AdminUsers = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Nombre</TableHead>
                     <TableHead>Rol</TableHead>
+                    <TableHead>Estado</TableHead>
                     <TableHead>Onboarding</TableHead>
                     <TableHead>Senales</TableHead>
                     <TableHead>Alta</TableHead>
@@ -292,6 +461,11 @@ const AdminUsers = () => {
                         <TableCell>{row.full_name ?? "Sin nombre"}</TableCell>
                         <TableCell>
                           <Badge variant={roleMeta[row.account_role].variant}>{roleMeta[row.account_role].label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${accountStatusMeta[row.account_status].className}`}>
+                            {accountStatusMeta[row.account_status].label}
+                          </span>
                         </TableCell>
                         <TableCell>{row.onboarding_completed ? "Completo" : "Pendiente"}</TableCell>
                         <TableCell>
@@ -310,30 +484,55 @@ const AdminUsers = () => {
                         <TableCell>{row.created_at ? format(new Date(row.created_at), "yyyy-MM-dd") : "--"}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            {reminderKinds.length > 0 && row.user_id !== user?.id ? (
+                            {row.user_id !== user?.id ? (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="outline" size="sm" disabled={reminderMutation.isPending}>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={
+                                      reminderMutation.isPending ||
+                                      manualNotificationMutation.isPending ||
+                                      updateAccountStatusMutation.isPending
+                                    }
+                                  >
                                     <BellRing className="mr-2 h-4 w-4" />
-                                    Recordar
+                                    Acciones
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Enviar recordatorio</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  {reminderKinds.map((kind) => (
-                                    <DropdownMenuItem
-                                      key={`${row.user_id}-${kind}`}
-                                      onSelect={() => {
-                                        reminderMutation.mutate({
-                                          targetUserId: row.user_id,
-                                          kind,
-                                        });
-                                      }}
-                                    >
-                                      {reminderTemplates[kind].title}
-                                    </DropdownMenuItem>
-                                  ))}
+                                <DropdownMenuContent align="end" className="w-72">
+                                  <DropdownMenuLabel>Comunicacion</DropdownMenuLabel>
+                                  <DropdownMenuItem onSelect={() => openManualNotificationDialog(row)}>
+                                    Notificacion manual
+                                  </DropdownMenuItem>
+                                  {reminderKinds.length > 0 ? (
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuLabel>Recordatorios sugeridos</DropdownMenuLabel>
+                                      {reminderKinds.map((kind) => (
+                                        <DropdownMenuItem
+                                          key={`${row.user_id}-${kind}`}
+                                          onSelect={() => {
+                                            reminderMutation.mutate({
+                                              targetUserId: row.user_id,
+                                              kind,
+                                            });
+                                          }}
+                                        >
+                                          {reminderTemplates[kind].title}
+                                        </DropdownMenuItem>
+                                      ))}
+                                    </>
+                                  ) : null}
+                                  {canManageAdminRoles ? (
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuLabel>Cuenta</DropdownMenuLabel>
+                                      <DropdownMenuItem onSelect={() => openAccountStatusDialog(row)}>
+                                        {row.account_status === "active" ? "Desactivar cuenta" : "Reactivar cuenta"}
+                                      </DropdownMenuItem>
+                                    </>
+                                  ) : null}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             ) : null}
@@ -475,6 +674,188 @@ const AdminUsers = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(manualNotificationTarget)} onOpenChange={(open) => !open && closeManualNotificationDialog()}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Enviar notificacion manual</DialogTitle>
+            <DialogDescription>
+              Mensaje interno persistente para {manualNotificationTarget?.email ?? "la cuenta seleccionada"}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Titulo</p>
+              <Input
+                value={manualNotificationDraft.title}
+                onChange={(event) =>
+                  setManualNotificationDraft((current) => ({
+                    ...current,
+                    title: event.target.value,
+                  }))
+                }
+                maxLength={180}
+                placeholder="Mensaje desde administracion"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Mensaje</p>
+              <Textarea
+                value={manualNotificationDraft.body}
+                onChange={(event) =>
+                  setManualNotificationDraft((current) => ({
+                    ...current,
+                    body: event.target.value,
+                  }))
+                }
+                className="min-h-[140px]"
+                maxLength={600}
+                placeholder="Explica al usuario que debe revisar o completar."
+              />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Severidad</p>
+                <Select
+                  value={manualNotificationDraft.severity}
+                  onValueChange={(value) =>
+                    setManualNotificationDraft((current) => ({
+                      ...current,
+                      severity: value as NotificationSeverity,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="info">Informativa</SelectItem>
+                    <SelectItem value="warning">Importante</SelectItem>
+                    <SelectItem value="action">Requiere accion</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Ruta sugerida</p>
+                <Select
+                  value={manualNotificationDraft.actionPath}
+                  onValueChange={(value) =>
+                    setManualNotificationDraft((current) => ({
+                      ...current,
+                      actionPath: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {manualNotificationPathOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Etiqueta del boton</p>
+              <Input
+                value={manualNotificationDraft.actionLabel}
+                onChange={(event) =>
+                  setManualNotificationDraft((current) => ({
+                    ...current,
+                    actionLabel: event.target.value,
+                  }))
+                }
+                maxLength={80}
+                placeholder="Abrir ahora"
+              />
+              <p className="text-xs text-muted-foreground">Opcional. Si no la completas, la notificacion saldra sin CTA.</p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={closeManualNotificationDialog}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={handleSubmitManualNotification} disabled={manualNotificationMutation.isPending}>
+              {manualNotificationMutation.isPending ? "Enviando..." : "Enviar notificacion"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={Boolean(accountStatusTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAccountStatusTarget(null);
+            setAccountStatusConfirm("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {accountStatusTarget?.account_status === "active" ? "Desactivar cuenta" : "Reactivar cuenta"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {accountStatusTarget?.account_status === "active"
+                ? "La cuenta perdera acceso a la app hasta que vuelvas a activarla. No se elimina informacion."
+                : "La cuenta volvera a poder iniciar sesion y operar con normalidad."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Confirmacion escrita</p>
+            <Input
+              value={accountStatusConfirm}
+              onChange={(event) => setAccountStatusConfirm(event.target.value)}
+              placeholder={expectedAccountStatusConfirmation}
+              autoComplete="off"
+            />
+            <p className="text-xs text-muted-foreground">
+              Escribe exactamente <span className="font-semibold">{expectedAccountStatusConfirmation}</span>.
+            </p>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setAccountStatusTarget(null);
+                setAccountStatusConfirm("");
+              }}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmAccountStatusChange}
+              disabled={
+                accountStatusConfirm.trim().toUpperCase() !== expectedAccountStatusConfirmation ||
+                updateAccountStatusMutation.isPending
+              }
+              className={
+                accountStatusTarget?.account_status === "active"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : ""
+              }
+            >
+              {updateAccountStatusMutation.isPending
+                ? "Aplicando..."
+                : accountStatusTarget?.account_status === "active"
+                  ? "Confirmar desactivacion"
+                  : "Confirmar reactivacion"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

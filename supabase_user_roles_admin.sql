@@ -7,6 +7,9 @@ add column if not exists account_role text not null default 'member';
 alter table public.users
 add column if not exists updated_at timestamptz default now();
 
+alter table public.users
+add column if not exists account_status text not null default 'active';
+
 do $$
 begin
   if not exists (
@@ -17,6 +20,19 @@ begin
     alter table public.users
     add constraint users_account_role_check
     check (account_role in ('member', 'admin_manager', 'super_admin'));
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'users_account_status_check'
+  ) then
+    alter table public.users
+    add constraint users_account_status_check
+    check (account_status in ('active', 'suspended'));
   end if;
 end $$;
 
@@ -125,6 +141,7 @@ returns table (
   email text,
   full_name text,
   account_role text,
+  account_status text,
   onboarding_completed boolean,
   avatar_url text,
   created_at timestamptz
@@ -144,9 +161,60 @@ begin
     au.email::text,
     p.full_name,
     u.account_role,
+    u.account_status,
     coalesce(u.onboarding_completed, p.onboarding_completed, false) as onboarding_completed,
     p.avatar_url,
     au.created_at
+  from public.users u
+  left join public.profiles p on p.id = u.id
+  left join auth.users au on au.id = u.id
+  order by au.created_at desc nulls last, u.id;
+end;
+$$;
+
+create or replace function public.get_admin_user_directory_operational()
+returns table (
+  user_id uuid,
+  email text,
+  full_name text,
+  account_role text,
+  account_status text,
+  onboarding_completed boolean,
+  avatar_url text,
+  created_at timestamptz,
+  missing_profile boolean,
+  onboarding_inconsistent boolean,
+  without_activity boolean
+)
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+  if public.current_account_role() not in ('admin_manager', 'super_admin') then
+    raise exception 'Not authorized';
+  end if;
+
+  return query
+  select
+    u.id as user_id,
+    au.email::text,
+    p.full_name,
+    u.account_role,
+    u.account_status,
+    coalesce(u.onboarding_completed, p.onboarding_completed, false) as onboarding_completed,
+    p.avatar_url,
+    au.created_at,
+    (p.id is null) as missing_profile,
+    (
+      p.id is not null
+      and coalesce(u.onboarding_completed, false) <> coalesce(p.onboarding_completed, false)
+    ) as onboarding_inconsistent,
+    (
+      not exists (select 1 from public.nutrition_entries ne where ne.user_id = u.id)
+      and not exists (select 1 from public.body_metrics bm where bm.user_id = u.id)
+      and not exists (select 1 from public.body_measurements bme where bme.user_id = u.id)
+    ) as without_activity
   from public.users u
   left join public.profiles p on p.id = u.id
   left join auth.users au on au.id = u.id
@@ -184,6 +252,32 @@ begin
     insert into public.admin_role_change_audit (actor_user_id, target_user_id, previous_role, next_role)
     values (auth.uid(), target_user_id, previous_role, next_role);
   end if;
+end;
+$$;
+
+create or replace function public.set_user_account_status(target_user_id uuid, next_status text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if public.current_account_role() <> 'super_admin' then
+    raise exception 'Not authorized';
+  end if;
+
+  if target_user_id = auth.uid() then
+    raise exception 'Cannot change your own account status';
+  end if;
+
+  if next_status not in ('active', 'suspended') then
+    raise exception 'Invalid account status';
+  end if;
+
+  update public.users
+  set account_status = next_status,
+      updated_at = now()
+  where id = target_user_id;
 end;
 $$;
 
@@ -228,7 +322,9 @@ $$;
 grant execute on function public.current_account_role() to authenticated;
 grant execute on function public.get_admin_dashboard_metrics() to authenticated;
 grant execute on function public.get_admin_user_directory() to authenticated;
+grant execute on function public.get_admin_user_directory_operational() to authenticated;
 grant execute on function public.set_user_account_role(uuid, text) to authenticated;
+grant execute on function public.set_user_account_status(uuid, text) to authenticated;
 grant execute on function public.get_admin_role_change_audit() to authenticated;
 
 create or replace function public.get_admin_user_directory_detailed()

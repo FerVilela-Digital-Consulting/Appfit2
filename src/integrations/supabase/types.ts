@@ -707,18 +707,21 @@ export type Database = {
       users: {
         Row: {
           account_role: string
+          account_status: string
           created_at: string | null
           id: string
           onboarding_completed: boolean | null
         }
         Insert: {
           account_role?: string
+          account_status?: string
           created_at?: string | null
           id: string
           onboarding_completed?: boolean | null
         }
         Update: {
           account_role?: string
+          account_status?: string
           created_at?: string | null
           id?: string
           onboarding_completed?: boolean | null
@@ -986,6 +989,7 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           account_role: string
+          account_status: string
           avatar_url: string | null
           created_at: string | null
           email: string | null
@@ -998,6 +1002,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           account_role: string
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          missing_profile: boolean
+          onboarding_completed: boolean | null
+          onboarding_inconsistent: boolean
+          user_id: string
+          without_activity: boolean
+        }[]
+      }
+      get_admin_user_directory_operational: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          account_role: string
+          account_status: string
           avatar_url: string | null
           created_at: string | null
           email: string | null
@@ -1064,6 +1084,13 @@ export type Database = {
       set_user_account_role: {
         Args: {
           next_role: string
+          target_user_id: string
+        }
+        Returns: undefined
+      }
+      set_user_account_status: {
+        Args: {
+          next_status: string
           target_user_id: string
         }
         Returns: undefined

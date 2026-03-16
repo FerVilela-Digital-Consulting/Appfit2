@@ -1,6 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 
 export type AccountRole = "member" | "admin_manager" | "super_admin";
+export type AccountStatus = "active" | "suspended";
 
 export interface Profile {
   full_name: string | null;

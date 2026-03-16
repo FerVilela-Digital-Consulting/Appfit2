@@ -1,5 +1,5 @@
 import { supabase } from "@/services/supabaseClient";
-import type { AccountRole } from "@/context/auth/types";
+import type { AccountRole, AccountStatus } from "@/context/auth/types";
 
 export const adminQueryDefaults = {
   staleTime: 60_000,
@@ -26,6 +26,7 @@ export type AdminUserDirectoryRow = {
   email: string | null;
   full_name: string | null;
   account_role: AccountRole;
+  account_status: AccountStatus;
   onboarding_completed: boolean | null;
   avatar_url: string | null;
   created_at: string | null;
@@ -92,7 +93,13 @@ export async function getAdminDashboardMetrics() {
 }
 
 export async function getAdminUserDirectory() {
-  let { data, error } = await supabase.rpc("get_admin_user_directory_detailed");
+  let { data, error } = await supabase.rpc("get_admin_user_directory_operational");
+
+  if (error && shouldFallbackToLegacyRpc(error, "get_admin_user_directory_operational")) {
+    const detailedResult = await supabase.rpc("get_admin_user_directory_detailed");
+    data = detailedResult.data;
+    error = detailedResult.error;
+  }
 
   if (error && shouldFallbackToLegacyRpc(error, "get_admin_user_directory_detailed")) {
     const legacyResult = await supabase.rpc("get_admin_user_directory");
@@ -107,6 +114,7 @@ export async function getAdminUserDirectory() {
     email: row.email ?? null,
     full_name: row.full_name ?? null,
     account_role: (row.account_role as AccountRole | undefined) ?? "member",
+    account_status: (row.account_status as AccountStatus | undefined) ?? "active",
     onboarding_completed: row.onboarding_completed ?? null,
     avatar_url: row.avatar_url ?? null,
     created_at: row.created_at ?? null,
@@ -120,6 +128,15 @@ export async function updateUserAccountRole(targetUserId: string, nextRole: Acco
   const { error } = await supabase.rpc("set_user_account_role", {
     target_user_id: targetUserId,
     next_role: nextRole,
+  });
+
+  if (error) throw error;
+}
+
+export async function updateUserAccountStatus(targetUserId: string, nextStatus: AccountStatus) {
+  const { error } = await supabase.rpc("set_user_account_status", {
+    target_user_id: targetUserId,
+    next_status: nextStatus,
   });
 
   if (error) throw error;

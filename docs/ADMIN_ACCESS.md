@@ -32,17 +32,25 @@ Ese script:
 Sistema de notificaciones:
 
 - ejecutar `supabase_notifications.sql`
-- habilita recordatorios internos enviados por admins
+- habilita recordatorios internos y mensajes manuales enviados por admins
 - conecta el icono de campana con un inbox persistente dentro de la app
+
+Operaciones de cuenta:
+
+- volver a ejecutar `supabase_user_roles_admin.sql` para activar `account_status`
+- habilita desactivacion y reactivacion segura de cuentas desde `/admin/users`
+- las cuentas desactivadas no se eliminan; simplemente pierden acceso hasta reactivarse
 
 ## RPCs usadas por el frontend
 
 - `get_admin_dashboard_metrics`
 - `get_admin_user_directory`
 - `get_admin_user_directory_detailed`
+- `get_admin_user_directory_operational`
 - `get_admin_panel_usage`
 - `get_admin_usage_daily`
 - `set_user_account_role`
+- `set_user_account_status`
 - `track_panel_event`
 - `send_admin_notification`
 - `list_my_notifications`
@@ -57,6 +65,12 @@ La vista de usuarios ahora muestra tres senales operativas por cuenta:
 - `Sin perfil`: existe en `public.users` pero no en `public.profiles`
 - `Onboarding inconsistente`: `public.users.onboarding_completed` no coincide con `public.profiles.onboarding_completed`
 - `Sin actividad`: no tiene registros en nutricion, peso ni medidas corporales
+
+Tambien incorpora:
+
+- `Estado`: `Activa` o `Desactivada`
+- `Notificacion manual`: mensaje libre persistente hacia cualquier cuenta
+- `Recordatorios sugeridos`: plantillas para cuentas con senales
 
 ## Recomendacion operativa
 

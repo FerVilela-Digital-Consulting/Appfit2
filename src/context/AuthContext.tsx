@@ -14,7 +14,7 @@ import {
     resolveOnboardingCompleted,
 } from '@/context/auth/profile';
 import type { AuthContextType, Profile } from '@/context/auth/types';
-import type { AccountRole } from '@/context/auth/types';
+import type { AccountRole, AccountStatus } from '@/context/auth/types';
 import { getEmailVerificationRedirectUrl, withTimeout } from '@/context/auth/utils';
 import { supabase } from '@/services/supabaseClient';
 import { toast } from 'sonner';
@@ -29,6 +29,7 @@ type ProfileRow = Partial<Profile> & Record<string, unknown>;
 type ProfileUpdatePayload = Partial<Profile> & { updated_at?: string };
 type UserAccountRow = {
     account_role?: AccountRole | null;
+    account_status?: AccountStatus | null;
     onboarding_completed?: boolean | null;
 };
 
@@ -142,7 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchUserAccount = async (userId: string): Promise<UserAccountRow> => {
         const { data, error } = await supabase
             .from("users")
-            .select("account_role,onboarding_completed")
+            .select("account_role,account_status,onboarding_completed")
             .eq("id", userId)
             .limit(1)
             .maybeSingle();
@@ -153,6 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         return {
             account_role: (data?.account_role as AccountRole | null | undefined) ?? "member",
+            account_status: (data?.account_status as AccountStatus | null | undefined) ?? "active",
             onboarding_completed: data?.onboarding_completed ?? null,
         };
     };
@@ -213,6 +215,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const nextAccountRole = resolvedAccount?.account_role ?? cachedAccountRole ?? "member";
             setAccountRole(nextAccountRole);
             setCachedAccountRole(authUser.id, nextAccountRole);
+
+            if (resolvedAccount?.account_status === "suspended") {
+                console.warn("Blocked suspended account from entering the app.", { userId: authUser.id });
+                setUser(null);
+                setAuthedProfile(null);
+                setAccountRole("member");
+                setOnboardingCompleted(false);
+                setAccountRoleLoading(false);
+                setIsGuest(false);
+                localStorage.removeItem(GUEST_STORAGE_KEY);
+                lastSuccessfulSyncRef.current = null;
+                toast.error("Tu cuenta esta desactivada temporalmente. Contacta al administrador.");
+                await supabase.auth.signOut();
+                return;
+            }
 
             try {
                 const resolvedProfile = await withTimeout(
@@ -291,6 +308,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setAuthedProfile(null);
                     setAccountRole("member");
                     setAccountRoleLoading(false);
+                    lastSuccessfulSyncRef.current = null;
                     setGuestProfile(createGuestProfile());
                     setOnboardingCompleted(isGuest ? true : false);
                 }
@@ -301,6 +319,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setAuthedProfile(null);
                     setAccountRole("member");
                     setAccountRoleLoading(false);
+                    lastSuccessfulSyncRef.current = null;
                     setGuestProfile(createGuestProfile());
                     setOnboardingCompleted(isGuest ? true : false);
                 }
@@ -327,6 +346,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         setAuthedProfile(null);
                         setAccountRole("member");
                         setAccountRoleLoading(false);
+                        lastSuccessfulSyncRef.current = null;
                         setOnboardingCompleted(false);
                     }
                 } catch (error) {
@@ -336,6 +356,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         setAuthedProfile(null);
                         setAccountRole("member");
                         setAccountRoleLoading(false);
+                        lastSuccessfulSyncRef.current = null;
                         setOnboardingCompleted(false);
                     }
                 } finally {
@@ -350,6 +371,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setAuthedProfile(null);
                 setAccountRole("member");
                 setAccountRoleLoading(false);
+                lastSuccessfulSyncRef.current = null;
                 setGuestProfile(createGuestProfile());
                 setOnboardingCompleted(false);
                 setIsGuest(false);
@@ -414,6 +436,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthedProfile(null);
         setAccountRole("member");
         setAccountRoleLoading(false);
+        lastSuccessfulSyncRef.current = null;
         setGuestProfile(createGuestProfile());
         setOnboardingCompleted(false);
 
@@ -429,6 +452,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthedProfile(null);
         setAccountRole("member");
         setAccountRoleLoading(false);
+        lastSuccessfulSyncRef.current = null;
         setOnboardingCompleted(true);
         setGuestProfile(createGuestProfile());
     };
@@ -439,6 +463,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setGuestProfile(createGuestProfile());
         setAccountRole("member");
         setAccountRoleLoading(false);
+        lastSuccessfulSyncRef.current = null;
         setOnboardingCompleted(false);
     };
 

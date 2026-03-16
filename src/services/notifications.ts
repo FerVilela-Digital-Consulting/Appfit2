@@ -2,6 +2,15 @@ import { supabase } from "@/services/supabaseClient";
 
 export type NotificationSeverity = "info" | "warning" | "action";
 export type NotificationKind = "complete_profile" | "resolve_onboarding" | "log_first_activity" | "general";
+export type ManualAdminNotificationInput = {
+  targetUserId: string;
+  title: string;
+  body: string;
+  severity: NotificationSeverity;
+  actionPath?: string | null;
+  actionLabel?: string | null;
+  metadata?: Record<string, string | number | boolean | null>;
+};
 
 export type UserNotification = {
   id: string;
@@ -119,6 +128,28 @@ export async function sendAdminReminder(targetUserId: string, kind: Exclude<Noti
     p_metadata: {
       template_kind: template.kind,
       source: "admin_users",
+    },
+  });
+
+  if (error) throw error;
+
+  return data as string | null;
+}
+
+export async function sendAdminNotification(input: ManualAdminNotificationInput) {
+  const { targetUserId, title, body, severity, actionPath, actionLabel, metadata } = input;
+
+  const { data, error } = await supabase.rpc("send_admin_notification", {
+    p_target_user_id: targetUserId,
+    p_notification_kind: "general",
+    p_title: title.trim(),
+    p_body: body.trim(),
+    p_action_path: actionPath?.trim() ? actionPath.trim() : null,
+    p_action_label: actionLabel?.trim() ? actionLabel.trim() : null,
+    p_severity: severity,
+    p_metadata: {
+      source: "admin_users_manual",
+      ...(metadata ?? {}),
     },
   });
 

@@ -16,6 +16,8 @@ Admins can now send reminders from the user directory when a user has one of the
 - inconsistent onboarding
 - no activity yet
 
+Admins can also send a manual notification to any account, even if the user is currently healthy.
+
 Users receive those reminders inside the app through:
 
 - the bell icon in the header
@@ -54,6 +56,8 @@ Initial reminder templates:
 - `log_first_activity`
 
 They are defined in `src/services/notifications.ts`.
+
+Manual notifications use the same transport and persistence layer, but allow free text and optional CTA routing.
 
 ## Future-safe Base
 The schema already leaves room for:
