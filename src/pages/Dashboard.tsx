@@ -201,17 +201,12 @@ const Dashboard = () => {
     [activeWorkout, core, scheduledWorkout, selectedModuleKeys, snapshot.monthActivity, snapshot.todayKey, todayActivity],
   );
   const {
-    dailyModules,
-    completionCount,
     missingModules,
     nextModule,
-    remainingModuleCount,
     todayCompletionPct,
-    pendingChecklist,
     nextActionLabel,
     primaryAction,
     weeklyConsistency,
-    upcomingItems,
   } = dashboardViewModel;
 
   useEffect(() => {
@@ -540,15 +535,9 @@ const Dashboard = () => {
     { label: "+ Peso", href: "#weight" },
     { label: "Check-in", href: "/today#biofeedback" },
   ];
-  const remainingChecksForConsistency = Math.max(2 - completionCount, 0);
-  const consistencyHint =
-    remainingChecksForConsistency === 0
-      ? "Hoy ya cuenta como dia completo en tu consistencia semanal."
-      : `Te faltan ${remainingChecksForConsistency} registro(s) para marcar hoy como completo en la semana.`;
-  const nextPriorityLabel =
-    upcomingItems[0]?.title && upcomingItems[0]?.detail
-      ? `${upcomingItems[0].title}: ${upcomingItems[0].detail}`
-      : "Sin eventos prioritarios hoy.";
+  const remainingActionsCount = Math.max(missingModules.length, 0);
+  const nextRequiredActionLabel = nextModule ? `Registrar ${nextModule.label.toLowerCase()}` : "Dia completado";
+  const nextRequiredActionHref = nextModule?.href ?? primaryAction.href;
 
   return (
     <div className="app-shell min-h-screen px-4 pb-5 pt-1 text-foreground sm:px-6 sm:pb-8 sm:pt-2">
@@ -734,52 +723,62 @@ const Dashboard = () => {
             titleRight={<p className="text-sm font-semibold">{weeklyConsistency.completedCount}/7</p>}
             contentClassName={denseActionContentClass}
           >
-            <div className="grid gap-3 xl:grid-cols-[1.2fr_auto] xl:items-start">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="rounded-full border border-border/60 bg-muted/20 px-2.5 py-1 text-xs font-medium">
-                    Semana: {weeklyConsistency.completedCount}/7 dias
-                  </div>
-                  <div className="rounded-full border border-border/60 bg-muted/20 px-2.5 py-1 text-xs font-medium">
-                    Hoy: {completionCount}/{dailyModules.length} registros
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">{consistencyHint}</p>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Avance operativo del dia</span>
-                    <span>{todayCompletionPct}%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted">
-                    <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${todayCompletionPct}%` }} />
-                  </div>
+                <p className="text-[1.05rem] font-bold">Hoy estas al {todayCompletionPct}% completado</p>
+                <div className="h-2.5 rounded-full bg-muted">
+                  <div className="h-2.5 rounded-full bg-primary transition-all duration-300" style={{ width: `${todayCompletionPct}%` }} />
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 xl:justify-end">
+
+              <div className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-3 md:p-4">
+                <p className="text-sm text-muted-foreground">
+                  Te falta {remainingActionsCount} {remainingActionsCount === 1 ? "accion" : "acciones"} para completar el dia
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="flex items-center rounded-xl border border-border/60 bg-background/70 px-3 py-2 text-lg font-semibold">
+                    {nextRequiredActionLabel}
+                  </div>
+                  {nextRequiredActionHref.startsWith("#") ? (
+                    <Button asChild className="h-12 rounded-xl text-base font-semibold">
+                      <a href={nextRequiredActionHref}>{nextRequiredActionLabel}</a>
+                    </Button>
+                  ) : (
+                    <Button asChild className="h-12 rounded-xl text-base font-semibold">
+                      <Link to={nextRequiredActionHref}>{nextRequiredActionLabel}</Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Semana</p>
+                <div className="grid grid-cols-7 gap-2">
+                  {weeklyConsistency.days.map((day) => (
+                    <div
+                      key={day.dateKey}
+                      className={cn(
+                        "rounded-lg border px-2 py-2 text-center text-xs font-semibold",
+                        day.completed && !day.isToday && "border-emerald-500/40 bg-emerald-500/10 text-foreground",
+                        !day.completed && !day.isToday && "border-border/60 bg-background/60 text-muted-foreground",
+                        day.isToday && "border-primary/60 bg-primary/15 text-foreground ring-1 ring-primary/35",
+                      )}
+                    >
+                      {day.label}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">{weeklyConsistency.completedCount}/7 dias completados</p>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-1">
                 {quickActions.map((action) => (
-                  <Button key={action.label} asChild variant="outline" className="h-9 rounded-xl px-3 text-sm">
+                  <Button key={action.label} asChild variant="outline" className="h-8 rounded-lg px-3 text-xs font-medium">
                     {action.href.startsWith("#") ? <a href={action.href}>{action.label}</a> : <Link to={action.href}>{action.label}</Link>}
                   </Button>
                 ))}
               </div>
             </div>
-
-            <div className="grid grid-cols-7 gap-2">
-              {weeklyConsistency.days.map((day) => (
-                <div
-                  key={day.dateKey}
-                  className={cn(
-                    "rounded-lg border px-2 py-2 text-center text-xs font-semibold",
-                    day.completed ? "border-primary/40 bg-primary/10 text-foreground" : "border-border/60 text-muted-foreground",
-                    day.isToday && "ring-1 ring-primary/40",
-                  )}
-                >
-                  {day.label}
-                </div>
-              ))}
-            </div>
-
-            <p className="text-xs text-muted-foreground">Siguiente prioridad: {nextPriorityLabel}</p>
           </DashboardCardShell>
         </section>
 
