@@ -459,9 +459,6 @@ const Dashboard = () => {
   const denseSectionGapClass = isCompactDensity ? "gap-2" : "gap-3";
   const denseCardContentClass = isCompactDensity ? "space-y-2 p-3 md:p-4" : "space-y-3 p-4 md:p-5";
   const denseActionContentClass = isCompactDensity ? "space-y-3 p-3 md:p-4" : "space-y-4 p-4 md:p-5";
-  const denseHeroContentClass = isCompactDensity
-    ? "grid gap-2 p-3 sm:gap-3 sm:p-4 md:gap-4 md:p-5"
-    : "grid gap-3 p-3 sm:gap-4 sm:p-4 md:gap-6 md:p-6";
   const greetingLabel = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return "Buenos dias";
@@ -564,6 +561,26 @@ const Dashboard = () => {
         : weightDelta < 0
           ? "text-emerald-600 dark:text-emerald-300"
           : "text-muted-foreground";
+  const physicalSummary = core?.physicalSummary ?? null;
+  const focusHeading = (physicalSummary?.goalHeading ?? "Sin meta activa").replace(/^Meta activa:\s*/i, "");
+  const compactPhysicalMetrics =
+    physicalSummary?.focusMode === "muscle_gain"
+      ? [
+          { label: "Masa magra", value: physicalSummary.leanMassKg !== null ? `${physicalSummary.leanMassKg.toFixed(1)} kg` : "--" },
+          { label: "Brazo", value: physicalSummary.armCm !== null ? `${physicalSummary.armCm.toFixed(1)} cm` : "--" },
+          { label: "Muslo", value: physicalSummary.thighCm !== null ? `${physicalSummary.thighCm.toFixed(1)} cm` : "--" },
+        ]
+      : [
+          {
+            label: "Cintura",
+            value:
+              physicalSummary?.waistChangeCm !== null && physicalSummary?.waistChangeCm !== undefined
+                ? `${physicalSummary.waistChangeCm > 0 ? "+" : ""}${physicalSummary.waistChangeCm.toFixed(1)} cm`
+                : "--",
+          },
+          { label: "% graso", value: physicalSummary?.bodyFatPct !== null ? `${physicalSummary.bodyFatPct.toFixed(1)}%` : "--" },
+          { label: "Cambio 7d", value: weightDeltaLabel },
+        ];
 
   const remainingActionsCount = Math.max(missingModules.length, 0);
   const nextRequiredActionLabel = nextModule ? `Registrar ${nextModule.label.toLowerCase()}` : "Dia completado";
@@ -573,7 +590,7 @@ const Dashboard = () => {
     <div className="app-shell min-h-0 w-full px-4 pb-5 pt-1 text-foreground sm:px-6 sm:pb-8 sm:pt-2">
       <div className="mx-auto flex max-w-[1540px] flex-col gap-5">
         <AppPageIntro
-          className="order-[-2]"
+          className="order-[-3]"
           eyebrow="Dashboard / Centro operativo"
           title={
             <>
@@ -666,16 +683,9 @@ const Dashboard = () => {
 
         <section aria-labelledby="dashboard-zone-hero" className="space-y-3">
           <h2 id="dashboard-zone-hero" className="sr-only">Estado del dia</h2>
-          <Card className="rounded-3xl border-border/60 bg-card/80">
-            <CardContent className={denseHeroContentClass}>
-              <div className="space-y-1">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Estado fisiologico</p>
-                <p className="text-sm text-muted-foreground">Lectura rapida para ajustar la intensidad del dia.</p>
-              </div>
-              <div className={cn("grid items-stretch", denseSectionGapClass)}>
-                <Card className="rounded-2xl border-border/60 bg-background/40">
-                  <CardContent className="grid gap-4 p-4 md:grid-cols-[180px_1fr] md:p-5">
-                    <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/70 p-3 text-center">
+          <Card className="rounded-3xl border-border/60 bg-background/40">
+            <CardContent className="grid gap-4 p-4 md:grid-cols-[150px_1fr] md:p-4">
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/70 p-2.5 text-center">
                       <div className="mb-2 flex w-full items-center justify-between">
                         <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Recovery score</p>
                         <Popover>
@@ -699,9 +709,11 @@ const Dashboard = () => {
                           </PopoverContent>
                         </Popover>
                       </div>
-                      <p className="text-4xl font-black leading-none">{recoveryScore}</p>
-                      <p className="mt-1 text-base font-semibold text-muted-foreground">/100</p>
-                      <p className={cn("mt-2 text-xs font-bold tracking-[0.2em]", recoveryAccentClass)}>{recoveryBand}</p>
+                      <p className="mt-1 flex items-end gap-1 text-3xl font-black leading-none">
+                        <span>{recoveryScore}</span>
+                        <span className="text-sm font-semibold text-muted-foreground">/100</span>
+                      </p>
+                      <p className={cn("mt-1.5 text-[11px] font-bold tracking-[0.2em]", recoveryAccentClass)}>{recoveryBand}</p>
                     </div>
 
                     <div className="space-y-4">
@@ -744,15 +756,11 @@ const Dashboard = () => {
                         <div className={cn("h-2 rounded-full transition-all duration-300", recoveryBarClass)} style={{ width: `${Math.max(8, recoveryScore)}%` }} />
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-
-              </div>
             </CardContent>
           </Card>
         </section>
 
-        <section aria-labelledby="dashboard-zone-actions" className={cn("order-[-1] grid", denseSectionGapClass)}>
+        <section aria-labelledby="dashboard-zone-actions" className={cn("order-[-2] grid", denseSectionGapClass)}>
           <h2 id="dashboard-zone-actions" className="sr-only">Control operativo de hoy</h2>
           <div className={cn("grid", denseSectionGapClass, "xl:grid-cols-3")}>
             <DashboardCardShell
@@ -821,27 +829,47 @@ const Dashboard = () => {
               </div>
             </DashboardCardShell>
 
-            <DashboardCardShell title="Peso y progreso" contentClassName={denseCardContentClass}>
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-sm text-muted-foreground">Peso actual</p>
+            <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="space-y-1">
+                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Foco</p>
+                  <p className="text-sm font-semibold">{focusHeading}</p>
+                </div>
                 <p className={cn("rounded-full border px-2 py-0.5 text-xs font-semibold", weightStatus.className)}>
                   {weightStatus.label}
                 </p>
               </div>
-              <p className="text-4xl font-black leading-none">{core?.latestMeasurementWeight ? `${core.latestMeasurementWeight.toFixed(1)} kg` : "--"}</p>
-              <div className="space-y-1">
-                <p className={cn("text-sm font-semibold", weightDeltaToneClass)}>Cambio 7d: {weightDeltaLabel}</p>
-                <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
+
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Peso actual</p>
+                  <p className="text-3xl font-black leading-none">{core?.latestMeasurementWeight ? `${core.latestMeasurementWeight.toFixed(1)} kg` : "--"}</p>
+                </div>
+                <div className="text-right">
+                  <p className={cn("text-sm font-semibold", weightDeltaToneClass)}>7d: {weightDeltaLabel}</p>
+                  <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
+                </div>
               </div>
-              <div className="h-24 rounded-xl border border-border/60 bg-muted/10 p-2">
+
+              <div className="h-16 rounded-xl border border-border/60 bg-muted/10 p-2">
                 {weightPath ? (
                   <svg viewBox="0 0 100 100" className="h-full w-full">
                     <polyline fill="none" stroke="currentColor" strokeWidth="3" className="text-primary" points={weightPath} />
                   </svg>
                 ) : (
-                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Sin datos de tendencia</div>
+                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Sin tendencia</div>
                 )}
               </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {compactPhysicalMetrics.map((metric) => (
+                  <div key={metric.label} className="rounded-xl border border-border/60 bg-muted/10 px-2 py-2">
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{metric.label}</p>
+                    <p className="mt-1 text-sm font-semibold leading-tight">{metric.value}</p>
+                  </div>
+                ))}
+              </div>
+
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Meta</span>
@@ -851,14 +879,18 @@ const Dashboard = () => {
                   <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${weightGoalProgressSafe ?? 0}%` }} />
                 </div>
               </div>
-              <Button type="button" variant="outline" className="h-9 rounded-xl px-3 text-xs font-semibold" onClick={() => setIsWeightModalOpen(true)}>
-                Registrar peso
-              </Button>
+
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">{physicalSummary?.lastUpdatedLabel ?? "Sin actualizaciones fisicas"}</p>
+                <Button type="button" variant="outline" className="h-9 rounded-xl px-3 text-xs font-semibold" onClick={() => setIsWeightModalOpen(true)}>
+                  Registrar peso
+                </Button>
+              </div>
             </DashboardCardShell>
           </div>
         </section>
 
-        <section aria-labelledby="dashboard-zone-metrics" className="space-y-2 pt-1">
+        <section aria-labelledby="dashboard-zone-metrics" className="order-[-1] space-y-2 pt-1">
           <h2 id="dashboard-zone-metrics" className="sr-only">Metricas diarias</h2>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <section id="water" className="min-w-0">
