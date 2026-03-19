@@ -95,29 +95,30 @@ const DashboardMetricCard = ({
   <Card className="group rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
     <CardContent className="space-y-3 p-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold">{title}</p>
-        <div className={cn("rounded-xl border border-border/60 bg-background/60 p-2", accentClassName)}>
-          <Icon className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          <div className={cn("rounded-xl border border-border/60 bg-background/60 p-2", accentClassName)}>
+            <Icon className="h-4 w-4" />
+          </div>
+          <p className="text-sm font-semibold tracking-tight">{title}</p>
         </div>
+        <Link
+          to={actionHref}
+          aria-label={actionLabel}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-background/70 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+        >
+          {actionLabel}
+        </Link>
       </div>
       <div className="space-y-1">
-        <p className="text-3xl font-black leading-none">{valueLabel}</p>
-        <p className="text-xs text-muted-foreground">{goalLabel}</p>
+        <p className="text-[2rem] font-black leading-none">{valueLabel}</p>
+        <p className="text-sm font-semibold text-muted-foreground">{goalLabel}</p>
       </div>
-      <div className="space-y-2">
-        <div className="h-2 rounded-full bg-muted">
-          <div
-            className={cn("h-2 rounded-full transition-all duration-300", accentClassName)}
-            style={{ width: `${Math.max(0, Math.min(100, progressPct))}%` }}
-          />
+      <div className="h-2 rounded-full bg-muted/70">
+        <div
+          className={cn("h-2 rounded-full transition-all duration-300", accentClassName)}
+          style={{ width: `${Math.max(0, Math.min(100, progressPct))}%` }}
+        />
         </div>
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-medium text-muted-foreground">{Math.round(progressPct)}%</span>
-          <Button asChild size="sm" variant="outline" className="h-7 rounded-lg px-2.5 text-xs">
-            <Link to={actionHref}>{actionLabel}</Link>
-          </Button>
-        </div>
-      </div>
     </CardContent>
   </Card>
 );
@@ -443,16 +444,11 @@ const Dashboard = () => {
     saveNoteMutation,
     snapshot.coreLoading,
   ]);
-  const defaultSecondaryCardLimit = 4;
-  const visibleStackCards = useMemo(
-    () => (showExtendedView ? stackCards : stackCards.slice(0, defaultSecondaryCardLimit)),
-    [showExtendedView, stackCards],
-  );
+  const visibleStackCards = useMemo(() => (showExtendedView ? stackCards : []), [showExtendedView, stackCards]);
   const isCompactDensity = cardDensity === "compact";
   const denseSectionGapClass = isCompactDensity ? "gap-2" : "gap-3";
   const denseCardContentClass = isCompactDensity ? "space-y-2 p-3 md:p-4" : "space-y-3 p-4 md:p-5";
   const denseActionContentClass = isCompactDensity ? "space-y-3 p-3 md:p-4" : "space-y-4 p-4 md:p-5";
-  const densePrimaryGridClass = isCompactDensity ? "grid gap-2 sm:grid-cols-2 xl:grid-cols-4" : "grid gap-3 sm:grid-cols-2 xl:grid-cols-4";
   const denseHeroContentClass = isCompactDensity
     ? "grid gap-2 p-3 sm:gap-3 sm:p-4 md:gap-4 md:p-5"
     : "grid gap-3 p-3 sm:gap-4 sm:p-4 md:gap-6 md:p-6";
@@ -553,7 +549,7 @@ const Dashboard = () => {
             <CardContent className={denseHeroContentClass}>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Estado del dia</p>
+                  <p className="text-sm font-medium text-muted-foreground">Dashboard / Centro operativo</p>
                   <h1 className="text-2xl font-black tracking-tight md:text-3xl">
                     {greetingLabel}, <span className="text-primary">{profileDisplayName}</span>
                   </h1>
@@ -561,6 +557,9 @@ const Dashboard = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="h-10 rounded-xl px-4">
+                    Dia
+                  </Button>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" size="sm" className="h-10 rounded-xl px-3">
@@ -847,7 +846,7 @@ const Dashboard = () => {
                     <p className="text-xs text-muted-foreground">Restantes {remainingCalories.toLocaleString("es-PE")} kcal</p>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Perfil: {nutritionSummary?.profileName ?? "Sin perfil"} · Dia {nutritionSummary?.archetypeLabel ?? "Base"}
+                    Perfil: {nutritionSummary?.profileName ?? "Sin perfil"} - Dia {nutritionSummary?.archetypeLabel ?? "Base"}
                   </div>
                 </div>
               </div>
@@ -904,19 +903,11 @@ const Dashboard = () => {
               />
             </section>
 
-            <DashboardCardShell title="Proximos" contentClassName={denseCardContentClass}>
-              {upcomingItems.length > 0 ? (
-                <div className="space-y-2">
-                  {upcomingItems.slice(0, 3).map((item, index) => (
-                    <div key={`${item.title}-${index}`} className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-                      <p className="text-sm font-semibold">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <DashboardEmptyState message="No hay pendientes criticos para hoy." />
-              )}
+            <DashboardCardShell title="Resumen semanal" contentClassName={denseCardContentClass}>
+              <p className="text-sm text-muted-foreground">{weeklyConsistency.completedCount}/7 dias completados</p>
+              <p className="text-sm text-muted-foreground">
+                {upcomingItems[0]?.title ? `${upcomingItems[0].title}: ${upcomingItems[0].detail}` : "Sin eventos prioritarios hoy."}
+              </p>
             </DashboardCardShell>
           </div>
         </section>
@@ -954,41 +945,13 @@ const Dashboard = () => {
                 </Button>
               ))}
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Avance operativo del dia</span>
-                <span>{todayCompletionPct}%</span>
-              </div>
-              <div className="h-2 rounded-full bg-muted">
-                <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${todayCompletionPct}%` }} />
-              </div>
-            </div>
-            {pendingChecklist.length > 0 ? (
-              <div className="space-y-2">
-                {pendingChecklist.slice(0, 3).map((module) => (
-                  <div key={module.key} className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-                    <p className="text-sm font-medium">{module.label}</p>
-                    {module.href.startsWith("#") ? (
-                      <Button asChild size="sm" className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
-                        <a href={module.href}>Registrar</a>
-                      </Button>
-                    ) : (
-                      <Button asChild size="sm" className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
-                        <Link to={module.href}>Registrar</Link>
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <DashboardEmptyState message="No hay pendientes criticos. Mantienes el dia bajo control." />
-            )}
+            <p className="text-xs text-muted-foreground">Avance operativo: {todayCompletionPct}%</p>
           </DashboardCardShell>
         </section>
 
         <section aria-labelledby="dashboard-zone-extension" className="space-y-4">
           <h2 id="dashboard-zone-extension" className="sr-only">Zona de extension progresiva</h2>
-          {stackCards.length > defaultSecondaryCardLimit ? (
+          {stackCards.length > 0 ? (
             <div className="flex justify-center">
               <Button
                 type="button"
@@ -996,12 +959,12 @@ const Dashboard = () => {
                 className="app-outline-button rounded-xl px-4"
                 onClick={() => setShowExtendedView((current) => !current)}
               >
-                {showExtendedView ? "Ver menos modulos" : "Ver mas modulos"}
+                {showExtendedView ? "Ocultar widgets opcionales" : "Mostrar widgets opcionales"}
               </Button>
             </div>
           ) : null}
 
-          <DashboardCardStack cards={visibleStackCards} />
+          {showExtendedView ? <DashboardCardStack cards={visibleStackCards} /> : null}
         </section>
       </div>
     </div>
