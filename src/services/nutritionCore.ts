@@ -6,6 +6,7 @@ import {
   parseGuestDayArchetypeMap,
   parseGuestDayOverrideMap,
   parseGuestProfiles,
+  saveGuestDailyLogs,
   saveGuestDayArchetypeMap,
   saveGuestDayOverrideMap,
   saveGuestGoals,
@@ -201,6 +202,32 @@ const persistDailyTarget = async (params: {
   if (error) throw error;
 };
 
+const persistDailyLog = async (params: { userId: string; log: DailyNutritionLog }) => {
+  const payload = {
+    user_id: params.userId,
+    date_key: params.log.date_key,
+    nutrition_profile_id: params.log.nutrition_profile_id,
+    profile_name_snapshot: params.log.profile_name_snapshot,
+    archetype_snapshot: params.log.archetype_snapshot,
+    target_calories: params.log.target_calories,
+    target_protein_g: params.log.target_protein_g,
+    target_carbs_g: params.log.target_carbs_g,
+    target_fat_g: params.log.target_fat_g,
+    base_tdee: params.log.base_tdee,
+    weight_snapshot_kg: params.log.weight_snapshot_kg,
+    calorie_adjustment: params.log.calorie_adjustment,
+    calorie_override: params.log.calorie_override,
+    updated_at: params.log.updated_at,
+  };
+
+  const { error } = await supabase.from("daily_nutrition_logs").upsert(payload, { onConflict: "user_id,date_key" });
+  if (error) {
+    const message = (error as { message?: string } | null)?.message?.toLowerCase() ?? "";
+    if (message.includes("schema cache") || message.includes("does not exist") || message.includes("could not find") || message.includes("column") || message.includes("relation")) return;
+    throw error;
+  }
+};
+
 export const resolveDayPlan = async (
   userId: string | null,
   date: Date,
@@ -231,7 +258,7 @@ export const resolveDayPlan = async (
   const goalType = normalizeGoalType(baseProfile?.nutrition_goal_type ?? baseProfile?.goal_type);
   const dayArchetype =
     options?.forceDayArchetype
-    ?? normalizeDayArchetype(existingLog?.day_archetype ?? selectedProfile?.archetype ?? baseProfile?.day_archetype ?? storedTarget?.day_archetype ?? "base");
+    ?? normalizeDayArchetype(existingLog?.archetype_snapshot ?? selectedProfile?.archetype ?? baseProfile?.day_archetype ?? storedTarget?.day_archetype ?? "base");
   const calorieOverride =
     options?.forceCalorieOverride !== undefined
       ? options.forceCalorieOverride
@@ -251,28 +278,25 @@ export const resolveDayPlan = async (
   };
 
   const target = calculateNutritionTargets(profile);
-  const resolvedLog =
-    existingLog ??
-    {
-      id: `guest-log-${dateKey}`,
-      user_id: userId ?? "guest",
-      date_key: dateKey,
-      nutrition_profile_id: selectedProfile?.id ?? null,
-      day_archetype: target.dayArchetype,
-      target_calories: target.finalTargetCalories,
-      actual_calories: 0,
-      actual_protein_g: 0,
-      actual_carbs_g: 0,
-      actual_fat_g: 0,
-      adherence_score: 0,
-      notes: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      weight_snapshot_kg: profile.weightKg,
-      base_tdee: target.tdee,
-      calorie_adjustment: target.archetypeDelta,
-      calorie_override: profile.calorieOverride,
-    };
+  const nowIso = new Date().toISOString();
+  const resolvedLog: DailyNutritionLog = {
+    id: existingLog?.id ?? `guest-log-${dateKey}`,
+    user_id: userId ?? "guest",
+    date_key: dateKey,
+    nutrition_profile_id: selectedProfile?.id ?? null,
+    profile_name_snapshot: selectedProfile?.name ?? null,
+    archetype_snapshot: target.dayArchetype,
+    target_calories: target.finalTargetCalories,
+    target_protein_g: Number(target.proteinGrams.toFixed(1)),
+    target_carbs_g: Number(target.carbGrams.toFixed(1)),
+    target_fat_g: Number(target.fatGrams.toFixed(1)),
+    base_tdee: target.tdee,
+    weight_snapshot_kg: profile.weightKg,
+    calorie_adjustment: target.archetypeDelta,
+    calorie_override: profile.calorieOverride,
+    created_at: existingLog?.created_at ?? nowIso,
+    updated_at: nowIso,
+  };
 
   if (isGuest || !userId) {
     const dayArchetypes = parseGuestDayArchetypeMap();
@@ -283,8 +307,15 @@ export const resolveDayPlan = async (
     if (profile.calorieOverride !== null && profile.calorieOverride !== undefined) overrides[dateKey] = profile.calorieOverride;
     else delete overrides[dateKey];
     saveGuestDayOverrideMap(overrides);
+    const guestLogs = parseGuestDailyLogs();
+    const nextGuestLogs = [
+      resolvedLog,
+      ...guestLogs.filter((row) => row.date_key !== dateKey),
+    ];
+    saveGuestDailyLogs(nextGuestLogs);
   } else {
     await persistDailyTarget({ userId, dateKey, target, calorieOverride: profile.calorieOverride });
+    await persistDailyLog({ userId, log: resolvedLog });
   }
 
   return {

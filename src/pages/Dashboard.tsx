@@ -85,6 +85,7 @@ type DailyMetricCardProps = {
   actionHref: string;
   actionLabel: string;
   onActionClick?: () => void;
+  comingSoon?: boolean;
 };
 
 const DashboardMetricCard = ({
@@ -97,6 +98,7 @@ const DashboardMetricCard = ({
   actionHref,
   actionLabel,
   onActionClick,
+  comingSoon = false,
 }: DailyMetricCardProps) => (
   <Card className="group rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
     <CardContent className="space-y-3 p-4 pt-5 md:pt-5">
@@ -107,23 +109,31 @@ const DashboardMetricCard = ({
           </div>
           <p className="text-sm font-semibold tracking-tight">{title}</p>
         </div>
-        {onActionClick ? (
-          <button
-            type="button"
-            onClick={onActionClick}
-            aria-label={actionLabel}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border border-border/70 bg-background/70 text-lg font-semibold leading-none text-foreground transition-colors hover:bg-muted"
-          >
-            {actionLabel}
-          </button>
+        {comingSoon ? (
+          <span className="inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-amber-600 dark:text-amber-300">
+            Proximamente
+          </span>
         ) : (
-          <Link
-            to={actionHref}
-            aria-label={actionLabel}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border border-border/70 bg-background/70 text-lg font-semibold leading-none text-foreground transition-colors hover:bg-muted"
-          >
-            {actionLabel}
-          </Link>
+          <>
+            {onActionClick ? (
+              <button
+                type="button"
+                onClick={onActionClick}
+                aria-label={actionLabel}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border border-border/70 bg-background/70 text-lg font-semibold leading-none text-foreground transition-colors hover:bg-muted"
+              >
+                {actionLabel}
+              </button>
+            ) : (
+              <Link
+                to={actionHref}
+                aria-label={actionLabel}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border border-border/70 bg-background/70 text-lg font-semibold leading-none text-foreground transition-colors hover:bg-muted"
+              >
+                {actionLabel}
+              </Link>
+            )}
+          </>
         )}
       </div>
       <div className="space-y-1">
@@ -844,12 +854,13 @@ const Dashboard = () => {
             <DashboardMetricCard
               title="Pasos"
               icon={Footprints}
-              valueLabel={`${(core?.activeDays7 ?? 0).toLocaleString("es-PE")} dias`}
-              goalLabel="Meta 7 dias activos"
-              progressPct={Math.min(100, Math.round(((core?.activeDays7 ?? 0) / 7) * 100))}
+              valueLabel="Proximamente"
+              goalLabel="Seguimiento de pasos en desarrollo"
+              progressPct={0}
               accentClassName="bg-emerald-500/90 text-emerald-100"
               actionHref="/calendar"
               actionLabel="+"
+              comingSoon
             />
           </div>
         </section>

@@ -593,7 +593,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Optimistic update
         const oldProfile = authedProfile;
         const baseProfile = authedProfile ?? createEmptyProfile();
-        setAuthedProfile({ ...baseProfile, ...data });
+        const nextProfile = { ...baseProfile, ...data };
+        setAuthedProfile(nextProfile);
 
         const payload: ProfileUpdatePayload = { ...data, updated_at: new Date().toISOString() };
 
@@ -616,6 +617,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             toast.error(error.message);
             throw error;
         }
+
+        // Keep auth cache aligned with optimistic profile updates so fallback syncs
+        // don't restore stale visual preferences (theme/accent/background).
+        setCachedProfile(user.id, nextProfile);
 
         if (typeof data.onboarding_completed === "boolean" && user?.id) {
             const accountUpdate = await supabase
