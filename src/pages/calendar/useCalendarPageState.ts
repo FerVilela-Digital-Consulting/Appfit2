@@ -279,8 +279,9 @@ export function useCalendarPageState() {
           durationMinutes: 25,
           variant: "logged",
           icon: Droplets,
-          surfaceClassName: "border-cyan-400/55 bg-[#071824] text-white shadow-[0_10px_24px_rgba(6,25,39,0.42)]",
-          accentClassName: "bg-cyan-400",
+          surfaceClassName:
+            "border-cyan-300/70 bg-cyan-50 text-cyan-950 shadow-[0_8px_20px_rgba(8,145,178,0.12)] dark:border-cyan-400/55 dark:bg-[#071824] dark:text-cyan-50 dark:shadow-[0_10px_24px_rgba(6,25,39,0.42)]",
+          accentClassName: "bg-cyan-500 dark:bg-cyan-400",
           badge: `${log.consumed_ml} ml`,
         });
       });
@@ -299,8 +300,9 @@ export function useCalendarPageState() {
           durationMinutes: placement.durationMinutes,
           variant: "logged",
           icon: Moon,
-          surfaceClassName: "border-indigo-400/55 bg-[#101527] text-white shadow-[0_10px_24px_rgba(15,23,42,0.45)]",
-          accentClassName: "bg-indigo-400",
+          surfaceClassName:
+            "border-indigo-300/70 bg-indigo-50 text-indigo-950 shadow-[0_8px_20px_rgba(79,70,229,0.12)] dark:border-indigo-400/55 dark:bg-[#101527] dark:text-indigo-50 dark:shadow-[0_10px_24px_rgba(15,23,42,0.45)]",
+          accentClassName: "bg-indigo-500 dark:bg-indigo-400",
           badge: `${(Number(log.total_minutes || 0) / 60).toFixed(1)} h`,
         });
       });
@@ -316,8 +318,9 @@ export function useCalendarPageState() {
           durationMinutes: 35,
           variant: "context",
           icon: HeartPulse,
-          surfaceClassName: "border-rose-400/55 bg-[#1b1020] text-white shadow-[0_10px_24px_rgba(31,10,24,0.45)]",
-          accentClassName: "bg-rose-400",
+          surfaceClassName:
+            "border-rose-300/70 bg-rose-50 text-rose-950 shadow-[0_8px_20px_rgba(225,29,72,0.12)] dark:border-rose-400/55 dark:bg-[#1b1020] dark:text-rose-50 dark:shadow-[0_10px_24px_rgba(31,10,24,0.45)]",
+          accentClassName: "bg-rose-500 dark:bg-rose-400",
           badge: `${selectedBiofeedback.daily_energy}/10`,
         });
       }
@@ -340,8 +343,9 @@ export function useCalendarPageState() {
           durationMinutes: Math.max(40, entries.length * 18),
           variant: "logged",
           icon: UtensilsCrossed,
-          surfaceClassName: "border-emerald-400/55 bg-[#0c1b16] text-white shadow-[0_10px_24px_rgba(8,28,22,0.45)]",
-          accentClassName: "bg-emerald-400",
+          surfaceClassName:
+            "border-emerald-300/70 bg-emerald-50 text-emerald-950 shadow-[0_8px_20px_rgba(16,185,129,0.12)] dark:border-emerald-400/55 dark:bg-[#0c1b16] dark:text-emerald-50 dark:shadow-[0_10px_24px_rgba(8,28,22,0.45)]",
+          accentClassName: "bg-emerald-500 dark:bg-emerald-400",
           badge: mealTotals?.calories ? `${mealTotals.calories} kcal` : undefined,
         });
       });
@@ -358,8 +362,9 @@ export function useCalendarPageState() {
           durationMinutes: 50,
           variant: "context",
           icon: FileText,
-          surfaceClassName: "border-amber-400/60 bg-[#1d1608] text-white shadow-[0_10px_24px_rgba(36,27,8,0.48)]",
-          accentClassName: "bg-amber-400",
+          surfaceClassName:
+            "border-amber-300/75 bg-amber-50 text-amber-950 shadow-[0_8px_20px_rgba(217,119,6,0.12)] dark:border-amber-400/60 dark:bg-[#1d1608] dark:text-amber-50 dark:shadow-[0_10px_24px_rgba(36,27,8,0.48)]",
+          accentClassName: "bg-amber-500 dark:bg-amber-400",
           badge: language === "es" ? "Nota" : "Note",
         });
       }

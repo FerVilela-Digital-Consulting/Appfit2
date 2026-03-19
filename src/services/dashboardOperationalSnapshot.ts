@@ -110,15 +110,10 @@ export const getDashboardOperationalSnapshot = async (
 
   const todayKey = getDateKeyForTimezone(today, timeZone);
 
-  const rpc = supabase.rpc as unknown as (
-    fn: string,
-    args: Record<string, unknown>,
-  ) => Promise<{ data: unknown; error: unknown }>;
-
-  const { data, error } = await rpc("get_dashboard_operational_snapshot", {
+  const { data, error } = await supabase.rpc("get_dashboard_operational_snapshot", {
     p_today: todayKey,
     p_timezone: timeZone,
-  });
+  } as never);
 
   if (error) {
     if (!isRpcUnavailableError(error)) {

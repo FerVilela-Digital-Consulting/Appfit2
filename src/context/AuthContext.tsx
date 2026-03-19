@@ -21,8 +21,8 @@ import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_STORAGE_KEY = 'appfit_is_guest';
-const AUTH_RESOLVE_TIMEOUT_MS = 15000;
-const PROFILE_FETCH_TIMEOUT_MS = 25000;
+const AUTH_RESOLVE_TIMEOUT_MS = 30000;
+const PROFILE_FETCH_TIMEOUT_MS = 40000;
 const AUTH_SYNC_CACHE_WINDOW_MS = 30000;
 const SUSPENDED_ACCOUNT_ERROR_MESSAGE = 'Esta cuenta esta desactivada temporalmente. Contacta al administrador.';
 

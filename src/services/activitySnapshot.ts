@@ -129,16 +129,11 @@ export const getActivityRangeSnapshot = async (
   }
 
   try {
-    const rpc = supabase.rpc as unknown as (
-      fn: string,
-      args: Record<string, unknown>,
-    ) => Promise<{ data: unknown; error: unknown }>;
-
-    const { data, error } = await rpc("get_activity_range_snapshot", {
+    const { data, error } = await supabase.rpc("get_activity_range_snapshot", {
       p_from: fromKey,
       p_to: toKey,
       p_timezone: timeZone,
-    });
+    } as never);
 
     if (error) {
       if (!isRpcUnavailableError(error)) {

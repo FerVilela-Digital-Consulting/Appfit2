@@ -38,9 +38,11 @@ import TodayMealsModule from "@/components/daily/TodayMealsModule";
 import TodayWeightModule from "@/components/daily/TodayWeightModule";
 import SleepCard from "@/components/dashboard/SleepCard";
 import WaterCard from "@/components/dashboard/WaterCard";
+import WaterWorkspace from "@/components/water/WaterWorkspace";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/context/AuthContext";
@@ -81,6 +83,7 @@ type DailyMetricCardProps = {
   accentClassName: string;
   actionHref: string;
   actionLabel: string;
+  onActionClick?: () => void;
 };
 
 const DashboardMetricCard = ({
@@ -92,6 +95,7 @@ const DashboardMetricCard = ({
   accentClassName,
   actionHref,
   actionLabel,
+  onActionClick,
 }: DailyMetricCardProps) => (
   <Card className="group rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
     <CardContent className="space-y-3 p-4 pt-5 md:pt-5">
@@ -102,13 +106,24 @@ const DashboardMetricCard = ({
           </div>
           <p className="text-sm font-semibold tracking-tight">{title}</p>
         </div>
-        <Link
-          to={actionHref}
-          aria-label={actionLabel}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border border-border/70 bg-background/70 text-lg font-semibold leading-none text-foreground transition-colors hover:bg-muted"
-        >
-          {actionLabel}
-        </Link>
+        {onActionClick ? (
+          <button
+            type="button"
+            onClick={onActionClick}
+            aria-label={actionLabel}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border border-border/70 bg-background/70 text-lg font-semibold leading-none text-foreground transition-colors hover:bg-muted"
+          >
+            {actionLabel}
+          </button>
+        ) : (
+          <Link
+            to={actionHref}
+            aria-label={actionLabel}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border border-border/70 bg-background/70 text-lg font-semibold leading-none text-foreground transition-colors hover:bg-muted"
+          >
+            {actionLabel}
+          </Link>
+        )}
       </div>
       <div className="space-y-1">
         <p className="text-[2rem] font-black leading-none">{valueLabel}</p>
@@ -141,6 +156,7 @@ const Dashboard = () => {
   const [visibleModuleKey, setVisibleModuleKey] = useState<string | null>(null);
   const [isModuleTransitioning, setIsModuleTransitioning] = useState(false);
   const [showExtendedView, setShowExtendedView] = useState(false);
+  const [isWaterModalOpen, setIsWaterModalOpen] = useState(false);
   const [cardDensity, setCardDensity] = useState<DashboardCardDensity>(() => loadDashboardCardDensity());
   const timeZone = profile?.timezone || DEFAULT_WATER_TIMEZONE;
 
@@ -795,6 +811,7 @@ const Dashboard = () => {
                 accentClassName="bg-sky-500/90 text-sky-100"
                 actionHref="/water"
                 actionLabel="+"
+                onActionClick={() => setIsWaterModalOpen(true)}
               />
             </section>
             <section id="nutrition" className="min-w-0">
@@ -833,6 +850,16 @@ const Dashboard = () => {
             />
           </div>
         </section>
+
+        <Dialog open={isWaterModalOpen} onOpenChange={setIsWaterModalOpen}>
+          <DialogContent className="max-h-[90vh] w-[95vw] max-w-5xl overflow-y-auto p-4 md:p-6">
+            <DialogHeader>
+              <DialogTitle>Agua</DialogTitle>
+              <DialogDescription>Registro completo de hidratacion sin salir del centro operativo.</DialogDescription>
+            </DialogHeader>
+            <WaterWorkspace embedded />
+          </DialogContent>
+        </Dialog>
 
         <section aria-labelledby="dashboard-zone-main" className={cn("grid xl:grid-cols-[1.6fr_1.3fr_1fr]", denseSectionGapClass)}>
           <h2 id="dashboard-zone-main" className="sr-only">Bloques principales del dashboard</h2>

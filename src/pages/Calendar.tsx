@@ -264,13 +264,17 @@ const Calendar = () => {
                                       <Icon className="h-4 w-4 shrink-0" />
                                       <span className="truncate">{item.title}</span>
                                     </p>
-                                    <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-slate-400">
+                                    <span className="rounded-full border border-border/70 bg-background/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground dark:border-white/10 dark:bg-transparent dark:text-slate-300">
                                       {getTimelineRangeLabel(item.startMinutes, item.durationMinutes, locale)}
                                     </span>
                                   </div>
-                                  <p className="line-clamp-2 text-xs text-slate-300">{item.detail}</p>
+                                  <p className="line-clamp-2 text-xs text-muted-foreground dark:text-slate-300">{item.detail}</p>
                                 </div>
-                                {item.badge ? <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-white/78">{item.badge}</span> : null}
+                                {item.badge ? (
+                                  <span className="rounded-full border border-border/70 bg-background/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-foreground/80 dark:border-white/15 dark:bg-transparent dark:text-white/78">
+                                    {item.badge}
+                                  </span>
+                                ) : null}
                               </div>
                             );
 
