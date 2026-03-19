@@ -1,7 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startOfMonth } from "date-fns";
-import { CalendarDays, CheckCircle2, Dumbbell, RefreshCcw, Settings2, Sparkles, TimerReset } from "lucide-react";
+import {
+  Activity,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  Droplets,
+  Dumbbell,
+  Flame,
+  Footprints,
+  Moon,
+  RefreshCcw,
+  Settings2,
+  Sparkles,
+  TimerReset,
+  UtensilsCrossed,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -55,6 +70,66 @@ import {
 } from "@/services/dashboardHomePreferences";
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
+
+type DailyMetricCardProps = {
+  title: string;
+  icon: ComponentType<{ className?: string }>;
+  valueLabel: string;
+  goalLabel: string;
+  progressPct: number;
+  accentClassName: string;
+  actionHref: string;
+  actionLabel: string;
+};
+
+const DashboardMetricCard = ({
+  title,
+  icon: Icon,
+  valueLabel,
+  goalLabel,
+  progressPct,
+  accentClassName,
+  actionHref,
+  actionLabel,
+}: DailyMetricCardProps) => (
+  <Card className="group rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+    <CardContent className="space-y-3 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold">{title}</p>
+        <div className={cn("rounded-xl border border-border/60 bg-background/60 p-2", accentClassName)}>
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <p className="text-3xl font-black leading-none">{valueLabel}</p>
+        <p className="text-xs text-muted-foreground">{goalLabel}</p>
+      </div>
+      <div className="space-y-2">
+        <div className="h-2 rounded-full bg-muted">
+          <div
+            className={cn("h-2 rounded-full transition-all duration-300", accentClassName)}
+            style={{ width: `${Math.max(0, Math.min(100, progressPct))}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-medium text-muted-foreground">{Math.round(progressPct)}%</span>
+          <Button asChild size="sm" variant="outline" className="h-7 rounded-lg px-2.5 text-xs">
+            <Link to={actionHref}>{actionLabel}</Link>
+          </Button>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const formatDurationLabel = (minutes: number) => {
+  if (!Number.isFinite(minutes) || minutes <= 0) return "--";
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours <= 0) return `${mins} min`;
+  if (mins <= 0) return `${hours} h`;
+  return `${hours} h ${mins} min`;
+};
 
 const Dashboard = () => {
   const queryClient = useQueryClient();
@@ -402,6 +477,72 @@ const Dashboard = () => {
     ]);
     toast.success("Dashboard sincronizado.");
   };
+
+  const recoveryScore = core?.recovery.score ?? 0;
+  const recoveryBand = recoveryScore >= 75 ? "ALTO" : recoveryScore >= 45 ? "MEDIO" : "BAJO";
+  const recoveryAccentClass = recoveryScore >= 75 ? "text-emerald-400" : recoveryScore >= 45 ? "text-amber-400" : "text-rose-400";
+  const recoveryBarClass = recoveryScore >= 75 ? "bg-emerald-500" : recoveryScore >= 45 ? "bg-amber-500" : "bg-rose-500";
+  const hydrationProgress = Math.min(100, Math.round(((core?.waterTodayMl ?? 0) / Math.max(core?.waterGoalMl ?? 2000, 1)) * 100));
+  const sleepProgress = Math.min(
+    100,
+    Math.round(((core?.sleepDay?.total_minutes ?? 0) / Math.max(core?.sleepGoalMinutes ?? 480, 1)) * 100),
+  );
+  const energyLabel = core?.bioToday?.daily_energy !== null && core?.bioToday?.daily_energy !== undefined ? `${core.bioToday.daily_energy}/10` : "--";
+  const stressLabel = core?.bioToday?.perceived_stress !== null && core?.bioToday?.perceived_stress !== undefined ? `${core.bioToday.perceived_stress}/10` : "--";
+
+  const recommendationLabel =
+    recoveryScore >= 75
+      ? "Hoy puedes entrenar fuerte"
+      : recoveryScore >= 45
+      ? "Entrenamiento moderado recomendado"
+      : "Entrenamiento ligero recomendado";
+  const dayDemandLabel = recoveryScore >= 75 ? "Dia de alto rendimiento" : recoveryScore >= 45 ? "Dia de carga media" : "Dia de descarga";
+
+  const nutritionTotals = core?.nutritionToday?.totals;
+  const nutritionGoals = core?.nutritionToday?.goals;
+  const consumedCalories = nutritionTotals?.calories ?? 0;
+  const targetCalories = nutritionGoals?.calorie_goal ?? 2000;
+  const remainingCalories = Math.max(targetCalories - consumedCalories, 0);
+  const caloriesProgress = Math.min(100, Math.round((consumedCalories / Math.max(targetCalories, 1)) * 100));
+
+  const proteinCurrent = nutritionTotals?.protein_g ?? 0;
+  const carbsCurrent = nutritionTotals?.carbs_g ?? 0;
+  const fatCurrent = nutritionTotals?.fat_g ?? 0;
+  const proteinGoal = nutritionGoals?.protein_goal_g ?? 160;
+  const carbsGoal = nutritionGoals?.carb_goal_g ?? 250;
+  const fatGoal = nutritionGoals?.fat_goal_g ?? 70;
+
+  const workoutExercises = (activeWorkout?.exercises ?? scheduledWorkout?.exercises ?? []).slice(0, 4);
+  const estimatedWorkoutMinutes = Math.max(
+    workoutExercises.reduce((sum, exercise) => sum + Math.max(Number(exercise.rest_seconds || 0), 45) * Math.max(Number(exercise.target_sets || 0), 1), 0) / 60,
+    0,
+  );
+  const exerciseCountLabel = workoutExercises.length > 0 ? `${workoutExercises.length} ejercicios visibles` : "Sin ejercicios configurados";
+
+  const weightSeries = (core?.weightSnapshot?.entries ?? [])
+    .slice(0, 7)
+    .reverse()
+    .map((row) => Number(row.weight_kg))
+    .filter((value) => Number.isFinite(value));
+  const weightMin = weightSeries.length > 0 ? Math.min(...weightSeries) : 0;
+  const weightMax = weightSeries.length > 0 ? Math.max(...weightSeries) : 0;
+  const weightPath = weightSeries
+    .map((value, index) => {
+      const x = weightSeries.length > 1 ? (index / (weightSeries.length - 1)) * 100 : 0;
+      const y =
+        weightMax === weightMin
+          ? 50
+          : 100 - ((value - weightMin) / Math.max(weightMax - weightMin, 1)) * 100;
+      return `${x},${Math.max(6, Math.min(94, y))}`;
+    })
+    .join(" ");
+
+  const quickActions = [
+    { label: "+ Agua", href: "#water" },
+    { label: "+ Comida", href: "/nutrition" },
+    { label: "+ Peso", href: "#weight" },
+    { label: "Check-in", href: "/today#biofeedback" },
+  ];
 
   return (
     <div className="app-shell min-h-screen px-4 py-5 text-foreground sm:px-6 sm:py-8">
