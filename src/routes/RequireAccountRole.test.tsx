@@ -98,4 +98,18 @@ describe("RequireAccountRole", () => {
 
     expect(container.querySelector(".animate-spin")).toBeInTheDocument();
   });
+
+  it("allows access if an admin role is already available while role sync is still running", () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: "user-4" },
+      loading: false,
+      accountRoleLoading: true,
+      isGuest: false,
+      accountRole: "super_admin",
+    });
+
+    renderRequireAccountRole();
+
+    expect(screen.getByText("Admin dashboard")).toBeInTheDocument();
+  });
 });
