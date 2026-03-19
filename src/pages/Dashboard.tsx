@@ -1,13 +1,18 @@
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addDays, format, startOfMonth, startOfWeek } from "date-fns";
+import { startOfMonth } from "date-fns";
 import { CalendarDays, CheckCircle2, Crosshair, Dumbbell, Settings2, TimerReset } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import BodyMeasurementsCard from "@/components/dashboard/BodyMeasurementsCard";
+import DashboardCardShell from "@/components/dashboard/DashboardCardShell";
+import DashboardCardStack from "@/components/dashboard/DashboardCardStack";
+import DashboardEmptyState from "@/components/dashboard/DashboardEmptyState";
+import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState";
 import CalendarMiniWidget from "@/components/dashboard/CalendarMiniWidget";
 import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
+import DashboardSectionTitle from "@/components/dashboard/DashboardSectionTitle";
 import PhysicalProgressHub from "@/components/dashboard/PhysicalProgressHub";
 import RecoveryCard from "@/components/dashboard/RecoveryCard";
 import TacticalNotesCard from "@/components/dashboard/TacticalNotesCard";
@@ -25,6 +30,13 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/context/AuthContext";
 import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
+import {
+  loadDashboardCardDensity,
+  saveDashboardCardDensity,
+  type DashboardCardDensity,
+} from "@/features/dashboard/dashboardDensity";
+import { buildDashboardViewModel } from "@/features/dashboard/dashboardViewModel";
+import type { DashboardStackCard } from "@/features/dashboard/dashboardTypes";
 import { NUTRITION_ARCHETYPE_META } from "@/features/nutrition/nutritionProfiles";
 import { getTrainingTodaySummary } from "@/modules/training/services";
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
@@ -45,51 +57,6 @@ import {
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
-type DashboardStackCard = {
-  key: string;
-  weight: number;
-  preferredColumn: "left" | "right";
-  mobileOrder: number;
-  node: ReactNode;
-};
-
-const balanceDashboardColumns = (cards: DashboardStackCard[]) => {
-  const orderedCards = [...cards].sort((a, b) => a.mobileOrder - b.mobileOrder);
-  const left: DashboardStackCard[] = [];
-  const right: DashboardStackCard[] = [];
-  let leftWeight = 0;
-  let rightWeight = 0;
-
-  orderedCards.forEach((card) => {
-    const preferredWeight = card.preferredColumn === "left" ? leftWeight : rightWeight;
-    const alternateWeight = card.preferredColumn === "left" ? rightWeight : leftWeight;
-    const shouldUsePreferredColumn = preferredWeight <= alternateWeight + 2;
-
-    if (card.preferredColumn === "left" && (shouldUsePreferredColumn || leftWeight <= rightWeight)) {
-      left.push(card);
-      leftWeight += card.weight;
-      return;
-    }
-
-    if (card.preferredColumn === "right" && (shouldUsePreferredColumn || rightWeight <= leftWeight)) {
-      right.push(card);
-      rightWeight += card.weight;
-      return;
-    }
-
-    if (leftWeight <= rightWeight) {
-      left.push(card);
-      leftWeight += card.weight;
-      return;
-    }
-
-    right.push(card);
-    rightWeight += card.weight;
-  });
-
-  return { orderedCards, left, right };
-};
-
 const Dashboard = () => {
   const queryClient = useQueryClient();
   const { user, isGuest, profile } = useAuth();
@@ -98,6 +65,7 @@ const Dashboard = () => {
   const [visibleModuleKey, setVisibleModuleKey] = useState<string | null>(null);
   const [isModuleTransitioning, setIsModuleTransitioning] = useState(false);
   const [showExtendedView, setShowExtendedView] = useState(false);
+  const [cardDensity, setCardDensity] = useState<DashboardCardDensity>(() => loadDashboardCardDensity());
   const timeZone = profile?.timezone || DEFAULT_WATER_TIMEZONE;
 
   const saveNoteMutation = useMutation({
@@ -143,50 +111,32 @@ const Dashboard = () => {
   });
   const selectedModuleKeys = modulePreferencesQuery.data ?? DEFAULT_DASHBOARD_CHECKIN_MODULES;
   const selectedWidgetKeys = widgetPreferencesQuery.data ?? DEFAULT_DASHBOARD_HOME_WIDGETS;
-  const allDailyModules = [
-    { key: "water", label: "Agua", href: "#water", completed: (core?.waterTodayMl ?? 0) > 0 },
-    { key: "sleep", label: "Sueno", href: "#sleep", completed: (core?.sleepDay?.total_minutes ?? 0) > 0 },
-    { key: "weight", label: "Peso", href: "#weight", completed: (core?.weightSnapshot?.entries || []).some((entry) => entry.measured_at === snapshot.todayKey) },
-    { key: "measurements", label: "Medidas", href: "/body", completed: core?.latestMeasurement?.date_key === snapshot.todayKey },
-    { key: "biofeedback", label: "Biofeedback", href: "#biofeedback", completed: Boolean(core?.bioToday) },
-    { key: "nutrition", label: "Comidas", href: "#nutrition", completed: Boolean(todayActivity?.hasNutrition) },
-  ] as const;
-  const dailyModules = allDailyModules.filter((module) => selectedModuleKeys.includes(module.key));
-  const completionCount = dailyModules.filter((module) => module.completed).length;
-  const missingModules = dailyModules.filter((module) => !module.completed);
-  const nextModule = missingModules[0] ?? null;
-  const remainingModuleCount = Math.max(missingModules.length - 1, 0);
-  const todayCompletionPct = dailyModules.length > 0 ? Math.round((completionCount / dailyModules.length) * 100) : 0;
-  const pendingChecklist = missingModules.slice(0, 3);
-  const nextActionLabel =
-    nextModule ? `${nextModule.label}: siguiente registro recomendado` : "Dia operativo completo. Revisa progreso o nutricion para interpretar tendencias.";
-  const primaryAction = useMemo(() => {
-    if (activeWorkout) {
-      return {
-        label: "Continuar entrenamiento",
-        href: "/training?tab=today",
-      };
-    }
-
-    if (scheduledWorkout) {
-      return {
-        label: "Iniciar entrenamiento",
-        href: "/training?tab=today",
-      };
-    }
-
-    if (nextModule) {
-      return {
-        label: `Registrar ${nextModule.label.toLowerCase()}`,
-        href: nextModule.href,
-      };
-    }
-
-    return {
-      label: "Ver progreso semanal",
-      href: "/progress",
-    };
-  }, [activeWorkout, nextModule, scheduledWorkout]);
+  const dashboardViewModel = useMemo(
+    () =>
+      buildDashboardViewModel({
+        core,
+        todayKey: snapshot.todayKey,
+        todayActivity,
+        monthActivity: snapshot.monthActivity,
+        selectedModuleKeys,
+        activeWorkout,
+        scheduledWorkout,
+      }),
+    [activeWorkout, core, scheduledWorkout, selectedModuleKeys, snapshot.monthActivity, snapshot.todayKey, todayActivity],
+  );
+  const {
+    dailyModules,
+    completionCount,
+    missingModules,
+    nextModule,
+    remainingModuleCount,
+    todayCompletionPct,
+    pendingChecklist,
+    nextActionLabel,
+    primaryAction,
+    weeklyConsistency,
+    upcomingItems,
+  } = dashboardViewModel;
 
   useEffect(() => {
     if (!nextModule) {
@@ -211,6 +161,10 @@ const Dashboard = () => {
 
     return () => window.clearTimeout(timeoutId);
   }, [nextModule, visibleModuleKey]);
+
+  useEffect(() => {
+    saveDashboardCardDensity(cardDensity);
+  }, [cardDensity]);
 
   const visibleModule = missingModules.find((module) => module.key === visibleModuleKey) ?? nextModule;
   const visibleWidgetKeySet = useMemo(() => new Set<DashboardHomeWidgetKey>(selectedWidgetKeys), [selectedWidgetKeys]);
@@ -287,72 +241,6 @@ const Dashboard = () => {
     isWidgetVisible("water") ||
     isWidgetVisible("sleep") ||
     isWidgetVisible("weight");
-  const weeklyConsistency = useMemo(() => {
-    const todayDate = new Date(`${snapshot.todayKey}T12:00:00`);
-    const weekStart = startOfWeek(todayDate, { weekStartsOn: 1 });
-    const labels = ["L", "M", "M", "J", "V", "S", "D"];
-
-    const days = Array.from({ length: 7 }).map((_, index) => {
-      const date = addDays(weekStart, index);
-      const dateKey = format(date, "yyyy-MM-dd");
-      const activity = snapshot.monthActivity?.get(dateKey);
-      const completedChecks =
-        Number(Boolean(activity?.hasWater)) +
-        Number(Boolean(activity?.hasSleep)) +
-        Number(Boolean(activity?.hasNutrition)) +
-        Number(Boolean(activity?.hasWeight)) +
-        Number(Boolean(activity?.hasBiofeedback));
-
-      return {
-        dateKey,
-        label: labels[index] ?? "",
-        completed: completedChecks >= 2,
-        isToday: dateKey === snapshot.todayKey,
-      };
-    });
-
-    const completedCount = days.filter((day) => day.completed).length;
-    return { days, completedCount };
-  }, [snapshot.monthActivity, snapshot.todayKey]);
-  const upcomingItems = useMemo(() => {
-    const items: Array<{ title: string; detail: string }> = [];
-
-    if (activeWorkout) {
-      items.push({
-        title: "Sesion activa",
-        detail: activeWorkout.name ?? "Continua con tu entrenamiento de hoy",
-      });
-    } else if (scheduledWorkout) {
-      items.push({
-        title: "Entrenamiento de hoy",
-        detail: scheduledWorkout.name ?? "Rutina programada para hoy",
-      });
-    }
-
-    if (nextModule) {
-      items.push({
-        title: "Siguiente registro",
-        detail: `${nextModule.label}: pendiente por completar`,
-      });
-    }
-
-    const remainingWater = Math.max((core?.waterGoalMl ?? 2000) - (core?.waterTodayMl ?? 0), 0);
-    if (remainingWater > 0) {
-      items.push({
-        title: "Hidratacion",
-        detail: `Te faltan ${remainingWater} ml para tu objetivo diario`,
-      });
-    }
-
-    if ((core?.sleepDay?.total_minutes ?? 0) === 0) {
-      items.push({
-        title: "Sueno",
-        detail: "Registra tu descanso para completar el control diario",
-      });
-    }
-
-    return items.slice(0, 3);
-  }, [activeWorkout, core?.sleepDay?.total_minutes, core?.waterGoalMl, core?.waterTodayMl, nextModule, scheduledWorkout]);
   const stackCards = useMemo(() => {
     const cards: DashboardStackCard[] = [];
     const widgetIsVisible = (widgetKey: DashboardHomeWidgetKey) =>
@@ -361,9 +249,11 @@ const Dashboard = () => {
     if (widgetIsVisible("physical_progress")) {
       cards.push({
         key: "physical_progress",
-        weight: 5,
-        preferredColumn: "left",
-        mobileOrder: 10,
+        placement: {
+          weight: 5,
+          preferredColumn: "left",
+          mobileOrder: 10,
+        },
         node: <PhysicalProgressHub loading={snapshot.coreLoading} summary={core?.physicalSummary ?? null} />,
       });
     }
@@ -371,9 +261,11 @@ const Dashboard = () => {
     if (widgetIsVisible("quick_actions")) {
       cards.push({
         key: "quick_actions",
-        weight: 4,
-        preferredColumn: "right",
-        mobileOrder: 80,
+        placement: {
+          weight: 4,
+          preferredColumn: "right",
+          mobileOrder: 80,
+        },
         node: <DashboardQuickActions nextActionLabel={nextActionLabel} nutritionSummary={nutritionSummary} />,
       });
     }
@@ -381,9 +273,11 @@ const Dashboard = () => {
     if (widgetIsVisible("biofeedback")) {
       cards.push({
         key: "biofeedback",
-        weight: 5,
-        preferredColumn: "right",
-        mobileOrder: 30,
+        placement: {
+          weight: 5,
+          preferredColumn: "right",
+          mobileOrder: 30,
+        },
         node: (
           <section id="biofeedback" className="min-w-0">
             <TodayBiofeedbackModule />
@@ -395,9 +289,11 @@ const Dashboard = () => {
     if (widgetIsVisible("body_measurements")) {
       cards.push({
         key: "body_measurements",
-        weight: 6,
-        preferredColumn: "left",
-        mobileOrder: 40,
+        placement: {
+          weight: 6,
+          preferredColumn: "left",
+          mobileOrder: 40,
+        },
         node: (
           <BodyMeasurementsCard
             loading={snapshot.coreLoading}
@@ -414,9 +310,11 @@ const Dashboard = () => {
     if (widgetIsVisible("notes")) {
       cards.push({
         key: "notes",
-        weight: 5,
-        preferredColumn: "right",
-        mobileOrder: 50,
+        placement: {
+          weight: 5,
+          preferredColumn: "right",
+          mobileOrder: 50,
+        },
         node: (
           <TacticalNotesCard
             loading={snapshot.coreLoading}
@@ -431,9 +329,11 @@ const Dashboard = () => {
     if (widgetIsVisible("recovery_card")) {
       cards.push({
         key: "recovery_card",
-        weight: 5,
-        preferredColumn: "right",
-        mobileOrder: 60,
+        placement: {
+          weight: 5,
+          preferredColumn: "right",
+          mobileOrder: 60,
+        },
         node: (
           <RecoveryCard
             loading={snapshot.coreLoading}
@@ -456,9 +356,11 @@ const Dashboard = () => {
     if (widgetIsVisible("calendar")) {
       cards.push({
         key: "calendar",
-        weight: 5,
-        preferredColumn: "left",
-        mobileOrder: 70,
+        placement: {
+          weight: 5,
+          preferredColumn: "left",
+          mobileOrder: 70,
+        },
         node: (
           <CalendarMiniWidget
             month={currentMonth}
@@ -498,11 +400,20 @@ const Dashboard = () => {
     () => (showExtendedView ? stackCards : stackCards.slice(0, defaultSecondaryCardLimit)),
     [showExtendedView, stackCards],
   );
-  const desktopColumns = useMemo(() => balanceDashboardColumns(visibleStackCards), [visibleStackCards]);
+  const isCompactDensity = cardDensity === "compact";
+  const denseSectionGapClass = isCompactDensity ? "gap-2" : "gap-3";
+  const denseCardContentClass = isCompactDensity ? "space-y-2 p-3 md:p-4" : "space-y-3 p-4 md:p-5";
+  const denseActionContentClass = isCompactDensity ? "space-y-3 p-3 md:p-4" : "space-y-4 p-4 md:p-5";
+  const densePrimaryGridClass = isCompactDensity ? "grid gap-2 sm:grid-cols-2 xl:grid-cols-4" : "grid gap-3 sm:grid-cols-2 xl:grid-cols-4";
+  const denseHeroContentClass = isCompactDensity
+    ? "grid gap-2 p-3 sm:gap-3 sm:p-4 md:gap-4 md:p-5"
+    : "grid gap-3 p-3 sm:gap-4 sm:p-4 md:gap-6 md:p-6";
 
   return (
     <div className="app-shell min-h-screen px-4 py-5 text-foreground sm:px-6 sm:py-8">
       <div className="mx-auto max-w-[1540px] space-y-6">
+        <section aria-labelledby="dashboard-zone-hero" className="space-y-4">
+        <h2 id="dashboard-zone-hero" className="sr-only">Zona hero operativo</h2>
         <AppPageIntro
           eyebrow="Panel diario"
           icon={<Crosshair className="h-3.5 w-3.5" />}
@@ -514,10 +425,33 @@ const Dashboard = () => {
           <PopoverTrigger asChild>
             <Button variant="outline" className="app-outline-button rounded-2xl">
               <Settings2 className="mr-2 h-4 w-4" />
-              Widgets visibles
+              Widgets y densidad
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-[calc(100vw-2rem)] max-w-sm space-y-4 sm:w-96">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Densidad de cards</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={cardDensity === "compact" ? "default" : "outline"}
+                  className="h-8 rounded-lg text-xs"
+                  onClick={() => setCardDensity("compact")}
+                >
+                  Compacto
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={cardDensity === "comfortable" ? "default" : "outline"}
+                  className="h-8 rounded-lg text-xs"
+                  onClick={() => setCardDensity("comfortable")}
+                >
+                  Comodo
+                </Button>
+              </div>
+            </div>
             <div className="space-y-2">
               <p className="text-sm font-medium">Centro operativo</p>
               <p className="text-xs text-muted-foreground">Controla que tarjetas aparecen en la pestana Centro operativo.</p>
@@ -545,7 +479,7 @@ const Dashboard = () => {
         />
 
         <Card className="app-surface-hero overflow-hidden rounded-[22px] md:rounded-[28px]">
-        <CardContent className={cn("grid gap-3 p-3 sm:gap-4 sm:p-4 md:gap-6 md:p-6", visibleRightCards && "xl:grid-cols-[1.5fr_0.9fr]")}>
+        <CardContent className={cn(denseHeroContentClass, visibleRightCards && "xl:grid-cols-[1.55fr_0.85fr]")}>
           <div className="space-y-4">
             {isWidgetVisible("hero_routine") ? (
             <div className="app-surface-tile rounded-2xl p-3 md:p-4">
@@ -639,9 +573,9 @@ const Dashboard = () => {
                 </div>
                 <div className="mt-3 space-y-2">
                   {snapshot.coreLoading || snapshot.monthActivityLoading ? (
-                    <p className="app-surface-muted text-sm">Analizando modulos pendientes...</p>
+                    <DashboardLoadingState className="app-surface-muted" message="Analizando modulos pendientes..." />
                   ) : missingModules.length === 0 ? (
-                    <p className="app-surface-muted text-sm">Dia operativo completo. No hay registros pendientes.</p>
+                    <DashboardEmptyState className="app-surface-muted text-sm" message="Dia operativo completo. No hay registros pendientes." />
                   ) : (
                     <>
                       {visibleModule ? (
@@ -709,73 +643,108 @@ const Dashboard = () => {
           ) : null}
         </CardContent>
       </Card>
+      </section>
 
-      <section className="grid gap-3 xl:grid-cols-[1.1fr_1fr]">
-        <Card className="rounded-2xl border-border/60">
-          <CardContent className="space-y-3 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Avance operativo del dia</p>
-            <div className="flex items-end justify-between gap-3">
-              <p className="text-3xl font-black leading-none">{todayCompletionPct}%</p>
-              <p className="text-sm text-muted-foreground">{completionCount}/{dailyModules.length} controles completos</p>
+      <section aria-labelledby="dashboard-zone-actions" className={cn("grid xl:grid-cols-4", denseSectionGapClass)}>
+        <h2 id="dashboard-zone-actions" className="sr-only">Zona de accion inmediata</h2>
+        <DashboardCardShell title="Accion recomendada" className="h-full xl:col-span-2" contentClassName={denseActionContentClass}>
+          <p className="text-sm text-muted-foreground">{nextActionLabel}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {primaryAction.href.startsWith("#") ? (
+              <Button asChild className="h-9 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 motion-reduce:transform-none motion-reduce:transition-none">
+                <a href={primaryAction.href}>{primaryAction.label}</a>
+              </Button>
+            ) : (
+              <Button asChild className="h-9 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 motion-reduce:transform-none motion-reduce:transition-none">
+                <Link to={primaryAction.href}>{primaryAction.label}</Link>
+              </Button>
+            )}
+            <div className="rounded-full border border-border/60 bg-muted/30 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+              {completionCount}/{dailyModules.length} completos
             </div>
+            <div className="rounded-full border border-border/60 bg-muted/30 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+              {missingModules.length} pendientes
+            </div>
+          </div>
+          <div className="space-y-2">
             <div className="h-2 rounded-full bg-muted">
               <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${todayCompletionPct}%` }} />
             </div>
-            <p className="text-xs text-muted-foreground">Incluye agua, sueno, peso, biofeedback y nutricion segun tu configuracion.</p>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-border/60">
-          <CardContent className="space-y-3 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Pendientes prioritarios</p>
             {pendingChecklist.length > 0 ? (
-              <div className="space-y-2">
-                {pendingChecklist.map((module) => (
-                  <div key={module.key} className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-                    <p className="text-sm font-medium">{module.label}</p>
-                    {module.href.startsWith("#") ? (
-                      <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
-                        <a href={module.href}>Registrar</a>
-                      </Button>
-                    ) : (
-                      <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
-                        <Link to={module.href}>Registrar</Link>
-                      </Button>
-                    )}
+              <div className="grid gap-2 sm:grid-cols-2">
+                {pendingChecklist.slice(0, 2).map((module) => (
+                  <div key={`action-${module.key}`} className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+                    <p className="text-xs font-medium">{module.label}</p>
+                    <span className="text-[11px] text-muted-foreground">Pendiente</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">No hay pendientes criticos. Mantienes el dia bajo control.</p>
+              <DashboardEmptyState message="Sin pendientes criticos. Mantienes buen ritmo hoy." />
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </DashboardCardShell>
+
+        <DashboardCardShell title="Avance operativo del dia" className="h-full" contentClassName={denseCardContentClass}>
+          <div className="flex items-end justify-between gap-3">
+            <p className="text-3xl font-black leading-none">{todayCompletionPct}%</p>
+            <p className="text-sm text-muted-foreground">{completionCount}/{dailyModules.length} controles completos</p>
+          </div>
+          <div className="h-2 rounded-full bg-muted">
+            <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${todayCompletionPct}%` }} />
+          </div>
+          <p className="text-xs text-muted-foreground">Incluye agua, sueno, peso, biofeedback y nutricion segun tu configuracion.</p>
+        </DashboardCardShell>
+
+        <DashboardCardShell title="Pendientes prioritarios" className="h-full" contentClassName={denseCardContentClass}>
+          {pendingChecklist.length > 0 ? (
+            <div className="space-y-2">
+              {pendingChecklist.map((module) => (
+                <div key={module.key} className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+                  <p className="text-sm font-medium">{module.label}</p>
+                  {module.href.startsWith("#") ? (
+                    <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
+                      <a href={module.href}>Registrar</a>
+                    </Button>
+                  ) : (
+                    <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
+                      <Link to={module.href}>Registrar</Link>
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <DashboardEmptyState message="No hay pendientes criticos. Mantienes el dia bajo control." />
+          )}
+        </DashboardCardShell>
       </section>
 
       {showPrimaryTodayGrid ? (
-        <section className="space-y-3">
+        <section aria-labelledby="dashboard-zone-ops" className={cn("space-y-3", isCompactDensity && "space-y-2")}>
+          <h2 id="dashboard-zone-ops" className="sr-only">Zona de operacion diaria</h2>
           <div className="flex items-center justify-between gap-3 px-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Registros clave de hoy</p>
+            <DashboardSectionTitle>Registros clave de hoy</DashboardSectionTitle>
             <p className="text-xs text-muted-foreground">Solo lo necesario para operar el dia.</p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+          <div className={densePrimaryGridClass}>
             {isWidgetVisible("water") ? (
-              <section id="water" className="min-w-0">
+              <section id="water" className="min-w-0 h-full">
                 <WaterCard showHistoryButton={false} />
               </section>
             ) : null}
             {isWidgetVisible("nutrition") ? (
-              <section id="nutrition" className="min-w-0">
+              <section id="nutrition" className="min-w-0 h-full">
                 <TodayMealsModule />
               </section>
             ) : null}
             {isWidgetVisible("sleep") ? (
-              <section id="sleep" className="min-w-0">
+              <section id="sleep" className="min-w-0 h-full">
                 <SleepCard />
               </section>
             ) : null}
             {isWidgetVisible("weight") ? (
-              <section id="weight" className="min-w-0">
+              <section id="weight" className="min-w-0 h-full">
                 <TodayWeightModule />
               </section>
             ) : null}
@@ -783,116 +752,76 @@ const Dashboard = () => {
         </section>
       ) : null}
 
-      <section className="grid gap-3 xl:grid-cols-[1.2fr_1fr]">
-        <Card className="rounded-2xl border-border/60">
-          <CardContent className="space-y-4 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Consistencia semanal</p>
-              <p className="text-sm font-semibold">{weeklyConsistency.completedCount}/7</p>
-            </div>
-            <div className="grid grid-cols-7 gap-2">
-              {weeklyConsistency.days.map((day) => (
-                <div
-                  key={day.dateKey}
-                  className={cn(
-                    "rounded-lg border px-2 py-2 text-center text-xs font-semibold",
-                    day.completed ? "border-primary/40 bg-primary/10 text-foreground" : "border-border/60 text-muted-foreground",
-                    day.isToday && "ring-1 ring-primary/40",
-                  )}
-                >
-                  {day.label}
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">Se marca como completo cuando registras al menos dos controles del dia.</p>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-border/60">
-          <CardContent className="space-y-3 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Proximos</p>
-            {upcomingItems.length > 0 ? (
-              <div className="space-y-2">
-                {upcomingItems.map((item, index) => (
-                  <div key={`${item.title}-${index}`} className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-                    <p className="text-sm font-semibold">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">{item.detail}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">No hay pendientes criticos para hoy. Continua con tu plan.</p>
-            )}
-          </CardContent>
-        </Card>
-      </section>
-
-      {stackCards.length > defaultSecondaryCardLimit ? (
-        <div className="flex justify-center">
-          <Button
-            type="button"
-            variant="outline"
-            className="app-outline-button rounded-xl px-4"
-            onClick={() => setShowExtendedView((current) => !current)}
-          >
-            {showExtendedView ? "Ver menos modulos" : "Ver mas modulos"}
-          </Button>
-        </div>
-      ) : null}
-
-      {visibleStatusRow ? (
-        <TodayStatusRow
-          loading={snapshot.coreLoading}
-          waterMl={core?.waterTodayMl ?? 0}
-          waterGoalMl={core?.waterGoalMl ?? 2000}
-          sleepMinutes={core?.sleepDay?.total_minutes ?? 0}
-          sleepGoalMinutes={core?.sleepGoalMinutes ?? 480}
-          energy={core?.bioToday?.daily_energy ?? null}
-          stress={core?.bioToday?.perceived_stress ?? null}
-          streakDays={core?.activeDays7 ?? 0}
-        />
-      ) : null}
-
-      {visibleStackCards.length > 0 ? (
-        <>
-          <div className="space-y-4 xl:hidden">
-            {desktopColumns.orderedCards.map((card) => (
-              <div key={`mobile-${card.key}`} className="min-w-0">
-                {card.node}
+      <section aria-labelledby="dashboard-zone-insights" className={cn("grid xl:grid-cols-[1.2fr_1fr]", denseSectionGapClass)}>
+        <h2 id="dashboard-zone-insights" className="sr-only">Zona de insights y contexto</h2>
+        <DashboardCardShell
+          title="Consistencia semanal"
+          titleRight={<p className="text-sm font-semibold">{weeklyConsistency.completedCount}/7</p>}
+          contentClassName={denseCardContentClass}
+        >
+          <div className="grid grid-cols-7 gap-2">
+            {weeklyConsistency.days.map((day) => (
+              <div
+                key={day.dateKey}
+                className={cn(
+                  "rounded-lg border px-2 py-2 text-center text-xs font-semibold",
+                  day.completed ? "border-primary/40 bg-primary/10 text-foreground" : "border-border/60 text-muted-foreground",
+                  day.isToday && "ring-1 ring-primary/40",
+                )}
+              >
+                {day.label}
               </div>
             ))}
           </div>
+          <p className="text-xs text-muted-foreground">Se marca como completo cuando registras al menos dos controles del dia.</p>
+        </DashboardCardShell>
 
-          <div
-            className={cn(
-              "hidden xl:items-start xl:gap-4",
-              desktopColumns.left.length > 0 && desktopColumns.right.length > 0
-                ? "xl:grid xl:grid-cols-[minmax(0,1.42fr)_minmax(320px,0.94fr)]"
-                : "xl:block",
-            )}
-          >
-            {desktopColumns.left.length > 0 ? (
-              <div className="space-y-4">
-                {desktopColumns.left.map((card) => (
-                  <div key={`left-${card.key}`} className="min-w-0">
-                    {card.node}
-                  </div>
-                ))}
-              </div>
-            ) : null}
+        <DashboardCardShell title="Proximos" contentClassName={denseCardContentClass}>
+          {upcomingItems.length > 0 ? (
+            <div className="space-y-2">
+              {upcomingItems.map((item, index) => (
+                <div key={`${item.title}-${index}`} className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+                  <p className="text-sm font-semibold">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.detail}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <DashboardEmptyState message="No hay pendientes criticos para hoy. Continua con tu plan." />
+          )}
+        </DashboardCardShell>
+      </section>
 
-            {desktopColumns.right.length > 0 ? (
-              <div className="space-y-4">
-                {desktopColumns.right.map((card) => (
-                  <div key={`right-${card.key}`} className="min-w-0">
-                    {card.node}
-                  </div>
-                ))}
-              </div>
-            ) : null}
+      <section aria-labelledby="dashboard-zone-extension" className="space-y-4">
+        <h2 id="dashboard-zone-extension" className="sr-only">Zona de extension progresiva</h2>
+        {stackCards.length > defaultSecondaryCardLimit ? (
+          <div className="flex justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              className="app-outline-button rounded-xl px-4"
+              onClick={() => setShowExtendedView((current) => !current)}
+            >
+              {showExtendedView ? "Ver menos modulos" : "Ver mas modulos"}
+            </Button>
           </div>
-        </>
-      ) : null}
+        ) : null}
+
+        {visibleStatusRow ? (
+          <TodayStatusRow
+            loading={snapshot.coreLoading}
+            waterMl={core?.waterTodayMl ?? 0}
+            waterGoalMl={core?.waterGoalMl ?? 2000}
+            sleepMinutes={core?.sleepDay?.total_minutes ?? 0}
+            sleepGoalMinutes={core?.sleepGoalMinutes ?? 480}
+            energy={core?.bioToday?.daily_energy ?? null}
+            stress={core?.bioToday?.perceived_stress ?? null}
+            streakDays={core?.activeDays7 ?? 0}
+          />
+        ) : null}
+
+        <DashboardCardStack cards={visibleStackCards} />
+      </section>
       </div>
     </div>
   );
