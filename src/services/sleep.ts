@@ -105,6 +105,39 @@ export const addSleepLog = async ({
   return data as SleepLog;
 };
 
+export const deleteSleepLog = async (id: string, userId: string | null, options?: { isGuest?: boolean }) => {
+  const isGuest = options?.isGuest || false;
+  if (!id) return;
+
+  if (isGuest) {
+    saveGuestLogs(getGuestLogs().filter((log) => log.id !== id));
+    return;
+  }
+  if (!userId) return;
+
+  const { error } = await supabase.from("sleep_logs").delete().eq("id", id).eq("user_id", userId);
+  if (error) throw error;
+};
+
+export const clearSleepLogsByDate = async (
+  userId: string | null,
+  date: Date,
+  options?: { isGuest?: boolean; timeZone?: string },
+) => {
+  const isGuest = options?.isGuest || false;
+  const timeZone = options?.timeZone || DEFAULT_WATER_TIMEZONE;
+  const dateKey = getDateKeyForTimezone(date, timeZone);
+
+  if (isGuest) {
+    saveGuestLogs(getGuestLogs().filter((log) => log.date_key !== dateKey));
+    return;
+  }
+  if (!userId) return;
+
+  const { error } = await supabase.from("sleep_logs").delete().eq("user_id", userId).eq("date_key", dateKey);
+  if (error) throw error;
+};
+
 export const getSleepDay = async (
   userId: string | null,
   date: Date,

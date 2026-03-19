@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Moon } from "lucide-react";
+import { Moon, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
 import { usePreferences } from "@/context/PreferencesContext";
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
-import { addSleepLog, getSleepDay, getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
+import { addSleepLog, clearSleepLogsByDate, deleteSleepLog, getSleepDay, getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -109,6 +109,35 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
       ]);
     },
     onError: (error: unknown) => toast.error(getErrorMessage(error, t("sleep.page.saveError"))),
+  });
+
+  const undoMutation = useMutation({
+    mutationFn: (id: string) => deleteSleepLog(id, user?.id ?? null, { isGuest }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["sleep_day"] }),
+        queryClient.invalidateQueries({ queryKey: ["sleep_range"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
+        queryClient.invalidateQueries({ queryKey: ["header_weekly_consistency"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
+      ]);
+    },
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "No se pudo deshacer el ultimo registro.")),
+  });
+
+  const resetDayMutation = useMutation({
+    mutationFn: () => clearSleepLogsByDate(user?.id ?? null, selectedDate, { isGuest, timeZone }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["sleep_day"] }),
+        queryClient.invalidateQueries({ queryKey: ["sleep_range"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
+        queryClient.invalidateQueries({ queryKey: ["header_weekly_consistency"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
+      ]);
+      toast.success("Se reinicio el sueno del dia seleccionado.");
+    },
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "No se pudo reiniciar el sueno de hoy.")),
   });
 
   return (
@@ -223,6 +252,35 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
                 ))}
               </div>
             )}
+
+            <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
+              <Button
+                className="w-full sm:w-auto"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const latest = dayData?.logs?.[0];
+                  if (!latest) return;
+                  undoMutation.mutate(latest.id);
+                }}
+                disabled={undoMutation.isPending || !dayData || dayData.logs.length === 0}
+              >
+                <Undo2 className="mr-2 h-4 w-4" />
+                Deshacer ultimo ({dayData?.logs.length ?? 0})
+              </Button>
+              <Button
+                className="w-full sm:w-auto"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (!window.confirm("Esto eliminara todos los registros de sueno de este dia. Continuar?")) return;
+                  resetDayMutation.mutate();
+                }}
+                disabled={resetDayMutation.isPending || !dayData || dayData.logs.length === 0}
+              >
+                Reiniciar hoy
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -280,4 +338,3 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
 };
 
 export default SleepWorkspace;
-
