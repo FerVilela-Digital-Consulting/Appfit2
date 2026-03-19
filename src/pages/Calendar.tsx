@@ -102,6 +102,69 @@ const Calendar = () => {
     </Card>
   );
 
+  const legendItems = [
+    {
+      key: "water",
+      icon: Droplets,
+      className: "text-primary",
+      label: language === "es" ? "Agua registrada" : "Water logged",
+    },
+    {
+      key: "weight",
+      icon: Scale,
+      className: "text-muted-foreground",
+      label: language === "es" ? "Peso registrado" : "Weight logged",
+    },
+    {
+      key: "sleep",
+      icon: Moon,
+      className: "text-indigo-500",
+      label: language === "es" ? "Sueno registrado" : "Sleep logged",
+    },
+    {
+      key: "biofeedback",
+      icon: HeartPulse,
+      className: "text-rose-500",
+      label: language === "es" ? "Biofeedback registrado" : "Biofeedback logged",
+    },
+    {
+      key: "nutrition",
+      icon: UtensilsCrossed,
+      className: "text-emerald-500",
+      label: language === "es" ? "Nutricion registrada" : "Nutrition logged",
+    },
+    {
+      key: "note",
+      icon: FileText,
+      className: "text-amber-500",
+      label: language === "es" ? "Nota diaria" : "Daily note",
+    },
+  ] as const;
+
+  const legendPanel = (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle>{language === "es" ? "Guia de lectura" : "Reading guide"}</CardTitle>
+        <CardDescription>
+          {language === "es"
+            ? "Referencia rapida para interpretar iconos y estado del dia en mes, historial y timeline."
+            : "Quick reference for month, agenda, and timeline indicators."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        {legendItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <div key={item.key} className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm text-muted-foreground">
+              <Icon className={`h-4 w-4 ${item.className}`} />
+              <span>{item.label}</span>
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+
   const dayPanel = (
     <div className="space-y-4">
       <Card className="overflow-hidden">
@@ -425,6 +488,7 @@ const Calendar = () => {
             <Button className="w-full" variant="outline" size="sm" onClick={goToToday}>{t("calendar.today")}</Button>
           </CardContent>
         </Card>
+        {legendPanel}
         {calendarView === "agenda" ? <div className="space-y-4">{agendaPanel}{selectedDaySummaryPanel}</div> : null}
         {calendarView === "day" ? dayPanel : null}
         {calendarView === "month" ? <div className="space-y-4">{monthCalendarCard}{selectedDaySummaryPanel}</div> : null}
@@ -432,6 +496,7 @@ const Calendar = () => {
 
         <div className="hidden gap-4 md:flex md:flex-col">
         <div className="max-w-sm">{viewTabs}</div>
+        {legendPanel}
         {calendarView === "agenda" ? <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.9fr]">{agendaPanel}{selectedDaySummaryPanel}</div> : null}
         {calendarView === "day" ? <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">{dayPanel}{monthCalendarCard}</div> : null}
         {calendarView === "month" ? <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.8fr_1fr]">{monthCalendarCard}{selectedDaySummaryPanel}</div> : null}

@@ -37,6 +37,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
@@ -76,6 +77,8 @@ type ManualNotificationDraft = {
   actionPath: string;
   actionLabel: string;
 };
+
+type AdminUsersTab = "directory" | "notifications" | "audit";
 
 const availableSignalFilters = ["all", "with_any_signal", "missing_profile", "onboarding_inconsistent", "without_activity"] as const;
 type SignalFilter = (typeof availableSignalFilters)[number];
@@ -117,6 +120,7 @@ const AdminUsers = () => {
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [signalFilter, setSignalFilter] = useState<SignalFilter>(resolveSignalFilter(searchParams.get("signal")));
+  const [activeTab, setActiveTab] = useState<AdminUsersTab>("directory");
   const [manualNotificationTarget, setManualNotificationTarget] = useState<(Awaited<ReturnType<typeof getAdminUserDirectory>>[number]) | null>(null);
   const [manualNotificationDraft, setManualNotificationDraft] = useState<ManualNotificationDraft>(createManualNotificationDraft(null));
   const [accountStatusTarget, setAccountStatusTarget] = useState<(Awaited<ReturnType<typeof getAdminUserDirectory>>[number]) | null>(null);
@@ -366,7 +370,21 @@ const AdminUsers = () => {
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl border-border/60">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as AdminUsersTab)} className="space-y-4">
+        <TabsList className="grid h-auto w-full grid-cols-3 gap-2 rounded-2xl bg-muted/60 p-2">
+          <TabsTrigger className="px-2 text-xs sm:text-sm" value="directory">
+            Directorio
+          </TabsTrigger>
+          <TabsTrigger className="px-2 text-xs sm:text-sm" value="notifications">
+            Recordatorios
+          </TabsTrigger>
+          <TabsTrigger className="px-2 text-xs sm:text-sm" value="audit">
+            Auditoria
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="directory" className="space-y-4">
+          <Card className="rounded-3xl border-border/60">
         <CardHeader>
           <CardTitle>Cuentas registradas</CardTitle>
           <CardDescription>
@@ -591,9 +609,11 @@ const AdminUsers = () => {
             </div>
           ) : null}
         </CardContent>
-      </Card>
+          </Card>
+        </TabsContent>
 
-      <Card className="rounded-3xl border-border/60">
+        <TabsContent value="notifications" className="space-y-4">
+          <Card className="rounded-3xl border-border/60">
         <CardHeader>
           <CardTitle>Recordatorios recientes</CardTitle>
           <CardDescription>Traza del nuevo sistema de notificaciones internas para soporte operativo y seguimiento futuro.</CardDescription>
@@ -639,9 +659,11 @@ const AdminUsers = () => {
             </div>
           )}
         </CardContent>
-      </Card>
+          </Card>
+        </TabsContent>
 
-      <Card className="rounded-3xl border-border/60">
+        <TabsContent value="audit" className="space-y-4">
+          <Card className="rounded-3xl border-border/60">
         <CardHeader>
           <CardTitle>Auditoria reciente de roles</CardTitle>
           <CardDescription>Traza minima para saber quien cambio permisos administrativos y cuando ocurrio.</CardDescription>
@@ -689,7 +711,9 @@ const AdminUsers = () => {
             </div>
           )}
         </CardContent>
-      </Card>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={Boolean(manualNotificationTarget)} onOpenChange={(open) => !open && closeManualNotificationDialog()}>
         <DialogContent className="sm:max-w-xl">

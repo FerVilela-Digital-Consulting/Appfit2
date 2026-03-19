@@ -4,23 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type StatsSummaryCardsProps = {
+  rangeLabel: string;
   latestWeight: number | null;
   delta7: number | null;
+  deltaRange: number | null;
   movingAvg7: number | null | undefined;
   trendLabel: string;
   sleepGoalHours: string;
-  sleepWeekAvgHours: string;
-  sleepMonthAvgHours: string;
-  sleepWeekMet: number;
-  nutrition7dCalories: number;
-  nutrition7dProtein: number;
-  nutrition30dCarbs: number;
-  nutrition30dFat: number;
+  sleepRangeAvgHours: string;
+  sleepRangeMet: number;
+  sleepRangeDays: number;
+  nutritionRangeCalories: number;
+  nutritionRangeProtein: number;
+  nutritionRangeCarbs: number;
+  nutritionRangeFat: number;
   nutritionGoalCalories: number;
   nutritionGoalProtein: number;
   nutritionGoalCarbs: number;
   nutritionGoalFat: number;
-  biofeedbackWeek: {
+  biofeedbackRange: {
     avg_energy?: number | null;
     avg_stress?: number | null;
     avg_sleep_quality?: number | null;
@@ -40,33 +42,37 @@ type StatsSummaryCardsProps = {
   } | null | undefined;
   delta30: number | null;
   weeklyAvg: number | null;
+  rangeAvg: number | null;
   prevMovingAvg7: number | null | undefined;
   formatNumber: (value: number | null) => string;
   trendLabelForValue: (value: "up" | "down" | "stable" | null) => string;
 };
 
 export function StatsSummaryCards({
+  rangeLabel,
   latestWeight,
   delta7,
+  deltaRange,
   movingAvg7,
   trendLabel,
   sleepGoalHours,
-  sleepWeekAvgHours,
-  sleepMonthAvgHours,
-  sleepWeekMet,
-  nutrition7dCalories,
-  nutrition7dProtein,
-  nutrition30dCarbs,
-  nutrition30dFat,
+  sleepRangeAvgHours,
+  sleepRangeMet,
+  sleepRangeDays,
+  nutritionRangeCalories,
+  nutritionRangeProtein,
+  nutritionRangeCarbs,
+  nutritionRangeFat,
   nutritionGoalCalories,
   nutritionGoalProtein,
   nutritionGoalCarbs,
   nutritionGoalFat,
-  biofeedbackWeek,
+  biofeedbackRange,
   latestMeasurement,
   weeklyReview,
   delta30,
   weeklyAvg,
+  rangeAvg,
   prevMovingAvg7,
   formatNumber,
   trendLabelForValue,
@@ -92,18 +98,23 @@ export function StatsSummaryCards({
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Promedio movil 7d</CardTitle>
+            <CardTitle className="text-sm">Cambio vs {rangeLabel}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{movingAvg7 === null || movingAvg7 === undefined ? "--" : `${movingAvg7.toFixed(2)} kg`}</p>
+            <p className="text-2xl font-semibold">
+              {deltaRange === null ? "--" : `${deltaRange > 0 ? "+" : ""}${deltaRange.toFixed(1)} kg`}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Tendencia</CardTitle>
+            <CardTitle className="text-sm">Promedio movil 7d</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{trendLabel}</p>
+            <p className="text-2xl font-semibold">
+              {movingAvg7 === null || movingAvg7 === undefined ? "--" : `${movingAvg7.toFixed(2)} kg`}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Tendencia: {trendLabel}</p>
           </CardContent>
         </Card>
       </div>
@@ -111,7 +122,7 @@ export function StatsSummaryCards({
       <Card>
         <CardHeader>
           <CardTitle>Resumen de sueno</CardTitle>
-          <CardDescription>Meta y tendencias desde registros de sueno.</CardDescription>
+          <CardDescription>Meta y cumplimiento dentro del rango seleccionado.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="rounded-lg border p-3">
@@ -119,16 +130,18 @@ export function StatsSummaryCards({
             <p className="text-xl font-semibold">{sleepGoalHours} h</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Promedio (7d)</p>
-            <p className="text-xl font-semibold">{sleepWeekAvgHours} h</p>
-          </div>
-          <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Promedio (30d)</p>
-            <p className="text-xl font-semibold">{sleepMonthAvgHours} h</p>
+            <p className="text-xs text-muted-foreground">Promedio ({rangeLabel})</p>
+            <p className="text-xl font-semibold">{sleepRangeAvgHours} h</p>
           </div>
           <div className="rounded-lg border p-3">
             <p className="text-xs text-muted-foreground">Dias cumplidos</p>
-            <p className="text-xl font-semibold">{sleepWeekMet}/7</p>
+            <p className="text-xl font-semibold">
+              {sleepRangeMet}/{sleepRangeDays || 0}
+            </p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">Dias con registro</p>
+            <p className="text-xl font-semibold">{sleepRangeDays}</p>
           </div>
           <div className="md:col-span-4">
             <Button asChild variant="outline">
@@ -141,27 +154,28 @@ export function StatsSummaryCards({
       <Card>
         <CardHeader>
           <CardTitle>Resumen de alimentacion</CardTitle>
-          <CardDescription>Calorias y macros promedio en 7 y 30 dias.</CardDescription>
+          <CardDescription>Calorias y macros promedio para {rangeLabel.toLowerCase()}.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Calorias (7d)</p>
-            <p className="text-xl font-semibold">{nutrition7dCalories} kcal</p>
+            <p className="text-xs text-muted-foreground">Calorias ({rangeLabel})</p>
+            <p className="text-xl font-semibold">{nutritionRangeCalories} kcal</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Proteina (7d)</p>
-            <p className="text-xl font-semibold">{nutrition7dProtein} g</p>
+            <p className="text-xs text-muted-foreground">Proteina ({rangeLabel})</p>
+            <p className="text-xl font-semibold">{nutritionRangeProtein} g</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Carbs (30d)</p>
-            <p className="text-xl font-semibold">{nutrition30dCarbs} g</p>
+            <p className="text-xs text-muted-foreground">Carbs ({rangeLabel})</p>
+            <p className="text-xl font-semibold">{nutritionRangeCarbs} g</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Grasas (30d)</p>
-            <p className="text-xl font-semibold">{nutrition30dFat} g</p>
+            <p className="text-xs text-muted-foreground">Grasas ({rangeLabel})</p>
+            <p className="text-xl font-semibold">{nutritionRangeFat} g</p>
           </div>
           <div className="md:col-span-4 text-xs text-muted-foreground">
-            Objetivos: {nutritionGoalCalories} kcal | P {nutritionGoalProtein}g | C {nutritionGoalCarbs}g | G {nutritionGoalFat}g
+            Objetivos: {nutritionGoalCalories} kcal | P {nutritionGoalProtein}g | C {nutritionGoalCarbs}g | G{" "}
+            {nutritionGoalFat}g
           </div>
         </CardContent>
       </Card>
@@ -169,13 +183,13 @@ export function StatsSummaryCards({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Biofeedback semanal</CardTitle>
+            <CardTitle className="text-sm">Biofeedback ({rangeLabel})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
-            <p className="font-semibold">Energia: {biofeedbackWeek?.avg_energy ?? 0}/10</p>
-            <p className="font-semibold">Estres: {biofeedbackWeek?.avg_stress ?? 0}/10</p>
-            <p className="font-semibold">Calidad de sueno: {biofeedbackWeek?.avg_sleep_quality ?? 0}/10</p>
-            <p className="text-xs text-muted-foreground">Dias registrados: {biofeedbackWeek?.days_logged ?? 0}/7</p>
+            <p className="font-semibold">Energia: {biofeedbackRange?.avg_energy ?? 0}/10</p>
+            <p className="font-semibold">Estres: {biofeedbackRange?.avg_stress ?? 0}/10</p>
+            <p className="font-semibold">Calidad de sueno: {biofeedbackRange?.avg_sleep_quality ?? 0}/10</p>
+            <p className="text-xs text-muted-foreground">Dias registrados: {biofeedbackRange?.days_logged ?? 0}</p>
             <Button asChild variant="outline" size="sm">
               <Link to="/today#biofeedback">Abrir biofeedback</Link>
             </Button>
@@ -187,13 +201,22 @@ export function StatsSummaryCards({
           </CardHeader>
           <CardContent className="space-y-1">
             <p className="font-semibold">
-              Grasa corporal: {latestMeasurement?.body_fat_pct === null || latestMeasurement?.body_fat_pct === undefined ? "--" : `${Number(latestMeasurement.body_fat_pct).toFixed(1)}%`}
+              Grasa corporal:{" "}
+              {latestMeasurement?.body_fat_pct === null || latestMeasurement?.body_fat_pct === undefined
+                ? "--"
+                : `${Number(latestMeasurement.body_fat_pct).toFixed(1)}%`}
             </p>
             <p className="font-semibold">
-              Masa grasa: {latestMeasurement?.fat_mass_kg === null || latestMeasurement?.fat_mass_kg === undefined ? "--" : `${Number(latestMeasurement.fat_mass_kg).toFixed(1)} kg`}
+              Masa grasa:{" "}
+              {latestMeasurement?.fat_mass_kg === null || latestMeasurement?.fat_mass_kg === undefined
+                ? "--"
+                : `${Number(latestMeasurement.fat_mass_kg).toFixed(1)} kg`}
             </p>
             <p className="font-semibold">
-              Masa magra: {latestMeasurement?.lean_mass_kg === null || latestMeasurement?.lean_mass_kg === undefined ? "--" : `${Number(latestMeasurement.lean_mass_kg).toFixed(1)} kg`}
+              Masa magra:{" "}
+              {latestMeasurement?.lean_mass_kg === null || latestMeasurement?.lean_mass_kg === undefined
+                ? "--"
+                : `${Number(latestMeasurement.lean_mass_kg).toFixed(1)} kg`}
             </p>
             <Button asChild variant="outline" size="sm">
               <Link to="/body">Abrir medidas</Link>
@@ -205,11 +228,16 @@ export function StatsSummaryCards({
             <CardTitle className="text-sm">Revision semanal</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
-            <p className="font-semibold">Adherencia agua: {weeklyReview?.waterDaysMet ?? 0}/{weeklyReview?.waterDaysTotal ?? 7}</p>
+            <p className="font-semibold">
+              Adherencia agua: {weeklyReview?.waterDaysMet ?? 0}/{weeklyReview?.waterDaysTotal ?? 7}
+            </p>
             <p className="font-semibold">Dias activos: {weeklyReview?.activeDays ?? 0}/7</p>
             <p className="font-semibold">Tendencia de peso: {trendLabelForValue(weeklyReview?.weightTrend ?? null)}</p>
             <p className="text-xs text-muted-foreground">
-              Cambio semanal: {weeklyReview?.weightWeeklyChange === null || weeklyReview?.weightWeeklyChange === undefined ? "--" : `${weeklyReview.weightWeeklyChange > 0 ? "+" : ""}${weeklyReview.weightWeeklyChange.toFixed(2)} kg`}
+              Cambio semanal:{" "}
+              {weeklyReview?.weightWeeklyChange === null || weeklyReview?.weightWeeklyChange === undefined
+                ? "--"
+                : `${weeklyReview.weightWeeklyChange > 0 ? "+" : ""}${weeklyReview.weightWeeklyChange.toFixed(2)} kg`}
             </p>
           </CardContent>
         </Card>
@@ -226,10 +254,13 @@ export function StatsSummaryCards({
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Promedio semanal</CardTitle>
+            <CardTitle className="text-sm">Promedio ({rangeLabel})</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{weeklyAvg === null ? "--" : `${weeklyAvg.toFixed(1)} kg`}</p>
+            <p className="text-2xl font-semibold">{rangeAvg === null ? "--" : `${rangeAvg.toFixed(1)} kg`}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Semanal: {weeklyAvg === null ? "--" : `${weeklyAvg.toFixed(1)} kg`}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -237,7 +268,9 @@ export function StatsSummaryCards({
             <CardTitle className="text-sm">Promedio movil previo 7d</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{prevMovingAvg7 === null || prevMovingAvg7 === undefined ? "--" : `${prevMovingAvg7.toFixed(2)} kg`}</p>
+            <p className="text-2xl font-semibold">
+              {prevMovingAvg7 === null || prevMovingAvg7 === undefined ? "--" : `${prevMovingAvg7.toFixed(2)} kg`}
+            </p>
           </CardContent>
         </Card>
       </div>

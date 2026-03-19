@@ -14,6 +14,7 @@ const Stats = () => {
     isGuest,
     range,
     setRange,
+    rangeLabel,
     latestWeight,
     initialWeight,
     hasInitialFallback,
@@ -23,21 +24,21 @@ const Stats = () => {
     progress,
     delta7,
     delta30,
+    deltaRange,
     weeklyAvg,
+    rangeAvg,
     weightTrendData,
     sleepGoalData,
-    sleepWeekAvg,
-    sleepMonthAvg,
-    sleepWeekMet,
+    sleepRangeAvg,
+    sleepRangeMet,
+    sleepRangeDays,
     nutritionGoals,
-    nutrition7d,
-    nutrition30d,
-    biofeedbackWeek,
+    nutritionRange,
+    biofeedbackRangeSummary,
     latestMeasurement,
     weeklyReview,
     chartData,
-    nutrition7dData,
-    nutrition30dData,
+    nutritionRangeData,
     biofeedbackChartData,
     bodyFatChartData,
     weightChartHeight,
@@ -60,83 +61,86 @@ const Stats = () => {
         {isGuest ? <GuestWarningBanner /> : null}
 
         <AppPageIntro
-          eyebrow="Análisis de progreso"
+          eyebrow="Analisis de progreso"
           icon={<TrendingUp className="h-3.5 w-3.5" />}
           title="Progreso"
-          description="Análisis longitudinal, tendencias y revisión semanal en un solo contexto."
+          description="Analisis longitudinal, tendencias y revision semanal en un solo contexto."
         />
 
-      <StatsGoalSummaryCard
-        latestWeight={latestWeight}
-        initialWeight={initialWeight}
-        hasInitialFallback={hasInitialFallback}
-        target={target}
-        targetDate={targetDate}
-        remaining={remaining}
-        progress={progress}
-        formatNumber={formatNumber}
-      />
+        <StatsGoalSummaryCard
+          latestWeight={latestWeight}
+          initialWeight={initialWeight}
+          hasInitialFallback={hasInitialFallback}
+          target={target}
+          targetDate={targetDate}
+          remaining={remaining}
+          progress={progress}
+          formatNumber={formatNumber}
+        />
 
-      <StatsSummaryCards
-        latestWeight={latestWeight}
-        delta7={delta7}
-        movingAvg7={weightTrendData?.movingAvg7}
-        trendLabel={trendLabel(weightTrendData?.trend ?? null)}
-        sleepGoalHours={(sleepGoalData.sleep_goal_minutes / 60).toFixed(1)}
-        sleepWeekAvgHours={(sleepWeekAvg / 60).toFixed(1)}
-        sleepMonthAvgHours={(sleepMonthAvg / 60).toFixed(1)}
-        sleepWeekMet={sleepWeekMet}
-        nutrition7dCalories={nutrition7d?.averages.calories ?? 0}
-        nutrition7dProtein={nutrition7d?.averages.protein_g ?? 0}
-        nutrition30dCarbs={nutrition30d?.averages.carbs_g ?? 0}
-        nutrition30dFat={nutrition30d?.averages.fat_g ?? 0}
-        nutritionGoalCalories={nutritionGoals?.calorie_goal ?? 2000}
-        nutritionGoalProtein={nutritionGoals?.protein_goal_g ?? 150}
-        nutritionGoalCarbs={nutritionGoals?.carb_goal_g ?? 250}
-        nutritionGoalFat={nutritionGoals?.fat_goal_g ?? 70}
-        biofeedbackWeek={biofeedbackWeek}
-        latestMeasurement={latestMeasurement}
-        weeklyReview={weeklyReview}
-        delta30={delta30}
-        weeklyAvg={weeklyAvg}
-        prevMovingAvg7={weightTrendData?.prevMovingAvg7}
-        formatNumber={formatNumber}
-        trendLabelForValue={trendLabel}
-      />
+        <StatsSummaryCards
+          rangeLabel={rangeLabel}
+          latestWeight={latestWeight}
+          delta7={delta7}
+          deltaRange={deltaRange}
+          movingAvg7={weightTrendData?.movingAvg7}
+          trendLabel={trendLabel(weightTrendData?.trend ?? null)}
+          sleepGoalHours={(sleepGoalData.sleep_goal_minutes / 60).toFixed(1)}
+          sleepRangeAvgHours={(sleepRangeAvg / 60).toFixed(1)}
+          sleepRangeMet={sleepRangeMet}
+          sleepRangeDays={sleepRangeDays}
+          nutritionRangeCalories={nutritionRange?.averages.calories ?? 0}
+          nutritionRangeProtein={nutritionRange?.averages.protein_g ?? 0}
+          nutritionRangeCarbs={nutritionRange?.averages.carbs_g ?? 0}
+          nutritionRangeFat={nutritionRange?.averages.fat_g ?? 0}
+          nutritionGoalCalories={nutritionGoals?.calorie_goal ?? 2000}
+          nutritionGoalProtein={nutritionGoals?.protein_goal_g ?? 150}
+          nutritionGoalCarbs={nutritionGoals?.carb_goal_g ?? 250}
+          nutritionGoalFat={nutritionGoals?.fat_goal_g ?? 70}
+          biofeedbackRange={biofeedbackRangeSummary}
+          latestMeasurement={latestMeasurement}
+          weeklyReview={weeklyReview}
+          delta30={delta30}
+          weeklyAvg={weeklyAvg}
+          rangeAvg={rangeAvg}
+          prevMovingAvg7={weightTrendData?.prevMovingAvg7}
+          formatNumber={formatNumber}
+          trendLabelForValue={trendLabel}
+        />
 
-      <StatsWeightChartCard
-        range={range}
-        onRangeChange={setRange}
-        chartData={chartData}
-        chartHeight={weightChartHeight}
-        chartMargin={chartMargin}
-        isMobile={isMobile}
-        yAxisWidth={yAxisWidth}
-        formatChartDate={formatChartDate}
-      />
+        <StatsWeightChartCard
+          range={range}
+          onRangeChange={setRange}
+          chartData={chartData}
+          chartHeight={weightChartHeight}
+          chartMargin={chartMargin}
+          isMobile={isMobile}
+          yAxisWidth={yAxisWidth}
+          formatChartDate={formatChartDate}
+        />
 
-      <StatsTrendChartsGrid
-        nutrition7dData={nutrition7dData}
-        nutrition30dData={nutrition30dData}
-        biofeedbackChartData={biofeedbackChartData}
-        bodyFatChartData={bodyFatChartData}
-        chartHeight={secondaryChartHeight}
-        chartMargin={chartMargin}
-        isMobile={isMobile}
-        yAxisWidth={yAxisWidth}
-        formatChartDate={formatChartDate}
-      />
+        <StatsTrendChartsGrid
+          rangeLabel={rangeLabel}
+          nutritionRangeData={nutritionRangeData}
+          biofeedbackChartData={biofeedbackChartData}
+          bodyFatChartData={bodyFatChartData}
+          chartHeight={secondaryChartHeight}
+          chartMargin={chartMargin}
+          isMobile={isMobile}
+          yAxisWidth={yAxisWidth}
+          formatChartDate={formatChartDate}
+        />
 
         <StatsWeeklyReviewCard
-        weeklyReview={weeklyReview}
-        hydrationState={hydrationState}
-        onHydrationStateChange={setHydrationState}
-        trainingPerformance={trainingPerformance}
-        onTrainingPerformanceChange={setTrainingPerformance}
-        weeklyNotes={weeklyNotes}
-        onWeeklyNotesChange={setWeeklyNotes}
-        isPending={saveWeeklyReviewMutation.isPending}
-        onSave={() => saveWeeklyReviewMutation.mutate()}
+          weeklyReview={weeklyReview}
+          hydrationState={hydrationState}
+          onHydrationStateChange={setHydrationState}
+          trainingPerformance={trainingPerformance}
+          onTrainingPerformanceChange={setTrainingPerformance}
+          weeklyNotes={weeklyNotes}
+          onWeeklyNotesChange={setWeeklyNotes}
+          isPending={saveWeeklyReviewMutation.isPending}
+          onSave={() => saveWeeklyReviewMutation.mutate()}
         />
       </div>
     </div>

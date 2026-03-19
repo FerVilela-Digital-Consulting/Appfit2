@@ -9,7 +9,7 @@ import { calculateGoalProgress, resolveInitialWeight, type GoalDirection } from 
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getErrorMessage } from "@/lib/errors";
-import { getBiofeedbackRange, getBiofeedbackWeeklyAverages } from "@/services/dailyBiofeedback";
+import { getBiofeedbackRange } from "@/services/dailyBiofeedback";
 import {
   getGuestBodyMetrics,
   getGuestWeightGoal,
@@ -51,6 +51,28 @@ export const formatChartDate = (value: string | number, mobile: boolean) => {
   return mobile ? date.toLocaleDateString(undefined, { month: "numeric", day: "numeric" }) : date.toLocaleDateString();
 };
 
+const rangeDaysMap: Record<Range, number> = {
+  "7d": 7,
+  "30d": 30,
+  "90d": 90,
+  all: 180,
+};
+
+const rangeLabelMap: Record<Range, string> = {
+  "7d": "7 dias",
+  "30d": "30 dias",
+  "90d": "90 dias",
+  all: "Historico",
+};
+
+const getRangeWindow = (days: number) => {
+  const to = new Date();
+  to.setHours(0, 0, 0, 0);
+  const from = new Date(to);
+  from.setDate(from.getDate() - (days - 1));
+  return { from, to };
+};
+
 export function useStatsPageState() {
   const { user, isGuest, profile } = useAuth();
   const isMobile = useIsMobile();
@@ -68,6 +90,8 @@ export function useStatsPageState() {
   ].join("|");
 
   const [range, setRange] = useState<Range>("30d");
+  const rangeDays = rangeDaysMap[range];
+  const rangeLabel = rangeLabelMap[range];
   const weekStartDate = useMemo(() => startOfWeek(new Date(), { weekStartsOn: 1 }), []);
   const weekKey = weekStartDate.toISOString().slice(0, 10);
   const [hydrationState, setHydrationState] = useState<HydrationState>("variable");
@@ -103,9 +127,8 @@ export function useStatsPageState() {
   const entriesForChart = isGuest
     ? guestEntries.filter((entry) => {
         if (range === "all") return true;
-        const days = range === "7d" ? 7 : range === "30d" ? 30 : 90;
         const fromDate = new Date();
-        fromDate.setDate(fromDate.getDate() - days);
+        fromDate.setDate(fromDate.getDate() - rangeDaysMap[range]);
         return entry.measured_at >= fromDate.toISOString().slice(0, 10);
       })
     : chartEntries;
@@ -133,6 +156,17 @@ export function useStatsPageState() {
 
   const last7Entries = allEntries.filter((entry) => entry.measured_at >= sevenDaysAgo);
   const weeklyAvg = last7Entries.length > 0 ? last7Entries.reduce((sum, entry) => sum + Number(entry.weight_kg), 0) / last7Entries.length : null;
+
+  const rangeAgo = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - rangeDays);
+    return date.toISOString().slice(0, 10);
+  }, [rangeDays]);
+
+  const refRange = findOnOrBefore(allEntries, rangeAgo);
+  const deltaRange = latestWeight !== null && refRange ? latestWeight - Number(refRange.weight_kg) : null;
+  const rangeEntries = allEntries.filter((entry) => entry.measured_at >= rangeAgo);
+  const rangeAvg = rangeEntries.length > 0 ? rangeEntries.reduce((sum, entry) => sum + Number(entry.weight_kg), 0) / rangeEntries.length : null;
 
   const guestGoal = isGuest ? getGuestWeightGoal() : null;
   const target = (isGuest ? guestGoal?.target_weight_kg : profile?.target_weight_kg) ?? null;
@@ -164,51 +198,51 @@ export function useStatsPageState() {
     enabled: queryEnabled,
   });
 
-  const { data: sleepWeekTotals = [] } = useQuery({
-    queryKey: ["sleep_stats_week", user?.id],
+  const { data: sleepRangeTotals = [] } = useQuery({
+    queryKey: ["sleep_stats_range", user?.id, range, isGuest, timeZone],
     queryFn: async () => {
-      const to = new Date();
-      to.setHours(0, 0, 0, 0);
-      const from = new Date(to);
-      from.setDate(from.getDate() - 6);
+      const { from, to } = getRangeWindow(rangeDays);
       return getSleepRangeTotals(user?.id ?? null, from, to, { isGuest, timeZone });
     },
     enabled: queryEnabled,
   });
 
-  const { data: sleepMonthTotals = [] } = useQuery({
-    queryKey: ["sleep_stats_month", user?.id],
-    queryFn: async () => {
-      const to = new Date();
-      to.setHours(0, 0, 0, 0);
-      const from = new Date(to);
-      from.setDate(from.getDate() - 29);
-      return getSleepRangeTotals(user?.id ?? null, from, to, { isGuest, timeZone });
-    },
-    enabled: queryEnabled,
-  });
-
-  const sleepWeekAvg = sleepWeekTotals.length ? sleepWeekTotals.reduce((sum, row) => sum + row.total_minutes, 0) / sleepWeekTotals.length : 0;
-  const sleepMonthAvg = sleepMonthTotals.length ? sleepMonthTotals.reduce((sum, row) => sum + row.total_minutes, 0) / sleepMonthTotals.length : 0;
-  const sleepWeekMet = sleepWeekTotals.filter((row) => row.total_minutes >= sleepGoalData.sleep_goal_minutes).length;
-
-  const { data: biofeedbackWeek } = useQuery({
-    queryKey: ["stats_biofeedback_week", user?.id, isGuest, timeZone],
-    queryFn: () => getBiofeedbackWeeklyAverages(user?.id ?? null, new Date(), { isGuest, timeZone }),
-    enabled: queryEnabled,
-  });
+  const sleepRangeAvg = sleepRangeTotals.length ? sleepRangeTotals.reduce((sum, row) => sum + row.total_minutes, 0) / sleepRangeTotals.length : 0;
+  const sleepRangeMet = sleepRangeTotals.filter((row) => row.total_minutes >= sleepGoalData.sleep_goal_minutes).length;
+  const sleepRangeDays = sleepRangeTotals.length;
 
   const { data: biofeedbackRows = [] } = useQuery({
-    queryKey: ["stats_biofeedback_range", user?.id, isGuest, timeZone],
+    queryKey: ["stats_biofeedback_range", user?.id, range, isGuest, timeZone],
     queryFn: async () => {
-      const to = new Date();
-      to.setHours(0, 0, 0, 0);
-      const from = new Date(to);
-      from.setDate(from.getDate() - 29);
+      const { from, to } = getRangeWindow(rangeDays);
       return getBiofeedbackRange(user?.id ?? null, from, to, { isGuest, timeZone });
     },
     enabled: queryEnabled,
   });
+
+  const biofeedbackRangeSummary = useMemo(() => {
+    if (biofeedbackRows.length === 0) {
+      return {
+        avg_energy: 0,
+        avg_stress: 0,
+        avg_sleep_quality: 0,
+        days_logged: 0,
+      };
+    }
+
+    const averageNullable = (values: Array<number | null>) => {
+      const valid = values.filter((value): value is number => typeof value === "number");
+      if (valid.length === 0) return 0;
+      return Number((valid.reduce((sum, value) => sum + value, 0) / valid.length).toFixed(1));
+    };
+
+    return {
+      avg_energy: averageNullable(biofeedbackRows.map((row) => row.daily_energy ?? null)),
+      avg_stress: averageNullable(biofeedbackRows.map((row) => row.perceived_stress ?? null)),
+      avg_sleep_quality: averageNullable(biofeedbackRows.map((row) => row.sleep_quality ?? null)),
+      days_logged: biofeedbackRows.length,
+    };
+  }, [biofeedbackRows]);
 
   const { data: allBodyMeasurementRows = [] } = useQuery({
     queryKey: ["body_measurements_all", user?.id, isGuest, "stats"],
@@ -217,7 +251,15 @@ export function useStatsPageState() {
   });
 
   const latestMeasurement = useMemo(() => deriveMeasurementSummary(allBodyMeasurementRows).latest, [allBodyMeasurementRows]);
-  const bodyMeasurementRows = useMemo(() => filterMeasurementsByRangePreset(allBodyMeasurementRows, "180d"), [allBodyMeasurementRows]);
+  const bodyMeasurementPreset = useMemo(() => {
+    if (range === "90d") return "90d";
+    if (range === "all") return "all";
+    return "30d";
+  }, [range]);
+  const bodyMeasurementRows = useMemo(
+    () => filterMeasurementsByRangePreset(allBodyMeasurementRows, bodyMeasurementPreset),
+    [allBodyMeasurementRows, bodyMeasurementPreset],
+  );
 
   const { data: weeklyReview } = useQuery({
     queryKey: ["stats_weekly_review", user?.id, isGuest, timeZone],
@@ -251,28 +293,10 @@ export function useStatsPageState() {
     enabled: queryEnabled,
   });
 
-  const { data: nutrition7d } = useQuery({
-    queryKey: ["stats_nutrition_7d", user?.id, isGuest, timeZone],
+  const { data: nutritionRange } = useQuery({
+    queryKey: ["stats_nutrition_range", user?.id, range, isGuest, timeZone],
     queryFn: async () => {
-      const to = new Date();
-      to.setHours(0, 0, 0, 0);
-      const from = new Date(to);
-      from.setDate(from.getDate() - 6);
-      return getNutritionRangeSummary(user?.id ?? null, from, to, { isGuest, timeZone }).catch(() => ({
-        days: [],
-        averages: { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
-      }));
-    },
-    enabled: queryEnabled,
-  });
-
-  const { data: nutrition30d } = useQuery({
-    queryKey: ["stats_nutrition_30d", user?.id, isGuest, timeZone],
-    queryFn: async () => {
-      const to = new Date();
-      to.setHours(0, 0, 0, 0);
-      const from = new Date(to);
-      from.setDate(from.getDate() - 29);
+      const { from, to } = getRangeWindow(rangeDays);
       return getNutritionRangeSummary(user?.id ?? null, from, to, { isGuest, timeZone }).catch(() => ({
         days: [],
         averages: { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
@@ -295,15 +319,7 @@ export function useStatsPageState() {
     sleep_quality: row.sleep_quality,
   }));
 
-  const nutrition7dData: NutritionTrendPoint[] = (nutrition7d?.days ?? []).map((row) => ({
-    date: row.date_key,
-    calories: row.calories,
-    protein_g: row.protein_g,
-    carbs_g: row.carbs_g,
-    fat_g: row.fat_g,
-  }));
-
-  const nutrition30dData: NutritionTrendPoint[] = (nutrition30d?.days ?? []).map((row) => ({
+  const nutritionRangeData: NutritionTrendPoint[] = (nutritionRange?.days ?? []).map((row) => ({
     date: row.date_key,
     calories: row.calories,
     protein_g: row.protein_g,
@@ -369,21 +385,23 @@ export function useStatsPageState() {
     progress,
     delta7,
     delta30,
+    deltaRange,
     weeklyAvg,
+    rangeAvg,
     weightTrendData,
+    rangeLabel,
+    rangeDays,
     sleepGoalData,
-    sleepWeekAvg,
-    sleepMonthAvg,
-    sleepWeekMet,
+    sleepRangeAvg,
+    sleepRangeMet,
+    sleepRangeDays,
     nutritionGoals,
-    nutrition7d,
-    nutrition30d,
-    biofeedbackWeek,
+    nutritionRange,
+    biofeedbackRangeSummary,
     latestMeasurement,
     weeklyReview,
     chartData,
-    nutrition7dData,
-    nutrition30dData,
+    nutritionRangeData,
     biofeedbackChartData,
     bodyFatChartData,
     weightChartHeight,

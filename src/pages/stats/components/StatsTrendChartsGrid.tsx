@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { BiofeedbackChartPoint, BodyFatChartPoint, NutritionTrendPoint } from "@/pages/stats/types";
 
 type StatsTrendChartsGridProps = {
-  nutrition7dData: NutritionTrendPoint[];
-  nutrition30dData: NutritionTrendPoint[];
+  rangeLabel: string;
+  nutritionRangeData: NutritionTrendPoint[];
   biofeedbackChartData: BiofeedbackChartPoint[];
   bodyFatChartData: BodyFatChartPoint[];
   chartHeight: number;
@@ -16,8 +16,8 @@ type StatsTrendChartsGridProps = {
 };
 
 export function StatsTrendChartsGrid({
-  nutrition7dData,
-  nutrition30dData,
+  rangeLabel,
+  nutritionRangeData,
   biofeedbackChartData,
   bodyFatChartData,
   chartHeight,
@@ -30,16 +30,16 @@ export function StatsTrendChartsGrid({
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>Tendencias de alimentacion (7d)</CardTitle>
-          <CardDescription>Ultima semana de calorias y macros.</CardDescription>
+          <CardTitle>Tendencias de alimentacion ({rangeLabel})</CardTitle>
+          <CardDescription>Calorias y macros diarios dentro del rango activo.</CardDescription>
         </CardHeader>
         <CardContent>
-          {nutrition7dData.length === 0 ? (
+          {nutritionRangeData.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aun no hay datos de alimentacion.</p>
           ) : (
             <div className="w-full" style={{ height: `${chartHeight}px` }}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart margin={chartMargin} data={nutrition7dData}>
+                <LineChart margin={chartMargin} data={nutritionRangeData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="date"
@@ -66,43 +66,7 @@ export function StatsTrendChartsGrid({
 
       <Card>
         <CardHeader>
-          <CardTitle>Tendencias de alimentacion (30d)</CardTitle>
-          <CardDescription>Calorias y macros por dia.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {nutrition30dData.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aun no hay datos de alimentacion.</p>
-          ) : (
-            <div className="w-full" style={{ height: `${chartHeight}px` }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart margin={chartMargin} data={nutrition30dData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="date"
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={8}
-                    minTickGap={isMobile ? 24 : 32}
-                    interval="preserveStartEnd"
-                    tick={{ fontSize: isMobile ? 11 : 12 }}
-                    tickFormatter={(value) => formatChartDate(value, isMobile)}
-                  />
-                  <YAxis axisLine={false} tickLine={false} tickMargin={4} tick={{ fontSize: isMobile ? 11 : 12 }} width={yAxisWidth} />
-                  <Tooltip labelFormatter={(value) => new Date(String(value)).toLocaleDateString()} />
-                  <Line type="monotone" dataKey="calories" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="protein_g" stroke="#22c55e" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="carbs_g" stroke="#0ea5e9" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="fat_g" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Biofeedback (30d)</CardTitle>
+          <CardTitle>Biofeedback ({rangeLabel})</CardTitle>
           <CardDescription>Energia, estres y calidad de sueno por dia.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -135,9 +99,9 @@ export function StatsTrendChartsGrid({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Tendencia de grasa corporal</CardTitle>
+          <CardTitle>Tendencia de grasa corporal ({rangeLabel})</CardTitle>
           <CardDescription>Estimacion de grasa corporal desde medidas corporales.</CardDescription>
         </CardHeader>
         <CardContent>
