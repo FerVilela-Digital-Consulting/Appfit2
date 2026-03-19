@@ -9,6 +9,7 @@ import AppRoutes from "@/routes/AppRoutes";
 import RouteIndicator from "@/components/RouteIndicator";
 import PanelUsageTracker from "@/components/PanelUsageTracker";
 import QueryPerformanceTracker from "@/components/QueryPerformanceTracker";
+import PwaLifecycleNotifier from "@/components/PwaLifecycleNotifier";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ const App = () => {
             <TooltipProvider>
               <Toaster />
               <Sonner />
+              <PwaLifecycleNotifier />
               <PanelUsageTracker />
               <QueryPerformanceTracker />
               <AppRoutes />

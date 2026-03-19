@@ -6,6 +6,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import GuestWarningBanner from "@/components/GuestWarningBanner";
 import { useAuth } from "@/context/AuthContext";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import MobileConnectionBanner from "@/components/MobileConnectionBanner";
 
 const MainLayout = () => {
   const { isGuest } = useAuth();
@@ -62,6 +63,7 @@ const MainLayout = () => {
 
         <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:ml-64">
           <DashboardHeader />
+          <MobileConnectionBanner />
           {isGuest && <GuestWarningBanner />}
           {!isGuest && <NotificationBanner />}
 

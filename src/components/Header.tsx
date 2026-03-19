@@ -7,7 +7,6 @@ import {
   Plus,
   Ruler,
   Settings,
-  ShieldCheck,
   Target,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -34,7 +33,7 @@ const getErrorMessage = (error: unknown, fallback: string) =>
 
 const DashboardHeader = () => {
   const { t } = usePreferences();
-  const { signOut, isGuest, exitGuest, canAccessAdmin } = useAuth();
+  const { signOut, isGuest, exitGuest } = useAuth();
   const navigate = useNavigate();
   const { weeklyConsistency } = useHeaderWeeklyConsistency();
   const mobileNavItems = [
@@ -44,10 +43,6 @@ const DashboardHeader = () => {
     { label: t("nav.fitnessProfile"), path: "/fitness-profile", icon: Target },
     { label: t("nav.settings"), path: "/settings", icon: Settings },
   ];
-
-  if (canAccessAdmin) {
-    mobileNavItems.unshift({ label: "Admin", path: "/admin", icon: ShieldCheck });
-  }
 
   const handleAuthAction = async () => {
     try {
