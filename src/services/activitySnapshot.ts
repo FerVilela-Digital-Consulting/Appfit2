@@ -128,46 +128,51 @@ export const getActivityRangeSnapshot = async (
     return getActivityRangeSnapshotFallback(userId, from, to, { isGuest, timeZone });
   }
 
-  const rpc = supabase.rpc as unknown as (
-    fn: string,
-    args: Record<string, unknown>,
-  ) => Promise<{ data: unknown; error: unknown }>;
+  try {
+    const rpc = supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: unknown }>;
 
-  const { data, error } = await rpc("get_activity_range_snapshot", {
-    p_from: fromKey,
-    p_to: toKey,
-    p_timezone: timeZone,
-  });
+    const { data, error } = await rpc("get_activity_range_snapshot", {
+      p_from: fromKey,
+      p_to: toKey,
+      p_timezone: timeZone,
+    });
 
-  if (error) {
-    if (!isRpcUnavailableError(error)) {
-      console.warn("[activitySnapshot] RPC failed, using fallback.", error);
+    if (error) {
+      if (!isRpcUnavailableError(error)) {
+        console.warn("[activitySnapshot] RPC failed, using fallback.", error);
+      }
+      return getActivityRangeSnapshotFallback(userId, from, to, { isGuest, timeZone });
     }
+
+    const rows = Array.isArray(data) ? data : [];
+    return rows.map((row) => {
+      const item = row as Record<string, unknown>;
+      const waterMl = toNumber(item.water_ml);
+      const sleepMinutes = toNumber(item.sleep_minutes);
+      const nutritionCalories = toNumber(item.nutrition_calories);
+      const weightRaw = item.weight_kg;
+      const weightKg = weightRaw === null || weightRaw === undefined ? null : toNumber(weightRaw);
+      return {
+        date_key: String(item.date_key ?? ""),
+        water_ml: waterMl,
+        sleep_minutes: sleepMinutes,
+        weight_kg: weightKg,
+        has_water: Boolean(item.has_water ?? waterMl > 0),
+        has_sleep: Boolean(item.has_sleep ?? sleepMinutes > 0),
+        has_weight: Boolean(item.has_weight ?? weightKg !== null),
+        has_biofeedback: Boolean(item.has_biofeedback ?? false),
+        has_note: Boolean(item.has_note ?? false),
+        has_nutrition: Boolean(item.has_nutrition ?? nutritionCalories > 0),
+        nutrition_calories: nutritionCalories,
+      } as ActivityRangeDay;
+    });
+  } catch (error) {
+    console.warn("[activitySnapshot] Unexpected error, using fallback.", error);
     return getActivityRangeSnapshotFallback(userId, from, to, { isGuest, timeZone });
   }
-
-  const rows = Array.isArray(data) ? data : [];
-  return rows.map((row) => {
-    const item = row as Record<string, unknown>;
-    const waterMl = toNumber(item.water_ml);
-    const sleepMinutes = toNumber(item.sleep_minutes);
-    const nutritionCalories = toNumber(item.nutrition_calories);
-    const weightRaw = item.weight_kg;
-    const weightKg = weightRaw === null || weightRaw === undefined ? null : toNumber(weightRaw);
-    return {
-      date_key: String(item.date_key ?? ""),
-      water_ml: waterMl,
-      sleep_minutes: sleepMinutes,
-      weight_kg: weightKg,
-      has_water: Boolean(item.has_water ?? waterMl > 0),
-      has_sleep: Boolean(item.has_sleep ?? sleepMinutes > 0),
-      has_weight: Boolean(item.has_weight ?? weightKg !== null),
-      has_biofeedback: Boolean(item.has_biofeedback ?? false),
-      has_note: Boolean(item.has_note ?? false),
-      has_nutrition: Boolean(item.has_nutrition ?? nutritionCalories > 0),
-      nutrition_calories: nutritionCalories,
-    } as ActivityRangeDay;
-  });
 };
 
 export const mapActivityRowsByDate = (rows: ActivityRangeDay[]) => new Map(rows.map((row) => [row.date_key, row]));
