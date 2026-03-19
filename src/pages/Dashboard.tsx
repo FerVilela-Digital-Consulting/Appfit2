@@ -795,7 +795,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 md:hidden">
                   <p className="text-sm font-medium">Semana</p>
                   <div className="grid grid-cols-7 gap-2">
                     {weeklyConsistency.days.map((day) => (
