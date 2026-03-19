@@ -1,6 +1,7 @@
 import {
   BarChart3,
   CalendarDays,
+  CircleHelp,
   LogOut,
   Menu,
   Plus,
@@ -27,6 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
 import { buildWeeklyConsistency } from "@/features/dashboard/dashboardViewModel";
 
@@ -120,27 +122,43 @@ const DashboardHeader = () => {
             THE <span className="text-primary">PRIME</span> PROTOCOL
           </p>
         </div>
-        <div className="ml-4 hidden items-center gap-2 md:flex">
-          <div className="flex items-center gap-1">
-            {weeklyConsistency.days.map((day) => (
-            <span
-              key={day.dateKey}
-              className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium transition-colors ${
-                day.isToday
-                  ? "bg-primary text-primary-foreground"
-                  : day.completed
-                    ? "bg-accent text-accent-foreground"
-                    : "bg-secondary text-muted-foreground"
-              }`}
-            >
-              {day.label}
-            </span>
-            ))}
+        <div className="ml-4 hidden items-end gap-2 md:flex">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Dia de la semana</span>
+            <div className="flex items-center gap-1">
+              {weeklyConsistency.days.map((day) => (
+                <span
+                  key={day.dateKey}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium transition-colors ${
+                    day.isToday
+                      ? "bg-primary text-primary-foreground"
+                      : day.completed
+                        ? "bg-accent text-accent-foreground"
+                        : "bg-secondary text-muted-foreground"
+                  }`}
+                >
+                  {day.label}
+                </span>
+              ))}
+            </div>
           </div>
           <span className="text-sm font-semibold text-muted-foreground">{weeklyConsistency.completedCount}/7</span>
-          <span className="hidden text-xs text-muted-foreground xl:inline">
-            Consistencia semanal: un dia cuenta como completo al registrar 2 o mas controles (agua, sueno, comida, peso o biofeedback).
-          </span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label="Como funciona la consistencia semanal"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-background/70 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <CircleHelp className="h-3.5 w-3.5" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" side="bottom" className="w-72 space-y-1.5">
+              <p className="text-sm font-semibold">Consistencia semanal</p>
+              <p className="text-xs text-muted-foreground">Mide cuantos dias completaste en la semana.</p>
+              <p className="text-xs text-muted-foreground">Un dia cuenta como completo al registrar 2 o mas controles: agua, sueno, comida, peso o biofeedback.</p>
+            </PopoverContent>
+          </Popover>
           <Button asChild variant="outline" size="sm" className="hidden h-7 rounded-lg px-2 text-xs xl:inline-flex">
             <Link to="/today#dashboard-zone-actions">Ver</Link>
           </Button>
