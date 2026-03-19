@@ -165,10 +165,17 @@ export const addNutritionEntry = async (params: NutritionEntryInsertParams): Pro
   assertPositive(Number(serving_size), "Serving size");
   assertNonNegative(Number(calories), "Calories");
 
-  const dayPlan = await resolveDayPlan(userId, date, { isGuest, timeZone });
+  let dailyLogId: string | null = null;
+  try {
+    const dayPlan = await resolveDayPlan(userId, date, { isGuest, timeZone });
+    dailyLogId = dayPlan.dailyLog?.id ?? null;
+  } catch (error) {
+    if (!isSchemaError(error)) throw error;
+  }
+
   const payload = {
     date_key: getDateKeyForTimezone(date, timeZone),
-    daily_log_id: dayPlan.dailyLog?.id ?? null,
+    daily_log_id: dailyLogId,
     meal_type,
     food_name: name,
     food_name_i18n: params.food_name_i18n ?? null,
@@ -204,9 +211,31 @@ export const addNutritionEntry = async (params: NutritionEntryInsertParams): Pro
   }
   if (!userId) return null;
 
-  const { data, error } = await supabase.from("nutrition_entries").insert({ user_id: userId, ...payload }).select("*").single();
-  if (error) throw error;
-  return normalizeEntry(data);
+  const insertPayload = { user_id: userId, ...payload };
+  const { data, error } = await supabase.from("nutrition_entries").insert(insertPayload).select("*").single();
+  if (!error) return normalizeEntry(data);
+
+  if (!isSchemaError(error)) throw error;
+
+  const legacyPayload = {
+    user_id: userId,
+    date_key: payload.date_key,
+    meal_type: payload.meal_type,
+    food_name: payload.food_name,
+    serving_size: payload.serving_size,
+    serving_unit: payload.serving_unit,
+    calories: payload.calories,
+    protein_g: payload.protein_g,
+    carbs_g: payload.carbs_g,
+    fat_g: payload.fat_g,
+    fiber_g: payload.fiber_g ?? 0,
+    sugar_g: payload.sugar_g ?? 0,
+    notes: payload.notes,
+  };
+
+  const { data: legacyData, error: legacyError } = await supabase.from("nutrition_entries").insert(legacyPayload).select("*").single();
+  if (legacyError) throw legacyError;
+  return normalizeEntry(legacyData);
 };
 
 export const updateNutritionEntry = async (

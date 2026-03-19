@@ -10,7 +10,7 @@ import {
   Target,
 } from "lucide-react";
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { startOfMonth } from "date-fns";
 
@@ -34,7 +34,7 @@ const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
 const DashboardHeader = () => {
-  const { language, t } = usePreferences();
+  const { t } = usePreferences();
   const { signOut, isGuest, exitGuest, canAccessAdmin } = useAuth();
   const navigate = useNavigate();
   const snapshot = useDashboardSnapshot(startOfMonth(new Date()));
@@ -138,6 +138,12 @@ const DashboardHeader = () => {
             ))}
           </div>
           <span className="text-sm font-semibold text-muted-foreground">{weeklyConsistency.completedCount}/7</span>
+          <span className="hidden text-xs text-muted-foreground xl:inline">
+            Consistencia semanal: un dia cuenta como completo al registrar 2 o mas controles (agua, sueno, comida, peso o biofeedback).
+          </span>
+          <Button asChild variant="outline" size="sm" className="hidden h-7 rounded-lg px-2 text-xs xl:inline-flex">
+            <Link to="/today#dashboard-zone-actions">Ver</Link>
+          </Button>
         </div>
       </div>
 

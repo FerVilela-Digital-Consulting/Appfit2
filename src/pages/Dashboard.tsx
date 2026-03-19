@@ -4,6 +4,7 @@ import { startOfMonth } from "date-fns";
 import {
   Activity,
   CalendarDays,
+  CircleHelp,
   CheckCircle2,
   Clock3,
   Droplets,
@@ -104,7 +105,7 @@ const DashboardMetricCard = ({
         <Link
           to={actionHref}
           aria-label={actionLabel}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-background/70 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border border-border/70 bg-background/70 text-lg font-semibold leading-none text-foreground transition-colors hover:bg-muted"
         >
           {actionLabel}
         </Link>
@@ -641,6 +642,29 @@ const Dashboard = () => {
                 <Card className="rounded-2xl border-border/60 bg-background/40">
                   <CardContent className="grid gap-4 p-4 md:grid-cols-[220px_1fr] md:p-5">
                     <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/70 p-4 text-center">
+                      <div className="mb-2 flex w-full items-center justify-between">
+                        <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Recovery score</p>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label="Como funciona el recovery score"
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-background/70 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            >
+                              <CircleHelp className="h-3.5 w-3.5" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent align="start" side="top" className="w-80 space-y-2">
+                            <p className="text-sm font-semibold">Como se interpreta este score</p>
+                            <p className="text-xs text-muted-foreground">
+                              El recovery score resume tu estado del dia en una escala de 0 a 100 usando sueno, hidratacion, energia, estres y biofeedback.
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              0-44: carga ligera, 45-74: carga moderada, 75-100: puedes empujar con mayor intensidad.
+                            </p>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                       <p className="text-5xl font-black leading-none">{recoveryScore}</p>
                       <p className="mt-1 text-lg font-semibold text-muted-foreground">/100</p>
                       <p className={cn("mt-3 text-sm font-bold tracking-[0.2em]", recoveryAccentClass)}>{recoveryBand}</p>
