@@ -169,6 +169,7 @@ const Dashboard = () => {
   const [showExtendedView, setShowExtendedView] = useState(false);
   const [isWaterModalOpen, setIsWaterModalOpen] = useState(false);
   const [isSleepModalOpen, setIsSleepModalOpen] = useState(false);
+  const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [cardDensity, setCardDensity] = useState<DashboardCardDensity>(() => loadDashboardCardDensity());
   const timeZone = profile?.timezone || DEFAULT_WATER_TIMEZONE;
 
@@ -863,8 +864,8 @@ const Dashboard = () => {
                   <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${weightGoalProgressSafe ?? 0}%` }} />
                 </div>
               </div>
-              <Button asChild variant="outline" className="h-9 rounded-xl px-3 text-xs font-semibold">
-                <a href="#weight">Registrar peso</a>
+              <Button type="button" variant="outline" className="h-9 rounded-xl px-3 text-xs font-semibold" onClick={() => setIsWeightModalOpen(true)}>
+                Registrar peso
               </Button>
             </DashboardCardShell>
           </div>
@@ -942,6 +943,16 @@ const Dashboard = () => {
               <DialogDescription>Registro completo de sueno sin salir del centro operativo.</DialogDescription>
             </DialogHeader>
             <SleepWorkspace embedded />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isWeightModalOpen} onOpenChange={setIsWeightModalOpen}>
+          <DialogContent className="max-h-[90vh] w-[95vw] max-w-4xl overflow-y-auto p-4 md:p-6">
+            <DialogHeader>
+              <DialogTitle>Peso</DialogTitle>
+              <DialogDescription>Registro completo de peso sin salir del centro operativo.</DialogDescription>
+            </DialogHeader>
+            <TodayWeightModule />
           </DialogContent>
         </Dialog>
 
