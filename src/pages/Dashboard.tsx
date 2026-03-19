@@ -568,7 +568,7 @@ const Dashboard = () => {
   const nextRequiredActionHref = nextModule?.href ?? primaryAction.href;
 
   return (
-    <div className="app-shell min-h-screen px-4 pb-5 pt-1 text-foreground sm:px-6 sm:pb-8 sm:pt-2">
+    <div className="app-shell min-h-0 w-full px-4 pb-5 pt-1 text-foreground sm:px-6 sm:pb-8 sm:pt-2">
       <div className="mx-auto max-w-[1540px] space-y-5">
         <section aria-labelledby="dashboard-zone-hero" className="space-y-3">
           <h2 id="dashboard-zone-hero" className="sr-only">Estado del dia</h2>
