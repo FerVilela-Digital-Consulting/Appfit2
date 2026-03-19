@@ -535,7 +535,7 @@ const Dashboard = () => {
     .join(" ");
 
   const quickActions = [
-    { label: "+ Agua", href: "#water" },
+    { label: "+ Agua", href: "/water" },
     { label: "+ Comida", href: "/nutrition" },
     { label: "+ Peso", href: "#weight" },
     { label: "Check-in", href: "/today#biofeedback" },
@@ -794,7 +794,7 @@ const Dashboard = () => {
                 goalLabel={`Meta ${(core?.waterGoalMl ?? 2000).toLocaleString("es-PE")} ml`}
                 progressPct={hydrationProgress}
                 accentClassName="bg-sky-500/90 text-sky-100"
-                actionHref="#water"
+                actionHref="/water"
                 actionLabel="+"
               />
             </section>
