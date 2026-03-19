@@ -8,18 +8,15 @@ import { deriveDashboardPhysicalSummary } from "@/features/dashboard/physicalPro
 import { DEFAULT_WATER_TIMEZONE, getDateKeyForTimezone } from "@/features/water/waterUtils";
 import {
   getBodyWeightSnapshot,
-  getGuestBodyMetrics,
   getWeightTrendAnalysis,
-  listBodyMetricsByRange,
   resolveWeightReferenceFromEntries,
 } from "@/services/bodyMetrics";
-import { getBiofeedbackRange, getDailyBiofeedback } from "@/services/dailyBiofeedback";
 import { listBodyMeasurements } from "@/services/bodyMeasurements";
-import { getDailyNote, getLatestDailyNote, listDailyNotesByRange, upsertDailyNote } from "@/services/dailyNotes";
-import { getNutritionDaySummary, getNutritionRangeSummary } from "@/services/nutrition";
+import { upsertDailyNote } from "@/services/dailyNotes";
+import { getNutritionDaySummary } from "@/services/nutrition";
 import { getGoalProgress, getUserGoal } from "@/services/goals";
-import { getSleepDay, getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
-import { getWaterDayTotal, getWaterGoal, getWaterRangeTotals } from "@/services/waterIntake";
+import { getActivityRangeSnapshot } from "@/services/activitySnapshot";
+import { getDashboardOperationalSnapshot } from "@/services/dashboardOperationalSnapshot";
 import { computeRecoveryScore } from "@/utils/dashboard";
 import type { DailyBiofeedback } from "@/services/dailyBiofeedback";
 
@@ -50,34 +47,7 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
   const monthActivityQuery = useQuery({
     queryKey: ["dashboard_snapshot", "month_activity", userId, formatDateKey(gridStart), formatDateKey(gridEnd), isGuest, timeZone],
     queryFn: async () => {
-      const [waterTotals, sleepTotals, bioRows, notesRows, weightRows, nutritionRange] = await Promise.all([
-        getWaterRangeTotals(userId, gridStart, gridEnd, { isGuest, timeZone }),
-        getSleepRangeTotals(userId, gridStart, gridEnd, { isGuest, timeZone }),
-        getBiofeedbackRange(userId, gridStart, gridEnd, { isGuest, timeZone }),
-        listDailyNotesByRange(userId, gridStart, gridEnd, { isGuest, timeZone }),
-        isGuest ? Promise.resolve(getGuestBodyMetrics()) : listBodyMetricsByRange(userId, "all", false),
-        getNutritionRangeSummary(userId, gridStart, gridEnd, { isGuest, timeZone }).catch(() => ({
-          days: [],
-          averages: { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
-        })),
-      ]);
-
-      const waterMap = new Map<string, number>();
-      waterTotals.forEach((row) => waterMap.set(row.date_key, Number(row.total_ml || 0)));
-      const sleepMap = new Map<string, number>();
-      sleepTotals.forEach((row) => sleepMap.set(row.date_key, Number(row.total_minutes || 0)));
-      const bioMap = new Map<string, boolean>();
-      bioRows.forEach((row) => bioMap.set(row.date_key, true));
-      const notesMap = new Map<string, boolean>();
-      notesRows.forEach((row) => notesMap.set(row.date_key, true));
-      const weightMap = new Map<string, number>();
-      weightRows.forEach((row) => {
-        if (row.measured_at >= formatDateKey(gridStart) && row.measured_at <= formatDateKey(gridEnd)) {
-          weightMap.set(row.measured_at, Number(row.weight_kg));
-        }
-      });
-      const nutritionMap = new Map<string, number>();
-      nutritionRange.days.forEach((row) => nutritionMap.set(row.date_key, Number(row.calories || 0)));
+      const activityRows = await getActivityRangeSnapshot(userId, gridStart, gridEnd, { isGuest, timeZone });
 
       const days = new Map<
         string,
@@ -98,21 +68,18 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
       let cursor = new Date(gridStart);
       while (cursor <= gridEnd) {
         const dateKey = formatDateKey(cursor);
-        const waterMl = waterMap.get(dateKey) ?? 0;
-        const sleepMinutes = sleepMap.get(dateKey) ?? 0;
-        const weightKg = weightMap.get(dateKey) ?? null;
-        const nutritionCalories = nutritionMap.get(dateKey) ?? 0;
+        const row = activityRows.find((item) => item.date_key === dateKey);
         days.set(dateKey, {
           dateKey,
-          waterMl,
-          sleepMinutes,
-          weightKg,
-          hasWater: waterMl > 0,
-          hasSleep: sleepMinutes > 0,
-          hasWeight: weightKg !== null,
-          hasBiofeedback: bioMap.get(dateKey) ?? false,
-          hasNote: notesMap.get(dateKey) ?? false,
-          hasNutrition: nutritionCalories > 0,
+          waterMl: row?.water_ml ?? 0,
+          sleepMinutes: row?.sleep_minutes ?? 0,
+          weightKg: row?.weight_kg ?? null,
+          hasWater: row?.has_water ?? false,
+          hasSleep: row?.has_sleep ?? false,
+          hasWeight: row?.has_weight ?? false,
+          hasBiofeedback: row?.has_biofeedback ?? false,
+          hasNote: row?.has_note ?? false,
+          hasNutrition: row?.has_nutrition ?? false,
         });
         cursor = addDays(cursor, 1);
       }
@@ -120,6 +87,8 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
       return days;
     },
     enabled: Boolean(userId) || isGuest,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const coreQuery = useQuery({
@@ -130,35 +99,15 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
       const [
         weightSnapshot,
         weightTrend,
-        waterTodayMl,
-        waterGoal,
-        water7d,
-        sleepDay,
-        sleepGoal,
-        sleep7d,
-        bioToday,
-        bio7d,
-        notes7d,
+        operationalSnapshot,
         allMeasurements,
         nutritionToday,
-        noteToday,
-        noteLatest,
       ] = await Promise.all([
         getBodyWeightSnapshot(userId, isGuest),
         getWeightTrendAnalysis(userId, isGuest),
-        getWaterDayTotal(userId, today, { isGuest, timeZone }),
-        getWaterGoal(userId, { isGuest }),
-        getWaterRangeTotals(userId, sevenDaysAgo, today, { isGuest, timeZone }),
-        getSleepDay(userId, today, { isGuest, timeZone }),
-        getSleepGoal(userId, { isGuest }),
-        getSleepRangeTotals(userId, sevenDaysAgo, today, { isGuest, timeZone }),
-        getDailyBiofeedback(userId, today, { isGuest, timeZone }),
-        getBiofeedbackRange(userId, sevenDaysAgo, today, { isGuest, timeZone }),
-        listDailyNotesByRange(userId, sevenDaysAgo, today, { isGuest, timeZone }),
+        getDashboardOperationalSnapshot(userId, today, { isGuest, timeZone }),
         listBodyMeasurements(userId, { isGuest }),
         getNutritionDaySummary(userId, today, { isGuest, timeZone, profile }).catch(() => null),
-        getDailyNote(userId, today, { isGuest, timeZone }),
-        getLatestDailyNote(userId, { isGuest }),
       ]);
 
       const goal = getUserGoal(profile, isGuest);
@@ -173,23 +122,23 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
       });
 
       const activeDays7 = new Set<string>();
-      water7d.forEach((row) => row.total_ml > 0 && activeDays7.add(row.date_key));
-      sleep7d.forEach((row) => row.total_minutes > 0 && activeDays7.add(row.date_key));
-      bio7d.forEach((row) => activeDays7.add(row.date_key));
-      notes7d.forEach((row) => activeDays7.add(row.date_key));
+      operationalSnapshot.water7d.forEach((row) => row.total_ml > 0 && activeDays7.add(row.date_key));
+      operationalSnapshot.sleep7d.forEach((row) => row.total_minutes > 0 && activeDays7.add(row.date_key));
+      operationalSnapshot.bio7d.forEach((row) => activeDays7.add(row.date_key));
+      operationalSnapshot.notes7d.forEach((row) => activeDays7.add(row.date_key));
       weightSnapshot.entries
         .filter((row) => row.measured_at >= formatDateKey(sevenDaysAgo) && row.measured_at <= formatDateKey(today))
         .forEach((row) => activeDays7.add(row.measured_at));
 
       const recovery = computeRecoveryScore({
-        sleepMinutes: sleepDay.total_minutes,
-        sleepGoalMinutes: sleepGoal.sleep_goal_minutes,
-        sleepQuality: bioToday?.sleep_quality ?? null,
-        dailyEnergy: bioToday?.daily_energy ?? null,
-        perceivedStress: bioToday?.perceived_stress ?? null,
-        trainingEnergy: bioToday?.training_energy ?? null,
-        hydrationMl: waterTodayMl,
-        hydrationGoalMl: waterGoal.water_goal_ml,
+        sleepMinutes: operationalSnapshot.sleepDay.total_minutes,
+        sleepGoalMinutes: operationalSnapshot.sleepGoalMinutes,
+        sleepQuality: operationalSnapshot.bioToday?.sleep_quality ?? null,
+        dailyEnergy: operationalSnapshot.bioToday?.daily_energy ?? null,
+        perceivedStress: operationalSnapshot.bioToday?.perceived_stress ?? null,
+        trainingEnergy: operationalSnapshot.bioToday?.training_energy ?? null,
+        hydrationMl: operationalSnapshot.waterTodayMl,
+        hydrationGoalMl: operationalSnapshot.waterGoalMl,
         activeDays7: activeDays7.size,
       });
 
@@ -218,15 +167,15 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
         initialWeight,
         weightSnapshot,
         weightTrend,
-        waterTodayMl,
-        waterGoalMl: waterGoal.water_goal_ml,
-        water7d,
-        sleepDay,
-        sleepGoalMinutes: sleepGoal.sleep_goal_minutes,
-        sleep7d,
-        bioToday,
-        bio7d,
-        notes7d,
+        waterTodayMl: operationalSnapshot.waterTodayMl,
+        waterGoalMl: operationalSnapshot.waterGoalMl,
+        water7d: operationalSnapshot.water7d,
+        sleepDay: operationalSnapshot.sleepDay,
+        sleepGoalMinutes: operationalSnapshot.sleepGoalMinutes,
+        sleep7d: operationalSnapshot.sleep7d,
+        bioToday: operationalSnapshot.bioToday,
+        bio7d: operationalSnapshot.bio7d,
+        notes7d: operationalSnapshot.notes7d,
         activeDays7: activeDays7.size,
         recovery,
         latestMeasurement: measurementSummary.latest,
@@ -236,11 +185,13 @@ export const useDashboardSnapshot = (currentMonth: Date) => {
         previousMeasurement: measurementSummary.previous,
         waistComparison: measurementSummary.waistComparison,
         physicalSummary,
-        noteToday,
-        noteLatest,
+        noteToday: operationalSnapshot.noteToday,
+        noteLatest: operationalSnapshot.noteLatest,
       };
     },
     enabled: Boolean(userId) || isGuest,
+    staleTime: 45_000,
+    refetchOnWindowFocus: false,
   });
 
   const trends = useMemo(() => {

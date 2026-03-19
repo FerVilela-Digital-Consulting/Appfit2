@@ -7,13 +7,13 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { usePreferences } from "@/context/PreferencesContext";
 import { DEFAULT_WATER_TIMEZONE, getDateKeyForTimezone } from "@/features/water/waterUtils";
-import { getGuestBodyMetrics, listBodyMetricsByRange, type BodyMetricEntry } from "@/services/bodyMetrics";
-import { getBiofeedbackRange, getDailyBiofeedback } from "@/services/dailyBiofeedback";
-import { getDailyNote, listDailyNotesByRange, upsertDailyNote } from "@/services/dailyNotes";
-import { getNutritionDaySummary, getNutritionRangeSummary } from "@/modules/nutrition/services";
-import { getSleepDay, getSleepGoal, getSleepRangeTotals, type SleepLog } from "@/services/sleep";
-import { getWaterGoal, getWaterLogsByDate, getWaterRangeTotals, type WaterLog } from "@/services/waterIntake";
+import { getDailyBiofeedback } from "@/services/dailyBiofeedback";
+import { getDailyNote, upsertDailyNote } from "@/services/dailyNotes";
+import { getNutritionDaySummary } from "@/modules/nutrition/services";
+import { getSleepDay, getSleepGoal, type SleepLog } from "@/services/sleep";
+import { getWaterGoal, getWaterLogsByDate, type WaterLog } from "@/services/waterIntake";
 import { getErrorMessage } from "@/lib/errors";
+import { getActivityRangeSnapshot } from "@/services/activitySnapshot";
 
 export type CalendarDayData = {
   dateKey: string;
@@ -109,59 +109,44 @@ export function useCalendarPageState() {
     queryKey: ["water_goal", user?.id, isGuest],
     queryFn: () => getWaterGoal(user?.id ?? null, { isGuest }),
     enabled: queryEnabled,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: sleepGoal = { sleep_goal_minutes: 480 } } = useQuery({
     queryKey: ["sleep_goal", user?.id, isGuest],
     queryFn: () => getSleepGoal(user?.id ?? null, { isGuest }),
     enabled: queryEnabled,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: calendarData, isLoading } = useQuery({
     queryKey: ["calendar_data", user?.id, formatDateKey(gridStart), formatDateKey(gridEnd), timezone, isGuest, waterGoal.water_goal_ml, sleepGoal.sleep_goal_minutes],
     queryFn: async () => {
-      const [waterTotals, weightEntries, sleepTotals, bioRows, noteRows, nutritionRange] = await Promise.all([
-        getWaterRangeTotals(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
-        isGuest ? Promise.resolve(getGuestBodyMetrics()) : listBodyMetricsByRange(user?.id ?? null, "all", false),
-        getSleepRangeTotals(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
-        getBiofeedbackRange(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
-        listDailyNotesByRange(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }),
-        getNutritionRangeSummary(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone }).catch(() => ({ days: [] })),
-      ]);
-
-      const waterMap = new Map(waterTotals.map((row) => [row.date_key, Number(row.total_ml || 0)]));
-      const sleepMap = new Map(sleepTotals.map((row) => [row.date_key, Number(row.total_minutes || 0)]));
-      const bioMap = new Map(bioRows.map((row) => [row.date_key, true]));
-      const noteMap = new Map(noteRows.map((row) => [row.date_key, true]));
-        const nutritionDays = nutritionRange?.days ?? [];
-        const nutritionMap = new Map(nutritionDays.map((row) => [row.date_key, Number(row.calories || 0)]));
-        const weightMap = new Map<string, number>();
-
-        weightEntries.forEach((entry: BodyMetricEntry) => {
-          if (entry.measured_at >= formatDateKey(gridStart) && entry.measured_at <= formatDateKey(gridEnd)) {
-            weightMap.set(entry.measured_at, Number(entry.weight_kg));
-          }
-      });
+      const activityRows = await getActivityRangeSnapshot(user?.id ?? null, gridStart, gridEnd, { isGuest, timeZone: timezone });
+      const activityMap = new Map(activityRows.map((row) => [row.date_key, row]));
 
       const daily = new Map<string, CalendarDayData>();
       let cursor = new Date(gridStart);
       while (cursor <= gridEnd) {
         const dateKey = formatDateKey(cursor);
-        const totalWaterMl = waterMap.get(dateKey) ?? 0;
-        const totalSleepMinutes = sleepMap.get(dateKey) ?? 0;
-        const weightKg = weightMap.get(dateKey) ?? null;
-        const nutritionCalories = nutritionMap.get(dateKey) ?? 0;
+        const row = activityMap.get(dateKey);
+        const totalWaterMl = row?.water_ml ?? 0;
+        const totalSleepMinutes = row?.sleep_minutes ?? 0;
+        const weightKg = row?.weight_kg ?? null;
+        const nutritionCalories = row?.nutrition_calories ?? 0;
         daily.set(dateKey, {
           dateKey,
           totalWaterMl,
           totalSleepMinutes,
           weightKg,
-          hasWater: totalWaterMl > 0,
-          hasWeight: weightKg !== null,
-          hasSleep: totalSleepMinutes > 0,
-          hasBiofeedback: bioMap.get(dateKey) ?? false,
-          hasNote: noteMap.get(dateKey) ?? false,
-          hasNutrition: nutritionCalories > 0,
+          hasWater: row?.has_water ?? false,
+          hasWeight: row?.has_weight ?? false,
+          hasSleep: row?.has_sleep ?? false,
+          hasBiofeedback: row?.has_biofeedback ?? false,
+          hasNote: row?.has_note ?? false,
+          hasNutrition: row?.has_nutrition ?? false,
           metWaterGoal: totalWaterMl >= waterGoal.water_goal_ml,
           metSleepGoal: totalSleepMinutes >= sleepGoal.sleep_goal_minutes,
           nutritionCalories,
@@ -172,30 +157,40 @@ export function useCalendarPageState() {
       return daily;
     },
     enabled: queryEnabled,
+    staleTime: 45_000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: dayLogs = [] } = useQuery({
     queryKey: ["calendar_day_logs", user?.id, selectedDateKey, timezone, isGuest],
     queryFn: () => getWaterLogsByDate(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }),
     enabled: queryEnabled,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: selectedSleepDay } = useQuery({
     queryKey: ["calendar_day_sleep", user?.id, selectedDateKey, timezone, isGuest],
     queryFn: () => getSleepDay(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }),
     enabled: queryEnabled,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: selectedBiofeedback } = useQuery({
     queryKey: ["calendar_day_biofeedback", user?.id, selectedDateKey, timezone, isGuest],
     queryFn: () => getDailyBiofeedback(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }),
     enabled: queryEnabled,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: selectedNote } = useQuery({
     queryKey: ["calendar_day_note", user?.id, selectedDateKey, timezone, isGuest],
     queryFn: () => getDailyNote(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone }),
     enabled: queryEnabled,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: selectedNutrition } = useQuery({
@@ -203,6 +198,8 @@ export function useCalendarPageState() {
     queryFn: () =>
       getNutritionDaySummary(user?.id ?? null, fromDateKey(selectedDateKey), { isGuest, timeZone: timezone, profile }).catch(() => null),
     enabled: queryEnabled,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {

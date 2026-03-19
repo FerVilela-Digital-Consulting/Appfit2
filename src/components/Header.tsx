@@ -10,10 +10,8 @@ import {
   ShieldCheck,
   Target,
 } from "lucide-react";
-import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { startOfMonth } from "date-fns";
 
 import { usePreferences } from "@/context/PreferencesContext";
 import { useAuth } from "@/context/AuthContext";
@@ -29,8 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
-import { buildWeeklyConsistency } from "@/features/dashboard/dashboardViewModel";
+import { useHeaderWeeklyConsistency } from "@/hooks/useHeaderWeeklyConsistency";
 
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
@@ -39,11 +36,7 @@ const DashboardHeader = () => {
   const { t } = usePreferences();
   const { signOut, isGuest, exitGuest, canAccessAdmin } = useAuth();
   const navigate = useNavigate();
-  const snapshot = useDashboardSnapshot(startOfMonth(new Date()));
-  const weeklyConsistency = useMemo(
-    () => buildWeeklyConsistency(snapshot.monthActivity, snapshot.todayKey),
-    [snapshot.monthActivity, snapshot.todayKey],
-  );
+  const { weeklyConsistency } = useHeaderWeeklyConsistency();
   const mobileNavItems = [
     { label: t("nav.progress"), path: "/progress", icon: BarChart3 },
     { label: t("nav.body"), path: "/body", icon: Ruler },
@@ -159,9 +152,6 @@ const DashboardHeader = () => {
               <p className="text-xs text-muted-foreground">Un dia cuenta como completo al registrar 2 o mas controles: agua, sueno, comida, peso o biofeedback.</p>
             </PopoverContent>
           </Popover>
-          <Button asChild variant="outline" size="sm" className="hidden h-7 rounded-lg px-2 text-xs xl:inline-flex">
-            <Link to="/today#dashboard-zone-actions">Ver</Link>
-          </Button>
         </div>
       </div>
 

@@ -90,6 +90,37 @@ export const listBodyMetricsByRange = async (
   return (data || []) as BodyMetricEntry[];
 };
 
+export const listBodyMetricsBetween = async (
+  userId: string | null,
+  from: Date,
+  to: Date,
+  isGuest = false,
+): Promise<BodyMetricEntry[]> => {
+  if (isGuest) {
+    const fromKey = from.toISOString().slice(0, 10);
+    const toKey = to.toISOString().slice(0, 10);
+    return getGuestBodyMetrics()
+      .filter((entry) => entry.measured_at >= fromKey && entry.measured_at <= toKey)
+      .sort((a, b) => a.measured_at.localeCompare(b.measured_at));
+  }
+
+  if (!userId) return [];
+
+  const fromKey = from.toISOString().slice(0, 10);
+  const toKey = to.toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from("body_metrics")
+    .select("*")
+    .eq("user_id", userId)
+    .gte("measured_at", fromKey)
+    .lte("measured_at", toKey)
+    .order("measured_at", { ascending: true });
+
+  if (error) throw error;
+  return (data || []) as BodyMetricEntry[];
+};
+
 export const upsertBodyMetric = async ({
   userId,
   isGuest = false,
