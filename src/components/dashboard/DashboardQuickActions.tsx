@@ -45,10 +45,10 @@ const QUICK_ACTIONS: QuickAction[] = [
 
 const DashboardQuickActions = ({ embedded = false }: Props) => {
   const content = (
-    <div className={cn("space-y-4", embedded && "rounded-xl border border-border/60 bg-muted/10 p-3 md:p-4")}>
+    <div className={cn("space-y-3", embedded && "rounded-xl border border-border/60 bg-muted/10 p-3")}>
       {embedded ? (
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Acciones rapidas</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Acciones rapidas</p>
           <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
         </div>
       ) : null}
@@ -62,23 +62,23 @@ const DashboardQuickActions = ({ embedded = false }: Props) => {
               to={action.to}
               className={cn(
                 "group rounded-2xl border border-border/60 bg-background/50 p-3 transition hover:border-primary/40 hover:bg-primary/5 md:p-4",
-                embedded && "rounded-xl",
+                embedded && "rounded-xl p-2.5 md:p-3",
               )}
             >
               <div className="flex items-center justify-between">
-                <div className="rounded-xl border border-border/60 bg-card p-2">
+                <div className="rounded-xl border border-border/60 bg-card p-1.5">
                   <Icon className="h-4 w-4 text-primary" />
                 </div>
                 <ArrowUpRight className="h-4 w-4 text-muted-foreground transition group-hover:text-primary" />
               </div>
-              <p className="mt-3 text-sm font-semibold">{action.label}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{action.description}</p>
+              <p className="mt-2 text-sm font-semibold leading-tight">{action.label}</p>
+              <p className="mt-1 text-xs leading-snug text-muted-foreground">{action.description}</p>
             </Link>
           );
         })}
       </div>
 
-      <Button asChild variant="outline" className="w-full justify-center">
+      <Button asChild variant="outline" className="h-10 w-full justify-center">
         <Link to="/progress">Abrir resumen completo</Link>
       </Button>
     </div>

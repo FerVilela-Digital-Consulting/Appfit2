@@ -761,7 +761,7 @@ const Dashboard = () => {
               contentClassName={denseActionContentClass}
               className="xl:col-span-2"
             >
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="space-y-2">
                   <p className="text-[1.05rem] font-bold">Hoy estas al {todayCompletionPct}% completado</p>
                   <div className="h-2.5 rounded-full bg-muted">
@@ -769,30 +769,28 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-3 md:p-4">
-                  <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-background/40 p-3 md:flex-row md:items-center md:justify-between md:p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="rounded-2xl border border-primary/20 bg-primary/10 p-2 text-primary">
-                        <CheckCircle2 className="h-5 w-5" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Siguiente paso</p>
-                        <p className="text-base font-semibold">{nextRequiredActionLabel}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Te falta {remainingActionsCount} {remainingActionsCount === 1 ? "accion" : "acciones"} para completar el dia
-                        </p>
-                      </div>
+                <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/10 p-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-2xl border border-primary/20 bg-primary/10 p-2 text-primary">
+                      <CheckCircle2 className="h-5 w-5" />
                     </div>
-                    {nextRequiredActionHref.startsWith("#") ? (
-                      <Button asChild className="h-11 rounded-xl px-5 text-sm font-semibold">
-                        <a href={nextRequiredActionHref}>Ir al registro</a>
-                      </Button>
-                    ) : (
-                      <Button asChild className="h-11 rounded-xl px-5 text-sm font-semibold">
-                        <Link to={nextRequiredActionHref}>Ir al registro</Link>
-                      </Button>
-                    )}
+                    <div className="space-y-1">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Siguiente paso</p>
+                      <p className="text-base font-semibold">{nextRequiredActionLabel}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Te falta {remainingActionsCount} {remainingActionsCount === 1 ? "accion" : "acciones"} para completar el dia
+                      </p>
+                    </div>
                   </div>
+                  {nextRequiredActionHref.startsWith("#") ? (
+                    <Button asChild className="h-10 rounded-xl px-4 text-sm font-semibold">
+                      <a href={nextRequiredActionHref}>Ir al registro</a>
+                    </Button>
+                  ) : (
+                    <Button asChild className="h-10 rounded-xl px-4 text-sm font-semibold">
+                      <Link to={nextRequiredActionHref}>Ir al registro</Link>
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-2 md:hidden">
