@@ -776,17 +776,24 @@ const Dashboard = () => {
                       Te falta {remainingActionsCount} {remainingActionsCount === 1 ? "accion" : "acciones"} para completar el dia
                     </p>
                     <div className="grid gap-2 sm:grid-cols-2">
-                      <div className="flex items-center rounded-xl border border-border/60 bg-background/70 px-3 py-2 text-lg font-semibold">
-                        {nextRequiredActionLabel}
-                      </div>
                       {nextRequiredActionHref.startsWith("#") ? (
-                        <Button asChild className="h-12 rounded-xl text-base font-semibold">
-                          <a href={nextRequiredActionHref}>{nextRequiredActionLabel}</a>
-                        </Button>
+                        <>
+                          <Button asChild variant="outline" className="h-12 rounded-xl text-base font-semibold">
+                            <a href={nextRequiredActionHref}>Ir al registro</a>
+                          </Button>
+                          <Button asChild className="h-12 rounded-xl text-base font-semibold">
+                            <a href={nextRequiredActionHref}>{nextRequiredActionLabel}</a>
+                          </Button>
+                        </>
                       ) : (
-                        <Button asChild className="h-12 rounded-xl text-base font-semibold">
-                          <Link to={nextRequiredActionHref}>{nextRequiredActionLabel}</Link>
-                        </Button>
+                        <>
+                          <Button asChild variant="outline" className="h-12 rounded-xl text-base font-semibold">
+                            <Link to={nextRequiredActionHref}>Ir al registro</Link>
+                          </Button>
+                          <Button asChild className="h-12 rounded-xl text-base font-semibold">
+                            <Link to={nextRequiredActionHref}>{nextRequiredActionLabel}</Link>
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -816,7 +823,6 @@ const Dashboard = () => {
                   <DashboardQuickActions
                     embedded
                     nextActionLabel={nextActionLabel}
-                    nutritionSummary={nutritionSummary}
                   />
                 ) : null}
               </div>
