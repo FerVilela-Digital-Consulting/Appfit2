@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { startOfMonth } from "date-fns";
+import { addDays, format, startOfMonth, startOfWeek } from "date-fns";
 import { CalendarDays, CheckCircle2, Crosshair, Dumbbell, Settings2, TimerReset } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -97,6 +97,7 @@ const Dashboard = () => {
   const snapshot = useDashboardSnapshot(currentMonth);
   const [visibleModuleKey, setVisibleModuleKey] = useState<string | null>(null);
   const [isModuleTransitioning, setIsModuleTransitioning] = useState(false);
+  const [showExtendedView, setShowExtendedView] = useState(false);
   const timeZone = profile?.timezone || DEFAULT_WATER_TIMEZONE;
 
   const saveNoteMutation = useMutation({
@@ -155,8 +156,37 @@ const Dashboard = () => {
   const missingModules = dailyModules.filter((module) => !module.completed);
   const nextModule = missingModules[0] ?? null;
   const remainingModuleCount = Math.max(missingModules.length - 1, 0);
+  const todayCompletionPct = dailyModules.length > 0 ? Math.round((completionCount / dailyModules.length) * 100) : 0;
+  const pendingChecklist = missingModules.slice(0, 3);
   const nextActionLabel =
     nextModule ? `${nextModule.label}: siguiente registro recomendado` : "Dia operativo completo. Revisa progreso o nutricion para interpretar tendencias.";
+  const primaryAction = useMemo(() => {
+    if (activeWorkout) {
+      return {
+        label: "Continuar entrenamiento",
+        href: "/training?tab=today",
+      };
+    }
+
+    if (scheduledWorkout) {
+      return {
+        label: "Iniciar entrenamiento",
+        href: "/training?tab=today",
+      };
+    }
+
+    if (nextModule) {
+      return {
+        label: `Registrar ${nextModule.label.toLowerCase()}`,
+        href: nextModule.href,
+      };
+    }
+
+    return {
+      label: "Ver progreso semanal",
+      href: "/progress",
+    };
+  }, [activeWorkout, nextModule, scheduledWorkout]);
 
   useEffect(() => {
     if (!nextModule) {
@@ -252,6 +282,77 @@ const Dashboard = () => {
     [visibleWidgetKeySet],
   );
   const visibleStatusRow = isWidgetVisible("status_row");
+  const showPrimaryTodayGrid =
+    isWidgetVisible("nutrition") ||
+    isWidgetVisible("water") ||
+    isWidgetVisible("sleep") ||
+    isWidgetVisible("weight");
+  const weeklyConsistency = useMemo(() => {
+    const todayDate = new Date(`${snapshot.todayKey}T12:00:00`);
+    const weekStart = startOfWeek(todayDate, { weekStartsOn: 1 });
+    const labels = ["L", "M", "M", "J", "V", "S", "D"];
+
+    const days = Array.from({ length: 7 }).map((_, index) => {
+      const date = addDays(weekStart, index);
+      const dateKey = format(date, "yyyy-MM-dd");
+      const activity = snapshot.monthActivity?.get(dateKey);
+      const completedChecks =
+        Number(Boolean(activity?.hasWater)) +
+        Number(Boolean(activity?.hasSleep)) +
+        Number(Boolean(activity?.hasNutrition)) +
+        Number(Boolean(activity?.hasWeight)) +
+        Number(Boolean(activity?.hasBiofeedback));
+
+      return {
+        dateKey,
+        label: labels[index] ?? "",
+        completed: completedChecks >= 2,
+        isToday: dateKey === snapshot.todayKey,
+      };
+    });
+
+    const completedCount = days.filter((day) => day.completed).length;
+    return { days, completedCount };
+  }, [snapshot.monthActivity, snapshot.todayKey]);
+  const upcomingItems = useMemo(() => {
+    const items: Array<{ title: string; detail: string }> = [];
+
+    if (activeWorkout) {
+      items.push({
+        title: "Sesion activa",
+        detail: activeWorkout.name ?? "Continua con tu entrenamiento de hoy",
+      });
+    } else if (scheduledWorkout) {
+      items.push({
+        title: "Entrenamiento de hoy",
+        detail: scheduledWorkout.name ?? "Rutina programada para hoy",
+      });
+    }
+
+    if (nextModule) {
+      items.push({
+        title: "Siguiente registro",
+        detail: `${nextModule.label}: pendiente por completar`,
+      });
+    }
+
+    const remainingWater = Math.max((core?.waterGoalMl ?? 2000) - (core?.waterTodayMl ?? 0), 0);
+    if (remainingWater > 0) {
+      items.push({
+        title: "Hidratacion",
+        detail: `Te faltan ${remainingWater} ml para tu objetivo diario`,
+      });
+    }
+
+    if ((core?.sleepDay?.total_minutes ?? 0) === 0) {
+      items.push({
+        title: "Sueno",
+        detail: "Registra tu descanso para completar el control diario",
+      });
+    }
+
+    return items.slice(0, 3);
+  }, [activeWorkout, core?.sleepDay?.total_minutes, core?.waterGoalMl, core?.waterTodayMl, nextModule, scheduledWorkout]);
   const stackCards = useMemo(() => {
     const cards: DashboardStackCard[] = [];
     const widgetIsVisible = (widgetKey: DashboardHomeWidgetKey) =>
@@ -272,64 +373,8 @@ const Dashboard = () => {
         key: "quick_actions",
         weight: 4,
         preferredColumn: "right",
-        mobileOrder: 20,
+        mobileOrder: 80,
         node: <DashboardQuickActions nextActionLabel={nextActionLabel} nutritionSummary={nutritionSummary} />,
-      });
-    }
-
-    if (widgetIsVisible("nutrition")) {
-      cards.push({
-        key: "nutrition",
-        weight: 8,
-        preferredColumn: "left",
-        mobileOrder: 30,
-        node: (
-          <section id="nutrition" className="min-w-0">
-            <TodayMealsModule />
-          </section>
-        ),
-      });
-    }
-
-    if (widgetIsVisible("water")) {
-      cards.push({
-        key: "water",
-        weight: 5,
-        preferredColumn: "right",
-        mobileOrder: 40,
-        node: (
-          <section id="water" className="min-w-0">
-            <WaterCard showHistoryButton={false} />
-          </section>
-        ),
-      });
-    }
-
-    if (widgetIsVisible("weight")) {
-      cards.push({
-        key: "weight",
-        weight: 4,
-        preferredColumn: "right",
-        mobileOrder: 50,
-        node: (
-          <section id="weight" className="min-w-0">
-            <TodayWeightModule />
-          </section>
-        ),
-      });
-    }
-
-    if (widgetIsVisible("sleep")) {
-      cards.push({
-        key: "sleep",
-        weight: 4,
-        preferredColumn: "right",
-        mobileOrder: 60,
-        node: (
-          <section id="sleep" className="min-w-0">
-            <SleepCard />
-          </section>
-        ),
       });
     }
 
@@ -338,7 +383,7 @@ const Dashboard = () => {
         key: "biofeedback",
         weight: 5,
         preferredColumn: "right",
-        mobileOrder: 70,
+        mobileOrder: 30,
         node: (
           <section id="biofeedback" className="min-w-0">
             <TodayBiofeedbackModule />
@@ -352,7 +397,7 @@ const Dashboard = () => {
         key: "body_measurements",
         weight: 6,
         preferredColumn: "left",
-        mobileOrder: 80,
+        mobileOrder: 40,
         node: (
           <BodyMeasurementsCard
             loading={snapshot.coreLoading}
@@ -371,7 +416,7 @@ const Dashboard = () => {
         key: "notes",
         weight: 5,
         preferredColumn: "right",
-        mobileOrder: 90,
+        mobileOrder: 50,
         node: (
           <TacticalNotesCard
             loading={snapshot.coreLoading}
@@ -388,7 +433,7 @@ const Dashboard = () => {
         key: "recovery_card",
         weight: 5,
         preferredColumn: "right",
-        mobileOrder: 100,
+        mobileOrder: 60,
         node: (
           <RecoveryCard
             loading={snapshot.coreLoading}
@@ -413,7 +458,7 @@ const Dashboard = () => {
         key: "calendar",
         weight: 5,
         preferredColumn: "left",
-        mobileOrder: 110,
+        mobileOrder: 70,
         node: (
           <CalendarMiniWidget
             month={currentMonth}
@@ -448,7 +493,12 @@ const Dashboard = () => {
     snapshot.monthActivity,
     snapshot.monthActivityLoading,
   ]);
-  const desktopColumns = useMemo(() => balanceDashboardColumns(stackCards), [stackCards]);
+  const defaultSecondaryCardLimit = 4;
+  const visibleStackCards = useMemo(
+    () => (showExtendedView ? stackCards : stackCards.slice(0, defaultSecondaryCardLimit)),
+    [showExtendedView, stackCards],
+  );
+  const desktopColumns = useMemo(() => balanceDashboardColumns(visibleStackCards), [visibleStackCards]);
 
   return (
     <div className="app-shell min-h-screen px-4 py-5 text-foreground sm:px-6 sm:py-8">
@@ -642,12 +692,153 @@ const Dashboard = () => {
                 Enfoque
               </div>
               <p className="app-surface-muted mt-2 text-sm">{nextActionLabel}</p>
+              <div className="mt-3">
+                {primaryAction.href.startsWith("#") ? (
+                  <Button asChild size="sm" className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
+                    <a href={primaryAction.href}>{primaryAction.label}</a>
+                  </Button>
+                ) : (
+                  <Button asChild size="sm" className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
+                    <Link to={primaryAction.href}>{primaryAction.label}</Link>
+                  </Button>
+                )}
+              </div>
             </div>
             ) : null}
           </div>
           ) : null}
         </CardContent>
       </Card>
+
+      <section className="grid gap-3 xl:grid-cols-[1.1fr_1fr]">
+        <Card className="rounded-2xl border-border/60">
+          <CardContent className="space-y-3 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Avance operativo del dia</p>
+            <div className="flex items-end justify-between gap-3">
+              <p className="text-3xl font-black leading-none">{todayCompletionPct}%</p>
+              <p className="text-sm text-muted-foreground">{completionCount}/{dailyModules.length} controles completos</p>
+            </div>
+            <div className="h-2 rounded-full bg-muted">
+              <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${todayCompletionPct}%` }} />
+            </div>
+            <p className="text-xs text-muted-foreground">Incluye agua, sueno, peso, biofeedback y nutricion segun tu configuracion.</p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border-border/60">
+          <CardContent className="space-y-3 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Pendientes prioritarios</p>
+            {pendingChecklist.length > 0 ? (
+              <div className="space-y-2">
+                {pendingChecklist.map((module) => (
+                  <div key={module.key} className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+                    <p className="text-sm font-medium">{module.label}</p>
+                    {module.href.startsWith("#") ? (
+                      <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
+                        <a href={module.href}>Registrar</a>
+                      </Button>
+                    ) : (
+                      <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
+                        <Link to={module.href}>Registrar</Link>
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No hay pendientes criticos. Mantienes el dia bajo control.</p>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      {showPrimaryTodayGrid ? (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-3 px-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Registros clave de hoy</p>
+            <p className="text-xs text-muted-foreground">Solo lo necesario para operar el dia.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+            {isWidgetVisible("water") ? (
+              <section id="water" className="min-w-0">
+                <WaterCard showHistoryButton={false} />
+              </section>
+            ) : null}
+            {isWidgetVisible("nutrition") ? (
+              <section id="nutrition" className="min-w-0">
+                <TodayMealsModule />
+              </section>
+            ) : null}
+            {isWidgetVisible("sleep") ? (
+              <section id="sleep" className="min-w-0">
+                <SleepCard />
+              </section>
+            ) : null}
+            {isWidgetVisible("weight") ? (
+              <section id="weight" className="min-w-0">
+                <TodayWeightModule />
+              </section>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="grid gap-3 xl:grid-cols-[1.2fr_1fr]">
+        <Card className="rounded-2xl border-border/60">
+          <CardContent className="space-y-4 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Consistencia semanal</p>
+              <p className="text-sm font-semibold">{weeklyConsistency.completedCount}/7</p>
+            </div>
+            <div className="grid grid-cols-7 gap-2">
+              {weeklyConsistency.days.map((day) => (
+                <div
+                  key={day.dateKey}
+                  className={cn(
+                    "rounded-lg border px-2 py-2 text-center text-xs font-semibold",
+                    day.completed ? "border-primary/40 bg-primary/10 text-foreground" : "border-border/60 text-muted-foreground",
+                    day.isToday && "ring-1 ring-primary/40",
+                  )}
+                >
+                  {day.label}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">Se marca como completo cuando registras al menos dos controles del dia.</p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border-border/60">
+          <CardContent className="space-y-3 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Proximos</p>
+            {upcomingItems.length > 0 ? (
+              <div className="space-y-2">
+                {upcomingItems.map((item, index) => (
+                  <div key={`${item.title}-${index}`} className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+                    <p className="text-sm font-semibold">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No hay pendientes criticos para hoy. Continua con tu plan.</p>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      {stackCards.length > defaultSecondaryCardLimit ? (
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            className="app-outline-button rounded-xl px-4"
+            onClick={() => setShowExtendedView((current) => !current)}
+          >
+            {showExtendedView ? "Ver menos modulos" : "Ver mas modulos"}
+          </Button>
+        </div>
+      ) : null}
 
       {visibleStatusRow ? (
         <TodayStatusRow
@@ -662,7 +853,7 @@ const Dashboard = () => {
         />
       ) : null}
 
-      {stackCards.length > 0 ? (
+      {visibleStackCards.length > 0 ? (
         <>
           <div className="space-y-4 xl:hidden">
             {desktopColumns.orderedCards.map((card) => (
