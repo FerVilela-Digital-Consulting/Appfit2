@@ -546,128 +546,49 @@ const Dashboard = () => {
 
   return (
     <div className="app-shell min-h-screen px-4 py-5 text-foreground sm:px-6 sm:py-8">
-      <div className="mx-auto max-w-[1540px] space-y-6">
-        <section aria-labelledby="dashboard-zone-hero" className="space-y-4">
-          <h2 id="dashboard-zone-hero" className="sr-only">Zona hero operativo</h2>
-          <div className="app-surface-tile rounded-3xl border border-border/60 bg-card/70 p-4 md:p-5">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="space-y-1">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Dashboard principal</p>
-                <h1 className="text-2xl font-black tracking-tight md:text-3xl">
-                  {greetingLabel}, <span className="text-primary">{profileDisplayName}</span>
-                </h1>
-                <p className="text-sm text-muted-foreground">{core?.todayLabel ?? "Cargando fecha..."}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="app-outline-button rounded-xl">
-                      <Settings2 className="mr-2 h-4 w-4" />
-                      Widgets y densidad
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-[calc(100vw-2rem)] max-w-sm space-y-4 sm:w-96">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Densidad de cards</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant={cardDensity === "compact" ? "default" : "outline"}
-                          className="h-8 rounded-lg text-xs"
-                          onClick={() => setCardDensity("compact")}
-                        >
-                          Compacto
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant={cardDensity === "comfortable" ? "default" : "outline"}
-                          className="h-8 rounded-lg text-xs"
-                          onClick={() => setCardDensity("comfortable")}
-                        >
-                          Comodo
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Centro operativo</p>
-                      <p className="text-xs text-muted-foreground">Controla que tarjetas aparecen en la pestana Centro operativo.</p>
-                      <div className="grid max-h-72 gap-2 overflow-auto pr-1">
-                        {DASHBOARD_HOME_WIDGET_DEFINITIONS.filter((widget) => widget.key !== "hero_modules").map((widget) => {
-                          const checked = selectedWidgetKeys.includes(widget.key);
-                          return (
-                            <div key={widget.key} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`dashboard-widget-${widget.key}`}
-                                checked={checked}
-                                onCheckedChange={(value) => handleToggleWidget(widget.key, Boolean(value))}
-                                disabled={saveWidgetPreferencesMutation.isPending}
-                              />
-                              <Label htmlFor={`dashboard-widget-${widget.key}`} className="text-sm font-normal">
-                                {widget.label}
-                              </Label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-                <Button type="button" className="rounded-xl bg-primary px-4 text-primary-foreground hover:bg-primary/90" onClick={() => void handleSyncDashboard()}>
-                  <RefreshCcw className="mr-2 h-4 w-4" />
-                  Sincronizar
-                </Button>
-              </div>
-            </div>
-          </div>
+      <div className="mx-auto max-w-[1540px] space-y-5">
+        <section aria-labelledby="dashboard-zone-hero" className="space-y-3">
+          <h2 id="dashboard-zone-hero" className="sr-only">Estado del dia</h2>
+          <Card className="rounded-3xl border-border/60 bg-card/80">
+            <CardContent className={denseHeroContentClass}>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-2">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Estado del dia</p>
+                  <h1 className="text-2xl font-black tracking-tight md:text-3xl">
+                    {greetingLabel}, <span className="text-primary">{profileDisplayName}</span>
+                  </h1>
+                  <p className="text-sm text-muted-foreground">{core?.todayLabel ?? "Cargando fecha..."}</p>
+                </div>
 
-        <Card className="app-surface-hero overflow-hidden rounded-[22px] md:rounded-[28px]">
-        <CardContent className={cn(denseHeroContentClass, "xl:grid-cols-[1.55fr_0.85fr]")}>
-          <div className="space-y-4">
-            {isWidgetVisible("hero_routine") ? (
-            <div className="app-surface-tile rounded-2xl p-3 md:p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="app-surface-caption flex items-center gap-2 text-[11px] uppercase tracking-[0.14em]">
-                    <Dumbbell className="h-3.5 w-3.5" />
-                    Rutina de hoy
-                  </div>
-                  <div className="app-surface-heading mt-2 text-base font-semibold md:text-lg">{trainingTodayQuery.isLoading ? "Cargando..." : workoutCardTitle}</div>
-                  <p className="app-surface-muted mt-1 text-sm">{workoutCardSubtitle}</p>
-                </div>
-                <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap">
-                  <Button asChild variant="outline" className="app-outline-button w-full sm:w-auto">
-                    <Link to="/training?tab=today">Ver rutina</Link>
-                  </Button>
-                  <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto">
-                    <Link to="/training?tab=library">Iniciar entrenamiento</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-            ) : null}
-            <div className="grid gap-2 md:gap-3 md:grid-cols-[1fr_1.25fr_1fr]">
-              {isWidgetVisible("hero_date") ? (
-              <div className="app-surface-tile rounded-2xl p-3 md:p-4">
-                <div className="app-surface-caption text-[11px] uppercase tracking-[0.14em]">Fecha</div>
-                <div className="app-surface-heading mt-2 text-base font-semibold md:text-lg">{core?.todayLabel ?? "Cargando..."}</div>
-              </div>
-              ) : null}
-              <div className="app-surface-tile rounded-2xl p-3 md:p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="app-surface-caption text-[11px] uppercase tracking-[0.14em]">Modulos completos</div>
+                <div className="flex items-center gap-2">
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="app-surface-muted h-7 w-7 rounded-full hover:bg-background/60 hover:text-foreground">
-                        <Settings2 className="h-4 w-4" />
+                      <Button variant="outline" size="sm" className="h-10 rounded-xl px-3">
+                        <Settings2 className="mr-2 h-4 w-4" />
+                        Widgets y densidad
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent align="end" className="w-[calc(100vw-2rem)] max-w-sm space-y-4 sm:w-96">
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Check-in del dia</p>
-                        <p className="text-xs text-muted-foreground">Elige que modulos cuentan para marcar tu dia como completo.</p>
-                        <div className="grid gap-2">
+                    <PopoverContent align="end" className="w-80 space-y-4">
+                      <div className="space-y-2 border-b pb-4">
+                        <p className="text-sm font-medium">Densidad visual</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {(["comfortable", "compact"] as const).map((densityOption) => (
+                            <Button
+                              key={densityOption}
+                              type="button"
+                              size="sm"
+                              variant={cardDensity === densityOption ? "default" : "outline"}
+                              className="justify-center"
+                              onClick={() => setCardDensity(densityOption)}
+                            >
+                              {densityOption === "comfortable" ? "Comodo" : "Compacto"}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-2 border-b pb-4">
+                        <p className="text-sm font-medium">Modulos de check-in</p>
+                        <div className="grid max-h-56 gap-2 overflow-auto pr-1">
                           {DASHBOARD_CHECKIN_MODULE_DEFINITIONS.map((module) => {
                             const checked = selectedModuleKeys.includes(module.key);
                             return (
@@ -686,10 +607,9 @@ const Dashboard = () => {
                           })}
                         </div>
                       </div>
-                      <div className="hidden space-y-2 border-t pt-4">
-                        <p className="hidden text-sm font-medium">Widgets visibles</p>
-                        <p className="text-xs text-muted-foreground">Controla que tarjetas aparecen en la pestana Hoy.</p>
-                        <div className="grid max-h-60 gap-2 overflow-auto pr-1">
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Widgets visibles</p>
+                        <div className="grid max-h-56 gap-2 overflow-auto pr-1">
                           {DASHBOARD_HOME_WIDGET_DEFINITIONS.filter((widget) => widget.key !== "hero_modules").map((widget) => {
                             const checked = selectedWidgetKeys.includes(widget.key);
                             return (
@@ -710,296 +630,383 @@ const Dashboard = () => {
                       </div>
                     </PopoverContent>
                   </Popover>
-                </div>
-                <div className="app-surface-heading mt-2 flex items-center gap-2 text-base font-semibold md:text-lg">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  {completionCount}/{dailyModules.length}
-                </div>
-                <div className="mt-3 space-y-2">
-                  {snapshot.coreLoading || snapshot.monthActivityLoading ? (
-                    <DashboardLoadingState className="app-surface-muted" message="Analizando modulos pendientes..." />
-                  ) : missingModules.length === 0 ? (
-                    <DashboardEmptyState className="app-surface-muted text-sm" message="Dia operativo completo. No hay registros pendientes." />
-                  ) : (
-                    <>
-                      {visibleModule ? (
-                        <div
-                          key={visibleModule.key}
-                          className={`app-surface-soft flex items-center justify-between gap-3 rounded-xl px-3 py-2 transition-all duration-200 ${
-                            isModuleTransitioning ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
-                          }`}
-                        >
-                          <span className="app-surface-heading text-sm">{visibleModule.label}</span>
-                          <Button asChild size="sm" className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
-                            {visibleModule.href.startsWith("#") ? <a href={visibleModule.href}>Registrar</a> : <Link to={visibleModule.href}>Registrar</Link>}
-                          </Button>
-                        </div>
-                      ) : null}
-                      <p className="app-surface-muted text-xs">
-                        {remainingModuleCount > 0 ? `${remainingModuleCount} registros restantes...` : "Ultimo registro pendiente."}
-                      </p>
-                    </>
-                  )}
-                </div>
-              </div>
-              {isWidgetVisible("hero_consistency") ? (
-              <div className="app-surface-tile rounded-2xl p-3 md:p-4">
-                <div className="app-surface-caption text-[11px] uppercase tracking-[0.14em]">Consistencia 7d</div>
-                <div className="app-surface-heading mt-2 flex items-center gap-2 text-base font-semibold md:text-lg">
-                  <TimerReset className="h-4 w-4 text-primary" />
-                  {core?.activeDays7 ?? 0} dias activos
-                </div>
-              </div>
-              ) : null}
-            </div>
-          </div>
 
-          <div className="grid gap-2 md:gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            {isWidgetVisible("hero_recovery") ? (
-            <div className="app-surface-tile rounded-2xl p-3 md:p-4">
-              <div className="app-surface-caption text-[11px] uppercase tracking-[0.14em]">Recovery score</div>
-              <div className="app-surface-heading mt-2 text-3xl font-black md:text-4xl">{core?.recovery.score ?? 0}</div>
-              <p className="app-surface-muted mt-2 text-sm">{core?.recovery.status ?? "Analizando..."}</p>
-            </div>
-            ) : null}
-            {isWidgetVisible("hero_focus") ? (
-            <div className="app-surface-tile rounded-2xl p-3 md:p-4">
-              <div className="app-surface-caption flex items-center gap-2 text-[11px] uppercase tracking-[0.14em]">
-                <CalendarDays className="h-3.5 w-3.5" />
-                Enfoque
+                  <Button onClick={handleSyncDashboard} className="h-10 rounded-xl bg-primary px-4 text-primary-foreground hover:bg-primary/90">
+                    <RefreshCcw className="mr-2 h-4 w-4" />
+                    Sincronizar
+                  </Button>
+                </div>
               </div>
-              <p className="app-surface-muted mt-2 text-sm">{nextActionLabel}</p>
-              <div className="mt-3">
-                {primaryAction.href.startsWith("#") ? (
-                  <Button asChild size="sm" className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
-                    <a href={primaryAction.href}>{primaryAction.label}</a>
-                  </Button>
+
+              <div className={cn("grid items-stretch xl:grid-cols-[1.9fr_1fr]", denseSectionGapClass)}>
+                <Card className="rounded-2xl border-border/60 bg-background/40">
+                  <CardContent className="grid gap-4 p-4 md:grid-cols-[220px_1fr] md:p-5">
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/70 p-4 text-center">
+                      <p className="text-5xl font-black leading-none">{recoveryScore}</p>
+                      <p className="mt-1 text-lg font-semibold text-muted-foreground">/100</p>
+                      <p className={cn("mt-3 text-sm font-bold tracking-[0.2em]", recoveryAccentClass)}>{recoveryBand}</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Recomendacion</p>
+                          <p className="text-2xl font-black leading-tight">{recommendationLabel}</p>
+                        </div>
+                        {primaryAction.href.startsWith("#") ? (
+                          <Button asChild className="h-11 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+                            <a href={primaryAction.href}>{primaryAction.label}</a>
+                          </Button>
+                        ) : (
+                          <Button asChild className="h-11 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+                            <Link to={primaryAction.href}>{primaryAction.label}</Link>
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                        <div className="rounded-xl border border-border/60 bg-card/70 px-3 py-2">
+                          <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Recuperacion</p>
+                          <p className={cn("mt-1 text-base font-semibold", recoveryAccentClass)}>{core?.recovery.status ?? "Analizando"}</p>
+                        </div>
+                        <div className="rounded-xl border border-border/60 bg-card/70 px-3 py-2">
+                          <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Energia</p>
+                          <p className="mt-1 text-base font-semibold">{energyLabel}</p>
+                        </div>
+                        <div className="rounded-xl border border-border/60 bg-card/70 px-3 py-2">
+                          <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Estres</p>
+                          <p className="mt-1 text-base font-semibold">{stressLabel}</p>
+                        </div>
+                        <div className="rounded-xl border border-border/60 bg-card/70 px-3 py-2">
+                          <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Hidratacion</p>
+                          <p className="mt-1 text-base font-semibold">{hydrationProgress}%</p>
+                        </div>
+                      </div>
+
+                      <div className="h-2 rounded-full bg-muted">
+                        <div className={cn("h-2 rounded-full transition-all duration-300", recoveryBarClass)} style={{ width: `${Math.max(8, recoveryScore)}%` }} />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <DashboardCardShell title="Progreso semanal" contentClassName={denseCardContentClass}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-2xl font-black">{weeklyConsistency.completedCount}/7</p>
+                    <p className="text-sm text-muted-foreground">completado</p>
+                  </div>
+                  <div className="grid grid-cols-7 gap-1.5">
+                    {weeklyConsistency.days.map((day) => (
+                      <div
+                        key={`hero-week-${day.dateKey}`}
+                        className={cn(
+                          "rounded-md border px-1.5 py-1 text-center text-[11px] font-semibold",
+                          day.completed ? "border-primary/40 bg-primary/10 text-foreground" : "border-border/60 text-muted-foreground",
+                          day.isToday && "ring-1 ring-primary/40",
+                        )}
+                      >
+                        {day.label}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{completionCount}/{dailyModules.length} controles del dia completados.</p>
+                </DashboardCardShell>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section aria-labelledby="dashboard-zone-metrics" className="space-y-2">
+          <h2 id="dashboard-zone-metrics" className="sr-only">Metricas diarias</h2>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <section id="water" className="min-w-0">
+              <DashboardMetricCard
+                title="Agua"
+                icon={Droplets}
+                valueLabel={`${(core?.waterTodayMl ?? 0).toLocaleString("es-PE")} ml`}
+                goalLabel={`Meta ${(core?.waterGoalMl ?? 2000).toLocaleString("es-PE")} ml`}
+                progressPct={hydrationProgress}
+                accentClassName="bg-sky-500/90 text-sky-100"
+                actionHref="#water"
+                actionLabel="+"
+              />
+            </section>
+            <section id="nutrition" className="min-w-0">
+              <DashboardMetricCard
+                title="Calorias"
+                icon={Flame}
+                valueLabel={`${consumedCalories.toLocaleString("es-PE")} kcal`}
+                goalLabel={`Meta ${targetCalories.toLocaleString("es-PE")} kcal`}
+                progressPct={caloriesProgress}
+                accentClassName="bg-amber-500/90 text-amber-100"
+                actionHref="/nutrition"
+                actionLabel="+"
+              />
+            </section>
+            <section id="sleep" className="min-w-0">
+              <DashboardMetricCard
+                title="Sueno"
+                icon={Moon}
+                valueLabel={`${((core?.sleepDay?.total_minutes ?? 0) / 60).toFixed(1)} h`}
+                goalLabel={`Meta ${((core?.sleepGoalMinutes ?? 480) / 60).toFixed(1)} h`}
+                progressPct={sleepProgress}
+                accentClassName="bg-violet-500/90 text-violet-100"
+                actionHref="/sleep"
+                actionLabel="+"
+              />
+            </section>
+            <DashboardMetricCard
+              title="Pasos"
+              icon={Footprints}
+              valueLabel={`${(core?.activeDays7 ?? 0).toLocaleString("es-PE")} dias`}
+              goalLabel="Meta 7 dias activos"
+              progressPct={Math.min(100, Math.round(((core?.activeDays7 ?? 0) / 7) * 100))}
+              accentClassName="bg-emerald-500/90 text-emerald-100"
+              actionHref="/calendar"
+              actionLabel="+"
+            />
+          </div>
+        </section>
+
+        <section aria-labelledby="dashboard-zone-main" className={cn("grid xl:grid-cols-[1.6fr_1.3fr_1fr]", denseSectionGapClass)}>
+          <h2 id="dashboard-zone-main" className="sr-only">Bloques principales del dashboard</h2>
+
+          <DashboardCardShell title="Entrenamiento de hoy" className="h-full" contentClassName={denseCardContentClass}>
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-2xl font-black leading-tight">{workoutCardTitle}</p>
+                  <p className="text-sm text-muted-foreground">{dayDemandLabel}</p>
+                </div>
+                <div className="rounded-full border border-border/60 px-3 py-1 text-xs font-semibold text-muted-foreground">
+                  {exerciseCountLabel}
+                </div>
+              </div>
+
+              {workoutExercises.length > 0 ? (
+                <div className="space-y-2">
+                  {workoutExercises.map((exercise) => (
+                    <div key={exercise.id} className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
+                      <p className="text-sm font-medium">{exercise.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {exercise.target_sets ?? 0}x{exercise.target_reps ?? "--"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <DashboardEmptyState message={workoutCardSubtitle} />
+              )}
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Button asChild className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+                  <Link to={activeWorkout ? "/training/session" : "/training"}>Iniciar entrenamiento</Link>
+                </Button>
+                <Button asChild variant="outline" className="h-10 rounded-xl px-4 text-sm">
+                  <Link to="/training">Ver rutina</Link>
+                </Button>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                <Clock3 className="mr-1 inline h-4 w-4" />
+                {formatDurationLabel(Math.round(estimatedWorkoutMinutes))} estimados
+              </p>
+            </div>
+          </DashboardCardShell>
+
+          <DashboardCardShell title="Nutricion" className="h-full" contentClassName={denseCardContentClass}>
+            <div className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-[130px_1fr]">
+                <div className="relative mx-auto h-28 w-28">
+                  <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
+                    <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
+                    <circle
+                      cx="60"
+                      cy="60"
+                      r="48"
+                      stroke="currentColor"
+                      strokeWidth="12"
+                      strokeLinecap="round"
+                      className="text-primary"
+                      fill="none"
+                      strokeDasharray={`${Math.min(100, Math.max(0, caloriesProgress)) * 3.02} 999`}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <p className="text-xs text-muted-foreground">Calorias</p>
+                    <p className="text-xl font-black">{caloriesProgress}%</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
+                    <p className="text-xs text-muted-foreground">Consumidas / Meta</p>
+                    <p className="text-lg font-bold">
+                      {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
+                    </p>
+                    <p className="text-xs text-muted-foreground">Restantes {remainingCalories.toLocaleString("es-PE")} kcal</p>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Perfil: {nutritionSummary?.profileName ?? "Sin perfil"} · Dia {nutritionSummary?.archetypeLabel ?? "Base"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-sm"><span>Proteina</span><span>{Math.round(proteinCurrent)} g / {Math.round(proteinGoal)} g</span></div>
+                  <div className="h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-emerald-500" style={{ width: `${Math.min(100, Math.round((proteinCurrent / Math.max(proteinGoal, 1)) * 100))}%` }} /></div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-sm"><span>Carbs</span><span>{Math.round(carbsCurrent)} g / {Math.round(carbsGoal)} g</span></div>
+                  <div className="h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-amber-500" style={{ width: `${Math.min(100, Math.round((carbsCurrent / Math.max(carbsGoal, 1)) * 100))}%` }} /></div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-sm"><span>Grasas</span><span>{Math.round(fatCurrent)} g / {Math.round(fatGoal)} g</span></div>
+                  <div className="h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-rose-500" style={{ width: `${Math.min(100, Math.round((fatCurrent / Math.max(fatGoal, 1)) * 100))}%` }} /></div>
+                </div>
+              </div>
+
+              <Button asChild className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+                <Link to="/nutrition">Registrar comida</Link>
+              </Button>
+            </div>
+          </DashboardCardShell>
+
+          <div className="space-y-3">
+            <DashboardCardShell title="Peso y progreso" contentClassName={denseCardContentClass}>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm text-muted-foreground">Peso actual</p>
+                <p className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-300">
+                  {core?.latestWeightDeltaKg !== null && core?.latestWeightDeltaKg !== undefined
+                    ? `${core.latestWeightDeltaKg > 0 ? "+" : ""}${core.latestWeightDeltaKg.toFixed(1)} kg`
+                    : "Sin delta"}
+                </p>
+              </div>
+              <p className="text-4xl font-black leading-none">{core?.latestMeasurementWeight ? `${core.latestMeasurementWeight.toFixed(1)} kg` : "--"}</p>
+              <div className="h-24 rounded-xl border border-border/60 bg-muted/10 p-2">
+                {weightPath ? (
+                  <svg viewBox="0 0 100 100" className="h-full w-full">
+                    <polyline fill="none" stroke="currentColor" strokeWidth="3" className="text-primary" points={weightPath} />
+                  </svg>
                 ) : (
-                  <Button asChild size="sm" className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
-                    <Link to={primaryAction.href}>{primaryAction.label}</Link>
-                  </Button>
+                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Sin datos de tendencia</div>
                 )}
               </div>
-            </div>
-            ) : null}
-            <div className="app-surface-tile rounded-2xl p-3 md:p-4">
-              <div className="app-surface-caption flex items-center gap-2 text-[11px] uppercase tracking-[0.14em]">
-                <Sparkles className="h-3.5 w-3.5" />
-                Progreso semanal
-              </div>
-              <p className="app-surface-heading mt-2 text-base font-semibold md:text-lg">{weeklyConsistency.completedCount}/7 completado</p>
-              <div className="mt-3 grid grid-cols-7 gap-1.5">
-                {weeklyConsistency.days.map((day) => (
-                  <div
-                    key={`hero-week-${day.dateKey}`}
-                    className={cn(
-                      "rounded-md border px-1.5 py-1 text-center text-[11px] font-semibold",
-                      day.completed ? "border-primary/40 bg-primary/10 text-foreground" : "border-border/60 text-muted-foreground",
-                      day.isToday && "ring-1 ring-primary/30",
-                    )}
-                  >
-                    {day.label}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      </section>
+            </DashboardCardShell>
 
-      {visibleStatusRow ? (
-        <section aria-labelledby="dashboard-zone-status" className="space-y-2">
-          <h2 id="dashboard-zone-status" className="sr-only">Indicadores rapidos del dia</h2>
-          <TodayStatusRow
-            loading={snapshot.coreLoading}
-            waterMl={core?.waterTodayMl ?? 0}
-            waterGoalMl={core?.waterGoalMl ?? 2000}
-            sleepMinutes={core?.sleepDay?.total_minutes ?? 0}
-            sleepGoalMinutes={core?.sleepGoalMinutes ?? 480}
-            energy={core?.bioToday?.daily_energy ?? null}
-            stress={core?.bioToday?.perceived_stress ?? null}
-            streakDays={core?.activeDays7 ?? 0}
-          />
+            <section className="min-w-0">
+              <CalendarMiniWidget
+                month={currentMonth}
+                onMonthChange={setCurrentMonth}
+                activity={snapshot.monthActivity}
+                loading={snapshot.monthActivityLoading}
+              />
+            </section>
+
+            <DashboardCardShell title="Proximos" contentClassName={denseCardContentClass}>
+              {upcomingItems.length > 0 ? (
+                <div className="space-y-2">
+                  {upcomingItems.slice(0, 3).map((item, index) => (
+                    <div key={`${item.title}-${index}`} className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+                      <p className="text-sm font-semibold">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">{item.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <DashboardEmptyState message="No hay pendientes criticos para hoy." />
+              )}
+            </DashboardCardShell>
+          </div>
         </section>
-      ) : null}
 
-      <section aria-labelledby="dashboard-zone-actions" className={cn("grid xl:grid-cols-4", denseSectionGapClass)}>
-        <h2 id="dashboard-zone-actions" className="sr-only">Zona de accion inmediata</h2>
-        <DashboardCardShell title="Accion recomendada" className="h-full xl:col-span-2" contentClassName={denseActionContentClass}>
-          <p className="text-sm text-muted-foreground">{nextActionLabel}</p>
-          <div className="flex flex-wrap items-center gap-2">
-            {primaryAction.href.startsWith("#") ? (
-              <Button asChild className="h-9 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 motion-reduce:transform-none motion-reduce:transition-none">
-                <a href={primaryAction.href}>{primaryAction.label}</a>
-              </Button>
-            ) : (
-              <Button asChild className="h-9 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 motion-reduce:transform-none motion-reduce:transition-none">
-                <Link to={primaryAction.href}>{primaryAction.label}</Link>
-              </Button>
-            )}
-            <div className="rounded-full border border-border/60 bg-muted/30 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-              {completionCount}/{dailyModules.length} completos
+        <section aria-labelledby="dashboard-zone-actions" className={cn("grid xl:grid-cols-[1.3fr_1fr]", denseSectionGapClass)}>
+          <h2 id="dashboard-zone-actions" className="sr-only">Zona de accion inmediata</h2>
+
+          <DashboardCardShell
+            title="Consistencia semanal"
+            titleRight={<p className="text-sm font-semibold">{weeklyConsistency.completedCount}/7</p>}
+            contentClassName={denseActionContentClass}
+          >
+            <div className="grid grid-cols-7 gap-2">
+              {weeklyConsistency.days.map((day) => (
+                <div
+                  key={day.dateKey}
+                  className={cn(
+                    "rounded-lg border px-2 py-2 text-center text-xs font-semibold",
+                    day.completed ? "border-primary/40 bg-primary/10 text-foreground" : "border-border/60 text-muted-foreground",
+                    day.isToday && "ring-1 ring-primary/40",
+                  )}
+                >
+                  {day.label}
+                </div>
+              ))}
             </div>
-            <div className="rounded-full border border-border/60 bg-muted/30 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-              {missingModules.length} pendientes
+            <p className="text-xs text-muted-foreground">Se marca como completo cuando registras al menos dos controles del dia.</p>
+          </DashboardCardShell>
+
+          <DashboardCardShell title="Acciones rapidas" contentClassName={denseActionContentClass}>
+            <div className="flex flex-wrap gap-2">
+              {quickActions.map((action) => (
+                <Button key={action.label} asChild variant="outline" className="h-9 rounded-xl px-3 text-sm">
+                  {action.href.startsWith("#") ? <a href={action.href}>{action.label}</a> : <Link to={action.href}>{action.label}</Link>}
+                </Button>
+              ))}
             </div>
-          </div>
-          <div className="space-y-2">
-            <div className="h-2 rounded-full bg-muted">
-              <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${todayCompletionPct}%` }} />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Avance operativo del dia</span>
+                <span>{todayCompletionPct}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-muted">
+                <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${todayCompletionPct}%` }} />
+              </div>
             </div>
             {pendingChecklist.length > 0 ? (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {pendingChecklist.slice(0, 2).map((module) => (
-                  <div key={`action-${module.key}`} className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-                    <p className="text-xs font-medium">{module.label}</p>
-                    <span className="text-[11px] text-muted-foreground">Pendiente</span>
+              <div className="space-y-2">
+                {pendingChecklist.slice(0, 3).map((module) => (
+                  <div key={module.key} className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+                    <p className="text-sm font-medium">{module.label}</p>
+                    {module.href.startsWith("#") ? (
+                      <Button asChild size="sm" className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
+                        <a href={module.href}>Registrar</a>
+                      </Button>
+                    ) : (
+                      <Button asChild size="sm" className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
+                        <Link to={module.href}>Registrar</Link>
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
             ) : (
-              <DashboardEmptyState message="Sin pendientes criticos. Mantienes buen ritmo hoy." />
+              <DashboardEmptyState message="No hay pendientes criticos. Mantienes el dia bajo control." />
             )}
-          </div>
-        </DashboardCardShell>
-
-        <DashboardCardShell title="Avance operativo del dia" className="h-full" contentClassName={denseCardContentClass}>
-          <div className="flex items-end justify-between gap-3">
-            <p className="text-3xl font-black leading-none">{todayCompletionPct}%</p>
-            <p className="text-sm text-muted-foreground">{completionCount}/{dailyModules.length} controles completos</p>
-          </div>
-          <div className="h-2 rounded-full bg-muted">
-            <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${todayCompletionPct}%` }} />
-          </div>
-          <p className="text-xs text-muted-foreground">Incluye agua, sueno, peso, biofeedback y nutricion segun tu configuracion.</p>
-        </DashboardCardShell>
-
-        <DashboardCardShell title="Pendientes prioritarios" className="h-full" contentClassName={denseCardContentClass}>
-          {pendingChecklist.length > 0 ? (
-            <div className="space-y-2">
-              {pendingChecklist.map((module) => (
-                <div key={module.key} className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-                  <p className="text-sm font-medium">{module.label}</p>
-                  {module.href.startsWith("#") ? (
-                    <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
-                      <a href={module.href}>Registrar</a>
-                    </Button>
-                  ) : (
-                    <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
-                      <Link to={module.href}>Registrar</Link>
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <DashboardEmptyState message="No hay pendientes criticos. Mantienes el dia bajo control." />
-          )}
-        </DashboardCardShell>
-      </section>
-
-      {showPrimaryTodayGrid ? (
-        <section aria-labelledby="dashboard-zone-ops" className={cn("space-y-3", isCompactDensity && "space-y-2")}>
-          <h2 id="dashboard-zone-ops" className="sr-only">Zona de operacion diaria</h2>
-          <div className="flex items-center justify-between gap-3 px-1">
-            <DashboardSectionTitle>Registros clave de hoy</DashboardSectionTitle>
-            <p className="text-xs text-muted-foreground">Solo lo necesario para operar el dia.</p>
-          </div>
-          <div className={densePrimaryGridClass}>
-            {isWidgetVisible("water") ? (
-              <section id="water" className="min-w-0 h-full">
-                <WaterCard showHistoryButton={false} />
-              </section>
-            ) : null}
-            {isWidgetVisible("nutrition") ? (
-              <section id="nutrition" className="min-w-0 h-full">
-                <TodayMealsModule />
-              </section>
-            ) : null}
-            {isWidgetVisible("sleep") ? (
-              <section id="sleep" className="min-w-0 h-full">
-                <SleepCard />
-              </section>
-            ) : null}
-            {isWidgetVisible("weight") ? (
-              <section id="weight" className="min-w-0 h-full">
-                <TodayWeightModule />
-              </section>
-            ) : null}
-          </div>
+          </DashboardCardShell>
         </section>
-      ) : null}
 
-      <section aria-labelledby="dashboard-zone-insights" className={cn("grid xl:grid-cols-[1.2fr_1fr_1fr]", denseSectionGapClass)}>
-        <h2 id="dashboard-zone-insights" className="sr-only">Zona de insights y contexto</h2>
-        <DashboardCardShell
-          title="Consistencia semanal"
-          titleRight={<p className="text-sm font-semibold">{weeklyConsistency.completedCount}/7</p>}
-          contentClassName={denseCardContentClass}
-        >
-          <div className="grid grid-cols-7 gap-2">
-            {weeklyConsistency.days.map((day) => (
-              <div
-                key={day.dateKey}
-                className={cn(
-                  "rounded-lg border px-2 py-2 text-center text-xs font-semibold",
-                  day.completed ? "border-primary/40 bg-primary/10 text-foreground" : "border-border/60 text-muted-foreground",
-                  day.isToday && "ring-1 ring-primary/40",
-                )}
+        <section aria-labelledby="dashboard-zone-extension" className="space-y-4">
+          <h2 id="dashboard-zone-extension" className="sr-only">Zona de extension progresiva</h2>
+          {stackCards.length > defaultSecondaryCardLimit ? (
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                variant="outline"
+                className="app-outline-button rounded-xl px-4"
+                onClick={() => setShowExtendedView((current) => !current)}
               >
-                {day.label}
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">Se marca como completo cuando registras al menos dos controles del dia.</p>
-        </DashboardCardShell>
-
-        <DashboardCardShell title="Proximos" contentClassName={denseCardContentClass}>
-          {upcomingItems.length > 0 ? (
-            <div className="space-y-2">
-              {upcomingItems.map((item, index) => (
-                <div key={`${item.title}-${index}`} className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-                  <p className="text-sm font-semibold">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">{item.detail}</p>
-                </div>
-              ))}
+                {showExtendedView ? "Ver menos modulos" : "Ver mas modulos"}
+              </Button>
             </div>
-          ) : (
-            <DashboardEmptyState message="No hay pendientes criticos para hoy. Continua con tu plan." />
-          )}
-        </DashboardCardShell>
+          ) : null}
 
-        <section className="min-w-0">
-          <CalendarMiniWidget
-            month={currentMonth}
-            onMonthChange={setCurrentMonth}
-            activity={snapshot.monthActivity}
-            loading={snapshot.monthActivityLoading}
-          />
+          <DashboardCardStack cards={visibleStackCards} />
         </section>
-      </section>
-
-      <section aria-labelledby="dashboard-zone-extension" className="space-y-4">
-        <h2 id="dashboard-zone-extension" className="sr-only">Zona de extension progresiva</h2>
-        {stackCards.length > defaultSecondaryCardLimit ? (
-          <div className="flex justify-center">
-            <Button
-              type="button"
-              variant="outline"
-              className="app-outline-button rounded-xl px-4"
-              onClick={() => setShowExtendedView((current) => !current)}
-            >
-              {showExtendedView ? "Ver menos modulos" : "Ver mas modulos"}
-            </Button>
-          </div>
-        ) : null}
-
-        <DashboardCardStack cards={visibleStackCards} />
-      </section>
       </div>
     </div>
   );
 };
 
 export default Dashboard;
+
