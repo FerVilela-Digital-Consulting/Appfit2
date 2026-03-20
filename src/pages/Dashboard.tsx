@@ -370,7 +370,7 @@ const Dashboard = () => {
     const widgetIsVisible = (widgetKey: DashboardHomeWidgetKey) =>
       widgetKey === "hero_modules" || visibleWidgetKeySet.has(widgetKey);
 
-    if (widgetIsVisible("body_measurements")) {
+    if (!isMobile && widgetIsVisible("body_measurements")) {
       cards.push({
         key: "body_measurements",
         placement: {
@@ -419,6 +419,7 @@ const Dashboard = () => {
     core?.noteToday,
     core?.previousMeasurement,
     core?.waistComparison,
+    isMobile,
     visibleWidgetKeySet,
     saveNoteMutation,
     snapshot.coreLoading,
