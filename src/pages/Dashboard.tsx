@@ -391,7 +391,7 @@ const Dashboard = () => {
       });
     }
 
-    if (widgetIsVisible("notes")) {
+    if (isMobile && widgetIsVisible("notes")) {
       cards.push({
         key: "notes",
         placement: {
@@ -410,6 +410,27 @@ const Dashboard = () => {
       });
     }
 
+    if (!isMobile && widgetIsVisible("calendar")) {
+      cards.push({
+        key: "calendar",
+        placement: {
+          weight: 5,
+          preferredColumn: "right",
+          mobileOrder: 50,
+        },
+        node: (
+          <section className="min-w-0">
+            <CalendarMiniWidget
+              month={currentMonth}
+              onMonthChange={setCurrentMonth}
+              activity={snapshot.monthActivity}
+              loading={snapshot.monthActivityLoading}
+            />
+          </section>
+        ),
+      });
+    }
+
     return cards;
   }, [
     core?.goal?.goal_direction,
@@ -419,10 +440,14 @@ const Dashboard = () => {
     core?.noteToday,
     core?.previousMeasurement,
     core?.waistComparison,
+    currentMonth,
     isMobile,
     visibleWidgetKeySet,
+    setCurrentMonth,
     saveNoteMutation,
     snapshot.coreLoading,
+    snapshot.monthActivity,
+    snapshot.monthActivityLoading,
   ]);
   const isCompactDensity = cardDensity === "compact";
   const denseSectionGapClass = isCompactDensity ? "gap-2" : "gap-3";
@@ -1289,14 +1314,14 @@ const Dashboard = () => {
             </div>
           </DashboardCardShell>
 
-          {!isMobile ? (
+          {!isMobile && isWidgetVisible("notes") ? (
             <div className="space-y-3">
               <section className="min-w-0">
-                <CalendarMiniWidget
-                  month={currentMonth}
-                  onMonthChange={setCurrentMonth}
-                  activity={snapshot.monthActivity}
-                  loading={snapshot.monthActivityLoading}
+                <TacticalNotesCard
+                  loading={snapshot.coreLoading}
+                  todayNote={core?.noteToday ?? null}
+                  latestNote={core?.noteLatest ?? null}
+                  onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
                 />
               </section>
             </div>
@@ -1307,7 +1332,11 @@ const Dashboard = () => {
         {showSecondaryDashboardZones ? (
           <section aria-labelledby="dashboard-zone-extension" className="space-y-4">
             <h2 id="dashboard-zone-extension" className="sr-only">Zona de extension progresiva</h2>
-            {stackCards.length > 0 ? <div className="space-y-4">{stackCards.map((card) => <div key={card.key}>{card.node}</div>)}</div> : null}
+            {stackCards.length > 0 ? (
+              <div className={cn("space-y-4", !isMobile && "grid gap-4 space-y-0 lg:grid-cols-2")}>
+                {stackCards.map((card) => <div key={card.key}>{card.node}</div>)}
+              </div>
+            ) : null}
           </section>
         ) : null}
       </div>
