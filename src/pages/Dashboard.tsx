@@ -851,7 +851,7 @@ const Dashboard = () => {
 
         <section aria-labelledby="dashboard-zone-actions" className={cn("order-[-2] grid", denseSectionGapClass)}>
           <h2 id="dashboard-zone-actions" className="sr-only">Control operativo de hoy</h2>
-          <div className={cn("grid", denseSectionGapClass, "xl:grid-cols-3")}>
+          <div className={cn("grid", denseSectionGapClass, "xl:grid-cols-5")}>
             <DashboardCardShell
               title="Que hacer hoy"
               contentClassName={denseActionContentClass}
@@ -950,7 +950,7 @@ const Dashboard = () => {
               </DashboardCardShell>
             ) : null}
 
-            <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass}>
+            <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass} className="xl:col-span-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="space-y-1">
                   <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Foco</p>
@@ -1012,62 +1012,107 @@ const Dashboard = () => {
 
               <p className="text-xs text-muted-foreground">{physicalSummary?.lastUpdatedLabel ?? "Sin actualizaciones fisicas"}</p>
             </DashboardCardShell>
+
+            {!isMobile ? (
+              <div className="space-y-3 xl:col-span-1">
+                <section id="water" className="min-w-0">
+                  <DashboardMetricCard
+                    title="Agua"
+                    icon={Droplets}
+                    valueLabel={`${(core?.waterTodayMl ?? 0).toLocaleString("es-PE")} ml`}
+                    goalLabel={`Meta ${(core?.waterGoalMl ?? 2000).toLocaleString("es-PE")} ml`}
+                    progressPct={hydrationProgress}
+                    accentClassName="bg-sky-500/90 text-sky-100"
+                    actionHref="/water"
+                    actionLabel="+"
+                    onActionClick={() => setIsWaterModalOpen(true)}
+                  />
+                </section>
+                <section id="nutrition-mini" className="min-w-0">
+                  <DashboardMetricCard
+                    title="Calorias"
+                    icon={Flame}
+                    valueLabel={`${consumedCalories.toLocaleString("es-PE")} kcal`}
+                    goalLabel={`Meta ${targetCalories.toLocaleString("es-PE")} kcal`}
+                    progressPct={caloriesProgress}
+                    accentClassName="bg-amber-500/90 text-amber-100"
+                    actionHref="/nutrition"
+                    actionLabel="+"
+                  />
+                </section>
+                <section id="sleep" className="min-w-0">
+                  <DashboardMetricCard
+                    title="Sueno"
+                    icon={Moon}
+                    valueLabel={`${((core?.sleepDay?.total_minutes ?? 0) / 60).toFixed(1)} h`}
+                    goalLabel={`Meta ${((core?.sleepGoalMinutes ?? 480) / 60).toFixed(1)} h`}
+                    progressPct={sleepProgress}
+                    accentClassName="bg-violet-500/90 text-violet-100"
+                    actionHref="/sleep"
+                    actionLabel="+"
+                    onActionClick={() => setIsSleepModalOpen(true)}
+                  />
+                </section>
+              </div>
+            ) : null}
           </div>
         </section>
 
-        <section aria-labelledby="dashboard-zone-metrics" className="order-[-1] space-y-2 pt-1">
-          <h2 id="dashboard-zone-metrics" className="sr-only">Metricas diarias</h2>
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-4">
-            <section id="water" className="min-w-0">
+        {isMobile ? (
+          <section aria-labelledby="dashboard-zone-metrics" className="order-[-1] space-y-2 pt-1">
+            <h2 id="dashboard-zone-metrics" className="sr-only">Metricas diarias</h2>
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+              <section id="water" className="min-w-0">
+                <DashboardMetricCard
+                  title="Agua"
+                  icon={Droplets}
+                  valueLabel={`${(core?.waterTodayMl ?? 0).toLocaleString("es-PE")} ml`}
+                  goalLabel={`Meta ${(core?.waterGoalMl ?? 2000).toLocaleString("es-PE")} ml`}
+                  progressPct={hydrationProgress}
+                  accentClassName="bg-sky-500/90 text-sky-100"
+                  actionHref="/water"
+                  actionLabel="+"
+                  onActionClick={() => setIsWaterModalOpen(true)}
+                />
+              </section>
+              <section id="nutrition" className="min-w-0">
+                <DashboardMetricCard
+                  title="Calorias"
+                  icon={Flame}
+                  valueLabel={`${consumedCalories.toLocaleString("es-PE")} kcal`}
+                  goalLabel={`Meta ${targetCalories.toLocaleString("es-PE")} kcal`}
+                  progressPct={caloriesProgress}
+                  accentClassName="bg-amber-500/90 text-amber-100"
+                  actionHref="/nutrition"
+                  actionLabel="+"
+                />
+              </section>
+              <section id="sleep" className="min-w-0">
+                <DashboardMetricCard
+                  title="Sueno"
+                  icon={Moon}
+                  valueLabel={`${((core?.sleepDay?.total_minutes ?? 0) / 60).toFixed(1)} h`}
+                  goalLabel={`Meta ${((core?.sleepGoalMinutes ?? 480) / 60).toFixed(1)} h`}
+                  progressPct={sleepProgress}
+                  accentClassName="bg-violet-500/90 text-violet-100"
+                  actionHref="/sleep"
+                  actionLabel="+"
+                  onActionClick={() => setIsSleepModalOpen(true)}
+                />
+              </section>
               <DashboardMetricCard
-                title="Agua"
-                icon={Droplets}
-                valueLabel={`${(core?.waterTodayMl ?? 0).toLocaleString("es-PE")} ml`}
-                goalLabel={`Meta ${(core?.waterGoalMl ?? 2000).toLocaleString("es-PE")} ml`}
-                progressPct={hydrationProgress}
-                accentClassName="bg-sky-500/90 text-sky-100"
-                actionHref="/water"
-                actionLabel="+"
-                onActionClick={() => setIsWaterModalOpen(true)}
-              />
-            </section>
-            <section id="nutrition" className="min-w-0">
-              <DashboardMetricCard
-                title="Calorias"
-                icon={Flame}
-                valueLabel={`${consumedCalories.toLocaleString("es-PE")} kcal`}
-                goalLabel={`Meta ${targetCalories.toLocaleString("es-PE")} kcal`}
-                progressPct={caloriesProgress}
-                accentClassName="bg-amber-500/90 text-amber-100"
-                actionHref="/nutrition"
+                title="Pasos"
+                icon={Footprints}
+                valueLabel="0 pasos"
+                goalLabel="Meta 8,000 pasos"
+                progressPct={0}
+                accentClassName="bg-emerald-500/90 text-emerald-100"
+                actionHref="/calendar"
                 actionLabel="+"
               />
-            </section>
-            <section id="sleep" className="min-w-0">
-              <DashboardMetricCard
-                title="Sueno"
-                icon={Moon}
-                valueLabel={`${((core?.sleepDay?.total_minutes ?? 0) / 60).toFixed(1)} h`}
-                goalLabel={`Meta ${((core?.sleepGoalMinutes ?? 480) / 60).toFixed(1)} h`}
-                progressPct={sleepProgress}
-                accentClassName="bg-violet-500/90 text-violet-100"
-                actionHref="/sleep"
-                actionLabel="+"
-                onActionClick={() => setIsSleepModalOpen(true)}
-              />
-            </section>
-            <DashboardMetricCard
-              title="Pasos"
-              icon={Footprints}
-              valueLabel="0 pasos"
-              goalLabel="Meta 8,000 pasos"
-              progressPct={0}
-              accentClassName="bg-emerald-500/90 text-emerald-100"
-              actionHref="/calendar"
-              actionLabel="+"
-            />
-          </div>
-        </section>
+            </div>
+          </section>
+        ) : null}
 
         {isMobile ? (
           <section aria-label="Contenido secundario del dia" className="space-y-2">
