@@ -137,14 +137,14 @@ const DashboardMetricCard = ({
       <div className="space-y-1">
         <p className="text-[1.12rem] font-black leading-none tracking-tight">{valueLabel}</p>
       </div>
-      <div className="flex items-center gap-2">
-        <div className="h-2 flex-1 rounded-full bg-muted/70">
-          <div
-            className={cn("h-2 rounded-full transition-all duration-300", accentClassName)}
-            style={{ width: `${Math.max(0, Math.min(100, progressPct))}%` }}
-          />
-        </div>
-        <p className="shrink-0 text-[11px] font-semibold text-muted-foreground">{goalLabel}</p>
+      <div className="flex justify-end">
+        <p className="text-[11px] font-semibold text-muted-foreground">{goalLabel}</p>
+      </div>
+      <div className="h-2 rounded-full bg-muted/70">
+        <div
+          className={cn("h-2 rounded-full transition-all duration-300", accentClassName)}
+          style={{ width: `${Math.max(0, Math.min(100, progressPct))}%` }}
+        />
       </div>
     </CardContent>
   </Card>
