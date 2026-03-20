@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startOfMonth } from "date-fns";
 import {
@@ -162,6 +162,14 @@ const formatDurationLabel = (minutes: number) => {
 };
 
 const SHOW_CALENDAR_CARD_IN_DASHBOARD = false;
+const USE_MOBILE_HORIZONTAL_SCROLL = true;
+const DASHBOARD_MODULE_ROUTE_FALLBACK: Record<string, string> = {
+  "#water": "/water",
+  "#sleep": "/sleep",
+  "#weight": "/weight",
+  "#biofeedback": "/biofeedback",
+  "#nutrition": "/nutrition",
+};
 
 const Dashboard = () => {
   const queryClient = useQueryClient();
@@ -179,7 +187,9 @@ const Dashboard = () => {
   const isMobile = useIsMobile();
   const [isSecondaryExpanded, setIsSecondaryExpanded] = useState(false);
   const [isTodayDetailsExpanded, setIsTodayDetailsExpanded] = useState(false);
+  const [mobileCarouselIndex, setMobileCarouselIndex] = useState(0);
   const [cardDensity, setCardDensity] = useState<DashboardCardDensity>(() => loadDashboardCardDensity());
+  const mobileCarouselRef = useRef<HTMLDivElement | null>(null);
   const timeZone = profile?.timezone || DEFAULT_WATER_TIMEZONE;
 
   const saveNoteMutation = useMutation({
@@ -375,25 +385,6 @@ const Dashboard = () => {
     const widgetIsVisible = (widgetKey: DashboardHomeWidgetKey) =>
       widgetKey === "hero_modules" || visibleWidgetKeySet.has(widgetKey);
 
-    if (isMobile && widgetIsVisible("notes")) {
-      cards.push({
-        key: "notes",
-        placement: {
-          weight: 5,
-          preferredColumn: "right",
-          mobileOrder: 50,
-        },
-        node: (
-          <TacticalNotesCard
-            loading={snapshot.coreLoading}
-            todayNote={core?.noteToday ?? null}
-            latestNote={core?.noteLatest ?? null}
-            onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
-          />
-        ),
-      });
-    }
-
     if (!isMobile && SHOW_CALENDAR_CARD_IN_DASHBOARD && widgetIsVisible("calendar")) {
       cards.push({
         key: "calendar",
@@ -417,14 +408,10 @@ const Dashboard = () => {
 
     return cards;
   }, [
-    core?.noteLatest,
-    core?.noteToday,
     currentMonth,
     isMobile,
     visibleWidgetKeySet,
     setCurrentMonth,
-    saveNoteMutation,
-    snapshot.coreLoading,
     snapshot.monthActivity,
     snapshot.monthActivityLoading,
   ]);
@@ -591,7 +578,34 @@ const Dashboard = () => {
   const remainingActionsCount = Math.max(missingModules.length, 0);
   const nextRequiredActionLabel = nextModule ? `Registrar ${nextModule.label.toLowerCase()}` : "Dia completado";
   const nextRequiredActionHref = nextModule?.href ?? primaryAction.href;
-  const showSecondaryDashboardZones = !isMobile || isSecondaryExpanded;
+  const nextRequiredActionModal = nextRequiredActionHref === "#water"
+    ? "water"
+    : nextRequiredActionHref === "#sleep"
+      ? "sleep"
+      : nextRequiredActionHref === "#weight"
+        ? "weight"
+        : null;
+  const resolvedNextRequiredActionHref =
+    nextRequiredActionHref.startsWith("#")
+      ? DASHBOARD_MODULE_ROUTE_FALLBACK[nextRequiredActionHref] ?? "/today"
+      : nextRequiredActionHref;
+  const nextRequiredActionButtonLabel = nextModule ? "Ir al registro" : primaryAction.label;
+  const handleNextRequiredAction = () => {
+    if (nextRequiredActionModal === "water") {
+      setIsWaterModalOpen(true);
+      return;
+    }
+    if (nextRequiredActionModal === "sleep") {
+      setIsSleepModalOpen(true);
+      return;
+    }
+    if (nextRequiredActionModal === "weight") {
+      setIsWeightModalOpen(true);
+      return;
+    }
+    navigate(resolvedNextRequiredActionHref);
+  };
+  const showSecondaryDashboardZones = !isMobile;
   const getWorkoutExerciseName = (exercise: {
     name?: string | null;
     exercise?: { name?: string | null; name_i18n?: { es?: string; en?: string } | null } | null;
@@ -740,6 +754,17 @@ const Dashboard = () => {
     </div>
   );
 
+  const handleMobileCarouselScroll = () => {
+    const container = mobileCarouselRef.current;
+    if (!container) return;
+    const firstSlide = container.firstElementChild as HTMLElement | null;
+    if (!firstSlide) return;
+    const slideWidth = firstSlide.offsetWidth + 12;
+    if (!slideWidth) return;
+    const nextIndex = Math.round(container.scrollLeft / slideWidth);
+    setMobileCarouselIndex(Math.max(0, Math.min(5, nextIndex)));
+  };
+
   return (
     <div className="app-shell min-h-0 w-full px-4 pb-5 pt-1 text-foreground sm:px-6 sm:pb-8 sm:pt-2">
       <div className="mx-auto flex max-w-[1540px] flex-col gap-5">
@@ -884,15 +909,9 @@ const Dashboard = () => {
                       </p>
                     </div>
                   </div>
-                  {nextRequiredActionHref.startsWith("#") ? (
-                    <Button asChild className="h-10 rounded-xl px-4 text-sm font-semibold">
-                      <a href={nextRequiredActionHref}>Ir al registro</a>
-                    </Button>
-                  ) : (
-                    <Button asChild className="h-10 rounded-xl px-4 text-sm font-semibold">
-                      <Link to={nextRequiredActionHref}>Ir al registro</Link>
-                    </Button>
-                  )}
+                  <Button type="button" className="h-10 rounded-xl px-4 text-sm font-semibold" onClick={handleNextRequiredAction}>
+                    {nextRequiredActionButtonLabel}
+                  </Button>
                 </div>
 
                 {isMobile ? (
@@ -920,44 +939,8 @@ const Dashboard = () => {
               </div>
             </DashboardCardShell>
 
-            {isMobile ? (
-              <DashboardCardShell title="Entrenamiento" className="h-full xl:col-span-2" contentClassName={denseCardContentClass}>
-                <div className="space-y-3">
-                  {renderTrainingRecoveryPanel()}
-
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Rutina de hoy</p>
-                      <p className="text-2xl font-black leading-tight">{workoutCardTitle}</p>
-                      <p className="text-sm text-muted-foreground">{dayDemandLabel}</p>
-                    </div>
-                    <div className="rounded-full border border-border/60 px-3 py-1 text-xs font-semibold text-muted-foreground">
-                      {exerciseCountLabel}
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    El resumen de ejercicios se muestra al iniciar entrenamiento.
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button type="button" className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90" onClick={handleOpenTrainingSummary}>
-                      {activeSession ? "Continuar entrenamiento" : "Iniciar entrenamiento"}
-                    </Button>
-                    <Button asChild variant="outline" className="h-10 rounded-xl px-4 text-sm">
-                      <Link to="/training">Ver rutina</Link>
-                    </Button>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground">
-                    <Clock3 className="mr-1 inline h-4 w-4" />
-                    {formatDurationLabel(Math.round(estimatedWorkoutMinutes))} estimados
-                  </p>
-                </div>
-              </DashboardCardShell>
-            ) : null}
-
-            <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass} className="xl:col-span-2">
+            {!isMobile ? (
+              <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass} className="xl:col-span-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="space-y-1">
                   <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Foco</p>
@@ -1018,7 +1001,8 @@ const Dashboard = () => {
               </div>
 
               <p className="text-xs text-muted-foreground">{physicalSummary?.lastUpdatedLabel ?? "Sin actualizaciones fisicas"}</p>
-            </DashboardCardShell>
+              </DashboardCardShell>
+            ) : null}
 
             {!isMobile ? (
               <div className="space-y-3 xl:col-span-1">
@@ -1064,7 +1048,7 @@ const Dashboard = () => {
                   <DashboardMetricCard
                     title="Pasos"
                     icon={Footprints}
-                    valueLabel="0 pasos"
+                    valueLabel="Proximamente..."
                     goalLabel="8,000 pasos"
                     progressPct={0}
                     accentClassName="bg-emerald-500/90 text-emerald-100"
@@ -1077,7 +1061,116 @@ const Dashboard = () => {
           </div>
         </section>
 
-        {isMobile ? (
+        {isMobile && USE_MOBILE_HORIZONTAL_SCROLL ? (
+          <section aria-label="Centro de mando movil" className="order-[-1] space-y-3">
+            {isWidgetVisible("notes") ? (
+              <TacticalNotesCard
+                loading={snapshot.coreLoading}
+                todayNote={core?.noteToday ?? null}
+                latestNote={core?.noteLatest ?? null}
+                onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
+              />
+            ) : null}
+
+            <div
+              ref={mobileCarouselRef}
+              onScroll={handleMobileCarouselScroll}
+              className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1"
+            >
+              <div className="min-w-[88%] snap-start">
+                <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Foco</p>
+                      <p className="line-clamp-1 text-sm font-semibold">{focusHeading}</p>
+                    </div>
+                    <p className={cn("rounded-full border px-2 py-0.5 text-xs font-semibold", weightStatus.className)}>
+                      {weightStatus.label}
+                    </p>
+                  </div>
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Peso actual</p>
+                      <p className="text-3xl font-black leading-none">{core?.latestMeasurementWeight ? `${core.latestMeasurementWeight.toFixed(1)} kg` : "--"}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={cn("text-sm font-semibold", weightDeltaToneClass)}>7d: {weightDeltaLabel}</p>
+                      <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
+                    </div>
+                  </div>
+                  <div className="h-12 rounded-xl border border-border/60 bg-muted/10 p-2">
+                    {weightPath ? (
+                      <svg viewBox="0 0 100 100" className="h-full w-full">
+                        <polyline fill="none" stroke="currentColor" strokeWidth="3" className="text-primary" points={weightPath} />
+                      </svg>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Sin tendencia</div>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Meta</span>
+                      <span>{weightGoalProgressSafe !== null ? `${weightGoalProgressSafe}%` : "--"}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted">
+                      <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${weightGoalProgressSafe ?? 0}%` }} />
+                    </div>
+                  </div>
+                </DashboardCardShell>
+              </div>
+
+              <div className="min-w-[88%] snap-start">
+                <DashboardCardShell title="Entrenamiento" className="h-full xl:col-span-2" contentClassName={denseCardContentClass}>
+                  <div className="space-y-3">
+                    {renderTrainingRecoveryPanel()}
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Rutina de hoy</p>
+                        <p className="text-2xl font-black leading-tight">{workoutCardTitle}</p>
+                        <p className="text-sm text-muted-foreground">{dayDemandLabel}</p>
+                      </div>
+                      <div className="rounded-full border border-border/60 px-3 py-1 text-xs font-semibold text-muted-foreground">
+                        {exerciseCountLabel}
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">El resumen de ejercicios se muestra al iniciar entrenamiento.</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button type="button" className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90" onClick={handleOpenTrainingSummary}>
+                        {activeSession ? "Continuar entrenamiento" : "Iniciar entrenamiento"}
+                      </Button>
+                      <Button asChild variant="outline" className="h-10 rounded-xl px-4 text-sm">
+                        <Link to="/training">Ver rutina</Link>
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      <Clock3 className="mr-1 inline h-4 w-4" />
+                      {formatDurationLabel(Math.round(estimatedWorkoutMinutes))} estimados
+                    </p>
+                  </div>
+                </DashboardCardShell>
+              </div>
+
+              <div className="min-w-[88%] snap-start"><section id="water" className="min-w-0"><DashboardMetricCard title="Agua" icon={Droplets} valueLabel={`${(core?.waterTodayMl ?? 0).toLocaleString("es-PE")} ml`} goalLabel={`${(core?.waterGoalMl ?? 2000).toLocaleString("es-PE")} ml`} progressPct={hydrationProgress} accentClassName="bg-sky-500/90 text-sky-100" actionHref="/water" actionLabel="+" onActionClick={() => setIsWaterModalOpen(true)} /></section></div>
+              <div className="min-w-[88%] snap-start"><section id="nutrition" className="min-w-0"><DashboardMetricCard title="Calorias" icon={Flame} valueLabel={`${consumedCalories.toLocaleString("es-PE")} kcal`} goalLabel={`${targetCalories.toLocaleString("es-PE")} kcal`} progressPct={caloriesProgress} accentClassName="bg-amber-500/90 text-amber-100" actionHref="/nutrition" actionLabel="+" /></section></div>
+              <div className="min-w-[88%] snap-start"><section id="sleep" className="min-w-0"><DashboardMetricCard title="Sueno" icon={Moon} valueLabel={`${((core?.sleepDay?.total_minutes ?? 0) / 60).toFixed(1)} h`} goalLabel={`${((core?.sleepGoalMinutes ?? 480) / 60).toFixed(1)} h`} progressPct={sleepProgress} accentClassName="bg-violet-500/90 text-violet-100" actionHref="/sleep" actionLabel="+" onActionClick={() => setIsSleepModalOpen(true)} /></section></div>
+              <div className="min-w-[88%] snap-start"><DashboardMetricCard title="Pasos" icon={Footprints} valueLabel="Proximamente..." goalLabel="8,000 pasos" progressPct={0} accentClassName="bg-emerald-500/90 text-emerald-100" actionHref="/calendar" actionLabel="+" /></div>
+            </div>
+
+            <div className="flex items-center justify-center gap-1.5">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <span
+                  key={`mobile-slide-dot-${index}`}
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full bg-muted-foreground/35 transition-all",
+                    mobileCarouselIndex === index && "w-4 bg-primary",
+                  )}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {isMobile && !USE_MOBILE_HORIZONTAL_SCROLL ? (
           <section aria-labelledby="dashboard-zone-metrics" className="order-[-1] space-y-2 pt-1">
             <h2 id="dashboard-zone-metrics" className="sr-only">Metricas diarias</h2>
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
@@ -1122,7 +1215,7 @@ const Dashboard = () => {
               <DashboardMetricCard
                 title="Pasos"
                 icon={Footprints}
-                valueLabel="0 pasos"
+                valueLabel="Proximamente..."
                 goalLabel="8,000 pasos"
                 progressPct={0}
                 accentClassName="bg-emerald-500/90 text-emerald-100"
@@ -1133,7 +1226,7 @@ const Dashboard = () => {
           </section>
         ) : null}
 
-        {isMobile ? (
+        {isMobile && !USE_MOBILE_HORIZONTAL_SCROLL ? (
           <section aria-label="Contenido secundario del dia" className="space-y-2">
             <Button
               type="button"
