@@ -572,6 +572,20 @@ const Dashboard = () => {
   const nextRequiredActionLabel = nextModule ? `Registrar ${nextModule.label.toLowerCase()}` : "Dia completado";
   const nextRequiredActionHref = nextModule?.href ?? primaryAction.href;
   const showSecondaryDashboardZones = !isMobile || isSecondaryExpanded;
+  const getWorkoutExerciseName = (exercise: {
+    name?: string | null;
+    exercise?: { name?: string | null; name_i18n?: { es?: string; en?: string } | null } | null;
+  }) => {
+    const direct = exercise.name?.trim();
+    if (direct) return direct;
+    const localizedEs = exercise.exercise?.name_i18n?.es?.trim();
+    if (localizedEs) return localizedEs;
+    const localizedEn = exercise.exercise?.name_i18n?.en?.trim();
+    if (localizedEn) return localizedEn;
+    const nested = exercise.exercise?.name?.trim();
+    if (nested) return nested;
+    return "Ejercicio sin nombre";
+  };
   const renderTrainingRecoveryPanel = () => (
     <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
       <div className="mb-3 flex items-start justify-between gap-2">
@@ -837,10 +851,13 @@ const Dashboard = () => {
             </DashboardCardShell>
 
             {isMobile ? (
-              <DashboardCardShell title="Entrenamiento de hoy" className="h-full xl:col-span-2" contentClassName={denseCardContentClass}>
+              <DashboardCardShell title="Entrenamiento" className="h-full xl:col-span-2" contentClassName={denseCardContentClass}>
                 <div className="space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+                  {renderTrainingRecoveryPanel()}
+
+                  <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
+                      <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Rutina de hoy</p>
                       <p className="text-2xl font-black leading-tight">{workoutCardTitle}</p>
                       <p className="text-sm text-muted-foreground">{dayDemandLabel}</p>
                     </div>
@@ -849,13 +866,11 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  {renderTrainingRecoveryPanel()}
-
                   {workoutExercises.length > 0 ? (
                     <div className="space-y-2">
                       {workoutExercises.map((exercise) => (
                         <div key={exercise.id} className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
-                          <p className="text-sm font-medium">{exercise.name?.trim() || "Ejercicio sin nombre"}</p>
+                          <p className="text-sm font-medium">{getWorkoutExerciseName(exercise)}</p>
                           <p className="text-xs text-muted-foreground">
                             {exercise.target_sets ?? 0}x{exercise.target_reps ?? "--"}
                           </p>
@@ -1056,25 +1071,26 @@ const Dashboard = () => {
             <h2 id="dashboard-zone-main" className="sr-only">Bloques principales del dashboard</h2>
 
           {!isMobile ? (
-            <DashboardCardShell title="Entrenamiento de hoy" className="h-full" contentClassName={denseCardContentClass}>
+            <DashboardCardShell title="Entrenamiento" className="h-full" contentClassName={denseCardContentClass}>
               <div className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+              {renderTrainingRecoveryPanel()}
+
+                <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Rutina de hoy</p>
                     <p className="text-2xl font-black leading-tight">{workoutCardTitle}</p>
                     <p className="text-sm text-muted-foreground">{dayDemandLabel}</p>
                   </div>
-                <div className="rounded-full border border-border/60 px-3 py-1 text-xs font-semibold text-muted-foreground">
-                  {exerciseCountLabel}
+                  <div className="rounded-full border border-border/60 px-3 py-1 text-xs font-semibold text-muted-foreground">
+                    {exerciseCountLabel}
+                  </div>
                 </div>
-              </div>
-
-              {renderTrainingRecoveryPanel()}
 
                 {workoutExercises.length > 0 ? (
                   <div className="space-y-2">
                   {workoutExercises.map((exercise) => (
                       <div key={exercise.id} className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
-                        <p className="text-sm font-medium">{exercise.name?.trim() || "Ejercicio sin nombre"}</p>
+                        <p className="text-sm font-medium">{getWorkoutExerciseName(exercise)}</p>
                         <p className="text-xs text-muted-foreground">
                           {exercise.target_sets ?? 0}x{exercise.target_reps ?? "--"}
                         </p>
