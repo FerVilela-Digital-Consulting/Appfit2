@@ -30,7 +30,6 @@ import CalendarMiniWidget from "@/components/dashboard/CalendarMiniWidget";
 import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
 import TacticalNotesCard from "@/components/dashboard/TacticalNotesCard";
 import TodayStatusRow from "@/components/dashboard/TodayStatusRow";
-import TodayBiofeedbackModule from "@/components/daily/TodayBiofeedbackModule";
 import TodayMealsModule from "@/components/daily/TodayMealsModule";
 import TodayWeightModule from "@/components/daily/TodayWeightModule";
 import SleepCard from "@/components/dashboard/SleepCard";
@@ -370,22 +369,6 @@ const Dashboard = () => {
     const cards: DashboardStackCard[] = [];
     const widgetIsVisible = (widgetKey: DashboardHomeWidgetKey) =>
       widgetKey === "hero_modules" || visibleWidgetKeySet.has(widgetKey);
-
-    if (widgetIsVisible("biofeedback")) {
-      cards.push({
-        key: "biofeedback",
-        placement: {
-          weight: 5,
-          preferredColumn: "right",
-          mobileOrder: 30,
-        },
-        node: (
-          <section id="biofeedback" className="min-w-0">
-            <TodayBiofeedbackModule />
-          </section>
-        ),
-      });
-    }
 
     if (widgetIsVisible("body_measurements")) {
       cards.push({
