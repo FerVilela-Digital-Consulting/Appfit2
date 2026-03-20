@@ -164,12 +164,12 @@ const DashboardHeader = () => {
               <Plus className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Navegacion rapida</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="min-w-[15.5rem] rounded-xl p-1.5 md:min-w-32">
+            <DropdownMenuLabel className="px-3 py-2 text-base font-bold">Navegacion rapida</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {headerNavItems.map((item) => (
-              <DropdownMenuItem key={item.path} onSelect={() => navigate(item.path)}>
-                <item.icon className="mr-2 h-4 w-4" />
+              <DropdownMenuItem key={item.path} className="min-h-12 px-3 py-2.5 text-base font-semibold" onSelect={() => navigate(item.path)}>
+                <item.icon className="mr-3 h-5 w-5" />
                 {item.label}
               </DropdownMenuItem>
             ))}

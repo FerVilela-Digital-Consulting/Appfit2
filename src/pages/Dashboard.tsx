@@ -1021,13 +1021,12 @@ const Dashboard = () => {
             <DashboardMetricCard
               title="Pasos"
               icon={Footprints}
-              valueLabel="Proximamente"
-              goalLabel="Seguimiento de pasos en desarrollo"
+              valueLabel="0 pasos"
+              goalLabel="Meta 8,000 pasos"
               progressPct={0}
               accentClassName="bg-emerald-500/90 text-emerald-100"
               actionHref="/calendar"
               actionLabel="+"
-              comingSoon
             />
           </div>
         </section>
@@ -1144,17 +1143,18 @@ const Dashboard = () => {
             </div>
           </DashboardCardShell>
 
-          <div className="space-y-3">
-            <section className="min-w-0">
-              <CalendarMiniWidget
-                month={currentMonth}
-                onMonthChange={setCurrentMonth}
-                activity={snapshot.monthActivity}
-                loading={snapshot.monthActivityLoading}
-              />
-            </section>
-
-          </div>
+          {!isMobile ? (
+            <div className="space-y-3">
+              <section className="min-w-0">
+                <CalendarMiniWidget
+                  month={currentMonth}
+                  onMonthChange={setCurrentMonth}
+                  activity={snapshot.monthActivity}
+                  loading={snapshot.monthActivityLoading}
+                />
+              </section>
+            </div>
+          ) : null}
           </section>
         ) : null}
 
