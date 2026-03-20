@@ -62,17 +62,22 @@ const DashboardQuickActions = ({ embedded = false }: Props) => {
               to={action.to}
               className={cn(
                 "group rounded-2xl border border-border/60 bg-background/50 p-3 transition hover:border-primary/40 hover:bg-primary/5 md:p-4",
-                embedded && "rounded-xl p-2.5 md:p-3",
+                embedded && "rounded-xl p-2 md:p-2.5",
+                embedded && "md:min-h-[58px] md:p-2.5",
               )}
             >
-              <div className="flex items-center justify-between">
-                <div className="rounded-xl border border-border/60 bg-card p-1.5">
-                  <Icon className="h-4 w-4 text-primary" />
+              <div className="flex items-start justify-between gap-2 md:items-center">
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="rounded-xl border border-border/60 bg-card p-1.5">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className={cn("text-sm font-semibold leading-tight md:truncate", embedded && "text-[13px]")}>{action.label}</p>
+                    <p className={cn("mt-0.5 text-xs leading-snug text-muted-foreground", embedded && "hidden lg:block")}>{action.description}</p>
+                  </div>
                 </div>
                 <ArrowUpRight className="h-4 w-4 text-muted-foreground transition group-hover:text-primary" />
               </div>
-              <p className="mt-2 text-sm font-semibold leading-tight">{action.label}</p>
-              <p className={cn("mt-1 text-xs leading-snug text-muted-foreground", embedded && "hidden sm:block")}>{action.description}</p>
             </Link>
           );
         })}
