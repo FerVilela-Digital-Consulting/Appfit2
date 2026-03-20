@@ -161,6 +161,8 @@ const formatDurationLabel = (minutes: number) => {
   return `${hours} h ${mins} min`;
 };
 
+const SHOW_CALENDAR_CARD_IN_DASHBOARD = false;
+
 const Dashboard = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -392,7 +394,7 @@ const Dashboard = () => {
       });
     }
 
-    if (!isMobile && widgetIsVisible("calendar")) {
+    if (!isMobile && SHOW_CALENDAR_CARD_IN_DASHBOARD && widgetIsVisible("calendar")) {
       cards.push({
         key: "calendar",
         placement: {
