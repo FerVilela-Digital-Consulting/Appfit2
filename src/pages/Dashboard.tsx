@@ -19,7 +19,7 @@ import {
   TimerReset,
   UtensilsCrossed,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import BodyMeasurementsCard from "@/components/dashboard/BodyMeasurementsCard";
@@ -43,6 +43,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AppPageIntro } from "@/components/layout/AppPageIntro";
 import { useAuth } from "@/context/AuthContext";
 import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
@@ -55,7 +56,7 @@ import {
 import { buildDashboardViewModel } from "@/features/dashboard/dashboardViewModel";
 import type { DashboardStackCard } from "@/features/dashboard/dashboardTypes";
 import { NUTRITION_ARCHETYPE_META } from "@/features/nutrition/nutritionProfiles";
-import { getTrainingTodaySummary } from "@/modules/training/services";
+import { getTrainingTodaySummary, getWorkoutDetail, listWorkouts, saveWorkoutScheduleDay, startWorkoutSession } from "@/modules/training/services";
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
 import {
   DASHBOARD_CHECKIN_MODULE_DEFINITIONS,
@@ -160,6 +161,7 @@ const formatDurationLabel = (minutes: number) => {
 
 const Dashboard = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { user, isGuest, profile } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
   const snapshot = useDashboardSnapshot(currentMonth);
@@ -168,6 +170,8 @@ const Dashboard = () => {
   const [isWaterModalOpen, setIsWaterModalOpen] = useState(false);
   const [isSleepModalOpen, setIsSleepModalOpen] = useState(false);
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
+  const [isTrainingSummaryOpen, setIsTrainingSummaryOpen] = useState(false);
+  const [selectedTrainingWorkoutId, setSelectedTrainingWorkoutId] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [isSecondaryExpanded, setIsSecondaryExpanded] = useState(false);
   const [isTodayDetailsExpanded, setIsTodayDetailsExpanded] = useState(false);
@@ -197,8 +201,19 @@ const Dashboard = () => {
     queryFn: () => getTrainingTodaySummary(user?.id ?? null, new Date(), { isGuest, timeZone }),
     enabled: Boolean(user?.id) || isGuest,
   });
+  const availableWorkoutsQuery = useQuery({
+    queryKey: ["dashboard_training_workouts", user?.id, isGuest, timeZone],
+    queryFn: () => listWorkouts(user?.id ?? null, { isGuest, timeZone }),
+    enabled: Boolean(user?.id) || isGuest,
+  });
   const scheduledWorkout = trainingTodayQuery.data?.scheduledWorkout ?? null;
+  const activeSession = trainingTodayQuery.data?.activeSession ?? null;
   const activeWorkout = trainingTodayQuery.data?.activeSession?.workout ?? null;
+  const selectedTrainingWorkoutQuery = useQuery({
+    queryKey: ["dashboard_training_selected_workout", user?.id, isGuest, timeZone, selectedTrainingWorkoutId],
+    queryFn: () => getWorkoutDetail(user?.id ?? null, selectedTrainingWorkoutId!, { isGuest, timeZone }),
+    enabled: Boolean(selectedTrainingWorkoutId) && (Boolean(user?.id) || isGuest),
+  });
   const workoutCardTitle = activeWorkout?.name ?? scheduledWorkout?.name ?? "Sin rutina asignada";
   const workoutCardSubtitle = activeWorkout
     ? "Sesion activa en curso."
@@ -217,6 +232,14 @@ const Dashboard = () => {
   });
   const selectedModuleKeys = modulePreferencesQuery.data ?? DEFAULT_DASHBOARD_CHECKIN_MODULES;
   const selectedWidgetKeys = widgetPreferencesQuery.data ?? DEFAULT_DASHBOARD_HOME_WIDGETS;
+
+  const saveTrainingScheduleMutation = useMutation({
+    mutationFn: ({ dayOfWeek, workoutId }: { dayOfWeek: number; workoutId: string | null }) =>
+      saveWorkoutScheduleDay(user?.id ?? null, dayOfWeek, workoutId, false, { isGuest, timeZone }),
+  });
+  const startTrainingSessionMutation = useMutation({
+    mutationFn: (workoutId: string) => startWorkoutSession(user?.id ?? null, workoutId, { isGuest, timeZone }),
+  });
   const dashboardViewModel = useMemo(
     () =>
       buildDashboardViewModel({
@@ -265,6 +288,12 @@ const Dashboard = () => {
   useEffect(() => {
     saveDashboardCardDensity(cardDensity);
   }, [cardDensity]);
+
+  useEffect(() => {
+    if (!isTrainingSummaryOpen) return;
+    const preferredWorkoutId = activeWorkout?.id ?? scheduledWorkout?.id ?? availableWorkoutsQuery.data?.[0]?.id ?? null;
+    setSelectedTrainingWorkoutId((current) => current ?? preferredWorkoutId);
+  }, [activeWorkout?.id, availableWorkoutsQuery.data, isTrainingSummaryOpen, scheduledWorkout?.id]);
 
   const visibleModule = missingModules.find((module) => module.key === visibleModuleKey) ?? nextModule;
   const visibleWidgetKeySet = useMemo(() => new Set<DashboardHomeWidgetKey>(selectedWidgetKeys), [selectedWidgetKeys]);
@@ -495,12 +524,12 @@ const Dashboard = () => {
   const carbsGoal = nutritionGoals?.carb_goal_g ?? 250;
   const fatGoal = nutritionGoals?.fat_goal_g ?? 70;
 
-  const workoutExercises = (activeWorkout?.exercises ?? scheduledWorkout?.exercises ?? []).slice(0, 4);
+  const workoutExercises = activeWorkout?.exercises ?? scheduledWorkout?.exercises ?? [];
   const estimatedWorkoutMinutes = Math.max(
     workoutExercises.reduce((sum, exercise) => sum + Math.max(Number(exercise.rest_seconds || 0), 45) * Math.max(Number(exercise.target_sets || 0), 1), 0) / 60,
     0,
   );
-  const exerciseCountLabel = workoutExercises.length > 0 ? `${workoutExercises.length} ejercicios visibles` : "Sin ejercicios configurados";
+  const exerciseCountLabel = workoutExercises.length > 0 ? `${workoutExercises.length} ejercicios` : "Sin ejercicios configurados";
 
   const weightSeries = (core?.weightSnapshot?.entries ?? [])
     .slice(0, 7)
@@ -586,13 +615,60 @@ const Dashboard = () => {
     if (nested) return nested;
     return "Ejercicio sin nombre";
   };
+  const selectedTrainingWorkout =
+    selectedTrainingWorkoutQuery.data ??
+    (selectedTrainingWorkoutId && selectedTrainingWorkoutId === activeWorkout?.id
+      ? activeWorkout
+      : selectedTrainingWorkoutId && selectedTrainingWorkoutId === scheduledWorkout?.id
+        ? scheduledWorkout
+        : null);
+  const selectedTrainingExercises = selectedTrainingWorkout?.exercises ?? [];
+  const selectedTrainingExercisePreview = selectedTrainingExercises.slice(0, 5);
+  const selectedTrainingMinutes = Math.max(
+    selectedTrainingExercises.reduce(
+      (sum, exercise) => sum + Math.max(Number(exercise.rest_seconds || 0), 45) * Math.max(Number(exercise.target_sets || 0), 1),
+      0,
+    ) / 60,
+    0,
+  );
+  const handleOpenTrainingSummary = () => {
+    setIsTrainingSummaryOpen(true);
+  };
+  const handleLaunchTraining = async () => {
+    try {
+      if (activeSession) {
+        setIsTrainingSummaryOpen(false);
+        navigate("/training?tab=today");
+        return;
+      }
+      if (!selectedTrainingWorkoutId) {
+        toast.error("Selecciona una rutina para hoy.");
+        return;
+      }
+      if (selectedTrainingWorkoutId !== (scheduledWorkout?.id ?? null)) {
+        await saveTrainingScheduleMutation.mutateAsync({ dayOfWeek: new Date().getDay(), workoutId: selectedTrainingWorkoutId });
+      }
+      await startTrainingSessionMutation.mutateAsync(selectedTrainingWorkoutId);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["dashboard_training_today"] }),
+        queryClient.invalidateQueries({ queryKey: ["training", "today"] }),
+        queryClient.invalidateQueries({ queryKey: ["training", "schedule"] }),
+      ]);
+      setIsTrainingSummaryOpen(false);
+      toast.success("Sesion iniciada.");
+      navigate("/training?tab=today");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "No se pudo iniciar el entrenamiento."));
+    }
+  };
+  const isTrainingLaunchPending = saveTrainingScheduleMutation.isPending || startTrainingSessionMutation.isPending;
   const renderTrainingRecoveryPanel = () => (
     <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
           <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Recovery score</p>
           <p className="text-xs text-muted-foreground">
-            Capacidad de carga para entrenar hoy: <span className={cn("font-semibold", recoveryAccentClass)}>{recoveryBand}</span>
+            Capacidad de carga recomendada para entrenar hoy: <span className={cn("font-semibold", recoveryAccentClass)}>{recoveryBand}</span>
           </p>
         </div>
         <Popover>
@@ -664,7 +740,6 @@ const Dashboard = () => {
           <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Recomendacion de carga</p>
           <p className="mt-1 text-base font-black leading-tight">{recommendationLabel}</p>
           <p className={cn("mt-1 text-xs font-semibold", recoveryAccentClass)}>{recoveryStatusLabel}</p>
-          <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">Drivers: {recoveryDriversLabel}</p>
           <p className="mt-2 text-[11px] text-muted-foreground">Detalle de factores en el boton de ayuda.</p>
         </div>
       </div>
@@ -866,24 +941,13 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  {workoutExercises.length > 0 ? (
-                    <div className="space-y-2">
-                      {workoutExercises.map((exercise) => (
-                        <div key={exercise.id} className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
-                          <p className="text-sm font-medium">{getWorkoutExerciseName(exercise)}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {exercise.target_sets ?? 0}x{exercise.target_reps ?? "--"}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <DashboardEmptyState message={workoutCardSubtitle} />
-                  )}
+                  <p className="text-xs text-muted-foreground">
+                    El resumen de ejercicios se muestra al iniciar entrenamiento.
+                  </p>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <Button asChild className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-                      <Link to={activeWorkout ? "/training/session" : "/training"}>Iniciar entrenamiento</Link>
+                    <Button type="button" className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90" onClick={handleOpenTrainingSummary}>
+                      {activeSession ? "Continuar entrenamiento" : "Iniciar entrenamiento"}
                     </Button>
                     <Button asChild variant="outline" className="h-10 rounded-xl px-4 text-sm">
                       <Link to="/training">Ver rutina</Link>
@@ -1036,6 +1100,78 @@ const Dashboard = () => {
           </section>
         ) : null}
 
+        <Dialog open={isTrainingSummaryOpen} onOpenChange={setIsTrainingSummaryOpen}>
+          <DialogContent className="max-h-[90vh] w-[95vw] max-w-3xl overflow-y-auto p-4 md:p-6">
+            <DialogHeader>
+              <DialogTitle>{activeSession ? "Sesion activa" : "Resumen de entrenamiento de hoy"}</DialogTitle>
+              <DialogDescription>
+                Revisa la rutina, cambia la asignacion si hace falta y empieza la sesion sin salir del centro operativo.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="dashboard-training-workout-select">Rutina del dia</Label>
+                <Select
+                  value={selectedTrainingWorkoutId ?? "__none__"}
+                  onValueChange={(value) => setSelectedTrainingWorkoutId(value === "__none__" ? null : value)}
+                  disabled={Boolean(activeSession) || availableWorkoutsQuery.isLoading}
+                >
+                  <SelectTrigger id="dashboard-training-workout-select">
+                    <SelectValue placeholder="Selecciona una rutina" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sin rutina asignada</SelectItem>
+                    {(availableWorkoutsQuery.data ?? []).map((workout) => (
+                      <SelectItem key={workout.id} value={workout.id}>
+                        {workout.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {activeSession ? <p className="text-xs text-muted-foreground">Hay una sesion activa; no puedes cambiar rutina hasta cerrarla.</p> : null}
+              </div>
+
+              <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Resumen</p>
+                <p className="mt-1 text-lg font-bold">{selectedTrainingWorkout?.name ?? "Sin rutina asignada"}</p>
+                <p className="text-sm text-muted-foreground">{selectedTrainingWorkout?.description || workoutCardSubtitle}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {(selectedTrainingExercises.length > 0 ? `${selectedTrainingExercises.length} ejercicios` : "Sin ejercicios")} ·{" "}
+                  {formatDurationLabel(Math.round(selectedTrainingMinutes))} estimados
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Vista rapida</p>
+                {selectedTrainingExercisePreview.length > 0 ? (
+                  <div className="mt-2 space-y-2">
+                    {selectedTrainingExercisePreview.map((exercise) => (
+                      <div key={exercise.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-background/50 px-3 py-2">
+                        <p className="text-sm font-medium">{getWorkoutExerciseName(exercise)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {exercise.target_sets ?? 0}x{exercise.target_reps ?? "--"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-muted-foreground">No hay ejercicios cargados para esta rutina.</p>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Button type="button" className="h-10 rounded-xl px-4 text-sm font-semibold" onClick={handleLaunchTraining} disabled={isTrainingLaunchPending}>
+                  {activeSession ? "Ir a sesion activa" : "Iniciar entrenamiento"}
+                </Button>
+                <Button asChild type="button" variant="outline" className="h-10 rounded-xl px-4 text-sm">
+                  <Link to="/training">Gestionar rutinas</Link>
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={isWaterModalOpen} onOpenChange={setIsWaterModalOpen}>
           <DialogContent className="max-h-[90vh] w-[95vw] max-w-5xl overflow-y-auto p-4 md:p-6">
             <DialogHeader>
@@ -1086,24 +1222,13 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                {workoutExercises.length > 0 ? (
-                  <div className="space-y-2">
-                  {workoutExercises.map((exercise) => (
-                      <div key={exercise.id} className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
-                        <p className="text-sm font-medium">{getWorkoutExerciseName(exercise)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {exercise.target_sets ?? 0}x{exercise.target_reps ?? "--"}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <DashboardEmptyState message={workoutCardSubtitle} />
-                )}
+                <p className="text-xs text-muted-foreground">
+                  El resumen de ejercicios se muestra al iniciar entrenamiento.
+                </p>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button asChild className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-                    <Link to={activeWorkout ? "/training/session" : "/training"}>Iniciar entrenamiento</Link>
+                  <Button type="button" className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90" onClick={handleOpenTrainingSummary}>
+                    {activeSession ? "Continuar entrenamiento" : "Iniciar entrenamiento"}
                   </Button>
                   <Button asChild variant="outline" className="h-10 rounded-xl px-4 text-sm">
                     <Link to="/training">Ver rutina</Link>
