@@ -99,11 +99,11 @@ const DashboardMetricCard = ({
   comingSoon = false,
 }: DailyMetricCardProps) => (
   <Card className="group rounded-3xl border-border/60 bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-    <CardContent className="space-y-3 p-4">
-      <div className="flex items-center justify-between gap-2">
+    <CardContent className="space-y-3 !p-4 md:!p-4">
+      <div className="flex min-h-7 items-center justify-between gap-2 sm:min-h-8">
         <div className="flex items-center gap-2">
-          <div className={cn("rounded-xl border border-border/50 p-[5px]", accentClassName)}>
-            <Icon className="h-[10px] w-[10px]" />
+          <div className={cn("rounded-xl border border-border/50 p-1.5", accentClassName)}>
+            <Icon className="h-3 w-3" />
           </div>
           <p className="text-[1.05rem] font-semibold tracking-tight text-foreground">{title}</p>
         </div>
@@ -118,7 +118,7 @@ const DashboardMetricCard = ({
                 type="button"
                 onClick={onActionClick}
                 aria-label={actionLabel}
-                className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-[12px] font-medium leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-sm font-medium leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 {actionLabel}
               </button>
@@ -126,7 +126,7 @@ const DashboardMetricCard = ({
               <Link
                 to={actionHref}
                 aria-label={actionLabel}
-                className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-[12px] font-medium leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-sm font-medium leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 {actionLabel}
               </Link>
