@@ -137,8 +137,9 @@ const DashboardMetricCard = ({
       <div className="flex items-end justify-between gap-3 pt-0.5">
         <p className="whitespace-nowrap text-[0.95rem] font-black leading-none tracking-tight text-foreground">{valueLabel}</p>
         <div className="shrink-0 text-right">
-          <p className="whitespace-nowrap text-[0.72rem] font-semibold uppercase leading-none tracking-[0.12em] text-muted-foreground/80">Meta</p>
-          <p className="mt-1 whitespace-nowrap text-[0.9rem] font-semibold leading-none text-muted-foreground/90">{goalLabel}</p>
+          <p className="whitespace-nowrap text-[0.65rem] font-semibold uppercase leading-none tracking-[0.12em] text-muted-foreground/80">
+            Meta {goalLabel}
+          </p>
         </div>
       </div>
       <div className="h-2 rounded-full bg-muted/70">
