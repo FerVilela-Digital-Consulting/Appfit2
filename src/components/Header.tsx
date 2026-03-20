@@ -36,11 +36,13 @@ const DashboardHeader = () => {
   const { signOut, isGuest, exitGuest } = useAuth();
   const navigate = useNavigate();
   const { weeklyConsistency } = useHeaderWeeklyConsistency();
-  const mobileNavItems = [
+  const headerNavItems = [
     { label: t("nav.progress"), path: "/progress", icon: BarChart3 },
     { label: t("nav.body"), path: "/body", icon: Ruler },
     { label: t("nav.calendar"), path: "/calendar", icon: CalendarDays },
     { label: t("nav.fitnessProfile"), path: "/fitness-profile", icon: Target },
+  ];
+  const mobileNavItems = [
     { label: t("nav.settings"), path: "/settings", icon: Settings },
   ];
 
@@ -156,9 +158,28 @@ const DashboardHeader = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground md:hidden"
+              aria-label="Navegacion rapida"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Navegacion rapida</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {headerNavItems.map((item) => (
+              <DropdownMenuItem key={item.path} onSelect={() => navigate(item.path)}>
+                <item.icon className="mr-2 h-4 w-4" />
+                {item.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="hidden h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground md:flex"
               aria-label="Registro rapido"
-              title="Registro rapido"
             >
               <Plus className="h-5 w-5" />
             </button>
