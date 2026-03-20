@@ -21,8 +21,8 @@ import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_STORAGE_KEY = 'appfit_is_guest';
-const AUTH_RESOLVE_TIMEOUT_MS = 30000;
-const PROFILE_FETCH_TIMEOUT_MS = 40000;
+const AUTH_RESOLVE_TIMEOUT_MS = 12000;
+const PROFILE_FETCH_TIMEOUT_MS = 15000;
 const AUTH_SYNC_CACHE_WINDOW_MS = 30000;
 const SUSPENDED_ACCOUNT_ERROR_MESSAGE = 'Esta cuenta esta desactivada temporalmente. Contacta al administrador.';
 
@@ -212,6 +212,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAccountRoleLoading(true);
 
         const syncPromise = (async () => {
+            const profileResultPromise = withTimeout(
+                fetchProfile(authUser.id),
+                PROFILE_FETCH_TIMEOUT_MS,
+                'Profile fetch timed out.'
+            )
+                .then((resolvedProfile) => ({ ok: true as const, resolvedProfile }))
+                .catch((error) => ({ ok: false as const, error }));
+
             let resolvedAccount: UserAccountRow | null = null;
             try {
                 resolvedAccount = await withTimeout(
@@ -229,6 +237,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 (currentUserIdRef.current === authUser.id ? currentAccountRoleRef.current : "member");
             setAccountRole(nextAccountRole);
             setCachedAccountRole(authUser.id, nextAccountRole);
+            if (typeof resolvedAccount?.onboarding_completed === "boolean") {
+                setOnboardingCompleted(resolvedAccount.onboarding_completed);
+                setCachedOnboarding(authUser.id, resolvedAccount.onboarding_completed);
+            }
 
             if (resolvedAccount?.account_status === "suspended") {
                 console.warn("Blocked suspended account from entering the app.", { userId: authUser.id });
@@ -248,12 +260,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             suspendedAccountNoticeRef.current = null;
 
-            try {
-                const resolvedProfile = await withTimeout(
-                    fetchProfile(authUser.id),
-                    PROFILE_FETCH_TIMEOUT_MS,
-                    'Profile fetch timed out.'
-                );
+            const profileResult = await profileResultPromise;
+            if (profileResult.ok) {
+                const resolvedProfile = profileResult.resolvedProfile;
                 const profileForOnboarding =
                     typeof resolvedAccount?.onboarding_completed === "boolean"
                         ? { ...resolvedProfile, onboarding_completed: resolvedAccount.onboarding_completed }
@@ -262,18 +271,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setOnboardingCompleted(completed);
                 setCachedOnboarding(authUser.id, completed);
                 lastSuccessfulSyncRef.current = { userId: authUser.id, at: Date.now() };
-            } catch (error) {
+            } else {
+                const error = profileResult.error;
                 if (cachedProfile) {
                     setAuthedProfile(cachedProfile);
                 }
-                const resolvedFallbackCompleted = cachedProfile
-                    ? resolveOnboardingCompleted(
-                        typeof resolvedAccount?.onboarding_completed === "boolean"
-                            ? { ...cachedProfile, onboarding_completed: resolvedAccount.onboarding_completed }
-                            : cachedProfile,
-                        cachedCompleted,
-                    )
-                    : cachedCompleted === true;
+                const resolvedFallbackCompleted =
+                    typeof resolvedAccount?.onboarding_completed === "boolean"
+                        ? resolvedAccount.onboarding_completed
+                        : cachedProfile
+                            ? resolveOnboardingCompleted(
+                                typeof resolvedAccount?.onboarding_completed === "boolean"
+                                    ? { ...cachedProfile, onboarding_completed: resolvedAccount.onboarding_completed }
+                                    : cachedProfile,
+                                cachedCompleted,
+                            )
+                            : cachedCompleted === true;
                 setOnboardingCompleted(prev => prev ?? resolvedFallbackCompleted);
                 // Prevent repeated re-sync storms when Supabase is temporarily slow.
                 if (cachedProfile || nextAccountRole !== "member") {
@@ -284,9 +297,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 } else {
                     console.error('Error fetching profile:', error);
                 }
-            } finally {
-                setAccountRoleLoading(false);
             }
+            setAccountRoleLoading(false);
         })();
 
         syncInFlightRef.current = syncPromise;

@@ -39,7 +39,6 @@ export const DASHBOARD_HOME_WIDGET_DEFINITIONS: DashboardHomeWidgetDefinition[] 
   { key: "water", label: "Agua hoy" },
   { key: "weight", label: "Peso de hoy" },
   { key: "sleep", label: "Sueño" },
-  { key: "body_measurements", label: "Medidas corporales" },
   { key: "notes", label: "Notas del dia" },
   { key: "recovery_card", label: "Tarjeta de recuperacion" },
   { key: "calendar", label: "Calendario compacto" },
