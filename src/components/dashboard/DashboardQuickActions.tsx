@@ -66,17 +66,14 @@ const DashboardQuickActions = ({ embedded = false }: Props) => {
                 embedded && "md:min-h-[58px] md:p-2.5",
               )}
             >
-              <div className="flex items-start justify-between gap-2 md:items-center">
-                <div className="flex min-w-0 items-center gap-2">
-                  <div className="rounded-xl border border-border/60 bg-card p-1.5">
-                    <Icon className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className={cn("text-sm font-semibold leading-tight md:truncate", embedded && "text-[13px]")}>{action.label}</p>
-                    <p className={cn("mt-0.5 text-xs leading-snug text-muted-foreground", embedded && "hidden lg:block")}>{action.description}</p>
-                  </div>
+              <div className="flex min-w-0 items-start gap-2 md:items-center">
+                <div className="rounded-xl border border-border/60 bg-card p-1.5">
+                  <Icon className="h-4 w-4 text-primary" />
                 </div>
-                <ArrowUpRight className="h-4 w-4 text-muted-foreground transition group-hover:text-primary" />
+                <div className="min-w-0">
+                  <p className={cn("text-sm font-semibold leading-tight md:truncate", embedded && "text-[13px]")}>{action.label}</p>
+                  <p className={cn("mt-0.5 text-xs leading-snug text-muted-foreground", embedded && "hidden lg:block")}>{action.description}</p>
+                </div>
               </div>
             </Link>
           );
