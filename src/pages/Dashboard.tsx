@@ -511,6 +511,40 @@ const Dashboard = () => {
   const proteinProgress = Math.min(100, Math.round((proteinCurrent / Math.max(proteinGoal, 1)) * 100));
   const carbsProgress = Math.min(100, Math.round((carbsCurrent / Math.max(carbsGoal, 1)) * 100));
   const fatProgress = Math.min(100, Math.round((fatCurrent / Math.max(fatGoal, 1)) * 100));
+  const remainingProtein = Math.max(proteinGoal - proteinCurrent, 0);
+  const remainingProteinLabel = `${Math.round(remainingProtein).toLocaleString("es-PE")} g`;
+  const hasNutritionLogs = consumedCalories > 0 || proteinCurrent > 0 || carbsCurrent > 0 || fatCurrent > 0;
+  const nutritionStatus =
+    !hasNutritionLogs
+      ? {
+          label: "Sin registro",
+          className: "border-border/60 bg-muted/40 text-muted-foreground",
+        }
+      : caloriesProgress > 110
+        ? {
+            label: "Exceso",
+            className: "border-rose-500/40 bg-rose-500/10 text-rose-500 dark:text-rose-300",
+          }
+        : caloriesProgress >= 85 && caloriesProgress <= 110 && proteinProgress >= 80
+          ? {
+              label: "En rango",
+              className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+            }
+          : {
+              label: "Bajo objetivo",
+              className: "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300",
+            };
+  const nutritionActionHint =
+    !hasNutritionLogs
+      ? "Empieza con tu primera comida para activar el seguimiento."
+      : caloriesProgress > 110
+        ? "Ya superaste calorias; prioriza proteina magra y vegetales."
+        : remainingProtein > 0
+          ? `Prioriza una comida con ${Math.min(Math.max(Math.round(remainingProtein), 20), 45)} g de proteina.`
+          : "Vas en buena ruta. Mantén porciones para cerrar el dia.";
+  const nutritionContextChip = core?.nutritionToday?.targetBreakdown?.tdee
+    ? `TDEE ${Math.round(core.nutritionToday.targetBreakdown.tdee).toLocaleString("es-PE")} kcal`
+    : null;
 
   const workoutExercises = activeWorkout?.exercises ?? scheduledWorkout?.exercises ?? [];
   const estimatedWorkoutMinutes = Math.max(
@@ -1452,8 +1486,22 @@ const Dashboard = () => {
                           </p>
                           <p className="text-xs text-muted-foreground">Restantes {remainingCalories.toLocaleString("es-PE")} kcal</p>
                         </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-semibold", nutritionStatus.className)}>
+                            {nutritionStatus.label}
+                          </span>
+                          <span className="rounded-full border border-border/60 bg-muted/10 px-2 py-0.5 text-[11px] text-muted-foreground">
+                            Proteina restante: <span className="font-semibold text-foreground">{remainingProteinLabel}</span>
+                          </span>
+                          {nutritionContextChip ? (
+                            <span className="rounded-full border border-border/60 bg-muted/10 px-2 py-0.5 text-[11px] text-muted-foreground">
+                              {nutritionContextChip}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
+                    <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
                     <Button asChild className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
                       <Link to="/nutrition">Registrar comida</Link>
                     </Button>
@@ -1800,8 +1848,22 @@ const Dashboard = () => {
                   <div className="text-xs text-muted-foreground">
                     Perfil: {nutritionSummary?.profileName ?? "Sin perfil"} - Dia {nutritionSummary?.archetypeLabel ?? "Base"}
                   </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-semibold", nutritionStatus.className)}>
+                      {nutritionStatus.label}
+                    </span>
+                    <span className="rounded-full border border-border/60 bg-muted/10 px-2 py-0.5 text-[11px] text-muted-foreground">
+                      Proteina restante: <span className="font-semibold text-foreground">{remainingProteinLabel}</span>
+                    </span>
+                    {nutritionContextChip ? (
+                      <span className="rounded-full border border-border/60 bg-muted/10 px-2 py-0.5 text-[11px] text-muted-foreground">
+                        {nutritionContextChip}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
 
                 <div className="grid gap-2 sm:grid-cols-3">
                   <div className="rounded-xl border border-border/60 bg-muted/10 px-2.5 py-2">
