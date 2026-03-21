@@ -541,6 +541,7 @@ const Dashboard = () => {
     ? (rawAxisMax === weightAxisMin ? rawAxisMax + 10 : rawAxisMax)
     : 10;
   const chartAxis = { left: 10, right: 96, top: 12, bottom: 88 };
+  const chartAxisMidX = (chartAxis.left + chartAxis.right) / 2;
   const selectedRangeEndDate = new Date(`${snapshot.todayKey}T00:00:00`);
   const selectedRangeStartDate = (() => {
     if (weightTrendRange === "all") {
@@ -570,6 +571,28 @@ const Dashboard = () => {
     };
   });
   const weightPath = weightSeriesPoints.map((point) => `${point.x},${point.y}`).join(" ");
+  const weightSmoothPath = (() => {
+    if (weightSeriesPoints.length < 2) return "";
+    if (weightSeriesPoints.length === 2) {
+      const [start, end] = weightSeriesPoints;
+      return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+    }
+    const [firstPoint, ...rest] = weightSeriesPoints;
+    let path = `M ${firstPoint.x} ${firstPoint.y}`;
+    for (let index = 0; index < rest.length - 1; index += 1) {
+      const current = rest[index];
+      const next = rest[index + 1];
+      const controlX = current.x;
+      const controlY = current.y;
+      const endX = (current.x + next.x) / 2;
+      const endY = (current.y + next.y) / 2;
+      path += ` Q ${controlX} ${controlY} ${endX} ${endY}`;
+    }
+    const penultimate = rest[rest.length - 1];
+    path += ` T ${penultimate.x} ${penultimate.y}`;
+    return path;
+  })();
+  const firstWeightPoint = weightSeriesPoints.length > 0 ? weightSeriesPoints[0] : null;
   const latestWeightPoint = weightSeriesPoints.length > 0 ? weightSeriesPoints[weightSeriesPoints.length - 1] : null;
   const hasWeightTrend = weightSeriesPoints.length >= 2;
   const weightMaxLabel = weightSeries.length > 0 ? `${weightAxisMax.toFixed(0)} kg` : "--";
@@ -1078,7 +1101,25 @@ const Dashboard = () => {
                           <line x1={chartAxis.left} y1={chartAxis.top} x2={chartAxis.left} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
                           <line x1={chartAxis.left} y1={chartAxis.bottom} x2={chartAxis.right} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
                           <line x1={chartAxis.left} y1={(chartAxis.top + chartAxis.bottom) / 2} x2={chartAxis.right} y2={(chartAxis.top + chartAxis.bottom) / 2} className="text-muted-foreground/45" stroke="currentColor" strokeDasharray="2 2" strokeWidth="0.9" />
-                          <polyline fill="none" stroke="currentColor" strokeWidth="3.8" className="text-primary" points={weightPath} />
+                          <line x1={chartAxis.left - 1.8} y1={chartAxis.top} x2={chartAxis.left + 1.8} y2={chartAxis.top} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                          <line x1={chartAxis.left - 1.8} y1={(chartAxis.top + chartAxis.bottom) / 2} x2={chartAxis.left + 1.8} y2={(chartAxis.top + chartAxis.bottom) / 2} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                          <line x1={chartAxis.left - 1.8} y1={chartAxis.bottom} x2={chartAxis.left + 1.8} y2={chartAxis.bottom} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                          <line x1={chartAxis.left} y1={chartAxis.bottom - 1.8} x2={chartAxis.left} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                          <line x1={chartAxisMidX} y1={chartAxis.bottom - 1.8} x2={chartAxisMidX} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                          <line x1={chartAxis.right} y1={chartAxis.bottom - 1.8} x2={chartAxis.right} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                          {firstWeightPoint && latestWeightPoint ? (
+                            <line
+                              x1={firstWeightPoint.x}
+                              y1={firstWeightPoint.y}
+                              x2={latestWeightPoint.x}
+                              y2={latestWeightPoint.y}
+                              className="text-primary/45"
+                              stroke="currentColor"
+                              strokeWidth="1.6"
+                              strokeDasharray="2.5 2.5"
+                            />
+                          ) : null}
+                          <path d={weightSmoothPath} fill="none" stroke="currentColor" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" className="text-primary" />
                           {latestWeightPoint ? <circle cx={latestWeightPoint.x} cy={latestWeightPoint.y} r="3.2" className="fill-primary" /> : null}
                         </svg>
                       ) : (
@@ -1294,7 +1335,25 @@ const Dashboard = () => {
                                 <line x1={chartAxis.left} y1={chartAxis.top} x2={chartAxis.left} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
                                 <line x1={chartAxis.left} y1={chartAxis.bottom} x2={chartAxis.right} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
                                 <line x1={chartAxis.left} y1={(chartAxis.top + chartAxis.bottom) / 2} x2={chartAxis.right} y2={(chartAxis.top + chartAxis.bottom) / 2} className="text-muted-foreground/45" stroke="currentColor" strokeDasharray="2 2" strokeWidth="0.9" />
-                                <polyline fill="none" stroke="currentColor" strokeWidth="3.8" className="text-primary" points={weightPath} />
+                                <line x1={chartAxis.left - 1.8} y1={chartAxis.top} x2={chartAxis.left + 1.8} y2={chartAxis.top} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                                <line x1={chartAxis.left - 1.8} y1={(chartAxis.top + chartAxis.bottom) / 2} x2={chartAxis.left + 1.8} y2={(chartAxis.top + chartAxis.bottom) / 2} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                                <line x1={chartAxis.left - 1.8} y1={chartAxis.bottom} x2={chartAxis.left + 1.8} y2={chartAxis.bottom} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                                <line x1={chartAxis.left} y1={chartAxis.bottom - 1.8} x2={chartAxis.left} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                                <line x1={chartAxisMidX} y1={chartAxis.bottom - 1.8} x2={chartAxisMidX} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                                <line x1={chartAxis.right} y1={chartAxis.bottom - 1.8} x2={chartAxis.right} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                                {firstWeightPoint && latestWeightPoint ? (
+                                  <line
+                                    x1={firstWeightPoint.x}
+                                    y1={firstWeightPoint.y}
+                                    x2={latestWeightPoint.x}
+                                    y2={latestWeightPoint.y}
+                                    className="text-primary/45"
+                                    stroke="currentColor"
+                                    strokeWidth="1.6"
+                                    strokeDasharray="2.5 2.5"
+                                  />
+                                ) : null}
+                                <path d={weightSmoothPath} fill="none" stroke="currentColor" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" className="text-primary" />
                                 {latestWeightPoint ? <circle cx={latestWeightPoint.x} cy={latestWeightPoint.y} r="3.2" className="fill-primary" /> : null}
                               </svg>
                             ) : (
