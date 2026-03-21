@@ -534,6 +534,7 @@ const Dashboard = () => {
   const hasWeightTrend = weightSeriesPoints.length >= 2;
   const weightMaxLabel = weightSeries.length > 0 ? `${weightMax.toFixed(1)} kg` : "--";
   const weightMinLabel = weightSeries.length > 0 ? `${weightMin.toFixed(1)} kg` : "--";
+  const weightMidLabel = weightSeries.length > 0 ? `${((weightMax + weightMin) / 2).toFixed(1)} kg` : "--";
   const weightGoalProgress = core?.goalProgress ?? null;
   const weightGoalProgressSafe = weightGoalProgress !== null ? Math.max(0, Math.min(100, Math.round(weightGoalProgress))) : null;
   const weightDelta = core?.latestWeightDeltaKg ?? null;
@@ -999,21 +1000,22 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-border/60 bg-muted/10 p-2.5">
-                <div className="grid h-full grid-cols-[3rem_minmax(0,1fr)] gap-2.5">
+              <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                <div className="grid h-full grid-cols-[3.6rem_minmax(0,1fr)] gap-3">
                   <div className="flex h-full flex-col justify-between text-[10px] text-muted-foreground">
                     <span>{weightMaxLabel}</span>
+                    <span>{weightMidLabel}</span>
                     <span>{weightMinLabel}</span>
                   </div>
                   <div className="min-w-0">
-                    <div className="h-20 md:h-24">
+                    <div className="h-28 md:h-32">
                       {hasWeightTrend ? (
                         <svg viewBox="0 0 100 100" className="h-full w-full">
-                          <line x1={chartAxis.left} y1={chartAxis.top} x2={chartAxis.left} y2={chartAxis.bottom} className="text-border/70" stroke="currentColor" strokeWidth="0.9" />
-                          <line x1={chartAxis.left} y1={chartAxis.bottom} x2={chartAxis.right} y2={chartAxis.bottom} className="text-border/70" stroke="currentColor" strokeWidth="0.9" />
-                          <line x1={chartAxis.left} y1={(chartAxis.top + chartAxis.bottom) / 2} x2={chartAxis.right} y2={(chartAxis.top + chartAxis.bottom) / 2} className="text-border/40" stroke="currentColor" strokeDasharray="2 2" strokeWidth="0.7" />
-                          <polyline fill="none" stroke="currentColor" strokeWidth="3.25" className="text-primary" points={weightPath} />
-                          {latestWeightPoint ? <circle cx={latestWeightPoint.x} cy={latestWeightPoint.y} r="2.8" className="fill-primary" /> : null}
+                          <line x1={chartAxis.left} y1={chartAxis.top} x2={chartAxis.left} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
+                          <line x1={chartAxis.left} y1={chartAxis.bottom} x2={chartAxis.right} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
+                          <line x1={chartAxis.left} y1={(chartAxis.top + chartAxis.bottom) / 2} x2={chartAxis.right} y2={(chartAxis.top + chartAxis.bottom) / 2} className="text-muted-foreground/45" stroke="currentColor" strokeDasharray="2 2" strokeWidth="0.9" />
+                          <polyline fill="none" stroke="currentColor" strokeWidth="3.8" className="text-primary" points={weightPath} />
+                          {latestWeightPoint ? <circle cx={latestWeightPoint.x} cy={latestWeightPoint.y} r="3.2" className="fill-primary" /> : null}
                         </svg>
                       ) : (
                         <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Sin tendencia</div>
@@ -1021,6 +1023,7 @@ const Dashboard = () => {
                     </div>
                     <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
                       <span>7d atras</span>
+                      <span>3d</span>
                       <span>Hoy</span>
                     </div>
                   </div>
@@ -1198,21 +1201,22 @@ const Dashboard = () => {
                         <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
                       </div>
                     </div>
-                    <div className="rounded-xl border border-border/60 bg-muted/10 p-2.5">
-                      <div className="grid h-full grid-cols-[2.4rem_minmax(0,1fr)] gap-2">
+                    <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                      <div className="grid h-full grid-cols-[3.1rem_minmax(0,1fr)] gap-2.5">
                         <div className="flex h-full flex-col justify-between text-[10px] text-muted-foreground">
                           <span>{weightMaxLabel}</span>
+                          <span>{weightMidLabel}</span>
                           <span>{weightMinLabel}</span>
                         </div>
                         <div className="min-w-0">
-                          <div className="h-16">
+                          <div className="h-24">
                             {hasWeightTrend ? (
                               <svg viewBox="0 0 100 100" className="h-full w-full">
-                                <line x1={chartAxis.left} y1={chartAxis.top} x2={chartAxis.left} y2={chartAxis.bottom} className="text-border/70" stroke="currentColor" strokeWidth="0.9" />
-                                <line x1={chartAxis.left} y1={chartAxis.bottom} x2={chartAxis.right} y2={chartAxis.bottom} className="text-border/70" stroke="currentColor" strokeWidth="0.9" />
-                                <line x1={chartAxis.left} y1={(chartAxis.top + chartAxis.bottom) / 2} x2={chartAxis.right} y2={(chartAxis.top + chartAxis.bottom) / 2} className="text-border/40" stroke="currentColor" strokeDasharray="2 2" strokeWidth="0.7" />
-                                <polyline fill="none" stroke="currentColor" strokeWidth="3.25" className="text-primary" points={weightPath} />
-                                {latestWeightPoint ? <circle cx={latestWeightPoint.x} cy={latestWeightPoint.y} r="2.8" className="fill-primary" /> : null}
+                                <line x1={chartAxis.left} y1={chartAxis.top} x2={chartAxis.left} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
+                                <line x1={chartAxis.left} y1={chartAxis.bottom} x2={chartAxis.right} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
+                                <line x1={chartAxis.left} y1={(chartAxis.top + chartAxis.bottom) / 2} x2={chartAxis.right} y2={(chartAxis.top + chartAxis.bottom) / 2} className="text-muted-foreground/45" stroke="currentColor" strokeDasharray="2 2" strokeWidth="0.9" />
+                                <polyline fill="none" stroke="currentColor" strokeWidth="3.8" className="text-primary" points={weightPath} />
+                                {latestWeightPoint ? <circle cx={latestWeightPoint.x} cy={latestWeightPoint.y} r="3.2" className="fill-primary" /> : null}
                               </svg>
                             ) : (
                               <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Sin tendencia</div>
@@ -1220,6 +1224,7 @@ const Dashboard = () => {
                           </div>
                           <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
                             <span>7d atras</span>
+                            <span>3d</span>
                             <span>Hoy</span>
                           </div>
                         </div>
