@@ -542,24 +542,8 @@ const Dashboard = () => {
     : 10;
   const chartAxis = { left: 10, right: 96, top: 12, bottom: 88 };
   const chartAxisMidX = (chartAxis.left + chartAxis.right) / 2;
-  const selectedRangeEndDate = new Date(`${snapshot.todayKey}T00:00:00`);
-  const selectedRangeStartDate = (() => {
-    if (weightTrendRange === "all") {
-      if (weightSeriesRows.length === 0) return new Date(selectedRangeEndDate);
-      return new Date(weightSeriesRows[0].dateMs);
-    }
-    const start = new Date(selectedRangeEndDate);
-    start.setDate(start.getDate() - (weightTrendRange === "7d" ? 6 : 29));
-    return start;
-  })();
-  const rangeStartMs = selectedRangeStartDate.getTime();
-  const rangeEndMs =
-    weightTrendRange === "all" && weightSeriesRows.length > 0
-      ? weightSeriesRows[weightSeriesRows.length - 1].dateMs
-      : selectedRangeEndDate.getTime();
-  const rangeSpanMs = Math.max(rangeEndMs - rangeStartMs, 1);
-  const weightSeriesPoints = weightSeriesRows.map((row) => {
-    const ratioX = Math.max(0, Math.min(1, (row.dateMs - rangeStartMs) / rangeSpanMs));
+  const weightSeriesPoints = weightSeriesRows.map((row, index) => {
+    const ratioX = weightSeriesRows.length > 1 ? index / (weightSeriesRows.length - 1) : 0.5;
     const x = chartAxis.left + ratioX * (chartAxis.right - chartAxis.left);
     const y =
       weightAxisMax === weightAxisMin
@@ -600,11 +584,26 @@ const Dashboard = () => {
   const weightMidLabel = weightSeries.length > 0 ? `${((weightAxisMax + weightAxisMin) / 2).toFixed(0)} kg` : "--";
   const formatAxisDate = (date: Date) =>
     new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short" }).format(date).replace(".", "");
-  const midAxisDate = new Date(rangeStartMs + rangeSpanMs / 2);
+  const selectedRangeEndDate = new Date(`${snapshot.todayKey}T00:00:00`);
+  const selectedRangeStartDate = (() => {
+    if (weightTrendRange === "all") {
+      if (weightSeriesRows.length === 0) return new Date(selectedRangeEndDate);
+      return new Date(weightSeriesRows[0].dateMs);
+    }
+    const start = new Date(selectedRangeEndDate);
+    start.setDate(start.getDate() - (weightTrendRange === "7d" ? 6 : 29));
+    return start;
+  })();
+  const actualStartDate = weightSeriesRows.length > 0 ? new Date(weightSeriesRows[0].dateMs) : selectedRangeStartDate;
+  const actualEndDate = weightSeriesRows.length > 0 ? new Date(weightSeriesRows[weightSeriesRows.length - 1].dateMs) : selectedRangeEndDate;
+  const midAxisDate =
+    weightSeriesRows.length > 2
+      ? new Date(weightSeriesRows[Math.floor((weightSeriesRows.length - 1) / 2)].dateMs)
+      : new Date((actualStartDate.getTime() + actualEndDate.getTime()) / 2);
   const weightRangeAxisLabels = {
-    start: formatAxisDate(selectedRangeStartDate),
+    start: formatAxisDate(actualStartDate),
     mid: formatAxisDate(midAxisDate),
-    end: formatAxisDate(new Date(rangeEndMs)),
+    end: formatAxisDate(actualEndDate),
   };
   const weightGoalProgress = core?.goalProgress ?? null;
   const weightGoalProgressSafe = weightGoalProgress !== null ? Math.max(0, Math.min(100, Math.round(weightGoalProgress))) : null;
