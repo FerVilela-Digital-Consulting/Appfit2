@@ -1457,8 +1457,8 @@ const Dashboard = () => {
               <div className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <DashboardCardShell title="Nutricion" className="h-full" contentClassName={cn(denseCardContentClass, "!space-y-0 flex h-full flex-col")}>
                   <div className="space-y-2.5">
-                    <div className="grid gap-2.5 sm:grid-cols-[96px_1fr]">
-                      <div className="relative mx-auto h-20 w-20">
+                    <div className="grid gap-2.5 sm:grid-cols-[116px_1fr]">
+                      <div className="relative mx-auto h-28 w-28">
                         <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
                           <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
                           <circle
@@ -1474,8 +1474,8 @@ const Dashboard = () => {
                           />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                          <p className="text-[11px] text-muted-foreground">Calorias</p>
-                          <p className="text-lg font-black">{caloriesProgress}%</p>
+                          <p className="text-xs text-muted-foreground">Calorias</p>
+                          <p className="text-2xl font-black">{caloriesProgress}%</p>
                         </div>
                       </div>
                       <div className="space-y-1.5">
@@ -1504,7 +1504,7 @@ const Dashboard = () => {
                     </div>
                     <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
                   </div>
-                  <div className="mt-2 space-y-2">
+                  <div className="mt-2 flex flex-1 flex-col gap-2">
                     <div className="grid gap-1.5 sm:grid-cols-3">
                       <div className="rounded-xl border border-border/60 bg-muted/10 px-2 py-1.5">
                         <div className="flex items-center justify-between text-xs">
@@ -1540,7 +1540,7 @@ const Dashboard = () => {
                     <div className="rounded-xl border border-border/60 bg-background/35 px-3 py-1.5 text-xs text-muted-foreground">
                       Restan <span className="font-semibold text-foreground">{remainingCalories.toLocaleString("es-PE")} kcal</span> para cumplir tu objetivo de hoy.
                     </div>
-                    <Button asChild className="h-9 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+                    <Button asChild className="mt-auto h-9 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
                       <Link to="/nutrition">Registrar comida</Link>
                     </Button>
                   </div>
