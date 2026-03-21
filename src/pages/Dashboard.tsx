@@ -1813,7 +1813,7 @@ const Dashboard = () => {
           ) : null}
 
           <DashboardCardShell title="Nutricion" className="h-full" contentClassName={denseCardContentClass}>
-            <div className="flex h-full flex-col justify-between gap-4">
+            <div className="flex h-full flex-col gap-4">
               <div className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-[130px_1fr]">
                 <div className="relative mx-auto h-28 w-28">
