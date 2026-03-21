@@ -540,28 +540,55 @@ const Dashboard = () => {
   const weightAxisMax = Number.isFinite(rawAxisMax)
     ? (rawAxisMax === weightAxisMin ? rawAxisMax + 10 : rawAxisMax)
     : 10;
-  const chartAxis = { left: 10, right: 96, top: 12, bottom: 88 };
+  const chartViewBox = { width: 180, height: 100 };
+  const chartAxis = { left: 14, right: 176, top: 12, bottom: 88 };
   const chartAxisMidX = (chartAxis.left + chartAxis.right) / 2;
-  const weightSeriesPoints = weightSeriesRows.map((row, index) => {
-    const ratioX = weightSeriesRows.length > 1 ? index / (weightSeriesRows.length - 1) : 0.5;
-    const x = chartAxis.left + ratioX * (chartAxis.right - chartAxis.left);
+  const selectedRangeEndDate = new Date(`${snapshot.todayKey}T00:00:00`);
+  const selectedRangeStartDate = (() => {
+    if (weightTrendRange === "all") {
+      if (weightSeriesRows.length === 0) return new Date(selectedRangeEndDate);
+      return new Date(weightSeriesRows[0].dateMs);
+    }
+    const start = new Date(selectedRangeEndDate);
+    start.setDate(start.getDate() - (weightTrendRange === "7d" ? 6 : 29));
+    return start;
+  })();
+  const rangeStartMs = selectedRangeStartDate.getTime();
+  const rangeEndMs = selectedRangeEndDate.getTime();
+  const rangeSpanMs = Math.max(rangeEndMs - rangeStartMs, 1);
+  const mapXForDate = (dateMs: number) => {
+    const ratioX = Math.max(0, Math.min(1, (dateMs - rangeStartMs) / rangeSpanMs));
+    return chartAxis.left + ratioX * (chartAxis.right - chartAxis.left);
+  };
+  const mapYForWeight = (weight: number) => {
     const y =
       weightAxisMax === weightAxisMin
         ? (chartAxis.top + chartAxis.bottom) / 2
-        : chartAxis.bottom - ((row.weight - weightAxisMin) / Math.max(weightAxisMax - weightAxisMin, 1)) * (chartAxis.bottom - chartAxis.top);
-    return {
-      x,
-      y: Math.max(chartAxis.top, Math.min(chartAxis.bottom, y)),
-    };
-  });
-  const weightPath = weightSeriesPoints.map((point) => `${point.x},${point.y}`).join(" ");
+        : chartAxis.bottom - ((weight - weightAxisMin) / Math.max(weightAxisMax - weightAxisMin, 1)) * (chartAxis.bottom - chartAxis.top);
+    return Math.max(chartAxis.top, Math.min(chartAxis.bottom, y));
+  };
+  const realWeightPoints = weightSeriesRows.map((row) => ({
+    x: mapXForDate(row.dateMs),
+    y: mapYForWeight(row.weight),
+  }));
+  const leadingAnchorPoint =
+    weightTrendRange !== "all" && weightSeriesRows.length > 0 && weightSeriesRows[0].dateMs > rangeStartMs
+      ? { x: mapXForDate(rangeStartMs), y: mapYForWeight(weightSeriesRows[0].weight) }
+      : null;
+  const trailingAnchorPoint =
+    weightTrendRange !== "all" && weightSeriesRows.length > 0 && weightSeriesRows[weightSeriesRows.length - 1].dateMs < rangeEndMs
+      ? {
+          x: mapXForDate(rangeEndMs),
+          y: mapYForWeight(weightSeriesRows[weightSeriesRows.length - 1].weight),
+        }
+      : null;
   const weightSmoothPath = (() => {
-    if (weightSeriesPoints.length < 2) return "";
-    if (weightSeriesPoints.length === 2) {
-      const [start, end] = weightSeriesPoints;
+    if (realWeightPoints.length < 2) return "";
+    if (realWeightPoints.length === 2) {
+      const [start, end] = realWeightPoints;
       return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
     }
-    const [firstPoint, ...rest] = weightSeriesPoints;
+    const [firstPoint, ...rest] = realWeightPoints;
     let path = `M ${firstPoint.x} ${firstPoint.y}`;
     for (let index = 0; index < rest.length - 1; index += 1) {
       const current = rest[index];
@@ -576,30 +603,18 @@ const Dashboard = () => {
     path += ` T ${penultimate.x} ${penultimate.y}`;
     return path;
   })();
-  const firstWeightPoint = weightSeriesPoints.length > 0 ? weightSeriesPoints[0] : null;
-  const latestWeightPoint = weightSeriesPoints.length > 0 ? weightSeriesPoints[weightSeriesPoints.length - 1] : null;
-  const hasWeightTrend = weightSeriesPoints.length >= 2;
+  const firstWeightPoint = realWeightPoints.length > 0 ? realWeightPoints[0] : null;
+  const latestRealWeightRow = weightSeriesRows.length > 0 ? weightSeriesRows[weightSeriesRows.length - 1] : null;
+  const latestWeightPoint = latestRealWeightRow ? { x: mapXForDate(latestRealWeightRow.dateMs), y: mapYForWeight(latestRealWeightRow.weight) } : null;
+  const hasWeightTrend = realWeightPoints.length >= 2;
   const weightMaxLabel = weightSeries.length > 0 ? `${weightAxisMax.toFixed(0)} kg` : "--";
   const weightMinLabel = weightSeries.length > 0 ? `${weightAxisMin.toFixed(0)} kg` : "--";
   const weightMidLabel = weightSeries.length > 0 ? `${((weightAxisMax + weightAxisMin) / 2).toFixed(0)} kg` : "--";
   const formatAxisDate = (date: Date) =>
     new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short" }).format(date).replace(".", "");
-  const selectedRangeEndDate = new Date(`${snapshot.todayKey}T00:00:00`);
-  const selectedRangeStartDate = (() => {
-    if (weightTrendRange === "all") {
-      if (weightSeriesRows.length === 0) return new Date(selectedRangeEndDate);
-      return new Date(weightSeriesRows[0].dateMs);
-    }
-    const start = new Date(selectedRangeEndDate);
-    start.setDate(start.getDate() - (weightTrendRange === "7d" ? 6 : 29));
-    return start;
-  })();
-  const actualStartDate = weightSeriesRows.length > 0 ? new Date(weightSeriesRows[0].dateMs) : selectedRangeStartDate;
-  const actualEndDate = weightSeriesRows.length > 0 ? new Date(weightSeriesRows[weightSeriesRows.length - 1].dateMs) : selectedRangeEndDate;
-  const midAxisDate =
-    weightSeriesRows.length > 2
-      ? new Date(weightSeriesRows[Math.floor((weightSeriesRows.length - 1) / 2)].dateMs)
-      : new Date((actualStartDate.getTime() + actualEndDate.getTime()) / 2);
+  const actualStartDate = selectedRangeStartDate;
+  const actualEndDate = selectedRangeEndDate;
+  const midAxisDate = new Date((actualStartDate.getTime() + actualEndDate.getTime()) / 2);
   const weightRangeAxisLabels = {
     start: formatAxisDate(actualStartDate),
     mid: formatAxisDate(midAxisDate),
@@ -1096,7 +1111,7 @@ const Dashboard = () => {
                   <div className="min-w-0">
                     <div className="h-28 md:h-32">
                       {hasWeightTrend ? (
-                        <svg viewBox="0 0 100 100" className="h-full w-full">
+                        <svg viewBox={`0 0 ${chartViewBox.width} ${chartViewBox.height}`} className="h-full w-full">
                           <line x1={chartAxis.left} y1={chartAxis.top} x2={chartAxis.left} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
                           <line x1={chartAxis.left} y1={chartAxis.bottom} x2={chartAxis.right} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
                           <line x1={chartAxis.left} y1={(chartAxis.top + chartAxis.bottom) / 2} x2={chartAxis.right} y2={(chartAxis.top + chartAxis.bottom) / 2} className="text-muted-foreground/45" stroke="currentColor" strokeDasharray="2 2" strokeWidth="0.9" />
@@ -1106,6 +1121,19 @@ const Dashboard = () => {
                           <line x1={chartAxis.left} y1={chartAxis.bottom - 1.8} x2={chartAxis.left} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
                           <line x1={chartAxisMidX} y1={chartAxis.bottom - 1.8} x2={chartAxisMidX} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
                           <line x1={chartAxis.right} y1={chartAxis.bottom - 1.8} x2={chartAxis.right} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                          {leadingAnchorPoint && firstWeightPoint ? (
+                            <line
+                              x1={leadingAnchorPoint.x}
+                              y1={leadingAnchorPoint.y}
+                              x2={firstWeightPoint.x}
+                              y2={firstWeightPoint.y}
+                              className="text-primary/55"
+                              stroke="currentColor"
+                              strokeWidth="2.1"
+                              strokeDasharray="3 2"
+                              strokeLinecap="round"
+                            />
+                          ) : null}
                           {firstWeightPoint && latestWeightPoint ? (
                             <line
                               x1={firstWeightPoint.x}
@@ -1119,6 +1147,19 @@ const Dashboard = () => {
                             />
                           ) : null}
                           <path d={weightSmoothPath} fill="none" stroke="currentColor" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" className="text-primary" />
+                          {trailingAnchorPoint && latestWeightPoint ? (
+                            <line
+                              x1={latestWeightPoint.x}
+                              y1={latestWeightPoint.y}
+                              x2={trailingAnchorPoint.x}
+                              y2={trailingAnchorPoint.y}
+                              className="text-primary/55"
+                              stroke="currentColor"
+                              strokeWidth="2.1"
+                              strokeDasharray="3 2"
+                              strokeLinecap="round"
+                            />
+                          ) : null}
                           {latestWeightPoint ? <circle cx={latestWeightPoint.x} cy={latestWeightPoint.y} r="3.2" className="fill-primary" /> : null}
                         </svg>
                       ) : (
@@ -1330,7 +1371,7 @@ const Dashboard = () => {
                         <div className="min-w-0">
                           <div className="h-24">
                             {hasWeightTrend ? (
-                              <svg viewBox="0 0 100 100" className="h-full w-full">
+                              <svg viewBox={`0 0 ${chartViewBox.width} ${chartViewBox.height}`} className="h-full w-full">
                                 <line x1={chartAxis.left} y1={chartAxis.top} x2={chartAxis.left} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
                                 <line x1={chartAxis.left} y1={chartAxis.bottom} x2={chartAxis.right} y2={chartAxis.bottom} className="text-muted-foreground/70" stroke="currentColor" strokeWidth="1.1" />
                                 <line x1={chartAxis.left} y1={(chartAxis.top + chartAxis.bottom) / 2} x2={chartAxis.right} y2={(chartAxis.top + chartAxis.bottom) / 2} className="text-muted-foreground/45" stroke="currentColor" strokeDasharray="2 2" strokeWidth="0.9" />
@@ -1340,6 +1381,19 @@ const Dashboard = () => {
                                 <line x1={chartAxis.left} y1={chartAxis.bottom - 1.8} x2={chartAxis.left} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
                                 <line x1={chartAxisMidX} y1={chartAxis.bottom - 1.8} x2={chartAxisMidX} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
                                 <line x1={chartAxis.right} y1={chartAxis.bottom - 1.8} x2={chartAxis.right} y2={chartAxis.bottom + 1.8} className="text-muted-foreground/75" stroke="currentColor" strokeWidth="1" />
+                                {leadingAnchorPoint && firstWeightPoint ? (
+                                  <line
+                                    x1={leadingAnchorPoint.x}
+                                    y1={leadingAnchorPoint.y}
+                                    x2={firstWeightPoint.x}
+                                    y2={firstWeightPoint.y}
+                                    className="text-primary/55"
+                                    stroke="currentColor"
+                                    strokeWidth="2.1"
+                                    strokeDasharray="3 2"
+                                    strokeLinecap="round"
+                                  />
+                                ) : null}
                                 {firstWeightPoint && latestWeightPoint ? (
                                   <line
                                     x1={firstWeightPoint.x}
@@ -1353,6 +1407,19 @@ const Dashboard = () => {
                                   />
                                 ) : null}
                                 <path d={weightSmoothPath} fill="none" stroke="currentColor" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" className="text-primary" />
+                                {trailingAnchorPoint && latestWeightPoint ? (
+                                  <line
+                                    x1={latestWeightPoint.x}
+                                    y1={latestWeightPoint.y}
+                                    x2={trailingAnchorPoint.x}
+                                    y2={trailingAnchorPoint.y}
+                                    className="text-primary/55"
+                                    stroke="currentColor"
+                                    strokeWidth="2.1"
+                                    strokeDasharray="3 2"
+                                    strokeLinecap="round"
+                                  />
+                                ) : null}
                                 {latestWeightPoint ? <circle cx={latestWeightPoint.x} cy={latestWeightPoint.y} r="3.2" className="fill-primary" /> : null}
                               </svg>
                             ) : (
