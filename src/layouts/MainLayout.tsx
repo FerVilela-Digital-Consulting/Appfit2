@@ -7,10 +7,14 @@ import GuestWarningBanner from "@/components/GuestWarningBanner";
 import { useAuth } from "@/context/AuthContext";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import MobileConnectionBanner from "@/components/MobileConnectionBanner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 const MainLayout = () => {
   const { isGuest } = useAuth();
   const location = useLocation();
+  const isMobile = useIsMobile();
+  const isMobileToday = isMobile && location.pathname.startsWith("/today");
   const mainRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -28,6 +32,7 @@ const MainLayout = () => {
   }, []);
 
   useEffect(() => {
+    if (isMobileToday) return;
     const main = mainRef.current;
     if (!main) return;
 
@@ -53,7 +58,7 @@ const MainLayout = () => {
     };
 
     requestAnimationFrame(scrollToTarget);
-  }, [location.hash, location.pathname]);
+  }, [isMobileToday, location.hash, location.pathname]);
 
   return (
     <div className="app-shell flex h-[100dvh] overflow-hidden bg-background md:h-screen">
@@ -67,7 +72,15 @@ const MainLayout = () => {
           {isGuest && <GuestWarningBanner />}
           {!isGuest && <NotificationBanner />}
 
-          <main ref={mainRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-[10px] pt-2 pb-28 md:px-8 md:pt-3 md:pb-8">
+          <main
+            ref={mainRef}
+            className={cn(
+              "min-h-0 flex-1 overscroll-contain px-[10px] pt-2 md:px-8 md:pt-3 md:pb-8",
+              isMobileToday
+                ? "overflow-hidden pb-[calc(4.25rem+env(safe-area-inset-bottom)+0.25rem)]"
+                : "overflow-y-auto pb-28",
+            )}
+          >
           <Outlet />
         </main>
         <MobileBottomNav />
