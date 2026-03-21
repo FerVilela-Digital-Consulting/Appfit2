@@ -85,6 +85,7 @@ type DailyMetricCardProps = {
   actionLabel: string;
   onActionClick?: () => void;
   comingSoon?: boolean;
+  className?: string;
 };
 
 const DashboardMetricCard = ({
@@ -98,8 +99,9 @@ const DashboardMetricCard = ({
   actionLabel,
   onActionClick,
   comingSoon = false,
+  className,
 }: DailyMetricCardProps) => (
-  <Card className="group rounded-3xl border-border/60 bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+  <Card className={cn("group rounded-3xl border-border/60 bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md", className)}>
     <CardContent className="space-y-3 !p-4 md:!p-4">
       <div className="flex min-h-7 items-center justify-between gap-2 sm:min-h-8">
         <div className="flex items-center gap-2">
@@ -842,6 +844,7 @@ const Dashboard = () => {
     const maxIndex = Math.max(0, container.childElementCount - 1);
     setMobileCarouselIndex(Math.max(0, Math.min(maxIndex, nextIndex)));
   };
+  const mobileSlidesCount = 5;
 
   const renderWeightTrendChart = (heightClassName: string) => (
     <div className="rounded-xl border border-border/60 bg-muted/10 p-2.5">
@@ -1250,9 +1253,11 @@ const Dashboard = () => {
               onScroll={handleMobileCarouselScroll}
               className="hide-scrollbar flex min-h-0 flex-1 snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overflow-y-hidden px-[6%] pb-1"
             >
-              <div className="min-w-[88%] snap-center space-y-3 overflow-hidden">
+              <div className="h-full w-[88%] shrink-0 snap-center overflow-hidden">
+                <div className="flex h-full flex-col gap-3">
                 <DashboardCardShell
                   title="Que hacer hoy"
+                  className="flex-1"
                   contentClassName={denseActionContentClass}
                 >
                   <div className="space-y-3">
@@ -1300,10 +1305,11 @@ const Dashboard = () => {
                     Abrir nota
                   </Button>
                 </DashboardCardShell>
+                </div>
               </div>
 
-              <div className="min-w-[88%] snap-center overflow-hidden">
-                <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass}>
+              <div className="h-full w-[88%] shrink-0 snap-center overflow-hidden">
+                <DashboardCardShell title="Progreso corporal" className="h-full" contentClassName={denseCardContentClass}>
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2">
                     <div className="space-y-1">
@@ -1383,8 +1389,8 @@ const Dashboard = () => {
                 </DashboardCardShell>
               </div>
 
-              <div className="min-w-[88%] snap-center self-start overflow-hidden">
-                <DashboardCardShell title="Entrenamiento" className="xl:col-span-2" contentClassName={denseCardContentClass}>
+              <div className="h-full w-[88%] shrink-0 snap-center overflow-hidden">
+                <DashboardCardShell title="Entrenamiento" className="h-full xl:col-span-2" contentClassName={denseCardContentClass}>
                   <div className="space-y-3">
                     {renderTrainingRecoveryPanel()}
                     <div className="flex flex-wrap items-start justify-between gap-2">
@@ -1414,7 +1420,7 @@ const Dashboard = () => {
                 </DashboardCardShell>
               </div>
 
-              <div className="min-w-[88%] snap-center overflow-hidden">
+              <div className="h-full w-[88%] shrink-0 snap-center overflow-hidden">
                 <DashboardCardShell title="Nutricion" className="h-full" contentClassName={denseCardContentClass}>
                   <div className="space-y-3">
                     <div className="grid gap-3 sm:grid-cols-[110px_1fr]">
@@ -1455,14 +1461,64 @@ const Dashboard = () => {
                 </DashboardCardShell>
               </div>
 
-              <div className="min-w-[88%] snap-center overflow-hidden"><section id="water" className="min-w-0"><DashboardMetricCard title="Agua" icon={Droplets} valueLabel={`${(core?.waterTodayMl ?? 0).toLocaleString("es-PE")} ml`} goalLabel={`${(core?.waterGoalMl ?? 2000).toLocaleString("es-PE")} ml`} progressPct={hydrationProgress} accentClassName="bg-sky-500/90 text-sky-100" actionHref="/water" actionLabel="+" onActionClick={() => setIsWaterModalOpen(true)} /></section></div>
-              <div className="min-w-[88%] snap-center overflow-hidden"><section id="nutrition" className="min-w-0"><DashboardMetricCard title="Calorias" icon={Flame} valueLabel={`${consumedCalories.toLocaleString("es-PE")} kcal`} goalLabel={`${targetCalories.toLocaleString("es-PE")} kcal`} progressPct={caloriesProgress} accentClassName="bg-amber-500/90 text-amber-100" actionHref="/nutrition" actionLabel="+" /></section></div>
-              <div className="min-w-[88%] snap-center overflow-hidden"><section id="sleep" className="min-w-0"><DashboardMetricCard title="Sueno" icon={Moon} valueLabel={`${((core?.sleepDay?.total_minutes ?? 0) / 60).toFixed(1)} h`} goalLabel={`${((core?.sleepGoalMinutes ?? 480) / 60).toFixed(1)} h`} progressPct={sleepProgress} accentClassName="bg-violet-500/90 text-violet-100" actionHref="/sleep" actionLabel="+" onActionClick={() => setIsSleepModalOpen(true)} /></section></div>
-              <div className="min-w-[88%] snap-center overflow-hidden"><DashboardMetricCard title="Pasos" icon={Footprints} valueLabel="Proximamente..." goalLabel="8,000 pasos" progressPct={0} accentClassName="bg-emerald-500/90 text-emerald-100" actionHref="/calendar" actionLabel="+" /></div>
+              <div className="h-full w-[88%] shrink-0 snap-center overflow-hidden">
+                <div className="flex h-full flex-col gap-2.5">
+                  <section id="water" className="min-w-0">
+                    <DashboardMetricCard
+                      title="Agua"
+                      icon={Droplets}
+                      valueLabel={`${(core?.waterTodayMl ?? 0).toLocaleString("es-PE")} ml`}
+                      goalLabel={`${(core?.waterGoalMl ?? 2000).toLocaleString("es-PE")} ml`}
+                      progressPct={hydrationProgress}
+                      accentClassName="bg-sky-500/90 text-sky-100"
+                      actionHref="/water"
+                      actionLabel="+"
+                      onActionClick={() => setIsWaterModalOpen(true)}
+                    />
+                  </section>
+                  <section id="nutrition-mini" className="min-w-0">
+                    <DashboardMetricCard
+                      title="Calorias"
+                      icon={Flame}
+                      valueLabel={`${consumedCalories.toLocaleString("es-PE")} kcal`}
+                      goalLabel={`${targetCalories.toLocaleString("es-PE")} kcal`}
+                      progressPct={caloriesProgress}
+                      accentClassName="bg-amber-500/90 text-amber-100"
+                      actionHref="/nutrition"
+                      actionLabel="+"
+                    />
+                  </section>
+                  <section id="sleep" className="min-w-0">
+                    <DashboardMetricCard
+                      title="Sueno"
+                      icon={Moon}
+                      valueLabel={`${((core?.sleepDay?.total_minutes ?? 0) / 60).toFixed(1)} h`}
+                      goalLabel={`${((core?.sleepGoalMinutes ?? 480) / 60).toFixed(1)} h`}
+                      progressPct={sleepProgress}
+                      accentClassName="bg-violet-500/90 text-violet-100"
+                      actionHref="/sleep"
+                      actionLabel="+"
+                      onActionClick={() => setIsSleepModalOpen(true)}
+                    />
+                  </section>
+                  <section id="steps" className="min-w-0">
+                    <DashboardMetricCard
+                      title="Pasos"
+                      icon={Footprints}
+                      valueLabel="Proximamente..."
+                      goalLabel="8,000 pasos"
+                      progressPct={0}
+                      accentClassName="bg-emerald-500/90 text-emerald-100"
+                      actionHref="/calendar"
+                      actionLabel="+"
+                    />
+                  </section>
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-center gap-1.5">
-              {Array.from({ length: 8 }).map((_, index) => (
+              {Array.from({ length: mobileSlidesCount }).map((_, index) => (
                 <span
                   key={`mobile-slide-dot-${index}`}
                   className={cn(
@@ -1823,4 +1879,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
 
