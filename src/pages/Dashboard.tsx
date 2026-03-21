@@ -1484,7 +1484,6 @@ const Dashboard = () => {
                           <p className="text-lg font-bold">
                             {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
                           </p>
-                          <p className="text-xs text-muted-foreground">Restantes {remainingCalories.toLocaleString("es-PE")} kcal</p>
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-semibold", nutritionStatus.className)}>
@@ -1880,7 +1879,6 @@ const Dashboard = () => {
                     <p className="text-lg font-bold">
                       {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
                     </p>
-                    <p className="text-xs text-muted-foreground">Restantes {remainingCalories.toLocaleString("es-PE")} kcal</p>
                   </div>
                   <div className="text-xs text-muted-foreground">
                     Perfil: {nutritionSummary?.profileName ?? "Sin perfil"} - Dia {nutritionSummary?.archetypeLabel ?? "Base"}
