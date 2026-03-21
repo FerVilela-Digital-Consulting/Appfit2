@@ -762,11 +762,25 @@ const Dashboard = () => {
     const slideWidth = firstSlide.offsetWidth + 12;
     if (!slideWidth) return;
     const nextIndex = Math.round(container.scrollLeft / slideWidth);
-    setMobileCarouselIndex(Math.max(0, Math.min(5, nextIndex)));
+    const maxIndex = Math.max(0, container.childElementCount - 1);
+    setMobileCarouselIndex(Math.max(0, Math.min(maxIndex, nextIndex)));
   };
 
+  useEffect(() => {
+    if (!isMobile || !USE_MOBILE_HORIZONTAL_SCROLL) return;
+    const container = mobileCarouselRef.current;
+    if (!container) return;
+    requestAnimationFrame(() => {
+      container.scrollTo({ left: 0, behavior: "auto" });
+      setMobileCarouselIndex(0);
+    });
+  }, [isMobile, core?.todayKey]);
+
   return (
-    <div className="app-shell min-h-0 w-full px-4 pb-5 pt-1 text-foreground sm:px-6 sm:pb-8 sm:pt-2">
+    <div className={cn(
+      "app-shell min-h-0 w-full px-4 pb-5 pt-1 text-foreground sm:px-6 sm:pb-8 sm:pt-2",
+      isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "pb-0",
+    )}>
       <div className="mx-auto flex max-w-[1540px] flex-col gap-5">
         <AppPageIntro
           className="order-[-3]"
@@ -1070,7 +1084,7 @@ const Dashboard = () => {
               onScroll={handleMobileCarouselScroll}
               className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden px-1 pb-1"
             >
-              <div className="min-w-[88%] snap-start">
+              <div className="min-w-[88%] snap-start space-y-3">
                 <DashboardCardShell
                   title="Que hacer hoy"
                   contentClassName={denseActionContentClass}
@@ -1120,18 +1134,13 @@ const Dashboard = () => {
                     ) : null}
                   </div>
                 </DashboardCardShell>
+                <TacticalNotesCard
+                  loading={snapshot.coreLoading}
+                  todayNote={core?.noteToday ?? null}
+                  latestNote={core?.noteLatest ?? null}
+                  onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
+                />
               </div>
-
-              {isWidgetVisible("notes") ? (
-                <div className="min-w-[88%] snap-start">
-                  <TacticalNotesCard
-                    loading={snapshot.coreLoading}
-                    todayNote={core?.noteToday ?? null}
-                    latestNote={core?.noteLatest ?? null}
-                    onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
-                  />
-                </div>
-              ) : null}
 
               <div className="min-w-[88%] snap-start">
                 <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass}>
@@ -1254,7 +1263,7 @@ const Dashboard = () => {
             </div>
 
             <div className="flex items-center justify-center gap-1.5">
-              {Array.from({ length: isWidgetVisible("notes") ? 9 : 8 }).map((_, index) => (
+              {Array.from({ length: 8 }).map((_, index) => (
                 <span
                   key={`mobile-slide-dot-${index}`}
                   className={cn(
