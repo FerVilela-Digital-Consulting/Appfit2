@@ -163,6 +163,11 @@ const formatDurationLabel = (minutes: number) => {
 
 const SHOW_CALENDAR_CARD_IN_DASHBOARD = false;
 const USE_MOBILE_HORIZONTAL_SCROLL = true;
+const WEIGHT_RANGE_OPTIONS = [
+  { key: "7d", label: "7D" },
+  { key: "30d", label: "30D" },
+  { key: "all", label: "Todo" },
+] as const;
 const DASHBOARD_MODULE_ROUTE_FALLBACK: Record<string, string> = {
   "#water": "/water",
   "#sleep": "/sleep",
@@ -184,6 +189,7 @@ const Dashboard = () => {
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [isTrainingSummaryOpen, setIsTrainingSummaryOpen] = useState(false);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [weightTrendRange, setWeightTrendRange] = useState<(typeof WEIGHT_RANGE_OPTIONS)[number]["key"]>("7d");
   const [selectedTrainingWorkoutId, setSelectedTrainingWorkoutId] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [isSecondaryExpanded, setIsSecondaryExpanded] = useState(false);
@@ -510,8 +516,16 @@ const Dashboard = () => {
   );
   const exerciseCountLabel = workoutExercises.length > 0 ? `${workoutExercises.length} ejercicios` : "Sin ejercicios configurados";
 
-  const weightSeries = (core?.weightSnapshot?.entries ?? [])
-    .slice(-7)
+  const weightRangeEntries = (() => {
+    const entries = core?.weightSnapshot?.entries ?? [];
+    if (weightTrendRange === "all") return entries;
+    const endDate = new Date(`${snapshot.todayKey}T00:00:00`);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - (weightTrendRange === "7d" ? 6 : 29));
+    const startKey = startDate.toISOString().slice(0, 10);
+    return entries.filter((entry) => entry.measured_at >= startKey && entry.measured_at <= snapshot.todayKey);
+  })();
+  const weightSeries = weightRangeEntries
     .map((row) => Number(row.weight_kg))
     .filter((value) => Number.isFinite(value));
   const weightMin = weightSeries.length > 0 ? Math.min(...weightSeries) : 0;
@@ -535,6 +549,12 @@ const Dashboard = () => {
   const weightMaxLabel = weightSeries.length > 0 ? `${weightMax.toFixed(1)} kg` : "--";
   const weightMinLabel = weightSeries.length > 0 ? `${weightMin.toFixed(1)} kg` : "--";
   const weightMidLabel = weightSeries.length > 0 ? `${((weightMax + weightMin) / 2).toFixed(1)} kg` : "--";
+  const weightRangeAxisLabels =
+    weightTrendRange === "7d"
+      ? { start: "7d atras", mid: "3d", end: "Hoy" }
+      : weightTrendRange === "30d"
+        ? { start: "30d atras", mid: "15d", end: "Hoy" }
+        : { start: "Inicio", mid: "Mitad", end: "Hoy" };
   const weightGoalProgress = core?.goalProgress ?? null;
   const weightGoalProgressSafe = weightGoalProgress !== null ? Math.max(0, Math.min(100, Math.round(weightGoalProgress))) : null;
   const weightDelta = core?.latestWeightDeltaKg ?? null;
@@ -989,6 +1009,22 @@ const Dashboard = () => {
                 </p>
               </div>
 
+              <div className="inline-flex items-center rounded-lg border border-border/60 bg-muted/10 p-0.5">
+                {WEIGHT_RANGE_OPTIONS.map((option) => (
+                  <button
+                    key={`desktop-weight-range-${option.key}`}
+                    type="button"
+                    onClick={() => setWeightTrendRange(option.key)}
+                    className={cn(
+                      "rounded-md px-2 py-1 text-[11px] font-semibold transition-colors",
+                      weightTrendRange === option.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
               <div className="flex items-end justify-between gap-3">
                 <div>
                   <p className="text-xs text-muted-foreground">Peso actual</p>
@@ -1022,9 +1058,9 @@ const Dashboard = () => {
                       )}
                     </div>
                     <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
-                      <span>7d atras</span>
-                      <span>3d</span>
-                      <span>Hoy</span>
+                      <span>{weightRangeAxisLabels.start}</span>
+                      <span>{weightRangeAxisLabels.mid}</span>
+                      <span>{weightRangeAxisLabels.end}</span>
                     </div>
                   </div>
                 </div>
@@ -1191,6 +1227,21 @@ const Dashboard = () => {
                       {weightStatus.label}
                     </p>
                     </div>
+                    <div className="inline-flex items-center rounded-lg border border-border/60 bg-muted/10 p-0.5">
+                      {WEIGHT_RANGE_OPTIONS.map((option) => (
+                        <button
+                          key={`mobile-weight-range-${option.key}`}
+                          type="button"
+                          onClick={() => setWeightTrendRange(option.key)}
+                          className={cn(
+                            "rounded-md px-2 py-1 text-[11px] font-semibold transition-colors",
+                            weightTrendRange === option.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
                     <div className="flex items-end justify-between gap-3">
                       <div>
                         <p className="text-xs text-muted-foreground">Peso actual</p>
@@ -1223,9 +1274,9 @@ const Dashboard = () => {
                             )}
                           </div>
                           <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
-                            <span>7d atras</span>
-                            <span>3d</span>
-                            <span>Hoy</span>
+                            <span>{weightRangeAxisLabels.start}</span>
+                            <span>{weightRangeAxisLabels.mid}</span>
+                            <span>{weightRangeAxisLabels.end}</span>
                           </div>
                         </div>
                       </div>
