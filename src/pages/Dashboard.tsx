@@ -19,7 +19,7 @@ import {
   TimerReset,
   UtensilsCrossed,
 } from "lucide-react";
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -870,6 +870,24 @@ const Dashboard = () => {
                 axisLine={{ stroke: "hsl(var(--border) / 0.7)" }}
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                 width={46}
+              />
+              <Tooltip
+                cursor={{ stroke: "hsl(var(--primary) / 0.35)", strokeDasharray: "4 4" }}
+                content={({ active, payload, label }) => {
+                  if (!active || !payload || payload.length === 0) return null;
+                  const row = payload[0]?.payload as { x?: number; y?: number; synthetic?: boolean } | undefined;
+                  if (!row || row.synthetic) return null;
+                  const dateLabel = formatAxisDate(new Date(Number(label)));
+                  const weightLabel = Number.isFinite(row.y) ? `${Number(row.y).toFixed(1)} kg` : "--";
+                  return (
+                    <div className="rounded-lg border border-border/70 bg-card/95 px-3 py-2 text-xs shadow-lg backdrop-blur">
+                      <p className="font-semibold text-foreground">{dateLabel}</p>
+                      <p className="mt-1 text-muted-foreground">
+                        Peso: <span className="font-semibold text-foreground">{weightLabel}</span>
+                      </p>
+                    </div>
+                  );
+                }}
               />
               {firstRealWeightPoint && lastRealWeightPoint ? (
                 <ReferenceLine
