@@ -782,9 +782,9 @@ const Dashboard = () => {
       "app-shell min-h-0 w-full px-4 pb-5 pt-1 text-foreground sm:px-6 sm:pb-8 sm:pt-2",
       isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "h-full overflow-hidden pb-0",
     )}>
-      <div className={cn("mx-auto flex max-w-[1540px] flex-col gap-5", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "h-full min-h-0 gap-3")}>
+      <div className={cn("mx-auto flex max-w-[1540px] flex-col gap-5", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "h-full min-h-0 gap-2")}>
         <AppPageIntro
-          className={cn("order-[-3]", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "shrink-0")}
+          className={cn("order-[-3]", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "shrink-0 gap-2")}
           eyebrow="Dashboard / Centro operativo"
           title={
             <>
@@ -874,7 +874,7 @@ const Dashboard = () => {
             </div>
           }
         />
-        <section aria-label="Dia de la semana" className={cn("order-[-3] space-y-2 px-1 md:hidden", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "shrink-0")}>
+        <section aria-label="Dia de la semana" className={cn("order-[-3] space-y-2 px-1 md:hidden", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "shrink-0 space-y-1.5")}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Dia de la semana</p>
           <div className="grid grid-cols-7 gap-2">
             {weeklyConsistency.days.map((day) => (
@@ -1083,7 +1083,7 @@ const Dashboard = () => {
             <div
               ref={mobileCarouselRef}
               onScroll={handleMobileCarouselScroll}
-              className="-mx-1 flex min-h-0 flex-1 snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overflow-y-hidden px-1 pb-1"
+              className="-mx-1 hide-scrollbar flex min-h-0 flex-1 snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overflow-y-hidden px-1 pb-1"
             >
               <div className="min-w-[88%] snap-start space-y-3 overflow-hidden">
                 <DashboardCardShell
