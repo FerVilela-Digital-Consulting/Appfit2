@@ -280,18 +280,12 @@ export function TrainingTodaySection({
       </Card>
 
       <div className="space-y-5">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="app-surface-tile rounded-2xl p-4">
-            <div className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">{copy.today}</div>
-            <div className="app-surface-heading mt-2 text-lg font-semibold">
-              {activeSession ? copy.activeSession : scheduledWorkout?.name ?? copy.noWorkout}
-            </div>
-          </div>
+        {restRemaining > 0 ? (
           <div className="app-surface-tile rounded-2xl p-4">
             <div className="app-surface-caption text-[11px] uppercase tracking-[0.22em]">{copy.rest}</div>
-            <div className="app-surface-heading mt-2 text-lg font-semibold">{restRemaining}s</div>
+            <div className="app-surface-heading mt-2 text-lg font-semibold">{formatRest(restRemaining)}</div>
           </div>
-        </div>
+        ) : null}
 
         <Card>
           <CardHeader>
