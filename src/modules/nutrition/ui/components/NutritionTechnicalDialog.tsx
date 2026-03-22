@@ -1,6 +1,17 @@
+import { useState } from "react";
 import { CircleHelp, Flame, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -24,7 +35,8 @@ type NutritionTechnicalDialogProps = {
   onEditProfile: (profile: NutritionProfileRecord) => void;
   onSetDefaultProfile: (profileId: string) => void;
   onArchiveProfile: (profileId: string) => void;
-  onDeleteProfile: (profileId: string) => void;
+  onDeleteProfile: (profileId: string, mode?: "safe_archive" | "hard_delete_with_placeholder") => void;
+  isDeletingProfile?: boolean;
 };
 
 export function NutritionTechnicalDialog({
@@ -39,17 +51,21 @@ export function NutritionTechnicalDialog({
   onSetDefaultProfile,
   onArchiveProfile,
   onDeleteProfile,
+  isDeletingProfile = false,
 }: NutritionTechnicalDialogProps) {
+  const [deleteTarget, setDeleteTarget] = useState<NutritionProfileRecord | null>(null);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="app-dialog-surface max-h-[90vh] max-w-4xl overflow-y-auto p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle>Configuracion tecnica de nutricion</DialogTitle>
-            <DialogDescription>
-              Ajusta plantillas del dia, metas y base de calculo sin bloquear el flujo principal de registro diario.
-            </DialogDescription>
-          </DialogHeader>
-        <div className="space-y-5">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="app-dialog-surface max-h-[90vh] max-w-4xl overflow-y-auto p-4 sm:p-6">
+            <DialogHeader>
+              <DialogTitle>Configuracion tecnica de nutricion</DialogTitle>
+              <DialogDescription>
+                Ajusta plantillas del dia, metas y base de calculo sin bloquear el flujo principal de registro diario.
+              </DialogDescription>
+            </DialogHeader>
+          <div className="space-y-5">
           <div className="app-surface-panel rounded-[24px] p-4 sm:rounded-[28px] sm:p-5">
             <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary/80">Calculo energetico</div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -193,7 +209,7 @@ export function NutritionTechnicalDialog({
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => onDeleteProfile(profileRow.id)}
+                          onClick={() => setDeleteTarget(profileRow)}
                           className="w-full border-red-400/20 bg-transparent text-red-200 sm:w-auto"
                         >
                           Eliminar
@@ -245,8 +261,48 @@ export function NutritionTechnicalDialog({
               </Button>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(next) => !next && setDeleteTarget(null)}>
+        <AlertDialogContent className="app-dialog-surface border-border/60">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar plantilla</AlertDialogTitle>
+            <AlertDialogDescription>
+              Si esta plantilla ya tiene historial, puedes archivarla (recomendado) o eliminarla y reemplazar su referencia por un marcador generico.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="app-surface-soft rounded-2xl border border-border/60 px-3 py-3 text-sm">
+            Plantilla objetivo: <span className="font-semibold">{deleteTarget?.name ?? "--"}</span>
+          </div>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel disabled={isDeletingProfile}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!deleteTarget) return;
+                onDeleteProfile(deleteTarget.id, "safe_archive");
+                setDeleteTarget(null);
+              }}
+              disabled={isDeletingProfile}
+              className="bg-slate-700 text-white hover:bg-slate-600"
+            >
+              Archivar (recomendado)
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => {
+                if (!deleteTarget) return;
+                onDeleteProfile(deleteTarget.id, "hard_delete_with_placeholder");
+                setDeleteTarget(null);
+              }}
+              disabled={isDeletingProfile}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar y reemplazar historial
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

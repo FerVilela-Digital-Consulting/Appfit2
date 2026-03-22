@@ -267,7 +267,8 @@ const Nutrition = () => {
         onEditProfile={openEditProfile}
         onSetDefaultProfile={(profileId) => defaultProfileMutation.mutate(profileId)}
         onArchiveProfile={(profileId) => archiveProfileMutation.mutate(profileId)}
-        onDeleteProfile={(profileId) => deleteProfileMutation.mutate(profileId)}
+        onDeleteProfile={(profileId, mode) => deleteProfileMutation.mutate({ profileId, mode })}
+        isDeletingProfile={deleteProfileMutation.isPending}
       />
     </div>
   );

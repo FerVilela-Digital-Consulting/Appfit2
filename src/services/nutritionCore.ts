@@ -459,22 +459,39 @@ export const setDefaultNutritionProfile = async (
 export const deleteNutritionProfileSafe = async (
   profileId: string,
   userId: string | null,
-  options?: { isGuest?: boolean },
-): Promise<{ deleted: boolean; archived: boolean }> => {
+  options?: { isGuest?: boolean; mode?: "safe_archive" | "hard_delete_with_placeholder" },
+): Promise<{ deleted: boolean; archived: boolean; historyReplaced: boolean }> => {
   const isGuest = options?.isGuest || false;
-  if (!profileId) return { deleted: false, archived: false };
+  const mode = options?.mode ?? "safe_archive";
+  const historyPlaceholder = "Plantilla eliminada";
+  if (!profileId) return { deleted: false, archived: false, historyReplaced: false };
 
   if (isGuest) {
     const logs = parseGuestDailyLogs();
     const isUsed = logs.some((row) => row.nutrition_profile_id === profileId);
     if (isUsed) {
+      if (mode === "hard_delete_with_placeholder") {
+        const nextLogs = logs.map((row) =>
+          row.nutrition_profile_id === profileId
+            ? {
+                ...row,
+                nutrition_profile_id: null,
+                profile_name_snapshot: historyPlaceholder,
+                updated_at: new Date().toISOString(),
+              }
+            : row,
+        );
+        saveGuestDailyLogs(nextLogs);
+        saveGuestProfiles(parseGuestProfiles().filter((row) => row.id !== profileId));
+        return { deleted: true, archived: false, historyReplaced: true };
+      }
       await archiveNutritionProfile(profileId, userId, { isGuest, archived: true });
-      return { deleted: false, archived: true };
+      return { deleted: false, archived: true, historyReplaced: false };
     }
     saveGuestProfiles(parseGuestProfiles().filter((row) => row.id !== profileId));
-    return { deleted: true, archived: false };
+    return { deleted: true, archived: false, historyReplaced: false };
   }
-  if (!userId) return { deleted: false, archived: false };
+  if (!userId) return { deleted: false, archived: false, historyReplaced: false };
 
   const { count, error: countError } = await supabase
     .from("daily_nutrition_logs")
@@ -488,13 +505,29 @@ export const deleteNutritionProfileSafe = async (
     }
   }
   if ((count ?? 0) > 0) {
+    if (mode === "hard_delete_with_placeholder") {
+      const { error: replaceError } = await supabase
+        .from("daily_nutrition_logs")
+        .update({
+          nutrition_profile_id: null,
+          profile_name_snapshot: historyPlaceholder,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId)
+        .eq("nutrition_profile_id", profileId);
+      if (replaceError) throw replaceError;
+
+      const { error: deleteError } = await supabase.from("nutrition_profiles").delete().eq("id", profileId).eq("user_id", userId);
+      if (deleteError) throw deleteError;
+      return { deleted: true, archived: false, historyReplaced: true };
+    }
     await archiveNutritionProfile(profileId, userId, { archived: true });
-    return { deleted: false, archived: true };
+    return { deleted: false, archived: true, historyReplaced: false };
   }
 
   const { error } = await supabase.from("nutrition_profiles").delete().eq("id", profileId).eq("user_id", userId);
   if (error) throw error;
-  return { deleted: true, archived: false };
+  return { deleted: true, archived: false, historyReplaced: false };
 };
 
 export const setNutritionProfileForDate = async (

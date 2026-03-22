@@ -235,10 +235,19 @@ export function useNutritionPageState() {
   });
 
   const deleteProfileMutation = useMutation({
-    mutationFn: (profileId: string) => deleteNutritionProfileSafe(profileId, userId, { isGuest }),
+    mutationFn: (payload: { profileId: string; mode?: "safe_archive" | "hard_delete_with_placeholder" }) =>
+      deleteNutritionProfileSafe(payload.profileId, userId, { isGuest, mode: payload.mode }),
     onSuccess: async (result) => {
       await invalidateNutrition();
-      toast.success(result.archived ? "La plantilla se archivo para proteger el historial." : "Plantilla eliminada.");
+      if (result.archived) {
+        toast.success("La plantilla se archivo para proteger el historial. Si deseas borrarla, usa 'Eliminar y reemplazar historial'.");
+        return;
+      }
+      if (result.deleted && result.historyReplaced) {
+        toast.success("La plantilla fue eliminada. El historial se conservo con el marcador 'Plantilla eliminada'.");
+        return;
+      }
+      toast.success("Plantilla eliminada.");
     },
     onError: (error: unknown) => toast.error(getErrorMessage(error, "No se pudo eliminar la plantilla.")),
   });
