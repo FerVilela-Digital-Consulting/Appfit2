@@ -17,11 +17,9 @@ type NutritionHeaderSectionProps = {
   planSource: "selected_template" | "initial_template" | "automatic" | "archived_snapshot";
   planSourceLabel: string;
   planSourceDescription: string;
-  totalCalories: number | null | undefined;
   onPreviousDate: () => void;
   onNextDate: () => void;
   onSelectProfile: (value: string | null) => void;
-  onOpenAddFood: () => void;
   onOpenTechnicalConfig: () => void;
 };
 
@@ -34,11 +32,9 @@ export function NutritionHeaderSection({
   planSource,
   planSourceLabel,
   planSourceDescription,
-  totalCalories,
   onPreviousDate,
   onNextDate,
   onSelectProfile,
-  onOpenAddFood,
   onOpenTechnicalConfig,
 }: NutritionHeaderSectionProps) {
   const activeArchetypeLabel =
@@ -56,13 +52,15 @@ export function NutritionHeaderSection({
   return (
     <section className="space-y-4">
       <div className="space-y-2 px-1">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-primary/80">Bitacora de nutricion</p>
-        <h1 className="app-surface-heading text-3xl font-black tracking-tight md:text-4xl">Nutricion - Hoy</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="app-surface-heading text-3xl font-black tracking-tight md:text-4xl">Nutricion - Hoy</h1>
+          <p className="pt-1 text-right text-[11px] font-semibold uppercase tracking-[0.34em] text-primary/80">Bitacora de nutricion</p>
+        </div>
         <p className="app-surface-caption text-sm">Registra rapido y entiende exactamente que plan nutricional estas usando.</p>
       </div>
 
       <div className="app-surface-hero rounded-[24px] px-4 py-5 sm:rounded-[28px] sm:px-6 sm:py-6">
-        <div className="grid gap-3 xl:grid-cols-[2.6fr_2fr_1.4fr_1fr_1.6fr] xl:items-stretch">
+        <div className="grid gap-3 xl:grid-cols-[2.8fr_2.2fr_1.5fr_1.2fr] xl:items-stretch">
           <article className="app-chip-muted rounded-2xl px-4 py-3">
             <div className="mb-2 flex items-center gap-2">
               <div className="app-surface-caption text-[10px] font-semibold uppercase tracking-[0.24em]">Plan de hoy</div>
@@ -74,7 +72,12 @@ export function NutritionHeaderSection({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-[240px] text-xs">
-                    El plan del dia se calcula con plantilla elegida, plantilla inicial o modo automatico.
+                    <p>
+                      Las plantillas de alimentacion ajustan tus calorias segun el tipo de dia: descanso (-300), esfuerzo alto (+150) o base (sin ajuste). Este ajuste se suma al calculo principal de tu Perfil Fitness.
+                    </p>
+                    <p className="mt-2">
+                      Puedes guardar plantillas, marcar una como inicial, aplicarlas por fecha y conservar snapshots diarios para no alterar tu historial.
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -140,15 +143,7 @@ export function NutritionHeaderSection({
             </Button>
           </article>
 
-          <article className="app-chip rounded-2xl px-4 py-3 text-center">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary/80">Consumido hoy</div>
-            <div className="mt-1 text-3xl font-black text-primary">{formatMetric(totalCalories, " kcal")}</div>
-          </article>
-
           <article className="app-chip-muted flex flex-col justify-center gap-2 rounded-2xl px-3 py-3">
-            <Button type="button" onClick={onOpenAddFood} className="w-full rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90">
-              + Agregar comida
-            </Button>
             <Button type="button" variant="outline" onClick={onOpenTechnicalConfig} className="w-full app-outline-button rounded-2xl">
               <SlidersHorizontal className="mr-2 h-4 w-4" />
               Config tecnica

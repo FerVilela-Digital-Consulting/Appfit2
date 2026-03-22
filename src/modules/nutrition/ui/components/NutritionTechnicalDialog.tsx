@@ -106,7 +106,12 @@ export function NutritionTechnicalDialog({
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-[250px] text-xs">
-                      Las plantillas modifican el tipo de dia (Base, Heavy, Recovery). No cambian tus datos base de metabolismo.
+                      <p>
+                        Las plantillas de alimentacion ajustan tus calorias segun el tipo de dia: descanso (-300), esfuerzo alto (+150) o base (sin ajuste). Este ajuste se suma al calculo principal de tu Perfil Fitness.
+                      </p>
+                      <p className="mt-2">
+                        Puedes guardar plantillas, marcar una como inicial, aplicarlas por fecha y conservar snapshots diarios para no alterar tu historial.
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

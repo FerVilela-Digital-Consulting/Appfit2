@@ -22,7 +22,6 @@ function renderSection(overrides: Partial<ComponentProps<typeof NutritionHeaderS
   const onPreviousDate = vi.fn();
   const onNextDate = vi.fn();
   const onSelectProfile = vi.fn();
-  const onOpenAddFood = vi.fn();
   const onOpenTechnicalConfig = vi.fn();
 
   const props: ComponentProps<typeof NutritionHeaderSection> = {
@@ -34,11 +33,9 @@ function renderSection(overrides: Partial<ComponentProps<typeof NutritionHeaderS
     planSource: "selected_template",
     planSourceLabel: "Plantilla elegida",
     planSourceDescription: "Esta plantilla tiene prioridad para este dia.",
-    totalCalories: 2150,
     onPreviousDate,
     onNextDate,
     onSelectProfile,
-    onOpenAddFood,
     onOpenTechnicalConfig,
     ...overrides,
   };
@@ -49,7 +46,6 @@ function renderSection(overrides: Partial<ComponentProps<typeof NutritionHeaderS
       onPreviousDate,
       onNextDate,
       onSelectProfile,
-      onOpenAddFood,
       onOpenTechnicalConfig,
     },
   };
@@ -61,20 +57,18 @@ describe("NutritionHeaderSection", () => {
 
     expect(screen.getByText("Nutricion - Hoy")).toBeInTheDocument();
     expect(screen.getByText("13/03/2026")).toBeInTheDocument();
-    expect(screen.getByText("2150 kcal")).toBeInTheDocument();
+    expect(screen.getByText("13/03/2026")).toBeInTheDocument();
   });
 
-  it("triggers date navigation and primary actions", () => {
+  it("triggers date navigation and technical action", () => {
     const { callbacks } = renderSection();
     const iconButtons = screen.getAllByRole("button", { name: "" });
     fireEvent.click(iconButtons[0]);
     fireEvent.click(iconButtons[1]);
-    fireEvent.click(screen.getByRole("button", { name: /\+ Agregar comida/i }));
     fireEvent.click(screen.getByRole("button", { name: /Config tecnica/i }));
 
     expect(callbacks.onPreviousDate).toHaveBeenCalled();
     expect(callbacks.onNextDate).toHaveBeenCalled();
-    expect(callbacks.onOpenAddFood).toHaveBeenCalled();
     expect(callbacks.onOpenTechnicalConfig).toHaveBeenCalled();
   });
 });

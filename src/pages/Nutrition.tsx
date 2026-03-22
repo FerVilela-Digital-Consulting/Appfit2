@@ -119,11 +119,9 @@ const Nutrition = () => {
           planSource={planSource}
           planSourceLabel={planSourceLabel}
           planSourceDescription={planSourceDescription}
-          totalCalories={totals?.calories}
           onPreviousDate={() => setSelectedDate((prev) => addDays(prev, -1))}
           onNextDate={() => setSelectedDate((prev) => addDays(prev, 1))}
           onSelectProfile={(value) => profileSelectionMutation.mutate(value)}
-          onOpenAddFood={() => openDialogForMeal("breakfast", "database")}
           onOpenTechnicalConfig={() => setTechnicalOpen(true)}
         />
 
