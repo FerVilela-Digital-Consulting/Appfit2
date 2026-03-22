@@ -58,6 +58,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
   const [goalInput, setGoalInput] = useState("");
   const [goalUnit, setGoalUnit] = useState<"ml" | "l">("ml");
   const [selectedPresetValue, setSelectedPresetValue] = useState<string>("default:250");
+  const [activeCustomOption, setActiveCustomOption] = useState<{ label: string; amount_ml: number } | null>(null);
 
   const { data: dayTotal = 0 } = useQuery({
     queryKey: ["water_day_total", user?.id, dayKey],
@@ -190,21 +191,31 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
       label: `${ml} ml`,
       amount_ml: ml,
     }));
+    const customActive = activeCustomOption
+      ? [
+          {
+            value: "custom-active",
+            label: activeCustomOption.label,
+            amount_ml: activeCustomOption.amount_ml,
+          },
+        ]
+      : [];
     const named = namedPresets.map((preset) => ({
       value: `named:${preset.id}`,
       label: `${preset.name} (${preset.amount_ml} ml)`,
       amount_ml: preset.amount_ml,
       preset,
     }));
-    return [...defaults, ...named];
-  }, [namedPresets, quickOptions]);
+    return [...defaults, ...customActive, ...named];
+  }, [activeCustomOption, namedPresets, quickOptions]);
 
   useEffect(() => {
     if (selectedPresetValue === "custom") return;
+    if (selectedPresetValue === "custom-active" && activeCustomOption) return;
     if (!combinedPresetOptions.some((option) => option.value === selectedPresetValue)) {
       setSelectedPresetValue(combinedPresetOptions[0]?.value ?? "default:250");
     }
-  }, [combinedPresetOptions, selectedPresetValue]);
+  }, [activeCustomOption, combinedPresetOptions, selectedPresetValue]);
 
   const handleAddQuick = async (amount: number) => {
     await addMutation.mutateAsync(amount);
@@ -230,9 +241,18 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
 
     await addMutation.mutateAsync(ml);
 
+    let createdPreset: WaterPreset | null = null;
     if (saveAsPreset) {
       const name = customPresetName.trim();
-      await createPresetMutation.mutateAsync({ name, amount_ml: ml });
+      createdPreset = await createPresetMutation.mutateAsync({ name, amount_ml: ml });
+    }
+
+    if (createdPreset?.id) {
+      setSelectedPresetValue(`named:${createdPreset.id}`);
+      setActiveCustomOption(null);
+    } else {
+      setActiveCustomOption({ label: `Personalizado (${ml} ml)`, amount_ml: ml });
+      setSelectedPresetValue("custom-active");
     }
 
     setCustomOpen(false);
@@ -242,6 +262,16 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
     setCustomPresetName("");
     toast.success(`Agregados ${ml} ml.`);
   };
+
+  const selectedPreset = combinedPresetOptions.find((option) => option.value === selectedPresetValue) ?? null;
+  const activeAmountMl = selectedPreset?.amount_ml ?? 250;
+  const primaryAddLabel =
+    selectedPresetValue === "custom"
+      ? "Agregar personalizado"
+      : selectedPreset
+        ? `+ ${selectedPreset.label}`
+        : "+ 1 vaso (250 ml)";
+  const secondaryAddLabel = selectedPresetValue === "custom-active" && selectedPreset ? `Agregar ${selectedPreset.label}` : "Agregar";
 
   const handleSaveGoal = async () => {
     const value = Number(goalInput);
@@ -279,8 +309,19 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
         <Progress value={progress} />
 
         <div className="grid gap-2 md:grid-cols-[1fr_auto]">
-          <Button size="lg" className="w-full" onClick={() => handleAddQuick(250)} disabled={addMutation.isPending}>
-            + 1 vaso (250 ml)
+          <Button
+            size="lg"
+            className="w-full"
+            onClick={() => {
+              if (selectedPresetValue === "custom") {
+                setCustomOpen(true);
+                return;
+              }
+              void handleAddQuick(activeAmountMl);
+            }}
+            disabled={addMutation.isPending}
+          >
+            {primaryAddLabel}
           </Button>
           <div className="grid gap-2 sm:flex">
             <Select value={selectedPresetValue} onValueChange={setSelectedPresetValue}>
@@ -310,7 +351,7 @@ const WaterCard = ({ showHistoryButton = true }: WaterCardProps) => {
               }}
               disabled={addMutation.isPending}
             >
-              Agregar
+              {secondaryAddLabel}
             </Button>
           </div>
         </div>
