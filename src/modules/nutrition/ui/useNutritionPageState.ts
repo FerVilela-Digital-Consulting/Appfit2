@@ -261,6 +261,21 @@ export function useNutritionPageState() {
     onError: (error: unknown) => toast.error(getErrorMessage(error, "No se pudo marcar la plantilla inicial.")),
   });
 
+  const weeklyProfilePlanMutation = useMutation({
+    mutationFn: async (entries: Array<{ date: Date; profileId: string | null }>) => {
+      await Promise.all(
+        entries.map((entry) =>
+          setNutritionProfileForDate(userId, entry.date, entry.profileId, { isGuest, timeZone, profile }),
+        ),
+      );
+    },
+    onSuccess: async (_, entries) => {
+      await invalidateNutrition();
+      toast.success(`Plan semanal aplicado (${entries.length} dias actualizados).`);
+    },
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "No se pudo aplicar el plan semanal.")),
+  });
+
   const daySummary = summaryQuery.data;
   const profileOptions = profilesQuery.data ?? [];
   const goals = daySummary?.goals;
@@ -594,6 +609,7 @@ export function useNutritionPageState() {
     archiveProfileMutation,
     deleteProfileMutation,
     defaultProfileMutation,
+    weeklyProfilePlanMutation,
     openDialogForMeal,
     toggleMeal,
     openCreateProfile,

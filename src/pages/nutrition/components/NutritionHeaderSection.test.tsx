@@ -22,6 +22,7 @@ function renderSection(overrides: Partial<ComponentProps<typeof NutritionHeaderS
   const onPreviousDate = vi.fn();
   const onNextDate = vi.fn();
   const onSelectProfile = vi.fn();
+  const onApplyWeeklyPlan = vi.fn();
   const onOpenTechnicalConfig = vi.fn();
 
   const props: ComponentProps<typeof NutritionHeaderSection> = {
@@ -36,6 +37,7 @@ function renderSection(overrides: Partial<ComponentProps<typeof NutritionHeaderS
     onPreviousDate,
     onNextDate,
     onSelectProfile,
+    onApplyWeeklyPlan,
     onOpenTechnicalConfig,
     ...overrides,
   };
@@ -46,6 +48,7 @@ function renderSection(overrides: Partial<ComponentProps<typeof NutritionHeaderS
       onPreviousDate,
       onNextDate,
       onSelectProfile,
+      onApplyWeeklyPlan,
       onOpenTechnicalConfig,
     },
   };
@@ -70,5 +73,12 @@ describe("NutritionHeaderSection", () => {
     expect(callbacks.onPreviousDate).toHaveBeenCalled();
     expect(callbacks.onNextDate).toHaveBeenCalled();
     expect(callbacks.onOpenTechnicalConfig).toHaveBeenCalled();
+  });
+
+  it("opens weekly planner and applies selected days", () => {
+    const { callbacks } = renderSection();
+    fireEvent.click(screen.getByRole("button", { name: /Plan semanal/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Aplicar plan semanal/i }));
+    expect(callbacks.onApplyWeeklyPlan).toHaveBeenCalled();
   });
 });

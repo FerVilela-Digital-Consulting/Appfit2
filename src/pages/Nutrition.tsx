@@ -100,6 +100,7 @@ const Nutrition = () => {
     archiveProfileMutation,
     deleteProfileMutation,
     defaultProfileMutation,
+    weeklyProfilePlanMutation,
     openDialogForMeal,
     toggleMeal,
     openCreateProfile,
@@ -122,6 +123,8 @@ const Nutrition = () => {
           onPreviousDate={() => setSelectedDate((prev) => addDays(prev, -1))}
           onNextDate={() => setSelectedDate((prev) => addDays(prev, 1))}
           onSelectProfile={(value) => profileSelectionMutation.mutate(value)}
+          onApplyWeeklyPlan={(entries) => weeklyProfilePlanMutation.mutate(entries)}
+          isApplyingWeeklyPlan={weeklyProfilePlanMutation.isPending}
           onOpenTechnicalConfig={() => setTechnicalOpen(true)}
         />
 
