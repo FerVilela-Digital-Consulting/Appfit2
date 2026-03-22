@@ -1,5 +1,6 @@
 import { CircleHelp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { NUTRITION_ARCHETYPE_META } from "@/features/nutrition/nutritionProfiles";
@@ -57,6 +58,38 @@ export function NutritionSidebarPanel({
         : planSource === "archived_snapshot"
           ? "border-amber-400/30 bg-amber-500/10 text-amber-200"
           : "border-slate-400/30 bg-slate-500/10 text-slate-200";
+  const activityLabel = ACTIVITY_LABELS[metabolicProfile?.activityLevel ?? "moderate"] ?? "--";
+  const goalLabel = GOAL_LABELS[metabolicProfile?.goalType ?? "maintain"] ?? "--";
+  const weightLabel = weightSource === "profile_fallback" ? "Peso perfil" : "Peso registrado";
+
+  const renderInfoChip = (label: string, description: string) => (
+    <>
+      <div className="hidden sm:block">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button" className="app-surface-soft rounded-xl px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]">
+              {label}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[250px] text-xs">
+            {description}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+      <div className="sm:hidden">
+        <Popover>
+          <PopoverTrigger asChild>
+            <button type="button" className="app-surface-soft rounded-xl px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]">
+              {label}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="top" className="w-[min(18rem,calc(100vw-2rem))] text-xs">
+            {description}
+          </PopoverContent>
+        </Popover>
+      </div>
+    </>
+  );
 
   return (
     <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
@@ -87,21 +120,28 @@ export function NutritionSidebarPanel({
         >
           {planSourceLabel}
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <div className="app-surface-soft rounded-xl px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]">
-            {ACTIVITY_LABELS[metabolicProfile?.activityLevel ?? "moderate"] ?? "--"}
+        <TooltipProvider delayDuration={90}>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {renderInfoChip(
+              activityLabel,
+              `Tu nivel de actividad configurado en Perfil Fitness es ${String(activityLabel).toLowerCase()} y afecta el calculo diario.`,
+            )}
+            {renderInfoChip(
+              goalLabel,
+              `Tu objetivo designado en tu Perfil Fitness es ${String(goalLabel).toLowerCase()}.`,
+            )}
+            {renderInfoChip(
+              weightLabel,
+              weightSource === "profile_fallback"
+                ? "Hoy no hay peso registrado cercano y se usa el peso base de tu Perfil Fitness."
+                : "El calculo de hoy esta usando un peso registrado en tu historial.",
+            )}
           </div>
-          <div className="app-surface-soft rounded-xl px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]">
-            {GOAL_LABELS[metabolicProfile?.goalType ?? "maintain"] ?? "--"}
-          </div>
-          <div className="app-surface-soft rounded-xl px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]">
-            {weightSource === "profile_fallback" ? "Peso perfil" : "Peso registrado"}
-          </div>
-        </div>
+        </TooltipProvider>
         <p className="app-surface-caption mt-2 text-xs leading-relaxed">
-          Actividad: {String((ACTIVITY_LABELS[metabolicProfile?.activityLevel ?? "moderate"] ?? "--")).toLowerCase()}
+          Actividad: {String(activityLabel).toLowerCase()}
           {" | "}
-          Objetivo: {String((GOAL_LABELS[metabolicProfile?.goalType ?? "maintain"] ?? "--")).toLowerCase()}
+          Objetivo: {String(goalLabel).toLowerCase()}
         </p>
         <div className="app-surface-caption mt-4 grid gap-2 text-xs uppercase tracking-[0.2em]">
           <div className="flex items-center justify-between"><span>TDEE base</span><span>{formatMetric(target?.tdee)}</span></div>
