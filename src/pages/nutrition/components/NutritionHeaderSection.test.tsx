@@ -22,7 +22,8 @@ function renderSection(overrides: Partial<ComponentProps<typeof NutritionHeaderS
   const onPreviousDate = vi.fn();
   const onNextDate = vi.fn();
   const onSelectProfile = vi.fn();
-  const onCreateProfile = vi.fn();
+  const onOpenAddFood = vi.fn();
+  const onOpenTechnicalConfig = vi.fn();
 
   const props: ComponentProps<typeof NutritionHeaderSection> = {
     selectedDate: new Date("2026-03-13T12:00:00"),
@@ -34,7 +35,8 @@ function renderSection(overrides: Partial<ComponentProps<typeof NutritionHeaderS
     onPreviousDate,
     onNextDate,
     onSelectProfile,
-    onCreateProfile,
+    onOpenAddFood,
+    onOpenTechnicalConfig,
     ...overrides,
   };
 
@@ -44,7 +46,8 @@ function renderSection(overrides: Partial<ComponentProps<typeof NutritionHeaderS
       onPreviousDate,
       onNextDate,
       onSelectProfile,
-      onCreateProfile,
+      onOpenAddFood,
+      onOpenTechnicalConfig,
     },
   };
 }
@@ -53,20 +56,22 @@ describe("NutritionHeaderSection", () => {
   it("renders headline, selected date and total calories", () => {
     renderSection();
 
-    expect(screen.getByText("Nutricion & Combustible")).toBeInTheDocument();
+    expect(screen.getByText("Nutricion - Hoy")).toBeInTheDocument();
     expect(screen.getByText("13/03/2026")).toBeInTheDocument();
     expect(screen.getByText("2150 kcal")).toBeInTheDocument();
   });
 
-  it("triggers date navigation and profile creation actions", () => {
+  it("triggers date navigation and primary actions", () => {
     const { callbacks } = renderSection();
     const iconButtons = screen.getAllByRole("button", { name: "" });
     fireEvent.click(iconButtons[0]);
     fireEvent.click(iconButtons[1]);
-    fireEvent.click(screen.getByRole("button", { name: /Nuevo perfil/i }));
+    fireEvent.click(screen.getByRole("button", { name: /\+ Agregar comida/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Config tecnica/i }));
 
     expect(callbacks.onPreviousDate).toHaveBeenCalled();
     expect(callbacks.onNextDate).toHaveBeenCalled();
-    expect(callbacks.onCreateProfile).toHaveBeenCalled();
+    expect(callbacks.onOpenAddFood).toHaveBeenCalled();
+    expect(callbacks.onOpenTechnicalConfig).toHaveBeenCalled();
   });
 });

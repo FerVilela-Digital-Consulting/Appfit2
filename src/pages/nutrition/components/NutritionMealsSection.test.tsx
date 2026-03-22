@@ -82,17 +82,11 @@ describe("NutritionMealsSection", () => {
   it("opens meal dialog shortcuts", () => {
     const { callbacks } = renderSection();
 
-    fireEvent.click(screen.getByRole("button", { name: /Anadir nueva comida/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Agregar comida/i }));
     expect(callbacks.onOpenMealDialog).toHaveBeenCalledWith("breakfast");
 
-    fireEvent.click(screen.getByRole("button", { name: /Carga manual/i }));
-    expect(callbacks.onOpenMealDialog).toHaveBeenCalledWith("breakfast", "manual");
-
-    fireEvent.click(screen.getByRole("button", { name: /Buscar alimento/i }));
+    fireEvent.click(screen.getByRole("button", { name: /\+ Agregar alimento/i }));
     expect(callbacks.onOpenMealDialog).toHaveBeenCalledWith("breakfast", "database");
-
-    fireEvent.click(screen.getByRole("button", { name: /Usar favorito/i }));
-    expect(callbacks.onOpenMealDialog).toHaveBeenCalledWith("breakfast", "favorite");
   });
 
   it("toggles meals and deletes entries", () => {
@@ -123,6 +117,6 @@ describe("NutritionMealsSection", () => {
       },
     });
 
-    expect(screen.getAllByText("Sin registros en esta comida.").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Esta comida aun esta vacia.").length).toBeGreaterThan(0);
   });
 });

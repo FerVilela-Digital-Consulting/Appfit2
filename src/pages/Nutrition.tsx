@@ -1,13 +1,19 @@
 import { addDays } from "date-fns";
+import { useState } from "react";
 
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { NutritionHeaderSection } from "@/modules/nutrition/ui/components/NutritionHeaderSection";
 import { NutritionMealDialog } from "@/modules/nutrition/ui/components/NutritionMealDialog";
 import { NutritionMealsSection } from "@/modules/nutrition/ui/components/NutritionMealsSection";
 import { NutritionProfileDialog } from "@/modules/nutrition/ui/components/NutritionProfileDialog";
 import { NutritionSidebarPanel } from "@/modules/nutrition/ui/components/NutritionSidebarPanel";
+import { NutritionTechnicalDialog } from "@/modules/nutrition/ui/components/NutritionTechnicalDialog";
 import { useNutritionPageState } from "@/modules/nutrition/ui/useNutritionPageState";
 
 const Nutrition = () => {
+  const [technicalOpen, setTechnicalOpen] = useState(false);
+
   const {
     selectedDate,
     setSelectedDate,
@@ -113,10 +119,39 @@ const Nutrition = () => {
           onPreviousDate={() => setSelectedDate((prev) => addDays(prev, -1))}
           onNextDate={() => setSelectedDate((prev) => addDays(prev, 1))}
           onSelectProfile={(value) => profileSelectionMutation.mutate(value)}
-          onCreateProfile={openCreateProfile}
+          onOpenAddFood={() => openDialogForMeal("breakfast", "database")}
+          onOpenTechnicalConfig={() => setTechnicalOpen(true)}
         />
+
         <div className="grid gap-6 xl:grid-cols-[1.65fr_0.8fr]">
           <section className="space-y-5">
+            <Card className="app-surface-panel rounded-[20px]">
+              <CardContent className="space-y-3 p-4 sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary/80">Resumen del dia</p>
+                    <p className="app-surface-heading mt-1 text-xl font-black">
+                      {totals?.calories ?? 0} / {goals?.calorie_goal ?? 0} kcal
+                    </p>
+                    <p className="app-surface-caption mt-1 text-xs">Tu estado diario en una sola mirada.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openDialogForMeal("breakfast", "database")}
+                    className="w-full rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 sm:w-auto"
+                  >
+                    + Agregar comida
+                  </button>
+                </div>
+                <Progress value={caloriesPct} className="h-2.5 app-progress-track" />
+                <div className="grid gap-2 text-sm sm:grid-cols-3">
+                  <div className="app-panel-block rounded-xl px-3 py-2">Prote: {totals?.protein_g ?? 0} / {goals?.protein_goal_g ?? 0}g</div>
+                  <div className="app-panel-block rounded-xl px-3 py-2">Carbs: {totals?.carbs_g ?? 0} / {goals?.carb_goal_g ?? 0}g</div>
+                  <div className="app-panel-block rounded-xl px-3 py-2">Grasas: {totals?.fat_g ?? 0} / {goals?.fat_goal_g ?? 0}g</div>
+                </div>
+              </CardContent>
+            </Card>
+
             <NutritionMealsSection
               mealOverview={mealOverview}
               expandedMeals={expandedMeals}
@@ -125,6 +160,7 @@ const Nutrition = () => {
               onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
             />
           </section>
+
           <NutritionSidebarPanel
             effectiveProfileLabel={effectiveProfileLabel}
             activeArchetype={activeArchetype}
@@ -134,19 +170,15 @@ const Nutrition = () => {
             totals={totals}
             remaining={remaining}
             metabolicProfile={metabolicProfile}
-            profileOptions={profileOptions}
             caloriesPct={caloriesPct}
             proteinPct={proteinPct}
             carbsPct={carbsPct}
             fatPct={fatPct}
-            onCreateProfile={openCreateProfile}
-            onEditProfile={openEditProfile}
-            onSetDefaultProfile={(profileId) => defaultProfileMutation.mutate(profileId)}
-            onArchiveProfile={(profileId) => archiveProfileMutation.mutate(profileId)}
-            onDeleteProfile={(profileId) => deleteProfileMutation.mutate(profileId)}
+            onOpenTechnicalConfig={() => setTechnicalOpen(true)}
           />
         </div>
       </div>
+
       <NutritionProfileDialog
         open={profilesDialogOpen}
         editingProfile={editingProfile}
@@ -160,6 +192,7 @@ const Nutrition = () => {
         onProfileIsDefaultChange={setProfileIsDefault}
         onSave={() => saveProfileMutation.mutate()}
       />
+
       <NutritionMealDialog
         open={mealDialogOpen}
         activeMeal={activeMeal}
@@ -213,6 +246,20 @@ const Nutrition = () => {
         onSelectedYesterdayIdChange={setSelectedYesterdayId}
         onSelectedRecentIdChange={setSelectedRecentId}
         onSave={handleAddEntry}
+      />
+
+      <NutritionTechnicalDialog
+        open={technicalOpen}
+        onOpenChange={setTechnicalOpen}
+        target={target}
+        goals={goals}
+        metabolicProfile={metabolicProfile}
+        profileOptions={profileOptions}
+        onCreateProfile={openCreateProfile}
+        onEditProfile={openEditProfile}
+        onSetDefaultProfile={(profileId) => defaultProfileMutation.mutate(profileId)}
+        onArchiveProfile={(profileId) => archiveProfileMutation.mutate(profileId)}
+        onDeleteProfile={(profileId) => deleteProfileMutation.mutate(profileId)}
       />
     </div>
   );

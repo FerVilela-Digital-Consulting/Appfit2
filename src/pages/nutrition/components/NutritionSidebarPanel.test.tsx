@@ -4,37 +4,9 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 import { NutritionSidebarPanel } from "@/modules/nutrition/ui/components/NutritionSidebarPanel";
-import type { NutritionProfileRecord } from "@/modules/nutrition/types";
-
-const profileOptions: NutritionProfileRecord[] = [
-  {
-    id: "profile-1",
-    user_id: "user-1",
-    name: "Torso",
-    archetype: "heavy",
-    is_default: true,
-    is_archived: false,
-    created_at: "2026-03-13T10:00:00.000Z",
-    updated_at: "2026-03-13T10:00:00.000Z",
-  },
-  {
-    id: "profile-2",
-    user_id: "user-1",
-    name: "Descanso",
-    archetype: "recovery",
-    is_default: false,
-    is_archived: false,
-    created_at: "2026-03-13T10:00:00.000Z",
-    updated_at: "2026-03-13T10:00:00.000Z",
-  },
-];
 
 function renderPanel(overrides: Partial<ComponentProps<typeof NutritionSidebarPanel>> = {}) {
-  const onCreateProfile = vi.fn();
-  const onEditProfile = vi.fn();
-  const onSetDefaultProfile = vi.fn();
-  const onArchiveProfile = vi.fn();
-  const onDeleteProfile = vi.fn();
+  const onOpenTechnicalConfig = vi.fn();
 
   const props: ComponentProps<typeof NutritionSidebarPanel> = {
     effectiveProfileLabel: "Torso",
@@ -98,16 +70,11 @@ function renderPanel(overrides: Partial<ComponentProps<typeof NutritionSidebarPa
       calorieOverride: null,
       isCalorieOverrideEnabled: false,
     },
-    profileOptions,
     caloriesPct: 79,
     proteinPct: 89,
     carbsPct: 78,
     fatPct: 80,
-    onCreateProfile,
-    onEditProfile,
-    onSetDefaultProfile,
-    onArchiveProfile,
-    onDeleteProfile,
+    onOpenTechnicalConfig,
     ...overrides,
   };
 
@@ -118,39 +85,26 @@ function renderPanel(overrides: Partial<ComponentProps<typeof NutritionSidebarPa
       </MemoryRouter>,
     ),
     callbacks: {
-      onCreateProfile,
-      onEditProfile,
-      onSetDefaultProfile,
-      onArchiveProfile,
-      onDeleteProfile,
+      onOpenTechnicalConfig,
     },
   };
 }
 
 describe("NutritionSidebarPanel", () => {
-  it("renders energy balance and metabolic profile summary", () => {
+  it("renders control cards and technical access", () => {
     renderPanel();
 
     expect(screen.getByText("Perfil del dia")).toBeInTheDocument();
     expect(screen.getByText("Balance energetico")).toBeInTheDocument();
-    expect(screen.getByText("Perfil metabolico")).toBeInTheDocument();
+    expect(screen.getByText("Macros")).toBeInTheDocument();
     expect(screen.getByText("2650 kcal")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Abrir Perfil Fitness/i })).toHaveAttribute("href", "/fitness-profile");
+    expect(screen.getByRole("button", { name: /Ver configuracion tecnica/i })).toBeInTheDocument();
   });
 
-  it("triggers profile management actions", () => {
+  it("opens technical configuration", () => {
     const { callbacks } = renderPanel();
 
-    fireEvent.click(screen.getByRole("button", { name: /Nuevo/i }));
-    fireEvent.click(screen.getAllByRole("button", { name: /Editar/i })[0]);
-    fireEvent.click(screen.getByRole("button", { name: /Predeterminado/i }));
-    fireEvent.click(screen.getAllByRole("button", { name: /Archivar/i })[0]);
-    fireEvent.click(screen.getAllByRole("button", { name: /Eliminar/i })[0]);
-
-    expect(callbacks.onCreateProfile).toHaveBeenCalled();
-    expect(callbacks.onEditProfile).toHaveBeenCalledWith(profileOptions[0]);
-    expect(callbacks.onSetDefaultProfile).toHaveBeenCalledWith("profile-2");
-    expect(callbacks.onArchiveProfile).toHaveBeenCalledWith("profile-1");
-    expect(callbacks.onDeleteProfile).toHaveBeenCalledWith("profile-1");
+    fireEvent.click(screen.getByRole("button", { name: /Ver configuracion tecnica/i }));
+    expect(callbacks.onOpenTechnicalConfig).toHaveBeenCalled();
   });
 });
