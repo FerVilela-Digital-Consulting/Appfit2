@@ -1,6 +1,9 @@
 import { addDays } from "date-fns";
 import { useState } from "react";
+import { Library } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { NutritionHeaderSection } from "@/modules/nutrition/ui/components/NutritionHeaderSection";
 import { NutritionFoodLibrarySection } from "@/modules/nutrition/ui/components/NutritionFoodLibrarySection";
 import { NutritionMealDialog } from "@/modules/nutrition/ui/components/NutritionMealDialog";
@@ -12,6 +15,7 @@ import { useNutritionPageState } from "@/modules/nutrition/ui/useNutritionPageSt
 
 const Nutrition = () => {
   const [technicalOpen, setTechnicalOpen] = useState(false);
+  const [foodLibraryOpen, setFoodLibraryOpen] = useState(false);
 
   const {
     selectedDate,
@@ -141,15 +145,35 @@ const Nutrition = () => {
               onToggleMeal={toggleMeal}
               onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
             />
-            <NutritionFoodLibrarySection
-              foodLibraryItems={foodLibraryItems}
-              favorites={favorites}
-              categories={categories}
-              onUpdateFavorite={(payload) => updateFavoriteMutation.mutate(payload)}
-              onDeleteFavorite={(favoriteId) => deleteFavoriteMutation.mutate(favoriteId)}
-              isUpdatingFavorite={updateFavoriteMutation.isPending}
-              isDeletingFavorite={deleteFavoriteMutation.isPending}
-            />
+            <Dialog open={foodLibraryOpen} onOpenChange={setFoodLibraryOpen}>
+              <div className="flex justify-end">
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="app-outline-button rounded-xl"
+                    aria-label="Abrir biblioteca de alimentos"
+                    title="Biblioteca de alimentos"
+                  >
+                    <Library className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+              </div>
+              <DialogContent className="app-dialog-surface max-h-[88vh] overflow-y-auto sm:max-w-6xl">
+                <DialogHeader>
+                  <DialogTitle>Biblioteca de alimentos</DialogTitle>
+                </DialogHeader>
+                <NutritionFoodLibrarySection
+                  foodLibraryItems={foodLibraryItems}
+                  favorites={favorites}
+                  categories={categories}
+                  onUpdateFavorite={(payload) => updateFavoriteMutation.mutate(payload)}
+                  onDeleteFavorite={(favoriteId) => deleteFavoriteMutation.mutate(favoriteId)}
+                  isUpdatingFavorite={updateFavoriteMutation.isPending}
+                  isDeletingFavorite={deleteFavoriteMutation.isPending}
+                />
+              </DialogContent>
+            </Dialog>
           </section>
 
           <NutritionSidebarPanel
