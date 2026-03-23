@@ -6,6 +6,7 @@ import {
   Plus,
   Ruler,
   Settings,
+  ShieldCheck,
   Target,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -31,7 +32,7 @@ const getErrorMessage = (error: unknown, fallback: string) =>
 
 const DashboardHeader = () => {
   const { t } = usePreferences();
-  const { signOut, isGuest, exitGuest } = useAuth();
+  const { signOut, isGuest, exitGuest, canAccessAdmin } = useAuth();
   const navigate = useNavigate();
   const { weeklyConsistency } = useHeaderWeeklyConsistency();
   const headerNavItems = [
@@ -78,6 +79,12 @@ const DashboardHeader = () => {
                 <Settings className="mr-2 h-4 w-4" />
                 Ajustes
               </DropdownMenuItem>
+              {canAccessAdmin && !isGuest ? (
+                <DropdownMenuItem className="min-h-11 px-3 py-2 text-sm font-semibold" onSelect={() => navigate("/admin")}>
+                  <ShieldCheck className="mr-2 h-4 w-4" />
+                  Panel admin
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem
                 className="min-h-11 px-3 py-2 text-sm font-semibold text-destructive focus:text-destructive"
                 onSelect={handleAuthAction}
