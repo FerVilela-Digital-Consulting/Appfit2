@@ -70,16 +70,16 @@ export function useNutritionPageState() {
   });
 
   const [foodName, setFoodName] = useState("");
-  const [servingSize, setServingSize] = useState("100");
-  const [servingUnit, setServingUnit] = useState("g");
-  const [calories, setCalories] = useState("0");
-  const [protein, setProtein] = useState("0");
-  const [carbs, setCarbs] = useState("0");
-  const [fat, setFat] = useState("0");
-  const [fiber, setFiber] = useState("0");
-  const [sugar, setSugar] = useState("0");
-  const [sodium, setSodium] = useState("0");
-  const [potassium, setPotassium] = useState("0");
+  const [servingSize, setServingSize] = useState("");
+  const [servingUnit, setServingUnit] = useState("");
+  const [calories, setCalories] = useState("");
+  const [protein, setProtein] = useState("");
+  const [carbs, setCarbs] = useState("");
+  const [fat, setFat] = useState("");
+  const [fiber, setFiber] = useState("");
+  const [sugar, setSugar] = useState("");
+  const [sodium, setSodium] = useState("");
+  const [potassium, setPotassium] = useState("");
   const [selectedFavoriteId, setSelectedFavoriteId] = useState("");
   const [selectedYesterdayId, setSelectedYesterdayId] = useState("");
   const [selectedRecentId, setSelectedRecentId] = useState("");

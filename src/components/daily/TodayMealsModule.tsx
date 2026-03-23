@@ -14,6 +14,7 @@ import {
   type NutritionEntry,
   type NutritionMealType,
 } from "@/modules/nutrition/services";
+import { FOOD_SERVING_UNITS } from "@/modules/nutrition/ui/nutritionConstants";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -45,12 +46,12 @@ const TodayMealsModule = () => {
   const [activeMeal, setActiveMeal] = useState<NutritionMealType>("breakfast");
   const [mode, setMode] = useState<AddMode>("manual");
   const [foodName, setFoodName] = useState("");
-  const [servingSize, setServingSize] = useState("100");
-  const [servingUnit, setServingUnit] = useState("g");
-  const [calories, setCalories] = useState("0");
-  const [protein, setProtein] = useState("0");
-  const [carbs, setCarbs] = useState("0");
-  const [fat, setFat] = useState("0");
+  const [servingSize, setServingSize] = useState("");
+  const [servingUnit, setServingUnit] = useState("");
+  const [calories, setCalories] = useState("");
+  const [protein, setProtein] = useState("");
+  const [carbs, setCarbs] = useState("");
+  const [fat, setFat] = useState("");
   const [selectedFavoriteId, setSelectedFavoriteId] = useState("");
   const [selectedRecentId, setSelectedRecentId] = useState("");
   const [expandedMeals, setExpandedMeals] = useState<Record<NutritionMealType, boolean>>({
@@ -160,12 +161,12 @@ const TodayMealsModule = () => {
 
   const resetManualForm = () => {
     setFoodName("");
-    setServingSize("100");
-    setServingUnit("g");
-    setCalories("0");
-    setProtein("0");
-    setCarbs("0");
-    setFat("0");
+    setServingSize("");
+    setServingUnit("");
+    setCalories("");
+    setProtein("");
+    setCarbs("");
+    setFat("");
   };
 
   const handleAdd = async () => {
@@ -404,7 +405,18 @@ const TodayMealsModule = () => {
                 <Input value={foodName} onChange={(event) => setFoodName(event.target.value)} placeholder="Nombre del alimento" />
                 <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
                   <Input value={servingSize} onChange={(event) => setServingSize(event.target.value)} type="number" min="0" placeholder="Cantidad" />
-                  <Input value={servingUnit} onChange={(event) => setServingUnit(event.target.value)} placeholder="unidad" />
+                  <Select value={servingUnit || undefined} onValueChange={setServingUnit}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="unidad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FOOD_SERVING_UNITS.map((unit) => (
+                        <SelectItem key={unit.value} value={unit.value}>
+                          {unit.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                   <Input value={calories} onChange={(event) => setCalories(event.target.value)} type="number" min="0" placeholder="kcal" />

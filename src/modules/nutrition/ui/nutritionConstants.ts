@@ -25,6 +25,20 @@ export const GOAL_LABELS: Record<string, string> = {
 
 export type AddMode = "manual" | "database" | "favorite" | "yesterday" | "recent";
 
+export const FOOD_SERVING_UNITS = [
+  { value: "g", label: "g" },
+  { value: "kg", label: "kg" },
+  { value: "ml", label: "ml" },
+  { value: "l", label: "L" },
+  { value: "oz", label: "oz" },
+  { value: "lb", label: "lb" },
+  { value: "cup", label: "taza" },
+  { value: "tbsp", label: "cda" },
+  { value: "tsp", label: "cdta" },
+  { value: "unit", label: "unidad" },
+  { value: "portion", label: "porcion" },
+] as const;
+
 export const formatMetric = (value: number | null | undefined, suffix = "", digits = 0) => {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return "--";
   return `${Number(value).toFixed(digits)}${suffix}`;
