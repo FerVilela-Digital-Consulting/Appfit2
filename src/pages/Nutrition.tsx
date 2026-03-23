@@ -13,7 +13,7 @@ import { useNutritionPageState } from "@/modules/nutrition/ui/useNutritionPageSt
 
 const Nutrition = () => {
   const [technicalOpen, setTechnicalOpen] = useState(false);
-  const [activeMainView, setActiveMainView] = useState<"logbook" | "library">("logbook");
+  const [activeMainView, setActiveMainView] = useState<"logbook" | "library" | "summary">("logbook");
 
   const {
     selectedDate,
@@ -112,6 +112,26 @@ const Nutrition = () => {
     handleAddEntry,
   } = useNutritionPageState();
 
+  const sidebarPanel = (
+    <NutritionSidebarPanel
+      effectiveProfileLabel={effectiveProfileLabel}
+      activeArchetype={activeArchetype}
+      planSource={planSource}
+      planSourceLabel={planSourceLabel}
+      weightSource={daySummary?.weightSource}
+      target={target}
+      goals={goals}
+      totals={totals}
+      remaining={remaining}
+      metabolicProfile={metabolicProfile}
+      caloriesPct={caloriesPct}
+      proteinPct={proteinPct}
+      carbsPct={carbsPct}
+      fatPct={fatPct}
+      onOpenTechnicalConfig={() => setTechnicalOpen(true)}
+    />
+  );
+
   return (
     <div className="app-shell min-h-screen px-4 py-5 text-foreground sm:px-6 sm:py-8">
       <div className="mx-auto max-w-[1540px] space-y-6">
@@ -135,7 +155,33 @@ const Nutrition = () => {
               onOpenTechnicalConfig={() => setTechnicalOpen(true)}
             />
             <div className="app-surface-panel rounded-[20px] p-2 sm:rounded-[24px]">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2 sm:hidden">
+                <Button
+                  type="button"
+                  variant={activeMainView === "logbook" ? "default" : "outline"}
+                  className="rounded-xl"
+                  onClick={() => setActiveMainView("logbook")}
+                >
+                  Logbook
+                </Button>
+                <Button
+                  type="button"
+                  variant={activeMainView === "library" ? "default" : "outline"}
+                  className="rounded-xl"
+                  onClick={() => setActiveMainView("library")}
+                >
+                  Biblioteca
+                </Button>
+                <Button
+                  type="button"
+                  variant={activeMainView === "summary" ? "default" : "outline"}
+                  className="rounded-xl"
+                  onClick={() => setActiveMainView("summary")}
+                >
+                  Resumen
+                </Button>
+              </div>
+              <div className="hidden grid-cols-2 gap-2 sm:grid">
                 <Button
                   type="button"
                   variant={activeMainView === "logbook" ? "default" : "outline"}
@@ -154,13 +200,9 @@ const Nutrition = () => {
                 </Button>
               </div>
             </div>
-            {activeMainView === "logbook" ? (
-              <NutritionMealsSection
-                mealOverview={mealOverview}
-                onOpenMealDialog={openDialogForMeal}
-                onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
-              />
-            ) : (
+            {activeMainView === "summary" ? (
+              <div className="sm:hidden">{sidebarPanel}</div>
+            ) : activeMainView === "library" ? (
               <NutritionFoodLibrarySection
                 foodLibraryItems={foodLibraryItems}
                 favorites={favorites}
@@ -171,26 +213,16 @@ const Nutrition = () => {
                 isUpdatingFavorite={updateFavoriteMutation.isPending}
                 isDeletingFavorite={deleteFavoriteMutation.isPending}
               />
+            ) : (
+              <NutritionMealsSection
+                mealOverview={mealOverview}
+                onOpenMealDialog={openDialogForMeal}
+                onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
+              />
             )}
           </section>
 
-          <NutritionSidebarPanel
-            effectiveProfileLabel={effectiveProfileLabel}
-            activeArchetype={activeArchetype}
-            planSource={planSource}
-            planSourceLabel={planSourceLabel}
-            weightSource={daySummary?.weightSource}
-            target={target}
-            goals={goals}
-            totals={totals}
-            remaining={remaining}
-            metabolicProfile={metabolicProfile}
-            caloriesPct={caloriesPct}
-            proteinPct={proteinPct}
-            carbsPct={carbsPct}
-            fatPct={fatPct}
-            onOpenTechnicalConfig={() => setTechnicalOpen(true)}
-          />
+          <div className="hidden sm:block">{sidebarPanel}</div>
         </div>
       </div>
 
