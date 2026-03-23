@@ -13,7 +13,7 @@ import { useNutritionPageState } from "@/modules/nutrition/ui/useNutritionPageSt
 
 const Nutrition = () => {
   const [technicalOpen, setTechnicalOpen] = useState(false);
-  const [activeMainView, setActiveMainView] = useState<"logbook" | "library" | "summary">("logbook");
+  const [activeMainView, setActiveMainView] = useState<"logbook" | "library" | "summary">("summary");
 
   const {
     selectedDate,
@@ -137,25 +137,35 @@ const Nutrition = () => {
       <div className="mx-auto max-w-[1540px] space-y-6">
         <div className="grid gap-6 xl:grid-cols-[1.65fr_0.8fr]">
           <section className="space-y-5">
-            <NutritionHeaderSection
-              selectedDate={selectedDate}
-              selectedProfileId={selectedNutritionProfile?.id ?? null}
-              selectedPlanName={effectiveProfileLabel}
-              profileOptions={profileOptions}
-              activeArchetype={activeArchetype}
-              archetypeDescription={archetypeMeta.description}
-              planSource={planSource}
-              planSourceLabel={planSourceLabel}
-              planSourceDescription={planSourceDescription}
-              onPreviousDate={() => setSelectedDate((prev) => addDays(prev, -1))}
-              onNextDate={() => setSelectedDate((prev) => addDays(prev, 1))}
-              onSelectProfile={(value) => profileSelectionMutation.mutate(value)}
-              onApplyWeeklyPlan={(entries) => weeklyProfilePlanMutation.mutate(entries)}
-              isApplyingWeeklyPlan={weeklyProfilePlanMutation.isPending}
-              onOpenTechnicalConfig={() => setTechnicalOpen(true)}
-            />
+            <div className="hidden sm:block">
+              <NutritionHeaderSection
+                selectedDate={selectedDate}
+                selectedProfileId={selectedNutritionProfile?.id ?? null}
+                selectedPlanName={effectiveProfileLabel}
+                profileOptions={profileOptions}
+                activeArchetype={activeArchetype}
+                archetypeDescription={archetypeMeta.description}
+                planSource={planSource}
+                planSourceLabel={planSourceLabel}
+                planSourceDescription={planSourceDescription}
+                onPreviousDate={() => setSelectedDate((prev) => addDays(prev, -1))}
+                onNextDate={() => setSelectedDate((prev) => addDays(prev, 1))}
+                onSelectProfile={(value) => profileSelectionMutation.mutate(value)}
+                onApplyWeeklyPlan={(entries) => weeklyProfilePlanMutation.mutate(entries)}
+                isApplyingWeeklyPlan={weeklyProfilePlanMutation.isPending}
+                onOpenTechnicalConfig={() => setTechnicalOpen(true)}
+              />
+            </div>
             <div className="app-surface-panel rounded-[20px] p-2 sm:rounded-[24px]">
               <div className="grid grid-cols-3 gap-2 sm:hidden">
+                <Button
+                  type="button"
+                  variant={activeMainView === "summary" ? "default" : "outline"}
+                  className="rounded-xl"
+                  onClick={() => setActiveMainView("summary")}
+                >
+                  Resumen
+                </Button>
                 <Button
                   type="button"
                   variant={activeMainView === "logbook" ? "default" : "outline"}
@@ -172,19 +182,11 @@ const Nutrition = () => {
                 >
                   Biblioteca
                 </Button>
-                <Button
-                  type="button"
-                  variant={activeMainView === "summary" ? "default" : "outline"}
-                  className="rounded-xl"
-                  onClick={() => setActiveMainView("summary")}
-                >
-                  Resumen
-                </Button>
               </div>
               <div className="hidden grid-cols-2 gap-2 sm:grid">
                 <Button
                   type="button"
-                  variant={activeMainView === "logbook" ? "default" : "outline"}
+                  variant={activeMainView === "library" ? "outline" : "default"}
                   className="rounded-xl"
                   onClick={() => setActiveMainView("logbook")}
                 >
@@ -201,7 +203,35 @@ const Nutrition = () => {
               </div>
             </div>
             {activeMainView === "summary" ? (
-              <div className="sm:hidden">{sidebarPanel}</div>
+              <>
+                <div className="space-y-5 sm:hidden">
+                  <NutritionHeaderSection
+                    selectedDate={selectedDate}
+                    selectedProfileId={selectedNutritionProfile?.id ?? null}
+                    selectedPlanName={effectiveProfileLabel}
+                    profileOptions={profileOptions}
+                    activeArchetype={activeArchetype}
+                    archetypeDescription={archetypeMeta.description}
+                    planSource={planSource}
+                    planSourceLabel={planSourceLabel}
+                    planSourceDescription={planSourceDescription}
+                    onPreviousDate={() => setSelectedDate((prev) => addDays(prev, -1))}
+                    onNextDate={() => setSelectedDate((prev) => addDays(prev, 1))}
+                    onSelectProfile={(value) => profileSelectionMutation.mutate(value)}
+                    onApplyWeeklyPlan={(entries) => weeklyProfilePlanMutation.mutate(entries)}
+                    isApplyingWeeklyPlan={weeklyProfilePlanMutation.isPending}
+                    onOpenTechnicalConfig={() => setTechnicalOpen(true)}
+                  />
+                  {sidebarPanel}
+                </div>
+                <div className="hidden sm:block">
+                  <NutritionMealsSection
+                    mealOverview={mealOverview}
+                    onOpenMealDialog={openDialogForMeal}
+                    onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
+                  />
+                </div>
+              </>
             ) : activeMainView === "library" ? (
               <NutritionFoodLibrarySection
                 foodLibraryItems={foodLibraryItems}
