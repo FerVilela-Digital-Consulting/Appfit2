@@ -59,20 +59,20 @@ export function NutritionMealsSection({
                 </div>
               </div>
 
-              <div className="grid min-w-0 grid-cols-2 gap-3 lg:grid-cols-4">
-                <div className="app-panel-block rounded-2xl px-3 py-2 text-center">
+              <div className="grid min-w-0 grid-cols-4 gap-2 lg:gap-3">
+                <div className="app-panel-block rounded-xl px-2 py-2 text-center sm:rounded-2xl sm:px-3">
                   <div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Pro</div>
                   <div className="text-sm font-semibold text-emerald-300">{formatMetric(subtotal?.protein_g, "g")}</div>
                 </div>
-                <div className="app-panel-block rounded-2xl px-3 py-2 text-center">
+                <div className="app-panel-block rounded-xl px-2 py-2 text-center sm:rounded-2xl sm:px-3">
                   <div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Cho</div>
                   <div className="text-sm font-semibold text-cyan-300">{formatMetric(subtotal?.carbs_g, "g")}</div>
                 </div>
-                <div className="app-panel-block rounded-2xl px-3 py-2 text-center">
+                <div className="app-panel-block rounded-xl px-2 py-2 text-center sm:rounded-2xl sm:px-3">
                   <div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Fat</div>
                   <div className="text-sm font-semibold text-amber-300">{formatMetric(subtotal?.fat_g, "g")}</div>
                 </div>
-                <div className="app-panel-block rounded-2xl px-3 py-2 text-center">
+                <div className="app-panel-block rounded-xl px-2 py-2 text-center sm:rounded-2xl sm:px-3">
                   <div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Kcal</div>
                   <div className="app-surface-heading text-sm font-semibold">{formatMetric(subtotal?.calories)}</div>
                 </div>
