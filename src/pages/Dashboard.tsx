@@ -165,7 +165,7 @@ const formatDurationLabel = (minutes: number) => {
 };
 
 const SHOW_CALENDAR_CARD_IN_DASHBOARD = false;
-const USE_MOBILE_HORIZONTAL_SCROLL = false;
+const USE_MOBILE_HORIZONTAL_SCROLL = true;
 const WEIGHT_RANGE_OPTIONS = [
   { key: "7d", label: "7D" },
   { key: "30d", label: "30D" },
