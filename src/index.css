@@ -172,12 +172,6 @@
     overflow-x: hidden;
   }
 
-  @media (max-width: 767px) {
-    .container {
-      padding-left: 0 !important;
-      padding-right: 0 !important;
-    }
-  }
 }
 
 @layer utilities {
@@ -185,6 +179,12 @@
     background: var(--app-shell-bg);
     background-attachment: fixed;
     background-size: var(--app-shell-size);
+  }
+
+  @media (max-width: 767px) {
+    .app-shell {
+      background-attachment: scroll;
+    }
   }
 
   .glass-card,

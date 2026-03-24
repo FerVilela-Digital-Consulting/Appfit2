@@ -165,7 +165,7 @@ const formatDurationLabel = (minutes: number) => {
 };
 
 const SHOW_CALENDAR_CARD_IN_DASHBOARD = false;
-const USE_MOBILE_HORIZONTAL_SCROLL = true;
+const USE_MOBILE_HORIZONTAL_SCROLL = false;
 const WEIGHT_RANGE_OPTIONS = [
   { key: "7d", label: "7D" },
   { key: "30d", label: "30D" },
@@ -233,7 +233,7 @@ const Dashboard = () => {
   const scheduledWorkout = trainingTodayQuery.data?.scheduledWorkout ?? null;
   const activeSession = trainingTodayQuery.data?.activeSession ?? null;
   const activeWorkout = trainingTodayQuery.data?.activeSession?.workout ?? null;
-  const todayTrainingRow = trainingTodayQuery.data?.schedule.find((day) => day.day_of_week === new Date().getDay()) ?? null;
+  const todayTrainingRow = trainingTodayQuery.data?.schedule?.find((day) => day.day_of_week === new Date().getDay()) ?? null;
   const isTrainingRestDay = Boolean(todayTrainingRow?.is_rest_day && !activeSession && !scheduledWorkout);
   const selectedTrainingWorkoutQuery = useQuery({
     queryKey: ["dashboard_training_selected_workout", user?.id, isGuest, timeZone, selectedTrainingWorkoutId],

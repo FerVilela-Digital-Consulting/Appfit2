@@ -343,7 +343,7 @@ export function TrainingTodaySection({
       </div>
 
       {!activeSession ? (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-3 backdrop-blur md:hidden">
+        <div className="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom)+0.25rem)] z-20 border-t bg-background/95 p-3 backdrop-blur md:hidden">
           <div className="mx-auto flex max-w-[560px] gap-2">
             <Button className="flex-1" onClick={() => (mobileStartWorkoutId ? onStartWorkout(mobileStartWorkoutId) : onOpenPlanning?.())} disabled={isStartPending}>
               {mobileStartWorkoutId ? copy.startWorkout : copy.viewPlanning}

@@ -29,8 +29,7 @@ export function TrainingPlanningScheduleSection({
         <CardDescription>{copy.planningSectionDescription}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="overflow-x-auto pb-1">
-          <div className="grid min-w-[980px] grid-cols-7 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
             {schedule.map((day) => (
               <div key={day.day_of_week} className="space-y-2 rounded-2xl border p-3">
                 <div className="flex items-center justify-between gap-2">
@@ -64,7 +63,6 @@ export function TrainingPlanningScheduleSection({
               </div>
             ))}
           </div>
-        </div>
       </CardContent>
     </Card>
   );
