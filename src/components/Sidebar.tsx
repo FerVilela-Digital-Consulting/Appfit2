@@ -1,7 +1,7 @@
 import { BarChart3, CalendarDays, Dumbbell, Home, Settings, ShieldCheck, Target, UtensilsCrossed, Ruler } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { useAuth } from "@/context/AuthContext";
 import { usePreferences } from "@/context/PreferencesContext";
 import { findGoalOption } from "@/lib/metabolismOptions";
@@ -14,6 +14,7 @@ const Sidebar = () => {
   const { t } = usePreferences();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const prefersReducedMotion = useReducedMotion();
+  const shouldAnimate = true || !prefersReducedMotion;
 
   const menuItems = [
     { title: t("nav.today"), icon: Home, path: "/today" },
@@ -69,13 +70,14 @@ const Sidebar = () => {
       <nav className="flex-1 px-4 py-6 overflow-y-auto">
         <section className="space-y-2 pb-4">
           <p className="px-4 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Workspace</p>
-          <ul className="space-y-1">
-            {menuItems.map((item, index) => (
+          <LayoutGroup id="sidebar-navigation">
+            <ul className="space-y-1">
+              {menuItems.map((item, index) => (
               <motion.li
                 key={item.title}
-                initial={prefersReducedMotion ? false : { opacity: 0, x: -10 }}
-                animate={prefersReducedMotion ? undefined : { opacity: 1, x: 0 }}
-                transition={prefersReducedMotion ? undefined : { duration: 0.2, delay: index * 0.025 }}
+                initial={shouldAnimate ? { opacity: 0, x: -10 } : false}
+                animate={shouldAnimate ? { opacity: 1, x: 0 } : undefined}
+                transition={shouldAnimate ? { duration: 0.24, delay: index * 0.03 } : undefined}
               >
                 <NavLink
                   to={item.path}
@@ -92,9 +94,21 @@ const Sidebar = () => {
                           layoutId="sidebar-active-pill"
                           className="absolute inset-0 rounded-lg bg-accent shadow-[0_8px_24px_-16px_hsl(var(--primary)/0.7)]"
                           transition={
-                            prefersReducedMotion
-                              ? { duration: 0 }
-                              : { type: "spring", stiffness: 480, damping: 38, mass: 0.55 }
+                            shouldAnimate
+                              ? { type: "spring", stiffness: 240, damping: 24, mass: 0.7 }
+                              : { duration: 0 }
+                          }
+                        />
+                      ) : null}
+
+                      {isActive ? (
+                        <motion.span
+                          layoutId="sidebar-active-glow"
+                          className="absolute inset-0 rounded-lg bg-primary/15"
+                          transition={
+                            shouldAnimate
+                              ? { type: "spring", stiffness: 210, damping: 22, mass: 0.75 }
+                              : { duration: 0 }
                           }
                         />
                       ) : null}
@@ -104,9 +118,9 @@ const Sidebar = () => {
                           layoutId="sidebar-active-rail"
                           className="absolute left-0 top-1/2 h-7 w-1.5 -translate-y-1/2 rounded-r-full bg-primary"
                           transition={
-                            prefersReducedMotion
-                              ? { duration: 0 }
-                              : { type: "spring", stiffness: 520, damping: 40, mass: 0.5 }
+                            shouldAnimate
+                              ? { type: "spring", stiffness: 260, damping: 24, mass: 0.7 }
+                              : { duration: 0 }
                           }
                         />
                       ) : null}
@@ -115,9 +129,11 @@ const Sidebar = () => {
                         className={`relative z-10 flex h-5 w-5 items-center justify-center ${
                           isActive ? "text-accent-foreground" : "text-muted-foreground group-hover:text-secondary-foreground"
                         }`}
-                        whileHover={prefersReducedMotion ? undefined : { x: 1, scale: 1.05 }}
-                        whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
-                        transition={{ type: "spring", stiffness: 360, damping: 24 }}
+                        initial={false}
+                        animate={shouldAnimate ? { scale: isActive ? 1.06 : 1, x: isActive ? 1 : 0 } : undefined}
+                        whileHover={shouldAnimate ? { x: 1, scale: 1.07 } : undefined}
+                        whileTap={shouldAnimate ? { scale: 0.96 } : undefined}
+                        transition={{ type: "spring", stiffness: 300, damping: 22 }}
                       >
                         <item.icon className="h-5 w-5" />
                       </motion.span>
@@ -126,8 +142,9 @@ const Sidebar = () => {
                         className={`relative z-10 ${
                           isActive ? "text-accent-foreground" : "text-muted-foreground group-hover:text-secondary-foreground"
                         }`}
-                        animate={prefersReducedMotion ? undefined : { x: isActive ? 2 : 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        initial={false}
+                        animate={shouldAnimate ? { x: isActive ? 3 : 0, opacity: isActive ? 1 : 0.92 } : undefined}
+                        transition={{ type: "spring", stiffness: 280, damping: 24 }}
                       >
                         {item.title}
                       </motion.span>
@@ -135,8 +152,9 @@ const Sidebar = () => {
                   )}
                 </NavLink>
               </motion.li>
-            ))}
-          </ul>
+              ))}
+            </ul>
+          </LayoutGroup>
         </section>
       </nav>
 
