@@ -96,7 +96,7 @@ const Training = () => {
 
         <Tabs value={tab} onValueChange={handleTabChange} className="space-y-5">
         <div className="app-surface-panel rounded-[20px] p-2 sm:rounded-[24px]">
-          <TabsList className="relative grid h-auto w-full grid-cols-3 p-0">
+          <TabsList className="relative grid h-auto w-full grid-cols-3 bg-transparent p-0">
             <motion.span
               aria-hidden
               className="absolute bottom-1 left-1 top-1 rounded-xl bg-primary"
