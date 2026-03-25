@@ -83,14 +83,30 @@ const Sidebar = () => {
                 >
                   {({ isActive }) => (
                     <>
+                      {!isActive ? (
+                        <span className="absolute inset-0 rounded-lg transition-colors duration-200 group-hover:bg-secondary/80" />
+                      ) : null}
+
                       {isActive ? (
                         <motion.span
                           layoutId="sidebar-active-pill"
-                          className="absolute inset-0 rounded-lg bg-accent"
+                          className="absolute inset-0 rounded-lg bg-accent shadow-[0_8px_24px_-16px_hsl(var(--primary)/0.7)]"
                           transition={
                             prefersReducedMotion
                               ? { duration: 0 }
                               : { type: "spring", stiffness: 480, damping: 38, mass: 0.55 }
+                          }
+                        />
+                      ) : null}
+
+                      {isActive ? (
+                        <motion.span
+                          layoutId="sidebar-active-rail"
+                          className="absolute left-0 top-1/2 h-7 w-1.5 -translate-y-1/2 rounded-r-full bg-primary"
+                          transition={
+                            prefersReducedMotion
+                              ? { duration: 0 }
+                              : { type: "spring", stiffness: 520, damping: 40, mass: 0.5 }
                           }
                         />
                       ) : null}
@@ -110,7 +126,7 @@ const Sidebar = () => {
                         className={`relative z-10 ${
                           isActive ? "text-accent-foreground" : "text-muted-foreground group-hover:text-secondary-foreground"
                         }`}
-                        animate={prefersReducedMotion ? undefined : { x: isActive ? 1 : 0 }}
+                        animate={prefersReducedMotion ? undefined : { x: isActive ? 2 : 0 }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       >
                         {item.title}
