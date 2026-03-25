@@ -213,13 +213,13 @@ const WeightRangeControl = ({ value, onChange, layoutId, className }: WeightRang
               <motion.span
                 layoutId={`${layoutId}-active-pill`}
                 className="absolute inset-0 rounded-lg bg-primary shadow-[0_8px_24px_-16px_hsl(var(--primary)/0.8)]"
-                transition={{ type: "spring", stiffness: 320, damping: 28, mass: 0.65 }}
+                transition={{ type: "spring", stiffness: 170, damping: 24, mass: 0.95 }}
               />
             ) : null}
             <motion.span
               className={cn("relative z-10", isActive ? "text-primary-foreground" : "text-muted-foreground")}
-              animate={{ scale: isActive ? 1.03 : 1, opacity: isActive ? 1 : 0.9 }}
-              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              animate={{ scale: isActive ? 1.015 : 1, opacity: isActive ? 1 : 0.88 }}
+              transition={{ duration: 0.24, ease: "easeOut" }}
             >
               {option.label}
             </motion.span>
