@@ -22,6 +22,7 @@ import {
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { LayoutGroup, motion } from "motion/react";
 
 import DashboardCardShell from "@/components/dashboard/DashboardCardShell";
 import DashboardEmptyState from "@/components/dashboard/DashboardEmptyState";
@@ -178,6 +179,56 @@ const DASHBOARD_MODULE_ROUTE_FALLBACK: Record<string, string> = {
   "#biofeedback": "/biofeedback",
   "#nutrition": "/nutrition",
 };
+
+type WeightRangeKey = (typeof WEIGHT_RANGE_OPTIONS)[number]["key"];
+
+type WeightRangeControlProps = {
+  value: WeightRangeKey;
+  onChange: (next: WeightRangeKey) => void;
+  layoutId: string;
+  className?: string;
+};
+
+const WeightRangeControl = ({ value, onChange, layoutId, className }: WeightRangeControlProps) => (
+  <LayoutGroup id={layoutId}>
+    <motion.div
+      className={cn(
+        "inline-flex w-full min-w-[11.5rem] max-w-[13.25rem] items-center rounded-xl border border-border/60 bg-muted/10 p-1",
+        className,
+      )}
+      initial={{ opacity: 0, y: 3 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+    >
+      {WEIGHT_RANGE_OPTIONS.map((option) => {
+        const isActive = value === option.key;
+        return (
+          <button
+            key={`${layoutId}-${option.key}`}
+            type="button"
+            onClick={() => onChange(option.key)}
+            className="relative flex-1 overflow-hidden rounded-lg px-3 py-1.5 text-xs font-semibold"
+          >
+            {isActive ? (
+              <motion.span
+                layoutId={`${layoutId}-active-pill`}
+                className="absolute inset-0 rounded-lg bg-primary shadow-[0_8px_24px_-16px_hsl(var(--primary)/0.8)]"
+                transition={{ type: "spring", stiffness: 320, damping: 28, mass: 0.65 }}
+              />
+            ) : null}
+            <motion.span
+              className={cn("relative z-10", isActive ? "text-primary-foreground" : "text-muted-foreground")}
+              animate={{ scale: isActive ? 1.03 : 1, opacity: isActive ? 1 : 0.9 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            >
+              {option.label}
+            </motion.span>
+          </button>
+        );
+      })}
+    </motion.div>
+  </LayoutGroup>
+);
 
 const Dashboard = () => {
   const queryClient = useQueryClient();
@@ -1171,21 +1222,11 @@ const Dashboard = () => {
                 </p>
               </div>
 
-              <div className="inline-flex items-center rounded-lg border border-border/60 bg-muted/10 p-0.5">
-                {WEIGHT_RANGE_OPTIONS.map((option) => (
-                  <button
-                    key={`desktop-weight-range-${option.key}`}
-                    type="button"
-                    onClick={() => setWeightTrendRange(option.key)}
-                    className={cn(
-                      "rounded-md px-2 py-1 text-[11px] font-semibold transition-colors",
-                      weightTrendRange === option.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+              <WeightRangeControl
+                value={weightTrendRange}
+                onChange={setWeightTrendRange}
+                layoutId="weight-range-desktop"
+              />
 
               <div className="flex items-end justify-between gap-3">
                 <div>
@@ -1364,21 +1405,12 @@ const Dashboard = () => {
                       {weightStatus.label}
                     </p>
                     </div>
-                    <div className="inline-flex items-center rounded-lg border border-border/60 bg-muted/10 p-0.5">
-                      {WEIGHT_RANGE_OPTIONS.map((option) => (
-                        <button
-                          key={`mobile-weight-range-${option.key}`}
-                          type="button"
-                          onClick={() => setWeightTrendRange(option.key)}
-                          className={cn(
-                            "rounded-md px-2 py-1 text-[11px] font-semibold transition-colors",
-                            weightTrendRange === option.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-                          )}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
+                    <WeightRangeControl
+                      value={weightTrendRange}
+                      onChange={setWeightTrendRange}
+                      layoutId="weight-range-mobile"
+                      className="max-w-[14rem]"
+                    />
                     <div className="flex items-end justify-between gap-3">
                       <div>
                         <p className="text-xs text-muted-foreground">Peso actual</p>
