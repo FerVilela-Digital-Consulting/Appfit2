@@ -191,14 +191,11 @@ type WeightRangeControlProps = {
 
 const WeightRangeControl = ({ value, onChange, layoutId, className }: WeightRangeControlProps) => (
   <LayoutGroup id={layoutId}>
-    <motion.div
+    <div
       className={cn(
         "inline-flex w-full min-w-[11.5rem] max-w-[13.25rem] items-center rounded-xl border border-border/60 bg-muted/10 p-1",
         className,
       )}
-      initial={{ opacity: 0, y: 3 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: "easeOut" }}
     >
       {WEIGHT_RANGE_OPTIONS.map((option) => {
         const isActive = value === option.key;
@@ -213,20 +210,16 @@ const WeightRangeControl = ({ value, onChange, layoutId, className }: WeightRang
               <motion.span
                 layoutId={`${layoutId}-active-pill`}
                 className="absolute inset-0 rounded-lg bg-primary shadow-[0_8px_24px_-16px_hsl(var(--primary)/0.8)]"
-                transition={{ type: "spring", stiffness: 170, damping: 24, mass: 0.95 }}
+                transition={{ type: "tween", duration: 0.22, ease: "easeInOut" }}
               />
             ) : null}
-            <motion.span
-              className={cn("relative z-10", isActive ? "text-primary-foreground" : "text-muted-foreground")}
-              animate={{ scale: isActive ? 1.015 : 1, opacity: isActive ? 1 : 0.88 }}
-              transition={{ duration: 0.24, ease: "easeOut" }}
-            >
+            <span className={cn("relative z-10", isActive ? "text-primary-foreground" : "text-muted-foreground")}>
               {option.label}
-            </motion.span>
+            </span>
           </button>
         );
       })}
-    </motion.div>
+    </div>
   </LayoutGroup>
 );
 
