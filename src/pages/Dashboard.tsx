@@ -22,7 +22,7 @@ import {
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { LayoutGroup, motion } from "motion/react";
+import { motion } from "motion/react";
 
 import DashboardCardShell from "@/components/dashboard/DashboardCardShell";
 import DashboardEmptyState from "@/components/dashboard/DashboardEmptyState";
@@ -190,37 +190,33 @@ type WeightRangeControlProps = {
 };
 
 const WeightRangeControl = ({ value, onChange, layoutId, className }: WeightRangeControlProps) => (
-  <LayoutGroup id={layoutId}>
-    <div
-      className={cn(
-        "inline-flex w-full min-w-[11.5rem] max-w-[13.25rem] items-center rounded-xl border border-border/60 bg-muted/10 p-1",
-        className,
-      )}
-    >
-      {WEIGHT_RANGE_OPTIONS.map((option) => {
-        const isActive = value === option.key;
-        return (
-          <button
-            key={`${layoutId}-${option.key}`}
-            type="button"
-            onClick={() => onChange(option.key)}
-            className="relative flex-1 overflow-hidden rounded-lg px-3 py-1.5 text-xs font-semibold"
-          >
-            {isActive ? (
-              <motion.span
-                layoutId={`${layoutId}-active-pill`}
-                className="absolute inset-0 rounded-lg bg-primary shadow-[0_8px_24px_-16px_hsl(var(--primary)/0.8)]"
-                transition={{ type: "tween", duration: 0.22, ease: "easeInOut" }}
-              />
-            ) : null}
-            <span className={cn("relative z-10", isActive ? "text-primary-foreground" : "text-muted-foreground")}>
-              {option.label}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  </LayoutGroup>
+  <div
+    className={cn(
+      "relative inline-flex w-full min-w-[11.5rem] max-w-[13.25rem] items-center rounded-xl border border-border/60 bg-muted/10 p-1",
+      className,
+    )}
+  >
+    <motion.span
+      aria-hidden
+      className="absolute bottom-1 left-1 top-1 rounded-lg bg-primary"
+      style={{ width: "calc((100% - 0.5rem) / 3)" }}
+      animate={{ x: `${WEIGHT_RANGE_OPTIONS.findIndex((option) => option.key === value) * 100}%` }}
+      transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+    />
+    {WEIGHT_RANGE_OPTIONS.map((option) => {
+      const isActive = value === option.key;
+      return (
+        <button
+          key={`${layoutId}-${option.key}`}
+          type="button"
+          onClick={() => onChange(option.key)}
+          className="relative z-10 flex-1 overflow-hidden rounded-lg px-3 py-1.5 text-xs font-semibold"
+        >
+          <span className={cn(isActive ? "text-primary-foreground" : "text-muted-foreground")}>{option.label}</span>
+        </button>
+      );
+    })}
+  </div>
 );
 
 const Dashboard = () => {
