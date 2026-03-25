@@ -19,6 +19,7 @@ const DESKTOP_NUTRITION_VIEWS = ["logbook", "library"] as const;
 const Nutrition = () => {
   const [technicalOpen, setTechnicalOpen] = useState(false);
   const [activeMainView, setActiveMainView] = useState<"logbook" | "library" | "summary">("summary");
+  const desktopMainView: "logbook" | "library" = activeMainView === "library" ? "library" : "logbook";
 
   const {
     selectedDate,
@@ -226,7 +227,7 @@ const Nutrition = () => {
                   aria-hidden
                   className="absolute bottom-1 left-1 top-1 rounded-xl bg-primary"
                   style={{ width: "calc((100% - 0.5rem) / 2)" }}
-                  animate={{ x: `${DESKTOP_NUTRITION_VIEWS.findIndex((view) => view === activeMainView) * 100}%` }}
+                  animate={{ x: `${DESKTOP_NUTRITION_VIEWS.findIndex((view) => view === desktopMainView) * 100}%` }}
                   transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                 />
                 <button
@@ -234,14 +235,14 @@ const Nutrition = () => {
                   className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("logbook")}
                 >
-                  <span className={activeMainView === "logbook" ? "text-primary-foreground" : "text-muted-foreground"}>Logbook</span>
+                  <span className={desktopMainView === "logbook" ? "text-primary-foreground" : "text-muted-foreground"}>Logbook</span>
                 </button>
                 <button
                   type="button"
                   className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("library")}
                 >
-                  <span className={activeMainView === "library" ? "text-primary-foreground" : "text-muted-foreground"}>Biblioteca</span>
+                  <span className={desktopMainView === "library" ? "text-primary-foreground" : "text-muted-foreground"}>Biblioteca</span>
                 </button>
               </div>
             </div>
