@@ -1,6 +1,7 @@
 import { BarChart3, CalendarDays, Dumbbell, Home, Settings, ShieldCheck, Target, UtensilsCrossed, Ruler } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { useAuth } from "@/context/AuthContext";
 import { usePreferences } from "@/context/PreferencesContext";
 import { findGoalOption } from "@/lib/metabolismOptions";
@@ -12,6 +13,7 @@ const Sidebar = () => {
   const { profile, user, isGuest, canAccessAdmin } = useAuth();
   const { t } = usePreferences();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   const menuItems = [
     { title: t("nav.today"), icon: Home, path: "/today" },
@@ -68,22 +70,55 @@ const Sidebar = () => {
         <section className="space-y-2 pb-4">
           <p className="px-4 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Workspace</p>
           <ul className="space-y-1">
-            {menuItems.map((item) => (
-              <li key={item.title}>
+            {menuItems.map((item, index) => (
+              <motion.li
+                key={item.title}
+                initial={prefersReducedMotion ? false : { opacity: 0, x: -10 }}
+                animate={prefersReducedMotion ? undefined : { opacity: 1, x: 0 }}
+                transition={prefersReducedMotion ? undefined : { duration: 0.2, delay: index * 0.025 }}
+              >
                 <NavLink
                   to={item.path}
-                  className={({ isActive }) =>
-                    `w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      isActive
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
-                    }`
-                  }
+                  className="group relative flex w-full items-center gap-3 overflow-hidden rounded-lg px-4 py-3 text-sm font-medium"
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.title}</span>
+                  {({ isActive }) => (
+                    <>
+                      {isActive ? (
+                        <motion.span
+                          layoutId="sidebar-active-pill"
+                          className="absolute inset-0 rounded-lg bg-accent"
+                          transition={
+                            prefersReducedMotion
+                              ? { duration: 0 }
+                              : { type: "spring", stiffness: 480, damping: 38, mass: 0.55 }
+                          }
+                        />
+                      ) : null}
+
+                      <motion.span
+                        className={`relative z-10 flex h-5 w-5 items-center justify-center ${
+                          isActive ? "text-accent-foreground" : "text-muted-foreground group-hover:text-secondary-foreground"
+                        }`}
+                        whileHover={prefersReducedMotion ? undefined : { x: 1, scale: 1.05 }}
+                        whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                        transition={{ type: "spring", stiffness: 360, damping: 24 }}
+                      >
+                        <item.icon className="h-5 w-5" />
+                      </motion.span>
+
+                      <motion.span
+                        className={`relative z-10 ${
+                          isActive ? "text-accent-foreground" : "text-muted-foreground group-hover:text-secondary-foreground"
+                        }`}
+                        animate={prefersReducedMotion ? undefined : { x: isActive ? 1 : 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      >
+                        {item.title}
+                      </motion.span>
+                    </>
+                  )}
                 </NavLink>
-              </li>
+              </motion.li>
             ))}
           </ul>
         </section>
