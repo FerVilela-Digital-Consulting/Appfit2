@@ -1,6 +1,7 @@
 import { addDays, format } from "date-fns";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import { NutritionHeaderSection } from "@/modules/nutrition/ui/components/NutritionHeaderSection";
@@ -11,6 +12,9 @@ import { NutritionProfileDialog } from "@/modules/nutrition/ui/components/Nutrit
 import { NutritionSidebarPanel } from "@/modules/nutrition/ui/components/NutritionSidebarPanel";
 import { NutritionTechnicalDialog } from "@/modules/nutrition/ui/components/NutritionTechnicalDialog";
 import { useNutritionPageState } from "@/modules/nutrition/ui/useNutritionPageState";
+
+const MOBILE_NUTRITION_VIEWS = ["summary", "logbook", "library"] as const;
+const DESKTOP_NUTRITION_VIEWS = ["logbook", "library"] as const;
 
 const Nutrition = () => {
   const [technicalOpen, setTechnicalOpen] = useState(false);
@@ -187,49 +191,58 @@ const Nutrition = () => {
               />
             </div>
             <div className="app-surface-panel rounded-[20px] p-2 sm:rounded-[24px]">
-              <div className="grid grid-cols-3 gap-2 sm:hidden">
-                <Button
+              <div className="relative grid grid-cols-3 sm:hidden">
+                <motion.span
+                  aria-hidden
+                  className="absolute bottom-1 left-1 top-1 rounded-xl bg-primary"
+                  style={{ width: "calc((100% - 0.5rem) / 3)" }}
+                  animate={{ x: `${MOBILE_NUTRITION_VIEWS.findIndex((view) => view === activeMainView) * 100}%` }}
+                  transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                />
+                <button
                   type="button"
-                  variant={activeMainView === "summary" ? "default" : "outline"}
-                  className="rounded-xl"
+                  className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("summary")}
                 >
-                  Resumen
-                </Button>
-                <Button
+                  <span className={activeMainView === "summary" ? "text-primary-foreground" : "text-muted-foreground"}>Resumen</span>
+                </button>
+                <button
                   type="button"
-                  variant={activeMainView === "logbook" ? "default" : "outline"}
-                  className="rounded-xl"
+                  className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("logbook")}
                 >
-                  Logbook
-                </Button>
-                <Button
+                  <span className={activeMainView === "logbook" ? "text-primary-foreground" : "text-muted-foreground"}>Logbook</span>
+                </button>
+                <button
                   type="button"
-                  variant={activeMainView === "library" ? "default" : "outline"}
-                  className="rounded-xl"
+                  className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("library")}
                 >
-                  Biblioteca
-                </Button>
+                  <span className={activeMainView === "library" ? "text-primary-foreground" : "text-muted-foreground"}>Biblioteca</span>
+                </button>
               </div>
-              <div className="hidden grid-cols-2 gap-2 sm:grid">
-                <Button
+              <div className="relative hidden grid-cols-2 sm:grid">
+                <motion.span
+                  aria-hidden
+                  className="absolute bottom-1 left-1 top-1 rounded-xl bg-primary"
+                  style={{ width: "calc((100% - 0.5rem) / 2)" }}
+                  animate={{ x: `${DESKTOP_NUTRITION_VIEWS.findIndex((view) => view === activeMainView) * 100}%` }}
+                  transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                />
+                <button
                   type="button"
-                  variant={activeMainView === "library" ? "outline" : "default"}
-                  className="rounded-xl"
+                  className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("logbook")}
                 >
-                  Logbook
-                </Button>
-                <Button
+                  <span className={activeMainView === "logbook" ? "text-primary-foreground" : "text-muted-foreground"}>Logbook</span>
+                </button>
+                <button
                   type="button"
-                  variant={activeMainView === "library" ? "default" : "outline"}
-                  className="rounded-xl"
+                  className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("library")}
                 >
-                  Biblioteca
-                </Button>
+                  <span className={activeMainView === "library" ? "text-primary-foreground" : "text-muted-foreground"}>Biblioteca</span>
+                </button>
               </div>
             </div>
             {activeMainView === "summary" ? (

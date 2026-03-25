@@ -12,6 +12,9 @@ import { TrainingWorkoutDialog } from "@/modules/training/ui/components/Training
 import { formatDateTime, formatRest, prLabelMap } from "@/modules/training/ui/trainingConstants";
 import { useTrainingPageState } from "@/modules/training/ui/useTrainingPageState";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { motion } from "motion/react";
+
+const TRAINING_TAB_ORDER = ["train", "plan", "progress"] as const;
 
 const Training = () => {
   const isMobile = useIsMobile();
@@ -92,10 +95,32 @@ const Training = () => {
         {trainingError ? <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">{copy.failedLoad}: {trainingErrorMessage}</div> : null}
 
         <Tabs value={tab} onValueChange={handleTabChange} className="space-y-5">
-        <TabsList className="grid h-auto w-full grid-cols-3 gap-2 rounded-2xl bg-muted/60 p-2">
-          <TabsTrigger className="min-w-0 px-2 text-xs sm:text-sm" value="train">{copy.tabs.train}</TabsTrigger>
-          <TabsTrigger className="min-w-0 px-2 text-xs sm:text-sm" value="plan">{copy.tabs.plan}</TabsTrigger>
-          <TabsTrigger className="min-w-0 px-2 text-xs sm:text-sm" value="progress">{copy.tabs.progress}</TabsTrigger>
+        <TabsList className="relative grid h-auto w-full grid-cols-3 rounded-2xl border border-border/60 bg-muted/60 p-1">
+          <motion.span
+            aria-hidden
+            className="absolute bottom-1 left-1 top-1 rounded-xl bg-background shadow-sm"
+            style={{ width: "calc((100% - 0.5rem) / 3)" }}
+            animate={{ x: `${TRAINING_TAB_ORDER.findIndex((tabKey) => tabKey === tab) * 100}%` }}
+            transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          />
+          <TabsTrigger
+            className="relative z-10 min-w-0 rounded-xl bg-transparent px-2 text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none sm:text-sm"
+            value="train"
+          >
+            {copy.tabs.train}
+          </TabsTrigger>
+          <TabsTrigger
+            className="relative z-10 min-w-0 rounded-xl bg-transparent px-2 text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none sm:text-sm"
+            value="plan"
+          >
+            {copy.tabs.plan}
+          </TabsTrigger>
+          <TabsTrigger
+            className="relative z-10 min-w-0 rounded-xl bg-transparent px-2 text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none sm:text-sm"
+            value="progress"
+          >
+            {copy.tabs.progress}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="train" className="space-y-5">
