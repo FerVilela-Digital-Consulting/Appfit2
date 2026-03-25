@@ -93,6 +93,35 @@ export function NutritionSidebarPanel({
     </>
   );
 
+  const renderCalcHint = (description: string) => (
+    <>
+      <span className="hidden sm:inline-flex">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button" className="rounded-full p-0.5 text-muted-foreground/80" aria-label="Ayuda del calculo">
+              <CircleHelp className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[240px] text-xs">
+            {description}
+          </TooltipContent>
+        </Tooltip>
+      </span>
+      <span className="inline-flex sm:hidden">
+        <Popover>
+          <PopoverTrigger asChild>
+            <button type="button" className="rounded-full p-0.5 text-muted-foreground/80" aria-label="Ayuda del calculo">
+              <CircleHelp className="h-3.5 w-3.5" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="top" className="w-[min(18rem,calc(100vw-2rem))] text-xs">
+            {description}
+          </PopoverContent>
+        </Popover>
+      </span>
+    </>
+  );
+
   return (
     <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
       {showPlanCard ? <div className="app-surface-panel rounded-[24px] p-4 sm:rounded-[28px] sm:p-5">
@@ -146,10 +175,47 @@ export function NutritionSidebarPanel({
           Objetivo: {String(goalLabel).toLowerCase()}
         </p>
         <div className="app-surface-caption mt-4 grid gap-2 text-xs uppercase tracking-[0.2em]">
-          <div className="flex items-center justify-between"><span>TDEE base</span><span>{formatMetric(target?.tdee)}</span></div>
-          <div className="flex items-center justify-between"><span>Ajuste</span><span>{target ? `${target.archetypeDelta >= 0 ? "+" : ""}${target.archetypeDelta}` : "--"}</span></div>
-          <div className="flex items-center justify-between"><span>Meta final</span><span>{formatMetric(goals?.calorie_goal, " kcal")}</span></div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1">
+              TDEE base
+              {renderCalcHint("Es tu gasto total diario estimado segun edad, peso, altura y actividad.")}
+            </span>
+            <span>{formatMetric(target?.tdee)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1">
+              Objetivo
+              {renderCalcHint("Multiplicador por objetivo: perder, mantener o ganar peso.")}
+            </span>
+            <span>{target ? `x${target.goalMultiplier.toFixed(2)}` : "--"}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1">
+              Base objetivo
+              {renderCalcHint("Resultado de TDEE base x objetivo, antes del ajuste del dia.")}
+            </span>
+            <span>{formatMetric(target?.calorieTarget, " kcal")}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1">
+              Ajuste del dia
+              {renderCalcHint("Ajuste por plantilla del dia: Base (0), Heavy (+150), Recovery (-300).")}
+            </span>
+            <span>{target ? `${target.archetypeDelta >= 0 ? "+" : ""}${target.archetypeDelta} kcal` : "--"}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1">
+              Meta final
+              {renderCalcHint("Formula final: (TDEE x objetivo) + ajuste del dia.")}
+            </span>
+            <span>{formatMetric(goals?.calorie_goal, " kcal")}</span>
+          </div>
         </div>
+        <p className="app-surface-caption mt-2 text-[11px] leading-relaxed">
+          Formula: ({formatMetric(target?.tdee)} x {target ? target.goalMultiplier.toFixed(2) : "--"}) +{" "}
+          {target ? `${target.archetypeDelta >= 0 ? "+" : ""}${target.archetypeDelta}` : "--"} ={" "}
+          {formatMetric(goals?.calorie_goal, " kcal")}
+        </p>
         <Button type="button" variant="outline" className="mt-4 w-full app-outline-button" onClick={onOpenTechnicalConfig}>
           Ver configuracion tecnica
         </Button>

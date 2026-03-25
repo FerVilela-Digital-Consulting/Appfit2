@@ -54,6 +54,20 @@ export function NutritionTechnicalDialog({
   isDeletingProfile = false,
 }: NutritionTechnicalDialogProps) {
   const [deleteTarget, setDeleteTarget] = useState<NutritionProfileRecord | null>(null);
+  const renderCalcHint = (description: string) => (
+    <TooltipProvider delayDuration={90}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button type="button" className="rounded-full p-0.5 text-muted-foreground/80" aria-label="Ayuda del calculo">
+            <CircleHelp className="h-3.5 w-3.5" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-[250px] text-xs">
+          {description}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 
   return (
     <>
@@ -68,14 +82,30 @@ export function NutritionTechnicalDialog({
           <div className="space-y-5">
           <div className="app-surface-panel rounded-[24px] p-4 sm:rounded-[28px] sm:p-5">
             <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary/80">Calculo energetico</div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border app-surface-soft p-4">
-                <div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">TDEE base</div>
+                <div className="app-surface-caption inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.24em]">
+                  TDEE base
+                  {renderCalcHint("Gasto total diario estimado segun tu perfil metabolico.")}
+                </div>
                 <div className="app-surface-heading mt-2 text-2xl font-black md:text-3xl">{formatMetric(target?.tdee)}</div>
                 <div className="app-surface-caption text-xs">antes del arquetipo</div>
               </div>
               <div className="rounded-2xl border app-surface-soft p-4">
-                <div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Ajuste del dia</div>
+                <div className="app-surface-caption inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.24em]">
+                  Objetivo
+                  {renderCalcHint("Multiplicador por objetivo: perder, mantener o ganar peso.")}
+                </div>
+                <div className="app-surface-heading mt-2 text-2xl font-black md:text-3xl">
+                  {target ? `x${target.goalMultiplier.toFixed(2)}` : "--"}
+                </div>
+                <div className="app-surface-caption text-xs">aplicado al TDEE</div>
+              </div>
+              <div className="rounded-2xl border app-surface-soft p-4">
+                <div className="app-surface-caption inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.24em]">
+                  Ajuste del dia
+                  {renderCalcHint("Ajuste por plantilla del dia: Base (0), Heavy (+150), Recovery (-300).")}
+                </div>
                 <div className="app-surface-heading mt-2 text-2xl font-black md:text-3xl">
                   {target ? `${target.archetypeDelta >= 0 ? "+" : ""}${target.archetypeDelta}` : "--"}
                 </div>
@@ -84,13 +114,28 @@ export function NutritionTechnicalDialog({
             </div>
             <div className="app-surface-caption mt-4 grid gap-2 text-xs uppercase tracking-[0.2em]">
               <div className="flex items-center justify-between">
-                <span>Meta final</span>
+                <span className="inline-flex items-center gap-1">
+                  Base objetivo
+                  {renderCalcHint("Resultado de TDEE base x objetivo, antes del ajuste del dia.")}
+                </span>
+                <span>{formatMetric(target?.calorieTarget, " kcal")}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1">
+                  Meta final
+                  {renderCalcHint("Formula final: (TDEE x objetivo) + ajuste del dia.")}
+                </span>
                 <span>{formatMetric(goals?.calorie_goal, " kcal")}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Peso de calculo</span>
                 <span>{formatMetric(metabolicProfile?.weightKg, " kg", 1)}</span>
               </div>
+            </div>
+            <div className="app-surface-caption mt-2 text-[11px] leading-relaxed">
+              Formula: ({formatMetric(target?.tdee)} x {target ? target.goalMultiplier.toFixed(2) : "--"}) +{" "}
+              {target ? `${target.archetypeDelta >= 0 ? "+" : ""}${target.archetypeDelta}` : "--"} ={" "}
+              {formatMetric(goals?.calorie_goal, " kcal")}
             </div>
           </div>
 
