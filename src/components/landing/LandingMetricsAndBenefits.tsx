@@ -25,7 +25,7 @@ export default function LandingMetricsAndBenefits({ language }: Props) {
         <div className="relative mx-auto w-[320px]">
           <div className="absolute left-[-28px] top-[-22px] h-[300px] w-[265px] rounded-[150px_150px_0_0] bg-[#c7eff0]" />
           <img alt="phone frame" className="relative z-10 h-auto w-full" src={landingAssets.phoneFrame} />
-          <img alt="phone screen" className="absolute left-[20px] top-[28px] z-0 h-[85%] w-[87%] rounded-[26px] object-cover" src={landingAssets.phoneScreenFeature} />
+          <img alt="phone screen" className="absolute left-[20px] top-[28px] z-20 h-[85%] w-[87%] rounded-[26px] object-cover" src={landingAssets.phoneScreenFeature} />
         </div>
         <div>
           <h2 className="text-4xl font-semibold leading-tight">{copy.title}</h2>

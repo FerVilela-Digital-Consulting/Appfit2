@@ -17,7 +17,7 @@ export default function LandingFeatureRows({ onPrimary, language }: Props) {
         <div className="relative mx-auto w-[320px]">
           <div className="absolute left-[-35px] top-[-28px] h-[300px] w-[300px] rounded-full bg-[#8fd6d7]" />
           <img alt="phone frame" className="relative z-10 h-auto w-full" src={landingAssets.phoneFrame} />
-          <img alt="phone screen" className="absolute left-[20px] top-[28px] z-0 h-[85%] w-[87%] rounded-[26px] object-cover" src={landingAssets.phoneScreenAlt} />
+          <img alt="phone screen" className="absolute left-[20px] top-[28px] z-20 h-[85%] w-[87%] rounded-[26px] object-cover" src={landingAssets.phoneScreenAlt} />
         </div>
         <div>
           <h2 className="text-4xl font-semibold leading-tight">{copy.firstTitle}</h2>
@@ -39,7 +39,7 @@ export default function LandingFeatureRows({ onPrimary, language }: Props) {
         <div className="order-1 relative mx-auto w-[320px] lg:order-2">
           <div className="absolute right-[-30px] top-[-26px] h-[295px] w-[280px] rounded-[150px_150px_0_0] bg-[#a8e2e3]" />
           <img alt="phone frame" className="relative z-10 h-auto w-full" src={landingAssets.phoneFrame} />
-          <img alt="phone screen" className="absolute left-[20px] top-[28px] z-0 h-[85%] w-[87%] rounded-[26px] object-cover" src={landingAssets.phoneScreenAlt2} />
+          <img alt="phone screen" className="absolute left-[20px] top-[28px] z-20 h-[85%] w-[87%] rounded-[26px] object-cover" src={landingAssets.phoneScreenAlt2} />
         </div>
       </section>
     </>

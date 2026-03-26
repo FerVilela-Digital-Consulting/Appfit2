@@ -34,7 +34,7 @@ export default function LandingFooter({ language }: Props) {
 
         <div className="mx-auto w-[112px] lg:mx-0">
           <img alt="footer phone" className="h-auto w-full" src={landingAssets.phoneFrame} />
-          <img alt="footer screen" className="-mt-[245px] ml-[8px] h-[220px] w-[95px] rounded-[16px] object-cover" src={landingAssets.phoneScreenFooter} />
+          <img alt="footer screen" className="relative z-20 -mt-[245px] ml-[8px] h-[220px] w-[95px] rounded-[16px] object-cover" src={landingAssets.phoneScreenFooter} />
         </div>
       </div>
 
