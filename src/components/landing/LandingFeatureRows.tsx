@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { landingAssets } from "@/components/landing/assets";
 import { landingCopy } from "@/components/landing/copy";
 import type { LandingLanguage } from "@/components/landing/types";
+import PhoneMockup from "@/components/landing/PhoneMockup";
 
 type Props = {
   onPrimary: () => void;
@@ -16,10 +17,7 @@ export default function LandingFeatureRows({ onPrimary, language }: Props) {
       <section className="mx-auto grid w-full max-w-[1280px] gap-10 px-4 py-10 md:px-6 lg:grid-cols-2 lg:items-center" id="features">
         <div className="relative mx-auto w-[320px]">
           <div className="absolute left-[-35px] top-[-28px] h-[300px] w-[300px] rounded-full bg-[#8fd6d7]" />
-          <div className="absolute inset-[3.9%_4.6%_3.8%_4.6%] z-10 overflow-hidden rounded-[34px] bg-black">
-            <img alt="phone screen" className="h-full w-full object-cover object-top" src={landingAssets.phoneScreenAlt} />
-          </div>
-          <img alt="phone frame" className="relative z-20 h-auto w-full" src={landingAssets.phoneFrame} />
+          <PhoneMockup alt="phone screen" src={landingAssets.phoneScreenAlt} />
         </div>
         <div>
           <h2 className="text-4xl font-semibold leading-tight">{copy.firstTitle}</h2>
@@ -40,10 +38,7 @@ export default function LandingFeatureRows({ onPrimary, language }: Props) {
         </div>
         <div className="order-1 relative mx-auto w-[320px] lg:order-2">
           <div className="absolute right-[-30px] top-[-26px] h-[295px] w-[280px] rounded-[150px_150px_0_0] bg-[#a8e2e3]" />
-          <div className="absolute inset-[3.9%_4.6%_3.8%_4.6%] z-10 overflow-hidden rounded-[34px] bg-black">
-            <img alt="phone screen" className="h-full w-full object-cover object-top" src={landingAssets.phoneScreenAlt2} />
-          </div>
-          <img alt="phone frame" className="relative z-20 h-auto w-full" src={landingAssets.phoneFrame} />
+          <PhoneMockup alt="phone screen" src={landingAssets.phoneScreenAlt2} />
         </div>
       </section>
     </>

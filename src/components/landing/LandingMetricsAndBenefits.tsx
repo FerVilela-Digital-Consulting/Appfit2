@@ -2,6 +2,7 @@ import { Check } from "lucide-react";
 import { landingAssets } from "@/components/landing/assets";
 import { landingCopy } from "@/components/landing/copy";
 import type { LandingLanguage } from "@/components/landing/types";
+import PhoneMockup from "@/components/landing/PhoneMockup";
 
 type Props = {
   language: LandingLanguage;
@@ -24,10 +25,7 @@ export default function LandingMetricsAndBenefits({ language }: Props) {
       <section className="mx-auto grid w-full max-w-[1280px] gap-10 px-4 py-12 md:px-6 lg:grid-cols-2 lg:items-center">
         <div className="relative mx-auto w-[320px]">
           <div className="absolute left-[-28px] top-[-22px] h-[300px] w-[265px] rounded-[150px_150px_0_0] bg-[#c7eff0]" />
-          <div className="absolute inset-[3.9%_4.6%_3.8%_4.6%] z-10 overflow-hidden rounded-[34px] bg-black">
-            <img alt="phone screen" className="h-full w-full object-cover object-top" src={landingAssets.phoneScreenFeature} />
-          </div>
-          <img alt="phone frame" className="relative z-20 h-auto w-full" src={landingAssets.phoneFrame} />
+          <PhoneMockup alt="phone screen" src={landingAssets.phoneScreenFeature} />
         </div>
         <div>
           <h2 className="text-4xl font-semibold leading-tight">{copy.title}</h2>

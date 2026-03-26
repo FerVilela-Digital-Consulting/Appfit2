@@ -3,6 +3,7 @@ import { Play } from "lucide-react";
 import { landingAssets } from "@/components/landing/assets";
 import { landingCopy } from "@/components/landing/copy";
 import type { LandingLanguage } from "@/components/landing/types";
+import PhoneMockup from "@/components/landing/PhoneMockup";
 
 type Props = {
   onPrimary: () => void;
@@ -36,12 +37,7 @@ export default function LandingHero({ onPrimary, language }: Props) {
           </div>
         </div>
       </div>
-      <div className="relative mx-auto w-[310px]">
-        <div className="absolute inset-[3.9%_4.6%_3.8%_4.6%] z-10 overflow-hidden rounded-[34px] bg-black">
-          <img alt="phone screen" className="h-full w-full object-cover object-top" src={landingAssets.phoneScreen} />
-        </div>
-        <img alt="phone frame" className="relative z-20 h-auto w-full" src={landingAssets.phoneFrame} />
-      </div>
+      <PhoneMockup alt="phone screen" src={landingAssets.phoneScreen} widthClassName="w-[310px]" />
     </section>
   );
 }
