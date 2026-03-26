@@ -5,10 +5,6 @@ import LandingHero from "@/components/landing/LandingHero";
 import LandingHowItWorks from "@/components/landing/LandingHowItWorks";
 import LandingFeatureRows from "@/components/landing/LandingFeatureRows";
 import LandingMetricsAndBenefits from "@/components/landing/LandingMetricsAndBenefits";
-import LandingPlatformBlock from "@/components/landing/LandingPlatformBlock";
-import LandingPartners from "@/components/landing/LandingPartners";
-import LandingTestimonial from "@/components/landing/LandingTestimonial";
-import LandingPricing from "@/components/landing/LandingPricing";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 const Index = () => {
@@ -33,10 +29,6 @@ const Index = () => {
         <LandingHowItWorks />
         <LandingFeatureRows onPrimary={goPrimary} />
         <LandingMetricsAndBenefits />
-        <LandingPlatformBlock />
-        <LandingPartners />
-        <LandingTestimonial onPrimary={goPrimary} />
-        <LandingPricing />
         <LandingFooter />
       </div>
     </div>
