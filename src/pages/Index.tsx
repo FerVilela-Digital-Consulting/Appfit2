@@ -1,324 +1,303 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import {
-  Activity,
-  BarChart3,
-  ArrowRight,
-  CheckCircle2,
-  Dumbbell,
-  Flame,
-  HeartPulse,
-  Loader2,
-  Menu,
-  MoonStar,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  Trophy
-} from "lucide-react";
+import { Check, Play } from "lucide-react";
 
-const highlights = [
-  { value: "8.2k", label: "Usuarios activos" },
-  { value: "120+", label: "Planes completados" },
-  { value: "97%", label: "Retencion mensual" },
+const imgLogo = "https://www.figma.com/api/mcp/asset/afc6f028-00d1-495f-bd40-461357ff47e7";
+const imgHeroBg = "https://www.figma.com/api/mcp/asset/8c38573b-147e-40d5-8560-fc4273a0a4a3";
+const imgPhoneFrame = "https://www.figma.com/api/mcp/asset/1d6625e0-82e1-4cc6-90c4-2be5aebac0cf";
+const imgPhoneScreen = "https://www.figma.com/api/mcp/asset/8fe64d5c-ddd0-4717-9395-1cd09563fdab";
+const imgPhoneScreenAlt = "https://www.figma.com/api/mcp/asset/11a72f1f-d955-47e8-a0ef-c55b45d7d44d";
+const imgPhoneScreenAlt2 = "https://www.figma.com/api/mcp/asset/52e623aa-83ab-410a-9f4d-271b293c55d6";
+const imgPhoneScreenFeature = "https://www.figma.com/api/mcp/asset/213edeb1-7431-4b31-989f-7b035a262b4e";
+const imgPhoneScreenFooter = "https://www.figma.com/api/mcp/asset/6390db42-6601-401d-bb99-2ea91a81bfe0";
+const imgAvatar = "https://www.figma.com/api/mcp/asset/e81f7a63-0f00-4946-8375-4a45251ce0fd";
+
+const partnerLogos = [
+  "https://www.figma.com/api/mcp/asset/8bff04e9-36a1-40dd-9b7f-bb881034f9cc",
+  "https://www.figma.com/api/mcp/asset/ce8fd138-fb8c-48b3-909c-6b87fbd44c38",
+  "https://www.figma.com/api/mcp/asset/aadf69d7-1e15-4f99-bdb8-9d4cb0009817",
+  "https://www.figma.com/api/mcp/asset/6bb6f451-e592-401c-a127-27d4956be9bb",
+  "https://www.figma.com/api/mcp/asset/c264e144-6865-4d84-bf1e-f74ac3dc3731",
+  "https://www.figma.com/api/mcp/asset/06d93d87-3a53-44b4-8bdb-e5d9f8b3c040",
+  "https://www.figma.com/api/mcp/asset/a18c740f-ad3c-431c-a23c-5e66829e9781",
+  "https://www.figma.com/api/mcp/asset/4dd1af8a-e1c1-42da-973f-2cd46a9cd386",
+  "https://www.figma.com/api/mcp/asset/69ad4c7e-1e3e-47ed-86ce-999783e7bdd7",
+  "https://www.figma.com/api/mcp/asset/82c1343a-3631-4b38-8ce7-cf962f13cec7",
 ];
 
-const serviceCards = [
+const pricing = [
   {
-    icon: Dumbbell,
-    title: "Entrenamiento inteligente",
-    text: "Rutinas por objetivos, historial por ejercicio y seguimiento de consistencia.",
+    name: "Free",
+    badge: "LIMITED",
+    price: "$0",
+    features: ["Order Transaction", "Live Inventory", "Basic Statistics", "Invoice Management", "Database"]
   },
   {
-    icon: Flame,
-    title: "Nutricion accionable",
-    text: "Control de calorias, macros y libreria de comidas para resultados sostenibles.",
+    name: "Pro",
+    badge: "POPULAR",
+    price: "$39",
+    features: ["Order Transaction", "Live Inventory", "Advanced Statistics", "Invoice Management", "Smart Reports"]
   },
   {
-    icon: MoonStar,
-    title: "Recuperacion real",
-    text: "Sueno, hidratacion y biofeedback en un mismo tablero para prevenir desgaste.",
-  },
-];
-
-const process = [
-  { step: "01", title: "Configura", text: "Define objetivo, nivel y disponibilidad." },
-  { step: "02", title: "Entrena", text: "Sigue tu plan con bloques diarios claros." },
-  { step: "03", title: "Ajusta", text: "Revisa progreso y optimiza semana a semana." },
-];
-
-const trustPills = [
-  "Planes personalizados",
-  "Datos seguros",
-  "Sin complejidad tecnica",
-];
-
-const workCards = [
-  {
-    title: "Dashboard Diario",
-    subtitle: "Control total de hoy",
-    gradient: "from-zinc-900 to-zinc-700",
-    icon: Activity,
-  },
-  {
-    title: "Training Logbook",
-    subtitle: "Progresion por rutina",
-    gradient: "from-neutral-800 to-neutral-600",
-    icon: Dumbbell,
-  },
-  {
-    title: "Nutrition Hub",
-    subtitle: "Comidas y macros",
-    gradient: "from-zinc-800 to-zinc-600",
-    icon: HeartPulse,
-  },
-  {
-    title: "Progress Analytics",
-    subtitle: "Tendencias semanales",
-    gradient: "from-neutral-900 to-zinc-700",
-    icon: BarChart3,
-  },
+    name: "Master",
+    badge: "ENTERPRISE",
+    price: "$99",
+    features: ["Order Transaction", "Live Inventory", "Full Statistics", "Invoice Management", "Dedicated Support"]
+  }
 ];
 
 const Index = () => {
-  const { user, isGuest, loading: authLoading, continueAsGuest } = useAuth();
+  const { user, isGuest, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  const goPrimary = () => navigate(user || isGuest ? "/today" : "/auth");
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-white text-[#1e194d]">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#fbbc05] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white [font-family:'Space_Grotesk',sans-serif]">
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-black/90 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4">
-          <div className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em]">
-            <Sparkles className="h-4 w-4 text-[#fbbc05]" />
-            Appfit
-          </div>
-          <nav className="hidden items-center gap-6 text-sm text-white/80 md:flex">
-            <a className="hover:text-white" href="#about">Sobre Appfit</a>
-            <a className="hover:text-white" href="#features">Funciones</a>
-            <a className="hover:text-white" href="#pricing">Planes</a>
+    <div className="bg-white text-[#1e194d]">
+      <div className="mx-auto w-full max-w-[1440px] overflow-hidden">
+        <header className="mx-auto flex w-full max-w-[1280px] items-center justify-between px-4 py-8 md:px-6">
+          <img alt="Quotient" className="h-10 w-auto" src={imgLogo} />
+
+          <nav className="hidden items-center gap-5 text-sm font-medium text-[#1b1e2c] lg:flex">
+            <a href="#about">About</a>
+            <a href="#service">Service</a>
+            <a href="#portfolio">Portfolio</a>
+            <a href="#blog">Blog</a>
+            <a href="#contact">Contact</a>
           </nav>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              className="hidden text-white hover:bg-white/10 hover:text-white sm:inline-flex"
-              onClick={() => navigate(user || isGuest ? "/today" : "/auth")}
-            >
-              {user || isGuest ? "Dashboard" : "Log In"}
-            </Button>
-            <Button
-              className="bg-[#fbbc05] text-black hover:bg-[#f5b000]"
-              onClick={() => navigate(user || isGuest ? "/today" : "/auth")}
-            >
-              {user || isGuest ? "Continuar" : "Get Started"}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/10 md:hidden"
-              onClick={() => navigate(user || isGuest ? "/today" : "/auth")}
-            >
-              <Menu className="h-5 w-5" />
+
+          <div className="flex items-center gap-3">
+            <button className="hidden text-sm font-medium text-[#1d1d20] sm:inline-flex" onClick={goPrimary} type="button">
+              Login
+            </button>
+            <Button className="h-10 rounded-full bg-[#fbbc05] px-6 text-white hover:bg-[#efb300]" onClick={goPrimary}>
+              Sign Up Free
             </Button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main>
-        <section className="relative mx-auto grid w-full max-w-6xl gap-10 px-5 pb-16 pt-12 lg:grid-cols-[1.08fr_0.92fr] lg:pt-20">
-          <div className="space-y-7">
-            <p className="inline-flex items-center gap-2 rounded-full border border-[#fbbc05]/40 bg-[#fbbc05]/10 px-3 py-1 text-xs uppercase tracking-[0.15em] text-[#fbbc05]">
-              <Trophy className="h-3.5 w-3.5" />
-              Plataforma fitness todo-en-uno
-            </p>
-            <h1 className="text-4xl font-bold leading-[1.05] sm:text-5xl lg:text-6xl">
-              TU PROGRESO
-              <span className="block text-[#fbbc05]">EN MODO SERIO</span>
-            </h1>
-            <p className="max-w-xl text-base text-white/75 sm:text-lg">
-              Appfit unifica entrenamiento, nutricion, recuperacion y analitica para que cada
-              semana se sienta como avance real, no como intentos sueltos.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                className="group bg-[#fbbc05] px-7 py-6 text-base text-black hover:bg-[#f5b000]"
-                onClick={() => navigate(user || isGuest ? "/today" : "/auth")}
-              >
-                {user || isGuest ? "Ir a mi dashboard" : "Comenzar ahora"}
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-              <Button
-                variant="outline"
-                className="border-white/25 bg-transparent px-7 py-6 text-base text-white hover:bg-white/10"
-                onClick={() => {
-                  continueAsGuest();
-                  navigate("/today");
-                }}
-              >
-                Probar como invitado
-              </Button>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {highlights.map((item) => (
-                <article key={item.label} className="border border-white/15 bg-white/5 p-4">
-                  <p className="text-3xl font-bold text-[#fbbc05]">{item.value}</p>
-                  <p className="mt-1 text-sm text-white/70">{item.label}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-
-          <div className="relative flex items-center justify-center py-4">
-            <div className="absolute h-48 w-full max-w-sm -rotate-12 bg-[#fbbc05]/50 blur-[110px]" />
-            <div className="relative w-[280px] rounded-[2.25rem] border-4 border-white/20 bg-zinc-950 p-3 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:w-[315px]">
-              <div className="rounded-[1.65rem] border border-white/10 bg-gradient-to-b from-zinc-800 to-zinc-900 p-4">
-                <div className="mb-4 flex items-center justify-between">
-                  <p className="text-xs uppercase tracking-[0.16em] text-white/60">Hoy</p>
-                  <p className="text-xs text-[#fbbc05]">Consistencia 92%</p>
-                </div>
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between rounded-xl bg-white/5 p-3">
-                    <span className="text-sm">Entrenamiento</span>
-                    <span className="text-xs text-[#fbbc05]">Completado</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl bg-white/5 p-3">
-                    <span className="text-sm">Nutricion</span>
-                    <span className="text-xs text-[#fbbc05]">1450 kcal</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl bg-white/5 p-3">
-                    <span className="text-sm">Sueno</span>
-                    <span className="text-xs text-[#fbbc05]">7h 42m</span>
-                  </div>
-                </div>
+        <section className="mx-auto grid w-full max-w-[1280px] items-center gap-10 px-4 pb-14 pt-2 md:px-6 lg:grid-cols-[1fr_410px] lg:pb-24">
+          <div className="relative overflow-hidden rounded-[28px] bg-[#eef2ff] px-6 py-10 md:px-10 md:py-12">
+            <img alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" src={imgHeroBg} />
+            <div className="relative z-10 max-w-[620px]">
+              <span className="inline-flex rounded-full bg-[rgba(84,94,244,0.06)] px-4 py-2 text-xs text-[#fbbc05]">Welcome to MyApp</span>
+              <h1 className="mt-3 text-4xl font-semibold leading-tight text-black md:text-6xl md:leading-[1.15]">
+                Manage your finance with <span className="text-[#fbbc05]">Quotient</span> app
+              </h1>
+              <p className="mt-4 text-base leading-8 text-[#748795] md:text-2xl md:leading-[1.6]">
+                Lorem ipsum dolor sit amet consectetur. Pulvinar nunc amet pretium pellentesque. Ornare in arcu elit quisque iaculis. Nunc enim cursus posuere egestas eu viverra.
+              </p>
+              <div className="mt-7 flex flex-wrap items-center gap-6">
+                <Button className="h-10 rounded-full bg-[#fbbc05] px-6 text-white hover:bg-[#efb300]" onClick={goPrimary}>
+                  Get Started
+                </Button>
+                <button className="inline-flex items-center gap-2 text-xl font-medium text-[#fbbc05]" type="button">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#fbbc05] text-white">
+                    <Play className="h-4 w-4 fill-white" />
+                  </span>
+                  How it works
+                </button>
               </div>
             </div>
-            <div className="absolute -left-2 top-[12%] hidden items-center gap-2 bg-[#fbbc05] px-3 py-2 text-xs text-black shadow-lg sm:inline-flex">
-              <CheckCircle2 className="h-4 w-4" />
-              Rutina del dia lista
-            </div>
-            <div className="absolute -bottom-1 right-0 hidden items-center gap-2 bg-[#ec5c2e] px-3 py-2 text-xs text-white shadow-lg sm:inline-flex">
-              <Target className="h-4 w-4" />
-              Meta semanal en progreso
-            </div>
+          </div>
+
+          <div className="relative mx-auto w-[310px]">
+            <img alt="phone frame" className="relative z-10 h-auto w-full" src={imgPhoneFrame} />
+            <img alt="phone screen" className="absolute left-[20px] top-[28px] z-0 h-[85%] w-[87%] rounded-[26px] object-cover" src={imgPhoneScreen} />
           </div>
         </section>
 
-        <section id="about" className="mx-auto w-full max-w-6xl px-5 py-14">
-          <div className="grid gap-8 lg:grid-cols-2">
-            <div className="space-y-5">
-              <p className="text-xs uppercase tracking-[0.22em] text-[#fbbc05]">Sobre Appfit</p>
-              <h2 className="text-3xl font-bold leading-tight sm:text-4xl">
-                Una sola plataforma para entrenar mejor, no mas complicado.
-              </h2>
-            </div>
-            <p className="text-base leading-relaxed text-white/75">
-              Diseñamos Appfit para que cualquier persona pueda convertir objetivos difusos en un
-              plan concreto: hoy entrenas, mañana ajustas, y al final de la semana entiendes por que
-              mejoraste. Sin hojas sueltas, sin apps desconectadas.
+        <section className="mx-auto w-full max-w-[1280px] px-4 py-12 md:px-6">
+          <div className="mx-auto max-w-[628px] text-center">
+            <h2 className="text-4xl font-semibold">How it works</h2>
+            <p className="mt-4 text-xl leading-9 text-[#9e9baa]">
+              Lorem ipsum dolor sit amet consectetur. Pulvinar nunc amet pretium pellentesque. Ornare in arcu elit quisque.
             </p>
           </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {serviceCards.map((feature) => (
-              <article key={feature.title} className="border border-white/15 bg-white/5 p-6">
-                <feature.icon className="h-8 w-8 text-[#fbbc05]" />
-                <h3 className="mt-4 text-xl font-semibold">{feature.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/70">{feature.text}</p>
+          <div className="mt-12 grid gap-8 md:grid-cols-3">
+            {[
+              "Install the app",
+              "Link with account",
+              "Use it and manage"
+            ].map((title) => (
+              <article className="text-center" key={title}>
+                <div className="mx-auto mb-4 h-2 w-16 rounded-full bg-[#fbbc05]" />
+                <h3 className="text-xl font-semibold">{title}</h3>
+                <p className="mt-3 text-base text-[#9e9baa]">
+                  Lorem ipsum dolor sit amet consectetur. Pulvinar nunc amet pretium pellentesque. Ornare in arcu elit.
+                </p>
               </article>
             ))}
           </div>
         </section>
 
-        <section id="features" className="mx-auto w-full max-w-6xl px-5 py-14">
-          <div className="mb-8 text-center">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#fbbc05]">Selected Work</p>
-            <h2 className="mt-2 text-3xl font-bold sm:text-4xl">Experiencia Appfit</h2>
+        <section className="mx-auto grid w-full max-w-[1280px] gap-10 px-4 py-10 md:px-6 lg:grid-cols-2 lg:items-center">
+          <div className="relative mx-auto w-[320px]">
+            <div className="absolute left-[-35px] top-[-28px] h-[300px] w-[300px] rounded-full bg-[#f2cc11]" />
+            <img alt="phone frame" className="relative z-10 h-auto w-full" src={imgPhoneFrame} />
+            <img alt="phone screen" className="absolute left-[20px] top-[28px] z-0 h-[85%] w-[87%] rounded-[26px] object-cover" src={imgPhoneScreenAlt} />
           </div>
-          <div className="grid gap-5 md:grid-cols-2">
-            {workCards.map((card) => (
-              <article key={card.title} className="space-y-3">
-                <div className={`flex h-64 items-center justify-center bg-gradient-to-br ${card.gradient} border border-white/10`}>
-                  <card.icon className="h-12 w-12 text-[#fbbc05]" />
-                </div>
-                <h3 className="text-2xl font-semibold">{card.title}</h3>
-                <p className="text-white/70">{card.subtitle}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="mx-auto w-full max-w-6xl px-5 py-14">
-          <div className="grid gap-4 md:grid-cols-3">
-            {process.map((item) => (
-              <article key={item.step} className="border border-white/15 bg-white/5 p-6">
-                <p className="text-5xl font-bold text-[#fbbc05]">{item.step}</p>
-                <h3 className="mt-3 text-2xl font-semibold">{item.title}</h3>
-                <p className="mt-2 text-white/70">{item.text}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section id="pricing" className="mx-auto w-full max-w-6xl px-5 py-14">
-          <div className="mb-8 text-center">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#fbbc05]">Planes</p>
-            <h2 className="mt-2 text-3xl font-bold sm:text-4xl">Escoge tu ritmo</h2>
-          </div>
-          <div className="grid gap-5 md:grid-cols-3">
-            <article className="border border-white/15 bg-white/5 p-6">
-              <p className="text-sm text-white/70">Basic</p>
-              <p className="mt-2 text-4xl font-bold">$9</p>
-              <p className="mt-1 text-sm text-white/60">/ mes</p>
-            </article>
-            <article className="border-2 border-[#fbbc05] bg-[#fbbc05] p-6 text-black">
-              <p className="text-sm text-black/70">Pro</p>
-              <p className="mt-2 text-4xl font-bold">$24</p>
-              <p className="mt-1 text-sm text-black/70">/ mes</p>
-            </article>
-            <article className="border border-white/15 bg-white/5 p-6">
-              <p className="text-sm text-white/70">Team</p>
-              <p className="mt-2 text-4xl font-bold">$49</p>
-              <p className="mt-1 text-sm text-white/60">/ mes</p>
-            </article>
-          </div>
-        </section>
-
-        <section className="mx-auto w-full max-w-6xl px-5 py-16">
-          <div className="border border-[#fbbc05] bg-[#fbbc05] px-6 py-12 text-center text-black sm:px-10">
-            <h2 className="mx-auto max-w-3xl text-3xl font-bold leading-tight sm:text-5xl">
-              Construye resultados medibles en 30 dias
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm sm:text-base">
-              El mismo look del Figma, aterrizado a tu producto: Appfit para entrenamiento,
-              nutricion y progreso diario.
+          <div>
+            <h2 className="text-4xl font-semibold leading-tight">Quick and easy payments with just a few clicks</h2>
+            <p className="mt-4 text-lg leading-8 text-[#9e9baa]">
+              Lorem ipsum dolor sit amet consectetur. Pulvinar nunc amet pretium pellentesque. Ornare in arcu elit quisque iaculis.
             </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              {trustPills.map((pill) => (
-                <span
-                  key={pill}
-                  className="inline-flex items-center gap-1 bg-black px-3 py-1 text-xs font-medium text-white"
-                >
-                  <ShieldCheck className="h-3.5 w-3.5 text-[#fbbc05]" />
-                  {pill}
-                </span>
-              ))}
-            </div>
-            <Button
-              className="mt-8 bg-black px-7 py-6 text-base text-white hover:bg-zinc-900"
-              onClick={() => navigate(user || isGuest ? "/today" : "/auth")}
-            >
-              {user || isGuest ? "Abrir mi panel" : "Crear cuenta gratis"}
+            <Button className="mt-7 h-10 rounded-full bg-[#fbbc05] px-6 text-white hover:bg-[#efb300]" onClick={goPrimary}>
+              Get started
             </Button>
           </div>
         </section>
-      </main>
+
+        <section className="mx-auto grid w-full max-w-[1280px] gap-10 px-4 py-10 md:px-6 lg:grid-cols-2 lg:items-center">
+          <div className="order-2 lg:order-1">
+            <h2 className="text-4xl font-semibold leading-tight">Quick and easy payments with just a few clicks</h2>
+            <p className="mt-4 text-lg leading-8 text-[#9e9baa]">
+              Lorem ipsum dolor sit amet consectetur. Pulvinar nunc amet pretium pellentesque. Ornare in arcu elit quisque iaculis.
+            </p>
+            <Button className="mt-7 h-10 rounded-full bg-[#fbbc05] px-6 text-white hover:bg-[#efb300]" onClick={goPrimary}>
+              Get started
+            </Button>
+          </div>
+          <div className="order-1 relative mx-auto w-[320px] lg:order-2">
+            <div className="absolute right-[-30px] top-[-26px] h-[295px] w-[280px] rounded-[150px_150px_0_0] bg-[#f7b6c5]" />
+            <img alt="phone frame" className="relative z-10 h-auto w-full" src={imgPhoneFrame} />
+            <img alt="phone screen" className="absolute left-[20px] top-[28px] z-0 h-[85%] w-[87%] rounded-[26px] object-cover" src={imgPhoneScreenAlt2} />
+          </div>
+        </section>
+
+        <section className="mx-auto grid w-full max-w-[820px] grid-cols-2 gap-6 px-4 py-10 text-center text-[#1e194d] sm:grid-cols-4">
+          <div><p className="text-2xl font-semibold">10,000+</p><p className="text-sm text-[#9e9baa]">Downloads</p></div>
+          <div><p className="text-2xl font-semibold">89K</p><p className="text-sm text-[#9e9baa]">Active users</p></div>
+          <div><p className="text-2xl font-semibold">30K</p><p className="text-sm text-[#9e9baa]">Positive review</p></div>
+          <div><p className="text-2xl font-semibold">2k</p><p className="text-sm text-[#9e9baa]">Company use</p></div>
+        </section>
+
+        <section className="mx-auto grid w-full max-w-[1280px] gap-10 px-4 py-12 md:px-6 lg:grid-cols-2 lg:items-center">
+          <div className="relative mx-auto w-[320px]">
+            <div className="absolute left-[-28px] top-[-22px] h-[300px] w-[265px] rounded-[150px_150px_0_0] bg-[#edb3f1]" />
+            <img alt="phone frame" className="relative z-10 h-auto w-full" src={imgPhoneFrame} />
+            <img alt="phone screen" className="absolute left-[20px] top-[28px] z-0 h-[85%] w-[87%] rounded-[26px] object-cover" src={imgPhoneScreenFeature} />
+          </div>
+
+          <div>
+            <h2 className="text-4xl font-semibold leading-tight">Some excellent features for you</h2>
+            <ul className="mt-6 space-y-4">
+              {["E-Payment", "Withdraw Money", "Add Card", "Bill Payment"].map((f) => (
+                <li className="flex items-center gap-3 text-[#59616a]" key={f}>
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#eef2ff] text-[#fbbc05]"><Check className="h-4 w-4" /></span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-[1280px] px-4 py-8 md:px-6" id="about">
+          <div className="relative overflow-hidden bg-[#f4eaea] p-8 md:p-10">
+            <div className="max-w-[720px]">
+              <h2 className="text-4xl font-semibold">Platform to make it easier for users</h2>
+              <p className="mt-4 text-[#9e9baa]">
+                Lorem ipsum dolor sit amet consectetur. Pulvinar nunc amet pretium pellentesque. Ornare in arcu elit quisque iaculis.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-4">
+                <span className="rounded bg-white px-4 py-2 text-sm text-[#1e194d] shadow-sm">Checkout</span>
+                <span className="rounded bg-white px-4 py-2 text-sm text-[#1e194d] shadow-sm">Integration</span>
+              </div>
+            </div>
+            <div className="pointer-events-none absolute bottom-0 right-8 hidden w-[200px] lg:block">
+              <img alt="mini phone" src={imgPhoneScreen} />
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-[1280px] px-4 py-12 md:px-6" id="portfolio">
+          <h2 className="text-center text-4xl font-semibold">See our trusted partners</h2>
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+            {partnerLogos.map((logo, i) => (
+              <div className="flex h-14 items-center justify-center bg-[#f8fafc] p-3" key={logo + i}>
+                <img alt="partner" className="max-h-7 w-auto" src={logo} />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-[1280px] px-4 py-12 md:px-6" id="blog">
+          <h3 className="text-center text-2xl font-semibold">Our best customers</h3>
+          <div className="mt-8 grid gap-6 rounded-2xl bg-[#fafafa] p-6 md:grid-cols-[280px_1fr] md:p-10">
+            <Button className="h-10 rounded-full bg-[#5560f4] text-white hover:bg-[#434dd9]" onClick={goPrimary}>
+              View Photo Gallary
+            </Button>
+            <div className="flex items-start gap-5">
+              <img alt="avatar" className="h-20 w-20 rounded-full object-cover" src={imgAvatar} />
+              <p className="text-[#9e9baa]">
+                Recusandae sunt voluptate repellat velit dolorem eos nostrum cupiditate. Labore porro cupiditate reiciendis enim neque. Modi eos autem expedita voluptatibus dignissimos repellat.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-[1280px] px-4 py-12 md:px-6" id="service">
+          <h2 className="text-center text-4xl font-semibold">Choose the best plan</h2>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {pricing.map((plan) => (
+              <article className="rounded-xl border border-[#ececec] p-6" key={plan.name}>
+                <p className="text-xl font-semibold">{plan.name}</p>
+                <p className="mt-3 text-4xl font-semibold">{plan.price}</p>
+                <p className="mt-1 inline-flex rounded-full bg-[#ffe7b0] px-2 py-0.5 text-xs text-[#9f6a00]">{plan.badge}</p>
+                <ul className="mt-4 space-y-2 text-sm text-[#748795]">
+                  {plan.features.map((feature) => (
+                    <li className="flex items-center gap-2" key={feature}>
+                      <Check className="h-4 w-4 text-[#fbbc05]" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <footer className="mt-16 bg-[#08003b] px-4 py-14 text-white md:px-6" id="contact">
+          <div className="mx-auto grid w-full max-w-[1280px] gap-10 lg:grid-cols-[1.2fr_2fr_auto]">
+            <div>
+              <h3 className="text-4xl font-semibold">Quotient is available for all devices</h3>
+              <p className="mt-4 max-w-[560px] text-[#9e9baa]">
+                Lorem ipsum dolor sit amet consectetur. Pulvinar nunc amet pretium pellentesque. Ornare in arcu elit quisque.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button className="rounded-full border border-white px-4 py-2 text-sm">Google play</button>
+                <button className="rounded-full border border-white px-4 py-2 text-sm">Apple store</button>
+              </div>
+            </div>
+
+            <div className="grid gap-7 text-sm text-[#9e9baa] sm:grid-cols-4">
+              <div><p className="mb-2 font-semibold text-white">Home</p><p>Product</p><p>Pricing</p><p>Business</p><p>Enterprise</p></div>
+              <div><p className="mb-2 font-semibold text-white">About us</p><p>Company</p><p>Leadership</p><p>Careers</p><p>Diversity</p></div>
+              <div><p className="mb-2 font-semibold text-white">Resources</p><p>App Guide</p><p>Forum</p><p>Support</p><p>Events</p></div>
+              <div><p className="mb-2 font-semibold text-white">Tutorial</p><p>10 leadership styles</p><p>Executive summary tips</p><p>What are OKRs</p><p>See all guides</p></div>
+            </div>
+
+            <div className="mx-auto w-[112px] lg:mx-0">
+              <img alt="footer phone" className="h-auto w-full" src={imgPhoneFrame} />
+              <img alt="footer screen" className="-mt-[245px] ml-[8px] h-[220px] w-[95px] rounded-[16px] object-cover" src={imgPhoneScreenFooter} />
+            </div>
+          </div>
+
+          <div className="mx-auto mt-10 flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-4 border-t border-white/15 pt-6 text-sm text-[#848487]">
+            <div className="flex gap-4"><span>?</span><span>?</span><span>?</span><span>?</span></div>
+            <div className="flex flex-wrap gap-4"><span>Term & Conditions</span><span>Privacy Policy</span><span>Cookies</span></div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 };
