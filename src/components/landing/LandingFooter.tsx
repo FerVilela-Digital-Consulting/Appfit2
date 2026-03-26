@@ -1,4 +1,3 @@
-import { landingAssets } from "@/components/landing/assets";
 import { landingCopy } from "@/components/landing/copy";
 import type { LandingLanguage } from "@/components/landing/types";
 
@@ -11,7 +10,7 @@ export default function LandingFooter({ language }: Props) {
 
   return (
     <footer className="mt-16 bg-[#08003b] px-4 py-14 text-white md:px-6" id="contact">
-      <div className="mx-auto grid w-full max-w-[1280px] gap-10 lg:grid-cols-[1.2fr_2fr_auto]">
+      <div className="mx-auto grid w-full max-w-[1280px] gap-10 lg:grid-cols-[1.25fr_1.75fr]">
         <div>
           <h3 className="text-4xl font-semibold">{copy.title}</h3>
           <p className="mt-4 max-w-[560px] text-[#9e9baa]">{copy.description}</p>
@@ -21,7 +20,7 @@ export default function LandingFooter({ language }: Props) {
           </div>
         </div>
 
-        <div className="grid gap-7 text-sm text-[#9e9baa] sm:grid-cols-4">
+        <div className="grid gap-7 text-sm text-[#9e9baa] sm:grid-cols-2 lg:grid-cols-4">
           {copy.groups.map((group) => (
             <div key={group.title}>
               <p className="mb-2 font-semibold text-white">{group.title}</p>
@@ -30,11 +29,6 @@ export default function LandingFooter({ language }: Props) {
               ))}
             </div>
           ))}
-        </div>
-
-        <div className="mx-auto w-[112px] lg:mx-0">
-          <img alt="footer phone" className="h-auto w-full" src={landingAssets.phoneFrame} />
-          <img alt="footer screen" className="relative z-20 -mt-[245px] ml-[8px] h-[220px] w-[95px] rounded-[16px] object-cover" src={landingAssets.phoneScreenFooter} />
         </div>
       </div>
 

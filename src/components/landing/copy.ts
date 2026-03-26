@@ -1,4 +1,4 @@
-import type { LandingLanguage } from "@/components/landing/types";
+﻿import type { LandingLanguage } from "@/components/landing/types";
 
 export const landingCopy: Record<LandingLanguage, {
   header: {
@@ -57,8 +57,8 @@ export const landingCopy: Record<LandingLanguage, {
       partners: "Aliados",
       pricing: "Precios",
       contact: "Contacto",
-      login: "Ingresar",
-      startFree: "Empieza Gratis",
+      login: "Inicia sesion",
+      startFree: "Registrate",
       switchLabel: "Cambiar a ingles",
     },
     hero: {
@@ -100,7 +100,7 @@ export const landingCopy: Record<LandingLanguage, {
     },
     footer: {
       title: "Appfit disponible en todos tus dispositivos",
-      description: "Sigue tus metas desde cualquier lugar y mant�n tu progreso sincronizado.",
+      description: "Sigue tus metas desde cualquier lugar y mantén tu progreso sincronizado.",
       playStore: "Google Play",
       appStore: "App Store",
       groups: [
@@ -121,8 +121,8 @@ export const landingCopy: Record<LandingLanguage, {
       partners: "Partners",
       pricing: "Pricing",
       contact: "Contact",
-      login: "Login",
-      startFree: "Start Free",
+      login: "Sign in",
+      startFree: "Sign up",
       switchLabel: "Switch to Spanish",
     },
     hero: {
@@ -179,3 +179,4 @@ export const landingCopy: Record<LandingLanguage, {
     },
   },
 };
+
