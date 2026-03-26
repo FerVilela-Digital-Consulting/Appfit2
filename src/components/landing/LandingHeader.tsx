@@ -18,14 +18,6 @@ export default function LandingHeader({ onPrimary, language, onToggleLanguage }:
         THE <span className="text-[#1f9ea0]">PRIME</span> PROTOCOL
       </p>
 
-      <nav className="hidden items-center gap-5 text-sm font-medium text-[#1b1e2c] lg:flex">
-        <a href="#about">{copy.about}</a>
-        <a href="#features">{copy.features}</a>
-        <a href="#partners">{copy.partners}</a>
-        <a href="#pricing">{copy.pricing}</a>
-        <a href="#contact">{copy.contact}</a>
-      </nav>
-
       <div className="flex items-center gap-2">
         <button
           aria-label={copy.switchLabel}
