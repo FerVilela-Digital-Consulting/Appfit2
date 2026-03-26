@@ -1,25 +1,35 @@
 import { landingAssets } from "@/components/landing/assets";
+import { landingCopy } from "@/components/landing/copy";
+import type { LandingLanguage } from "@/components/landing/types";
 
-export default function LandingFooter() {
+type Props = {
+  language: LandingLanguage;
+};
+
+export default function LandingFooter({ language }: Props) {
+  const copy = landingCopy[language].footer;
+
   return (
     <footer className="mt-16 bg-[#08003b] px-4 py-14 text-white md:px-6" id="contact">
       <div className="mx-auto grid w-full max-w-[1280px] gap-10 lg:grid-cols-[1.2fr_2fr_auto]">
         <div>
-          <h3 className="text-4xl font-semibold">Appfit is available for all devices</h3>
-          <p className="mt-4 max-w-[560px] text-[#9e9baa]">
-            Track your fitness goals from anywhere and keep your progress synchronized across your routine.
-          </p>
+          <h3 className="text-4xl font-semibold">{copy.title}</h3>
+          <p className="mt-4 max-w-[560px] text-[#9e9baa]">{copy.description}</p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <button className="rounded-full border border-white px-4 py-2 text-sm">Google Play</button>
-            <button className="rounded-full border border-white px-4 py-2 text-sm">Apple Store</button>
+            <button className="rounded-full border border-white px-4 py-2 text-sm">{copy.playStore}</button>
+            <button className="rounded-full border border-white px-4 py-2 text-sm">{copy.appStore}</button>
           </div>
         </div>
 
         <div className="grid gap-7 text-sm text-[#9e9baa] sm:grid-cols-4">
-          <div><p className="mb-2 font-semibold text-white">Home</p><p>Product</p><p>Pricing</p><p>Business</p><p>Enterprise</p></div>
-          <div><p className="mb-2 font-semibold text-white">About us</p><p>Company</p><p>Leadership</p><p>Careers</p><p>Diversity</p></div>
-          <div><p className="mb-2 font-semibold text-white">Resources</p><p>App Guide</p><p>Forum</p><p>Support</p><p>Events</p></div>
-          <div><p className="mb-2 font-semibold text-white">Tutorial</p><p>Training setup</p><p>Nutrition baseline</p><p>Weekly review</p><p>See all guides</p></div>
+          {copy.groups.map((group) => (
+            <div key={group.title}>
+              <p className="mb-2 font-semibold text-white">{group.title}</p>
+              {group.items.map((item) => (
+                <p key={item}>{item}</p>
+              ))}
+            </div>
+          ))}
         </div>
 
         <div className="mx-auto w-[112px] lg:mx-0">
@@ -35,7 +45,7 @@ export default function LandingFooter() {
           <span className="h-2 w-2 rounded-full bg-[#fbbc05]" />
           <span className="h-2 w-2 rounded-full bg-[#fbbc05]" />
         </div>
-        <div className="flex flex-wrap gap-4"><span>Term & Conditions</span><span>Privacy Policy</span><span>Cookies</span></div>
+        <div className="flex flex-wrap gap-4"><span>{copy.terms}</span><span>{copy.privacy}</span><span>{copy.cookies}</span></div>
       </div>
     </footer>
   );

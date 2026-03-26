@@ -1,33 +1,36 @@
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { landingAssets } from "@/components/landing/assets";
+import { landingCopy } from "@/components/landing/copy";
+import type { LandingLanguage } from "@/components/landing/types";
 
 type Props = {
   onPrimary: () => void;
+  language: LandingLanguage;
 };
 
-export default function LandingHero({ onPrimary }: Props) {
+export default function LandingHero({ onPrimary, language }: Props) {
+  const copy = landingCopy[language].hero;
+
   return (
     <section className="mx-auto grid w-full max-w-[1280px] items-center gap-10 px-4 pb-14 pt-2 md:px-6 lg:grid-cols-[1fr_410px] lg:pb-24">
       <div className="relative overflow-hidden rounded-[28px] bg-[#eef2ff] px-6 py-10 md:px-10 md:py-12">
         <img alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" src={landingAssets.heroBg} />
         <div className="relative z-10 max-w-[620px]">
-          <span className="inline-flex rounded-full bg-[rgba(84,94,244,0.06)] px-4 py-2 text-xs text-[#fbbc05]">Welcome to Appfit</span>
+          <span className="inline-flex rounded-full bg-[rgba(84,94,244,0.06)] px-4 py-2 text-xs text-[#fbbc05]">{copy.badge}</span>
           <h1 className="mt-3 text-4xl font-semibold leading-tight text-black md:text-6xl md:leading-[1.15]">
-            Manage your fitness progress with <span className="text-[#fbbc05]">Appfit</span>
+            {copy.title} <span className="text-[#fbbc05]">{copy.titleHighlight}</span> {copy.titleSuffix}
           </h1>
-          <p className="mt-4 text-base leading-8 text-[#748795] md:text-2xl md:leading-[1.6]">
-            Plan training, track nutrition, monitor recovery, and review your weekly progress in one clear workflow.
-          </p>
+          <p className="mt-4 text-base leading-8 text-[#748795] md:text-2xl md:leading-[1.6]">{copy.description}</p>
           <div className="mt-7 flex flex-wrap items-center gap-6">
             <Button className="h-10 rounded-full bg-[#fbbc05] px-6 text-white hover:bg-[#efb300]" onClick={onPrimary}>
-              Get Started
+              {copy.primary}
             </Button>
             <button className="inline-flex items-center gap-2 text-xl font-medium text-[#fbbc05]" type="button">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#fbbc05] text-white">
                 <Play className="h-4 w-4 fill-white" />
               </span>
-              How it works
+              {copy.howItWorks}
             </button>
           </div>
         </div>
