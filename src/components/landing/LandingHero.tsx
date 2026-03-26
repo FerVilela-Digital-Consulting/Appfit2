@@ -17,17 +17,17 @@ export default function LandingHero({ onPrimary, language }: Props) {
       <div className="relative overflow-hidden rounded-[28px] bg-[#eef2ff] px-6 py-10 md:px-10 md:py-12">
         <img alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" src={landingAssets.heroBg} />
         <div className="relative z-10 max-w-[620px]">
-          <span className="inline-flex rounded-full bg-[rgba(84,94,244,0.06)] px-4 py-2 text-xs text-[#fbbc05]">{copy.badge}</span>
+          <span className="inline-flex rounded-full bg-[rgba(31,158,160,0.12)] px-4 py-2 text-xs text-[#1f9ea0]">{copy.badge}</span>
           <h1 className="mt-3 text-4xl font-semibold leading-tight text-black md:text-6xl md:leading-[1.15]">
-            {copy.title} <span className="text-[#fbbc05]">{copy.titleHighlight}</span> {copy.titleSuffix}
+            {copy.title} <span className="text-[#1f9ea0]">{copy.titleHighlight}</span> {copy.titleSuffix}
           </h1>
           <p className="mt-4 text-base leading-8 text-[#748795] md:text-2xl md:leading-[1.6]">{copy.description}</p>
           <div className="mt-7 flex flex-wrap items-center gap-6">
-            <Button className="h-10 rounded-full bg-[#fbbc05] px-6 text-white hover:bg-[#efb300]" onClick={onPrimary}>
+            <Button className="h-10 rounded-full bg-[#1f9ea0] px-6 text-white hover:bg-[#198b8d]" onClick={onPrimary}>
               {copy.primary}
             </Button>
-            <button className="inline-flex items-center gap-2 text-xl font-medium text-[#fbbc05]" type="button">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#fbbc05] text-white">
+            <button className="inline-flex items-center gap-2 text-xl font-medium text-[#1f9ea0]" type="button">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#1f9ea0] text-white">
                 <Play className="h-4 w-4 fill-white" />
               </span>
               {copy.howItWorks}

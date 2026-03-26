@@ -17,7 +17,7 @@ export default function LandingHowItWorks({ language }: Props) {
       <div className="mt-12 grid gap-8 md:grid-cols-3">
         {copy.steps.map((title) => (
           <article className="text-center" key={title}>
-            <div className="mx-auto mb-4 h-2 w-16 rounded-full bg-[#fbbc05]" />
+            <div className="mx-auto mb-4 h-2 w-16 rounded-full bg-[#1f9ea0]" />
             <h3 className="text-xl font-semibold">{title}</h3>
             <p className="mt-3 text-base text-[#9e9baa]">{copy.itemDescription}</p>
           </article>

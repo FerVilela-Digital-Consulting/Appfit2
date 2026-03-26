@@ -33,7 +33,7 @@ const Index = () => {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white text-[#1e194d]">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#fbbc05] border-t-transparent" />
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#1f9ea0] border-t-transparent" />
       </div>
     );
   }

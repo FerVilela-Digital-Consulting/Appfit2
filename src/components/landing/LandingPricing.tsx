@@ -30,11 +30,11 @@ export default function LandingPricing() {
           <article className="rounded-xl border border-[#ececec] p-6" key={plan.name}>
             <p className="text-xl font-semibold">{plan.name}</p>
             <p className="mt-3 text-4xl font-semibold">{plan.price}</p>
-            <p className="mt-1 inline-flex rounded-full bg-[#ffe7b0] px-2 py-0.5 text-xs text-[#9f6a00]">{plan.badge}</p>
+            <p className="mt-1 inline-flex rounded-full bg-[#dff4f4] px-2 py-0.5 text-xs text-[#1a6f70]">{plan.badge}</p>
             <ul className="mt-4 space-y-2 text-sm text-[#748795]">
               {plan.features.map((feature) => (
                 <li className="flex items-center gap-2" key={feature}>
-                  <Check className="h-4 w-4 text-[#fbbc05]" />
+                  <Check className="h-4 w-4 text-[#1f9ea0]" />
                   {feature}
                 </li>
               ))}

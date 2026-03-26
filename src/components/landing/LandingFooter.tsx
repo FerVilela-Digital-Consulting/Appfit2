@@ -40,10 +40,10 @@ export default function LandingFooter({ language }: Props) {
 
       <div className="mx-auto mt-10 flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-4 border-t border-white/15 pt-6 text-sm text-[#848487]">
         <div className="flex gap-4">
-          <span className="h-2 w-2 rounded-full bg-[#fbbc05]" />
-          <span className="h-2 w-2 rounded-full bg-[#fbbc05]" />
-          <span className="h-2 w-2 rounded-full bg-[#fbbc05]" />
-          <span className="h-2 w-2 rounded-full bg-[#fbbc05]" />
+          <span className="h-2 w-2 rounded-full bg-[#1f9ea0]" />
+          <span className="h-2 w-2 rounded-full bg-[#1f9ea0]" />
+          <span className="h-2 w-2 rounded-full bg-[#1f9ea0]" />
+          <span className="h-2 w-2 rounded-full bg-[#1f9ea0]" />
         </div>
         <div className="flex flex-wrap gap-4"><span>{copy.terms}</span><span>{copy.privacy}</span><span>{copy.cookies}</span></div>
       </div>

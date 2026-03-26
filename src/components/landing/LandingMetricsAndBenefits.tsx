@@ -23,7 +23,7 @@ export default function LandingMetricsAndBenefits({ language }: Props) {
 
       <section className="mx-auto grid w-full max-w-[1280px] gap-10 px-4 py-12 md:px-6 lg:grid-cols-2 lg:items-center">
         <div className="relative mx-auto w-[320px]">
-          <div className="absolute left-[-28px] top-[-22px] h-[300px] w-[265px] rounded-[150px_150px_0_0] bg-[#edb3f1]" />
+          <div className="absolute left-[-28px] top-[-22px] h-[300px] w-[265px] rounded-[150px_150px_0_0] bg-[#c7eff0]" />
           <img alt="phone frame" className="relative z-10 h-auto w-full" src={landingAssets.phoneFrame} />
           <img alt="phone screen" className="absolute left-[20px] top-[28px] z-0 h-[85%] w-[87%] rounded-[26px] object-cover" src={landingAssets.phoneScreenFeature} />
         </div>
@@ -32,7 +32,7 @@ export default function LandingMetricsAndBenefits({ language }: Props) {
           <ul className="mt-6 space-y-4">
             {copy.bullets.map((f) => (
               <li className="flex items-center gap-3 text-[#59616a]" key={f}>
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#eef2ff] text-[#fbbc05]"><Check className="h-4 w-4" /></span>
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#e7f7f7] text-[#1f9ea0]"><Check className="h-4 w-4" /></span>
                 {f}
               </li>
             ))}
