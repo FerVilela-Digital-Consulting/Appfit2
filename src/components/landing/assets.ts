@@ -1,6 +1,5 @@
 export const landingAssets = {
   logo: "https://www.figma.com/api/mcp/asset/afc6f028-00d1-495f-bd40-461357ff47e7",
-  heroBg: "https://www.figma.com/api/mcp/asset/8c38573b-147e-40d5-8560-fc4273a0a4a3",
   phoneFrame: "https://www.figma.com/api/mcp/asset/1d6625e0-82e1-4cc6-90c4-2be5aebac0cf",
   phoneScreen: "/Landing/phone-1-centro-operativo.png",
   phoneScreenAlt: "/Landing/phone-3-cards-control.png",

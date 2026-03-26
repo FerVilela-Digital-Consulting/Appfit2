@@ -14,8 +14,9 @@ export default function LandingHero({ onPrimary, language }: Props) {
 
   return (
     <section className="mx-auto grid w-full max-w-[1280px] items-center gap-10 px-4 pb-14 pt-2 md:px-6 lg:grid-cols-[1fr_410px] lg:pb-24">
-      <div className="relative overflow-hidden rounded-[28px] bg-[#eef2ff] px-6 py-10 md:px-10 md:py-12">
-        <img alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" src={landingAssets.heroBg} />
+      <div className="relative overflow-hidden rounded-[28px] bg-[#dfe6f2] px-6 py-10 md:px-10 md:py-12">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.55),transparent_35%),radial-gradient(circle_at_80%_15%,rgba(132,157,196,0.16),transparent_40%)]" />
+        <div className="pointer-events-none absolute -bottom-8 left-0 h-20 w-[120%] -rotate-[3.2deg] bg-[#d9e1ef]" />
         <div className="relative z-10 max-w-[620px]">
           <span className="inline-flex rounded-full bg-[rgba(31,158,160,0.12)] px-4 py-2 text-xs text-[#1f9ea0]">{copy.badge}</span>
           <h1 className="mt-3 text-4xl font-semibold leading-tight text-black md:text-6xl md:leading-[1.15]">
@@ -36,8 +37,8 @@ export default function LandingHero({ onPrimary, language }: Props) {
         </div>
       </div>
       <div className="relative mx-auto w-[310px]">
-        <img alt="phone frame" className="relative z-10 h-auto w-full" src={landingAssets.phoneFrame} />
-        <img alt="phone screen" className="absolute left-[20px] top-[28px] z-20 h-[85%] w-[87%] rounded-[26px] object-cover" src={landingAssets.phoneScreen} />
+        <img alt="phone frame" className="relative z-20 h-auto w-full" src={landingAssets.phoneFrame} />
+        <img alt="phone screen" className="absolute left-[4.6%] top-[3.9%] z-10 h-[92.3%] w-[90.8%] rounded-[34px] object-cover object-top" src={landingAssets.phoneScreen} />
       </div>
     </section>
   );
