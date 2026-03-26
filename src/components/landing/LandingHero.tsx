@@ -37,7 +37,9 @@ export default function LandingHero({ onPrimary, language }: Props) {
         </div>
       </div>
       <div className="relative mx-auto w-[310px]">
-        <img alt="phone screen" className="absolute left-[4.6%] top-[3.9%] z-10 h-[92.3%] w-[90.8%] rounded-[34px] object-cover object-top" src={landingAssets.phoneScreen} />
+        <div className="absolute inset-[3.9%_4.6%_3.8%_4.6%] z-10 overflow-hidden rounded-[34px] bg-black">
+          <img alt="phone screen" className="h-full w-full object-cover object-top" src={landingAssets.phoneScreen} />
+        </div>
         <img alt="phone frame" className="relative z-20 h-auto w-full" src={landingAssets.phoneFrame} />
       </div>
     </section>
