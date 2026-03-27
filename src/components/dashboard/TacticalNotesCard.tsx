@@ -124,7 +124,7 @@ const TacticalNotesCard = ({ loading = false, todayNote, latestNote, onSave }: P
           <CalendarCheck2 className="h-4 w-4 text-primary" />
           Nota del día
         </CardTitle>
-        <CardDescription>Captura rápida. Se síncroniza directo con tu calendario.</CardDescription>
+        <CardDescription>Captura rápida. Se sincroniza directo con tu calendario.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="rounded-xl border border-border/60 bg-background/35 p-2.5">
@@ -133,7 +133,7 @@ const TacticalNotesCard = ({ loading = false, todayNote, latestNote, onSave }: P
             onChange={(event) => setContent(event.target.value)}
             onFocus={() => setIsExpanded(true)}
             className={cn(
-              "resíze-none border-0 bg-transparent px-1.5 py-1.5 shadow-none transítion-all focus-visíble:ring-0",
+              "resize-none border-0 bg-transparent px-1.5 py-1.5 shadow-none transition-all focus-visible:ring-0",
               isExpanded ? "min-h-24" : "min-h-12",
             )}
             placeholder="Agregar nota del día..."
@@ -159,5 +159,4 @@ const TacticalNotesCard = ({ loading = false, todayNote, latestNote, onSave }: P
 };
 
 export default TacticalNotesCard;
-
 

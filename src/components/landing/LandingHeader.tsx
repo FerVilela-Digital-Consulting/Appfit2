@@ -18,13 +18,13 @@ export default function LandingHeader({ onPrimary, language }: Props) {
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(31,158,160,0.14)] ring-1 ring-[#8fd6d7]/60">
             <span className="h-2.5 w-2.5 rounded-full bg-[#1f9ea0]" />
           </span>
-          <p className="truncate text-left text-[0.92rem] font-black uppercase tracking-[0.22em] text-card-foreground md:text-xl md:tracking-[0.28em]">
+          <p className="truncate text-left text-[0.92rem] font-black uppercase tracking-[0.22em] text-[#c8d1dd] md:text-xl md:tracking-[0.28em]">
             THE <span className="text-[#1f9ea0]">PRIME</span> PROTOCOL
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="min-w-8 text-center text-xs font-semibold uppercase text-[#6f748a]">{language}</span>
+          <span className="min-w-8 text-center text-xs font-semibold uppercase text-[#5e6a82]">{language}</span>
           <Button className="h-10 rounded-full bg-[#1f9ea0] px-6 text-white hover:bg-[#198b8d]" onClick={onPrimary}>
             {`${copy.login} / ${copy.startFree}`}
           </Button>

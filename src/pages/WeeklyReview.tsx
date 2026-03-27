@@ -77,7 +77,7 @@ const WeeklyReview = () => {
         { isGuest },
       ),
     onSuccess: async () => {
-      toast.success("Revisíón semanal guardada.");
+      toast.success("Revisión semanal guardada.");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["weekly_review_observation"] }),
         queryClient.invalidateQueries({ queryKey: ["weekly_review_summary"] }),
@@ -86,7 +86,7 @@ const WeeklyReview = () => {
       ]);
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, "No se pudo guardar la revisíón semanal."));
+      toast.error(getErrorMessage(error, "No se pudo guardar la revisión semanal."));
     },
   });
 
@@ -99,7 +99,7 @@ const WeeklyReview = () => {
       <div className="flex items-center gap-3">
         <ClipboardList className="w-8 h-8 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold md:text-3xl">Revisíón semanal</h1>
+          <h1 className="text-2xl font-bold md:text-3xl">Revisión semanal</h1>
           <p className="text-sm text-muted-foreground">Resumen automático de los últimos 7 días + observaciones.</p>
         </div>
       </div>
@@ -127,7 +127,7 @@ const WeeklyReview = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Dias activos</CardTitle>
+            <CardTitle className="text-sm">Días activos</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">{summary?.activeDays ?? 0}/7</p>
@@ -180,16 +180,16 @@ const WeeklyReview = () => {
           <div className="rounded-lg border p-3 md:col-span-2">
             <p className="text-sm text-muted-foreground">Nutrición</p>
             <p className="font-medium">
-              Dias con registros: {summary?.nutritionDaysWithData ?? 0}/{summary?.nutritionDaysTotal ?? 7}
+              Días con registros: {summary?.nutritionDaysWithData ?? 0}/{summary?.nutritionDaysTotal ?? 7}
             </p>
             <p className="font-medium">
-              Calorias en meta: {summary?.nutritionCalorieDaysMet ?? 0}/{summary?.nutritionDaysTotal ?? 7}
+              Calorías en meta: {summary?.nutritionCalorieDaysMet ?? 0}/{summary?.nutritionDaysTotal ?? 7}
             </p>
             <p className="font-medium">
-              Proteina en meta: {summary?.nutritionProteinDaysMet ?? 0}/{summary?.nutritionDaysTotal ?? 7}
+              Proteína en meta: {summary?.nutritionProteinDaysMet ?? 0}/{summary?.nutritionDaysTotal ?? 7}
             </p>
             <p className="text-xs text-muted-foreground">
-              Promedio: {summary?.avgCalories ?? 0} kcal | Proteina: {summary?.avgProteinG ?? 0} g
+              Promedio: {summary?.avgCalories ?? 0} kcal | Proteína: {summary?.avgProteinG ?? 0} g
             </p>
           </div>
         </CardContent>
@@ -251,6 +251,5 @@ const WeeklyReview = () => {
 };
 
 export default WeeklyReview;
-
 
 

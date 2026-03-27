@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
+import { useLocation } from "react-router-dom";
 
 import { useAuth } from "@/context/AuthContext";
 import { AppLanguage, translations, TranslationKey } from "@/i18n/translations";
@@ -48,6 +49,8 @@ const isSchemaMissingError = (error: unknown, columnName: string) => {
 const PreferencesInnerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { profile, updateProfile, isGuest, user } = useAuth();
   const { setTheme, resolvedTheme } = useTheme();
+  const location = useLocation();
+  const isAuthRoute = location.pathname === "/auth" || location.pathname.startsWith("/auth/");
 
   const [language, setLanguage] = useState<AppLanguage>("es");
   const [themePreference, setThemePreferenceState] = useState<ThemePreference>("system");
@@ -69,8 +72,8 @@ const PreferencesInnerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     setThemePreferenceState(nextTheme);
     localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    setTheme(nextTheme);
-  }, [profile?.theme_preference, setTheme]);
+    setTheme(isAuthRoute ? "light" : nextTheme);
+  }, [profile?.theme_preference, setTheme, isAuthRoute]);
 
   useEffect(() => {
     const profileAccent = profile?.theme_accent_color;
@@ -94,13 +97,15 @@ const PreferencesInnerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [profile?.theme_background_style]);
 
   useEffect(() => {
-    const mode = resolvedTheme === "dark" ? "dark" : "light";
-    applyAccentThemeVars(accentColorId, mode);
-  }, [accentColorId, resolvedTheme]);
+    const mode = isAuthRoute ? "light" : resolvedTheme === "dark" ? "dark" : "light";
+    const activeAccentColorId = isAuthRoute ? getDefaultAccentColorId() : accentColorId;
+    applyAccentThemeVars(activeAccentColorId, mode);
+  }, [accentColorId, resolvedTheme, isAuthRoute]);
 
   useEffect(() => {
-    document.documentElement.dataset.appBg = backgroundStyleId;
-  }, [backgroundStyleId]);
+    const activeBackgroundStyleId = isAuthRoute ? getDefaultBackgroundStyleId() : backgroundStyleId;
+    document.documentElement.dataset.appBg = activeBackgroundStyleId;
+  }, [backgroundStyleId, isAuthRoute]);
 
   const setLanguagePreference = async (_nextLanguage: AppLanguage) => {
     const nextLanguage: AppLanguage = "es";

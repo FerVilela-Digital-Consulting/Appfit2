@@ -59,49 +59,49 @@ export const landingCopy: Record<LandingLanguage, {
       contact: "Contacto",
       login: "Entrar",
       startFree: "Crear cuenta",
-      switchLabel: "Cambiar a ingles",
+      switchLabel: "Cambiar a inglés",
     },
     hero: {
       badge: "Producto real hoy",
-      title: "Gestiona tu operacion fitness con",
+      title: "Gestiona tu operación fitness con",
       titleHighlight: "Appfit",
       titleSuffix: "",
       description:
         "Centro operativo, nutrición, entrenamiento, cuerpo, calendario, biofeedback y panel admin conectados en un solo sistema.",
       primary: "Entrar a Appfit",
-      howItWorks: "Como funciona",
+      howItWorks: "Cómo funciona",
     },
     how: {
-      title: "Como funciona",
-      description: "Un flujo unico: registra, compara y decide con datos reales del dia a dia.",
-      steps: ["Registra tu dia", "Coordina modulos clave", "Revisa progreso semanal"],
+      title: "Cómo funciona",
+      description: "Un flujo único: registra, compara y decide con datos reales del día a día.",
+      steps: ["Registra tu día", "Coordina módulos clave", "Revisa progreso semanal"],
       itemDescriptions: [
         "Registra agua, sueño, nutrición, biofeedback y notas para construir un contexto diario confiable.",
         "Conecta centro operativo, nutrición, entrenamiento y cuerpo para decidir con una sola lectura.",
-        "Evalua tendencias, cumplimiento de metas y observaciones para ajustar la siguiente semana.",
+        "Evalúa tendencias, cumplimiento de metas y observaciones para ajustar la siguiente semana.",
       ],
     },
     featureRows: {
       firstTitle: "Centro operativo + calendario en una sola vista",
       firstDescription:
-        "Abre el dia con prioridades claras y timeline real de agua, sueño, nutrición, biofeedback, peso y notas.",
+        "Abre el día con prioridades claras y timeline real de agua, sueño, nutrición, biofeedback, peso y notas.",
       firstButton: "Ver centro operativo",
-      secondTitle: "Nutricion, entrenamiento y cuerpo conectados",
+      secondTitle: "Nutrición, entrenamiento y cuerpo conectados",
       secondDescription:
-        "Plan nutriciónal, rutinas, progreso corporal y revisión semanal en un mismo flujo. Incluye vista admin para equipos.",
-      secondButton: "Explorar modulos",
+        "Plan nutricional, rutinas, progreso corporal y revisión semanal en un mismo flujo. Incluye vista admin para equipos.",
+      secondButton: "Explorar módulos",
     },
     metrics: {
       items: [
         { value: "8", label: "Modulos operativos reales" },
-        { value: "2", label: "Idiomas de interfaz (ES/EN)" },
+        { value: "1", label: "Idioma de interfaz (ES)" },
         { value: "2", label: "Modos de acceso (cuenta/invitado)" },
         { value: "1", label: "Panel admin integrado" },
       ],
-      title: "Modulos disponibles hoy",
+      title: "Módulos disponibles hoy",
       bullets: [
         "Centro operativo diario",
-        "Nutricion",
+        "Nutrición",
         "Entrenamiento",
         "Cuerpo (peso + mediciones)",
         "Calendario operativo",
@@ -118,11 +118,11 @@ export const landingCopy: Record<LandingLanguage, {
       groups: [
         { title: "Inicio", items: ["Producto", "Precios", "Negocios", "Enterprise"] },
         { title: "Nosotros", items: ["Empresa", "Equipo", "Carreras", "Diversidad"] },
-        { title: "Recursos", items: ["Guia de App", "Foro", "Soporte", "Eventos"] },
-        { title: "Tutoriales", items: ["Configurar entrenamiento", "Base nutriciónal", "Revisión semanal", "Ver guías"] },
+        { title: "Recursos", items: ["Guía de App", "Foro", "Soporte", "Eventos"] },
+        { title: "Tutoriales", items: ["Configurar entrenamiento", "Base nutricional", "Revisión semanal", "Ver guías"] },
       ],
-      terms: "Terminos y Condiciones",
-      privacy: "Politica de Privacidad",
+      terms: "Términos y Condiciones",
+      privacy: "Política de Privacidad",
       cookies: "Cookies",
     },
   },
@@ -203,5 +203,3 @@ export const landingCopy: Record<LandingLanguage, {
     },
   },
 };
-
-

@@ -113,7 +113,7 @@ const DashboardMetricCard = ({
         </div>
         {comingSoon ? (
           <span className="inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-600 sm:px-2 sm:text-[11px] dark:text-amber-300">
-            Proximamente
+            Próximamente
           </span>
         ) : (
           <>
@@ -227,8 +227,8 @@ const Dashboard = () => {
   const { user, isGuest, profile } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
   const snapshot = useDashboardSnapshot(currentMonth);
-  const [visibleModuleKey, setVisíbleModuleKey] = useState<string | null>(null);
-  const [isModuleTransítioning, setIsModuleTransítioning] = useState(false);
+  const [visibleModuleKey, setVisibleModuleKey] = useState<string | null>(null);
+  const [isModuleTransitioning, setIsModuleTransitioning] = useState(false);
   const [isWaterModalOpen, setIsWaterModalOpen] = useState(false);
   const [isSleepModalOpen, setIsSleepModalOpen] = useState(false);
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
@@ -333,23 +333,23 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!nextModule) {
-      setVisíbleModuleKey(null);
-      setIsModuleTransítioning(false);
+      setVisibleModuleKey(null);
+      setIsModuleTransitioning(false);
       return;
     }
 
     if (!visibleModuleKey) {
-      setVisíbleModuleKey(nextModule.key);
-      setIsModuleTransítioning(false);
+      setVisibleModuleKey(nextModule.key);
+      setIsModuleTransitioning(false);
       return;
     }
 
     if (visibleModuleKey === nextModule.key) return;
 
-    setIsModuleTransítioning(true);
+    setIsModuleTransitioning(true);
     const timeoutId = window.setTimeout(() => {
-      setVisíbleModuleKey(nextModule.key);
-      setIsModuleTransítioning(false);
+      setVisibleModuleKey(nextModule.key);
+      setIsModuleTransitioning(false);
     }, 180);
 
     return () => window.clearTimeout(timeoutId);
@@ -438,10 +438,10 @@ const Dashboard = () => {
     isWidgetVisible("weight");
   const stackCards = useMemo(() => {
     const cards: DashboardStackCard[] = [];
-    const widgetIsVisíble = (widgetKey: DashboardHomeWidgetKey) =>
+    const widgetIsVisible = (widgetKey: DashboardHomeWidgetKey) =>
       widgetKey === "hero_modules" || visibleWidgetKeySet.has(widgetKey);
 
-    if (!isMobile && SHOW_CALENDAR_CARD_IN_DASHBOARD && widgetIsVisíble("calendar")) {
+    if (!isMobile && SHOW_CALENDAR_CARD_IN_DASHBOARD && widgetIsVisible("calendar")) {
       cards.push({
         key: "calendar",
         placement: {
@@ -590,9 +590,9 @@ const Dashboard = () => {
     !hasNutritionLogs
       ? "Empieza con tu primera comida para activar el seguimiento."
       : caloriesProgress > 110
-        ? "Ya superaste calorias; prioriza proteina magra y vegetales."
+        ? "Ya superaste calorías; prioriza proteína magra y vegetales."
         : remainingProtein > 0
-          ? `Prioriza una comida con ${Math.min(Math.max(Math.round(remainingProtein), 20), 45)} g de proteina.`
+          ? `Prioriza una comida con ${Math.min(Math.max(Math.round(remainingProtein), 20), 45)} g de proteína.`
           : "Vas en buena ruta. Mantén porciones para cerrar el día.";
   const nutritionContextChip = core?.nutritionToday?.targetBreakdown?.tdee
     ? `TDEE ${Math.round(core.nutritionToday.targetBreakdown.tdee).toLocaleString("es-PE")} kcal`
@@ -701,7 +701,7 @@ const Dashboard = () => {
           : "text-muted-foreground";
   const physicalSummary = core?.physicalSummary ?? null;
   const focusHeading = (physicalSummary?.goalHeading ?? "Sin meta activa").replace(/^Meta activa:\s*/i, "");
-  const compactPhysícalMetrics =
+  const compactPhysicalMetrics =
     physicalSummary?.focusMode === "muscle_gain"
       ? [
           { label: "Masa magra", value: physicalSummary.leanMassKg !== null ? `${physicalSummary.leanMassKg.toFixed(1)} kg` : "--" },
@@ -728,7 +728,7 @@ const Dashboard = () => {
 
   const remainingActionsCount = Math.max(missingModules.length, 0);
   const quickActionsVisible = isWidgetVisible("quick_actions");
-  const mobilePhysícalHighlights = compactPhysícalMetrics.slice(0, 2);
+  const mobilePhysicalHighlights = compactPhysicalMetrics.slice(0, 2);
   const targetWeightKg = core?.goal?.target_weight_kg ?? null;
   const currentWeightKg = core?.latestMeasurementWeight ?? core?.latestWeight ?? null;
   const goalGapKg =
@@ -851,7 +851,7 @@ const Dashboard = () => {
               <CircleHelp className="h-3.5 w-3.5" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" síde="top" className="w-80 space-y-2">
+          <PopoverContent align="start" side="top" className="w-80 space-y-2">
             <p className="text-sm font-semibold">Como funciona este card</p>
             <p className="text-xs text-muted-foreground">
               El score (0-100) combina sueño, biofeedback, hidratación y consistencia semanal para estimar tu capacidad de carga del día.
@@ -1092,7 +1092,7 @@ const Dashboard = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Widgets visibles</p>
                     <div className="grid max-h-56 gap-2 overflow-auto pr-1">
-                      {DASHBOARD_HOME_WIDGET_DEFINITIONS.filter((widget) => widget.key !== "hero_modules" && widget.key !== "physícal_progress").map((widget) => {
+                      {DASHBOARD_HOME_WIDGET_DEFINITIONS.filter((widget) => widget.key !== "hero_modules" && widget.key !== "physical_progress").map((widget) => {
                         const checked = selectedWidgetKeys.includes(widget.key);
                         return (
                           <div key={widget.key} className="flex items-center space-x-2">
@@ -1146,7 +1146,7 @@ const Dashboard = () => {
           <h2 id="dashboard-zone-actions" className="sr-only">Control operativo de hoy</h2>
           <div className={cn("grid", denseSectionGapClass, "xl:grid-cols-5")}>
             <DashboardCardShell
-              title="Que hacer hoy"
+              title="Qué hacer hoy"
               contentClassName={denseActionContentClass}
               className="xl:col-span-2"
             >
@@ -1242,7 +1242,7 @@ const Dashboard = () => {
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                {compactPhysícalMetrics.map((metric) => (
+                {compactPhysicalMetrics.map((metric) => (
                   <div key={metric.label} className="rounded-xl border border-border/60 bg-muted/10 px-2 py-2">
                     <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{metric.label}</p>
                     <p className="mt-1 text-sm font-semibold leading-tight">{metric.value}</p>
@@ -1308,7 +1308,7 @@ const Dashboard = () => {
                   <DashboardMetricCard
                     title="Pasos"
                     icon={Footprints}
-                    valueLabel="Proximamente..."
+                    valueLabel="Próximamente..."
                     goalLabel="8,000 pasos"
                     progressPct={0}
                     accentClassName="bg-emerald-500/90 text-emerald-100"
@@ -1333,7 +1333,7 @@ const Dashboard = () => {
               <div className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <div className="flex h-full flex-col gap-3">
                 <DashboardCardShell
-                  title="Que hacer hoy"
+                  title="Qué hacer hoy"
                   className="flex-1"
                   contentClassName={denseActionContentClass}
                 >
@@ -1426,8 +1426,8 @@ const Dashboard = () => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
-                      {mobilePhysícalHighlights.map((metric) => (
-                        <div key={`mobile-physícal-${metric.label}`} className="rounded-lg border border-border/60 bg-muted/10 px-2 py-2">
+                      {mobilePhysicalHighlights.map((metric) => (
+                        <div key={`mobile-physical-${metric.label}`} className="rounded-lg border border-border/60 bg-muted/10 px-2 py-2">
                           <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{metric.label}</p>
                           <p className="mt-0.5 text-xs font-semibold">{metric.value}</p>
                         </div>
@@ -1625,7 +1625,7 @@ const Dashboard = () => {
                     <DashboardMetricCard
                       title="Pasos"
                       icon={Footprints}
-                      valueLabel="Proximamente..."
+                      valueLabel="Próximamente..."
                       goalLabel="8,000 pasos"
                       progressPct={0}
                       accentClassName="bg-emerald-500/90 text-emerald-100"
@@ -1697,7 +1697,7 @@ const Dashboard = () => {
               <DashboardMetricCard
                 title="Pasos"
                 icon={Footprints}
-                valueLabel="Proximamente..."
+                valueLabel="Próximamente..."
                 goalLabel="8,000 pasos"
                 progressPct={0}
                 accentClassName="bg-emerald-500/90 text-emerald-100"
@@ -2016,8 +2016,6 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-
 
 
 

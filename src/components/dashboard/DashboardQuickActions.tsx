@@ -29,7 +29,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   {
     key: "measurements",
     label: "Registrar medidas",
-    description: "Guardar perimetros corporales",
+    description: "Guardar perímetros corporales",
     to: "/body",
     icon: Ruler,
   },
@@ -43,7 +43,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   {
     key: "nutrition",
     label: "Registrar comida",
-    description: "Cargar consumo y avance nutriciónal",
+    description: "Cargar consumo y avance nutricional",
     to: "/nutrition",
     icon: UtensilsCrossed,
   },
@@ -55,7 +55,7 @@ const DashboardQuickActions = ({ embedded = false, excludeKeys = [] }: Props) =>
     <div className={cn("min-w-0 space-y-3", embedded && "overflow-hidden rounded-xl border border-border/60 bg-muted/10 p-3")}>
       {embedded ? (
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Acciones rapidas</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Acciones rápidas</p>
           <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
         </div>
       ) : null}
@@ -103,8 +103,8 @@ const DashboardQuickActions = ({ embedded = false, excludeKeys = [] }: Props) =>
   return (
     <Card className="rounded-[22px] border-border/50 bg-card/80 md:rounded-[24px]">
       <CardHeader>
-        <CardTitle>Acciones rapidas</CardTitle>
-        <CardDescription>Desde aqui deberias poder registrar o revisar lo importante sin salir del dashboard.</CardDescription>
+        <CardTitle>Acciones rápidas</CardTitle>
+        <CardDescription>Desde aquí deberías poder registrar o revisar lo importante sin salir del dashboard.</CardDescription>
       </CardHeader>
       <CardContent>{content}</CardContent>
     </Card>
@@ -112,4 +112,3 @@ const DashboardQuickActions = ({ embedded = false, excludeKeys = [] }: Props) =>
 };
 
 export default DashboardQuickActions;
-

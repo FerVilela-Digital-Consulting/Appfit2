@@ -73,7 +73,7 @@ const formatWeightReference = (reference: BodyMeasurementWeightReference) => {
     return `Peso de referencia: ${reference.weightKg.toFixed(1)} kg (${reference.measuredAt})`;
   }
   if (reference.source === "latest_available" && reference.measuredAt) {
-    return `Sin peso previo. Se usa el ultimo disponible: ${reference.weightKg.toFixed(1)} kg (${reference.measuredAt})`;
+      return `Sin peso previo. Se usa el último disponible: ${reference.weightKg.toFixed(1)} kg (${reference.measuredAt})`;
   }
   if (reference.source === "profile_fallback") {
     return `Sin registro de peso. Se usa el peso del perfil: ${reference.weightKg.toFixed(1)} kg`;
@@ -169,13 +169,13 @@ const BodyMeasurements = () => {
         summary.latest?.lean_mass_kg !== null && summary.latest?.lean_mass_kg !== undefined
           ? `${Number(summary.latest.lean_mass_kg).toFixed(1)} kg`
           : "--",
-      description: "Todo lo que no es grasa: musculo, agua, hueso y orgaños.",
+      description: "Todo lo que no es grasa: músculo, agua, hueso y órganos.",
       formula: "Peso total (kg) - masa grasa (kg)",
     },
     {
       title: "Registros",
       value: String(measurementRows.length),
-      description: "Cantidad de mediciones guardadas para comparar tu evolucion.",
+      description: "Cantidad de mediciones guardadas para comparar tu evolución.",
       formula: "Conteo total de mediciones históricas registradas",
     },
   ] as const;
@@ -377,7 +377,7 @@ const BodyMeasurements = () => {
                          <button
                            type="button"
                            className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition hover:border-primary/60 hover:text-primary md:hidden"
-                           aria-label={`Ver formula de ${item.title}`}
+                           aria-label={`Ver fórmula de ${item.title}`}
                            aria-expanded={activeMobileInfoCard === item.title}
                          >
                            <CircleHelp className="h-3.5 w-3.5" />
@@ -385,8 +385,8 @@ const BodyMeasurements = () => {
                        </PopoverTrigger>
                        <PopoverContent
                          align="end"
-                         síde="bottom"
-                         sídeOffset={8}
+                         side="bottom"
+                         sideOffset={8}
                          className="z-[130] w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-border/70 bg-popover/95 p-3 shadow-xl md:hidden"
                        >
                          <p className="text-xs font-medium">{item.title}</p>
@@ -398,12 +398,12 @@ const BodyMeasurements = () => {
                          <button
                            type="button"
                            className="hidden h-6 w-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition hover:border-primary/60 hover:text-primary md:inline-flex"
-                           aria-label={`Ver formula de ${item.title}`}
+                           aria-label={`Ver fórmula de ${item.title}`}
                          >
                            <CircleHelp className="h-3.5 w-3.5" />
                          </button>
                        </TooltipTrigger>
-                       <TooltipContent síde="top" className="max-w-[240px]">
+                       <TooltipContent side="top" className="max-w-[240px]">
                          <p className="text-xs font-medium">{item.title}</p>
                          <p className="mt-1 text-xs text-muted-foreground">{item.formula}</p>
                        </TooltipContent>
@@ -423,7 +423,7 @@ const BodyMeasurements = () => {
         <Card>
           <CardHeader>
             <CardTitle>{editingMeasurementId ? "Editar medición" : "Nueva medición"}</CardTitle>
-            <CardDescription>Se usa el peso mas cercano a la fecha. Si no existe, se toma el ultimo disponible.</CardDescription>
+            <CardDescription>Se usa el peso más cercano a la fecha. Si no existe, se toma el último disponible.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -524,7 +524,7 @@ const BodyMeasurements = () => {
 
         <Card>
         <CardHeader>
-          <CardTitle>Comparacion libre</CardTitle>
+          <CardTitle>Comparación libre</CardTitle>
           <CardDescription>Compara cualquier par de fechas guardadas y revisa el cambio por perímetro.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -701,7 +701,6 @@ const BodyMeasurements = () => {
 };
 
 export default BodyMeasurements;
-
 
 
 

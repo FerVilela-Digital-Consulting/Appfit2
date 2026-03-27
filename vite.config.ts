@@ -58,13 +58,15 @@ export default defineConfig(({ mode }) => ({
             handler: "NetworkFirst",
             options: {
               cacheName: "app-pages",
+              networkTimeoutSeconds: 3,
             },
           },
           {
             urlPattern: ({ request }) => request.destination === "script" || request.destination === "style",
-            handler: "StaleWhileRevalidate",
+            handler: "NetworkFirst",
             options: {
               cacheName: "app-assets",
+              networkTimeoutSeconds: 3,
             },
           },
           {
@@ -75,18 +77,6 @@ export default defineConfig(({ mode }) => ({
               expiration: {
                 maxEntries: 150,
                 maxAgeSeconds: 60 * 60 * 24 * 30,
-              },
-            },
-          },
-          {
-            urlPattern: ({ url }) => url.hostname.includes("supabase.co"),
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "supabase-api",
-              networkTimeoutSeconds: 4,
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 12,
               },
             },
           },
