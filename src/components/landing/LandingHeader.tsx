@@ -13,7 +13,7 @@ export default function LandingHeader({ onPrimary, language, onToggleLanguage }:
   const copy = landingCopy[language].header;
 
   return (
-    <header className="sticky inset-x-0 top-0 z-50 w-full border-b border-[#d8e0ec] bg-white/95 shadow-[0_8px_24px_rgba(9,24,44,0.08)] backdrop-blur">
+    <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-[#d8e0ec] bg-white/95 shadow-[0_8px_24px_rgba(9,24,44,0.08)] backdrop-blur">
       <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between px-4 py-4 md:px-6">
         <p className="truncate text-left text-[0.92rem] font-black uppercase tracking-[0.22em] text-card-foreground md:text-xl md:tracking-[0.28em]">
           THE <span className="text-[#1f9ea0]">PRIME</span> PROTOCOL
