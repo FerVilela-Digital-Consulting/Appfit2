@@ -619,24 +619,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const payload: ProfileUpdatePayload = { ...data, updated_at: new Date().toISOString() };
 
-        let { error } = await supabase
+        let updateResult = await supabase
             .from('profiles')
             .update(payload)
-            .eq('id', user.id);
+            .eq('id', user.id)
+            .select('id')
+            .maybeSingle();
 
         // Some projects don't have updated_at in profiles; retry without it.
-        if (error && error.message?.includes("Could not find the 'updated_at' column")) {
-            const retry = await supabase
+        if (updateResult.error && updateResult.error.message?.includes("Could not find the 'updated_at' column")) {
+            updateResult = await supabase
                 .from('profiles')
                 .update(data)
-                .eq('id', user.id);
-            error = retry.error;
+                .eq('id', user.id)
+                .select('id')
+                .maybeSingle();
         }
 
-        if (error) {
+        // If no profile row exists yet, create it so onboarding/profile data persists.
+        if (!updateResult.error && !updateResult.data) {
+            let upsertResult = await supabase
+                .from('profiles')
+                .upsert({ id: user.id, ...payload }, { onConflict: 'id' })
+                .select('id')
+                .maybeSingle();
+
+            if (upsertResult.error && upsertResult.error.message?.includes("Could not find the 'updated_at' column")) {
+                upsertResult = await supabase
+                    .from('profiles')
+                    .upsert({ id: user.id, ...data }, { onConflict: 'id' })
+                    .select('id')
+                    .maybeSingle();
+            }
+
+            updateResult = upsertResult;
+        }
+
+        if (updateResult.error) {
             setAuthedProfile(oldProfile);
-            toast.error(error.message);
-            throw error;
+            toast.error(updateResult.error.message);
+            throw updateResult.error;
         }
 
         // Keep auth cache aligned with optimistic profile updates so fallback syncs

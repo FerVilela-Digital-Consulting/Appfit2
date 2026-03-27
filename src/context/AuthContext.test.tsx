@@ -9,6 +9,7 @@ const mockResend = vi.fn();
 const mockSignOut = vi.fn();
 const mockMaybeSingle = vi.fn();
 const mockUpdateEq = vi.fn();
+const mockUpsertMaybeSingle = vi.fn();
 
 const mockFrom = vi.fn(() => ({
   select: () => ({
@@ -19,7 +20,21 @@ const mockFrom = vi.fn(() => ({
     }),
   }),
   update: (payload: unknown) => ({
-    eq: (column: string, value: string) => mockUpdateEq(payload, column, value),
+    eq: (column: string, value: string) => {
+      const run = () => mockUpdateEq(payload, column, value);
+      const direct = Promise.resolve(run()) as Promise<unknown> & {
+        select: () => { maybeSingle: () => Promise<unknown> };
+      };
+      direct.select = () => ({
+        maybeSingle: () => Promise.resolve(run()),
+      });
+      return direct;
+    },
+  }),
+  upsert: (...args: unknown[]) => ({
+    select: () => ({
+      maybeSingle: () => mockUpsertMaybeSingle(...args),
+    }),
   }),
 }));
 
@@ -85,6 +100,7 @@ describe("AuthProvider", () => {
     mockSignOut.mockReset();
     mockMaybeSingle.mockReset();
     mockUpdateEq.mockReset();
+    mockUpsertMaybeSingle.mockReset();
 
     mockGetSession.mockResolvedValue({ data: { session: null } });
     mockOnAuthStateChange.mockReturnValue({
@@ -103,7 +119,8 @@ describe("AuthProvider", () => {
       },
       error: null,
     });
-    mockUpdateEq.mockResolvedValue({ error: null });
+    mockUpdateEq.mockResolvedValue({ data: { id: "profile-1" }, error: null });
+    mockUpsertMaybeSingle.mockResolvedValue({ data: { id: "profile-1" }, error: null });
   });
 
   it("enters and exits guest mode locally", async () => {
