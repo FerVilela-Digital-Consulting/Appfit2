@@ -80,11 +80,12 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
 
   const chartData = rangeTotals.map((row) => ({
     x: new Date(`${row.date_key}T00:00:00`).getTime(),
-    hours: Number((row.total_minutes / 60).toFixed(2)),
+    hours: row.total_minutes > 0 ? Number((row.total_minutes / 60).toFixed(2)) : null,
     total_minutes: row.total_minutes,
     date_key: row.date_key,
+    hasData: row.total_minutes > 0,
   }));
-  const sleepSeries = chartData.map((row) => row.hours);
+  const sleepSeries = chartData.map((row) => row.hours).filter((value): value is number => typeof value === "number");
   const sleepMin = sleepSeries.length > 0 ? Math.min(...sleepSeries) : 0;
   const sleepMax = sleepSeries.length > 0 ? Math.max(...sleepSeries) : 0;
   const sleepAxisMin = Math.max(0, Math.floor(sleepMin));
@@ -398,8 +399,20 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
                   />
                   <ReferenceLine y={Number((goalData.sleep_goal_minutes / 60).toFixed(2))} stroke="hsl(var(--primary) / 0.35)" strokeDasharray="4 4" />
                   <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      borderColor: "hsl(var(--border))",
+                      color: "hsl(var(--popover-foreground))",
+                      borderRadius: "0.75rem",
+                    }}
+                    itemStyle={{ color: "hsl(var(--popover-foreground))" }}
+                    labelStyle={{ color: "hsl(var(--muted-foreground))" }}
                     labelFormatter={(value) => formatAxisDate(Number(value))}
-                    formatter={(value: number | string) => {
+                    formatter={(value: number | string | null, _name, entry) => {
+                      const payload = entry?.payload as { hasData?: boolean } | undefined;
+                      if (!payload?.hasData || value === null || value === undefined) {
+                        return ["Sin registro", "Sueno"];
+                      }
                       const hoursValue = typeof value === "number" ? value : Number(value);
                       return [`${hoursValue.toFixed(1)} h`, "Sueno"];
                     }}
@@ -409,6 +422,7 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
                     dataKey="hours"
                     stroke="hsl(var(--primary))"
                     strokeWidth={3}
+                    connectNulls={false}
                     dot={{ r: 0 }}
                     activeDot={{ r: 6, fill: "hsl(var(--primary))", strokeWidth: 0 }}
                   />
