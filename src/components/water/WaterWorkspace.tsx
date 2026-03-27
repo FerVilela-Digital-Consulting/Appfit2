@@ -1,5 +1,6 @@
 ﻿import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Droplets } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { useAuth } from "@/context/AuthContext";
@@ -65,89 +66,141 @@ const WaterWorkspace = ({ embedded = false }: WaterWorkspaceProps) => {
     total_ml: item.total_ml,
   }));
 
-  return (
-    <div className={embedded ? "space-y-6" : "container max-w-6xl space-y-6 py-8"}>
-      <WaterCard showHistoryButton={false} />
+  const avgMl = totals.length
+    ? Math.round(totals.reduce((sum, item) => sum + item.total_ml, 0) / totals.length)
+    : 0;
+  const daysMet = totals.filter((item) => item.total_ml >= goal.water_goal_ml).length;
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Analitica de agua</CardTitle>
-          <CardDescription>Dia, semana y mes con totales diarios.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Hoy</p>
-              <p className="text-xl font-semibold">{todayTotal} ml</p>
+  return (
+    <div className={embedded ? "space-y-5 md:space-y-6" : "container max-w-6xl space-y-5 py-6 md:space-y-6 md:py-8"}>
+      <div className="flex items-center gap-3">
+        <Droplets className="h-7 w-7 text-primary" />
+        <div>
+          <h1 className="text-2xl font-bold md:text-3xl">Agua</h1>
+          <p className="text-sm text-muted-foreground">
+            Sigue tu hidratación diaria y revisa tendencia, meta y registros sin salir del centro operativo.
+          </p>
+        </div>
+      </div>
+
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="grid grid-cols-2 divide-x divide-y border-border/60 sm:grid-cols-4 sm:divide-y-0">
+            <div className="space-y-1 p-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Hoy</p>
+              <p className="text-xl font-semibold md:text-2xl">{todayTotal} ml</p>
             </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Objetivo</p>
-              <p className="text-xl font-semibold">{goal.water_goal_ml} ml</p>
+            <div className="space-y-1 p-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Meta</p>
+              <p className="text-xl font-semibold md:text-2xl">{goal.water_goal_ml} ml</p>
             </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Rango</p>
-              <p className="text-xl font-semibold">{range === "7d" ? "Últimos 7 días" : range === "30d" ? "Últimos 30 días" : "Este mes"}</p>
+            <div className="space-y-1 p-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Promedio</p>
+              <p className="text-xl font-semibold md:text-2xl">{avgMl} ml</p>
+            </div>
+            <div className="space-y-1 p-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Días con meta</p>
+              <p className="text-xl font-semibold md:text-2xl">{daysMet}</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Registros de agua</CardTitle>
+            <CardDescription>
+              <input
+                type="date"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={selectedDate.toISOString().slice(0, 10)}
+                onChange={(e) => setSelectedDate(new Date(`${e.target.value}T12:00:00`))}
+              />
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {selectedLogs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No hay registros de agua para esta fecha.</p>
+            ) : (
+              <div className="space-y-2">
+                {selectedLogs.map((log) => (
+                  <div key={log.id} className="rounded-lg border p-3 text-sm">
+                    <p className="font-medium">{log.consumed_ml} ml</p>
+                    <p className="text-muted-foreground">
+                      {new Date(log.logged_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          <WaterCard showHistoryButton={false} />
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Hidratación</CardTitle>
           <div className="flex gap-2">
             <Button size="sm" variant={range === "7d" ? "default" : "outline"} onClick={() => setRange("7d")}>
               Semana
             </Button>
             <Button size="sm" variant={range === "30d" ? "default" : "outline"} onClick={() => setRange("30d")}>
-              Mes (30d)
+              30 días
             </Button>
             <Button size="sm" variant={range === "month" ? "default" : "outline"} onClick={() => setRange("month")}>
               Este mes
             </Button>
           </div>
-
+        </CardHeader>
+        <CardContent>
           {chartData.length === 0 ? (
             <p className="text-sm text-muted-foreground">Sin datos para el rango seleccionado.</p>
           ) : (
-            <div className="h-[240px] w-full md:h-[320px]">
+            <div className="h-[190px] w-full md:h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
-                  <YAxis />
+                <BarChart data={chartData} margin={{ top: 8, right: 10, left: 0, bottom: 2 }}>
+                  <CartesianGrid vertical={false} stroke="hsl(var(--border) / 0.45)" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(value) =>
+                      new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short" }).format(new Date(value)).replace(".", "")
+                    }
+                    tickLine={false}
+                    axisLine={{ stroke: "hsl(var(--border) / 0.7)" }}
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    dy={8}
+                  />
+                  <YAxis
+                    tickFormatter={(value) => `${Math.round(Number(value) * 1000)} ml`}
+                    tickLine={false}
+                    axisLine={{ stroke: "hsl(var(--border) / 0.7)" }}
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  />
                   <Tooltip
-                    labelFormatter={(v) => new Date(String(v)).toLocaleDateString()}
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      borderColor: "hsl(var(--border))",
+                      color: "hsl(var(--popover-foreground))",
+                      borderRadius: "0.75rem",
+                    }}
+                    itemStyle={{ color: "hsl(var(--popover-foreground))" }}
+                    labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+                    labelFormatter={(value) =>
+                      new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short" }).format(new Date(String(value))).replace(".", "")
+                    }
                     formatter={(value: number | string) => {
                       const liters = typeof value === "number" ? value : Number(value);
-                      return [`${Math.round(liters * 1000)} ml`, "Total"];
+                      return [`${Math.round(liters * 1000)} ml`, "Agua"];
                     }}
                   />
-                  <Bar dataKey="liters" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="liters" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Historial del dia seleccionado</CardTitle>
-          <CardDescription>Eventos individuales del consumo de agua.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <input
-            type="date"
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={selectedDate.toISOString().slice(0, 10)}
-            onChange={(e) => setSelectedDate(new Date(`${e.target.value}T12:00:00`))}
-          />
-          {selectedLogs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No hay eventos para esta fecha.</p>
-          ) : (
-            <div className="space-y-2">
-              {selectedLogs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between rounded-lg border p-3">
-                  <p className="font-medium">{log.consumed_ml} ml</p>
-                  <p className="text-sm text-muted-foreground">{new Date(log.logged_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
-                </div>
-              ))}
             </div>
           )}
         </CardContent>
@@ -157,5 +210,3 @@ const WaterWorkspace = ({ embedded = false }: WaterWorkspaceProps) => {
 };
 
 export default WaterWorkspace;
-
-
