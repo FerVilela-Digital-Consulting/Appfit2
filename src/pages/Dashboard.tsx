@@ -17,9 +17,9 @@ import {
   Settings2,
   Sparkles,
   TimerReset,
-  UtensílsCrossed,
+  UtensilsCrossed,
 } from "lucide-react";
-import { CartesíanGrid, Line, LineChart, ReferenceLine, ResponsíveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { motion } from "motion/react";
@@ -49,10 +49,10 @@ import { useAuth } from "@/context/AuthContext";
 import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
-  loadDashboardCardDensíty,
-  saveDashboardCardDensíty,
-  type DashboardCardDensíty,
-} from "@/features/dashboard/dashboardDensíty";
+  loadDashboardCardDensity,
+  saveDashboardCardDensity,
+  type DashboardCardDensity,
+} from "@/features/dashboard/dashboardDensity";
 import { buildDashboardViewModel } from "@/features/dashboard/dashboardViewModel";
 import type { DashboardStackCard } from "@/features/dashboard/dashboardTypes";
 import { NUTRITION_ARCHETYPE_META } from "@/features/nutrition/nutritionProfiles";
@@ -122,7 +122,7 @@ const DashboardMetricCard = ({
                 type="button"
                 onClick={onActionClick}
                 aria-label={actionLabel}
-                className="inline-flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-sm font-medium leading-none text-muted-foreground transítion-colors hover:bg-muted hover:text-foreground"
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-sm font-medium leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 {actionLabel}
               </button>
@@ -130,7 +130,7 @@ const DashboardMetricCard = ({
               <Link
                 to={actionHref}
                 aria-label={actionLabel}
-                className="inline-flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-sm font-medium leading-none text-muted-foreground transítion-colors hover:bg-muted hover:text-foreground"
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-sm font-medium leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 {actionLabel}
               </Link>
@@ -203,7 +203,7 @@ const WeightRangeControl = ({ value, onChange, layoutId, className }: WeightRang
       className="absolute bottom-1 left-1 top-1 rounded-lg bg-primary"
       style={{ width: "calc((100% - 0.5rem) / 3)" }}
       animate={{ x: `${WEIGHT_RANGE_OPTIONS.findIndex((option) => option.key === value) * 100}%` }}
-      transítion={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
     />
     {WEIGHT_RANGE_OPTIONS.map((option) => {
       const isActive = value === option.key;
@@ -240,14 +240,14 @@ const Dashboard = () => {
   const [isSecondaryExpanded, setIsSecondaryExpanded] = useState(false);
   const [isTodayDetailsExpanded, setIsTodayDetailsExpanded] = useState(false);
   const [mobileCarouselIndex, setMobileCarouselIndex] = useState(0);
-  const [cardDensíty, setCardDensíty] = useState<DashboardCardDensíty>(() => loadDashboardCardDensíty());
+  const [cardDensity, setCardDensity] = useState<DashboardCardDensity>(() => loadDashboardCardDensity());
   const mobileCarouselRef = useRef<HTMLDivElement | null>(null);
   const timeZone = profile?.timezone || DEFAULT_WATER_TIMEZONE;
 
   const saveNoteMutation = useMutation({
     mutationFn: (payload: { title?: string | null; content: string }) => snapshot.saveTodayNote(payload),
     onSuccess: async () => {
-      toast.success("Nota díaria guardada.");
+      toast.success("Nota diaria guardada.");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
         queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
@@ -356,8 +356,8 @@ const Dashboard = () => {
   }, [nextModule, visibleModuleKey]);
 
   useEffect(() => {
-    saveDashboardCardDensíty(cardDensíty);
-  }, [cardDensíty]);
+    saveDashboardCardDensity(cardDensity);
+  }, [cardDensity]);
 
   useEffect(() => {
     if (!isTrainingSummaryOpen) return;
@@ -471,7 +471,7 @@ const Dashboard = () => {
     snapshot.monthActivity,
     snapshot.monthActivityLoading,
   ]);
-  const isCompactDensity = cardDensíty === "compact";
+  const isCompactDensity = cardDensity === "compact";
   const denseSectionGapClass = isCompactDensity ? "gap-2" : "gap-3";
   const denseCardContentClass = isCompactDensity ? "space-y-2 p-3 md:p-4" : "space-y-3 p-4 md:p-5";
   const denseActionContentClass = isCompactDensity ? "space-y-3 p-3 md:p-4" : "space-y-4 p-4 md:p-5";
@@ -510,7 +510,7 @@ const Dashboard = () => {
       queryClient.invalidateQueries({ queryKey: ["dashboard_training_today"] }),
       queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
     ]);
-    toast.success("Dashboard síncronizado.");
+    toast.success("Dashboard sincronizado.");
   };
 
   const recoveryScore = core?.recovery.score ?? 0;
@@ -846,7 +846,7 @@ const Dashboard = () => {
             <button
               type="button"
               aria-label="Como funciona el recovery score"
-              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border/70 bg-background/70 text-muted-foreground transítion-colors hover:bg-muted hover:text-foreground"
+              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border/70 bg-background/70 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <CircleHelp className="h-3.5 w-3.5" />
             </button>
@@ -874,7 +874,7 @@ const Dashboard = () => {
                 <div className="mt-1 h-1.5 rounded-full bg-muted"><div className={cn("h-1.5 rounded-full", recoveryBarClass)} style={{ width: `${Math.max(0, Math.min(100, recoverySubscores.hydration))}%` }} /></div>
               </div>
               <div className="rounded-md border border-border/60 px-2 py-1.5">
-                <p className="text-[11px] text-muted-foreground">Consístencia</p>
+                <p className="text-[11px] text-muted-foreground">Consistencia</p>
                 <div className="mt-1 h-1.5 rounded-full bg-muted"><div className={cn("h-1.5 rounded-full", recoveryBarClass)} style={{ width: `${Math.max(0, Math.min(100, recoverySubscores.consistency))}%` }} /></div>
               </div>
             </div>
@@ -936,9 +936,9 @@ const Dashboard = () => {
     <div className="rounded-xl border border-border/60 bg-muted/10 p-2.5">
       <div className={heightClassName}>
         {hasWeightTrend ? (
-          <ResponsíveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={weightChartData} margin={{ top: 8, right: 10, left: 0, bottom: 2 }}>
-              <CartesíanGrid vertical={false} stroke="hsl(var(--border) / 0.45)" />
+              <CartesianGrid vertical={false} stroke="hsl(var(--border) / 0.45)" />
               <XAxis
                 type="number"
                 dataKey="x"
@@ -1005,7 +1005,7 @@ const Dashboard = () => {
                 }}
               />
             </LineChart>
-          </ResponsíveContainer>
+          </ResponsiveContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Sin tendencia</div>
         )}
@@ -1040,30 +1040,30 @@ const Dashboard = () => {
           description={todayDateLabel}
           actions={
             <div className="hidden items-center gap-2 md:flex">
-              <Button variant="outline" síze="sm" className="h-10 rounded-xl px-4">
+              <Button variant="outline" size="sm" className="h-10 rounded-xl px-4">
                 Día
               </Button>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" síze="sm" className="h-10 rounded-xl px-3">
+                  <Button variant="outline" size="sm" className="h-10 rounded-xl px-3">
                     <Settings2 className="mr-2 h-4 w-4" />
-                    Widgets y densídad
+                    Widgets y densidad
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-80 space-y-4">
                   <div className="space-y-2 border-b pb-4">
-                    <p className="text-sm font-medium">Densídad visual</p>
+                    <p className="text-sm font-medium">Densidad visual</p>
                     <div className="grid grid-cols-2 gap-2">
-                      {(["comfortable", "compact"] as const).map((densítyOption) => (
+                      {(["comfortable", "compact"] as const).map((densityOption) => (
                         <Button
-                          key={densítyOption}
+                          key={densityOption}
                           type="button"
-                          síze="sm"
-                          variant={cardDensíty === densítyOption ? "default" : "outline"}
+                          size="sm"
+                          variant={cardDensity === densityOption ? "default" : "outline"}
                           className="justify-center"
-                          onClick={() => setCardDensíty(densítyOption)}
+                          onClick={() => setCardDensity(densityOption)}
                         >
-                          {densítyOption === "comfortable" ? "Comodo" : "Compacto"}
+                          {densityOption === "comfortable" ? "Comodo" : "Compacto"}
                         </Button>
                       ))}
                     </div>
@@ -1184,7 +1184,7 @@ const Dashboard = () => {
                     onClick={() => setIsTodayDetailsExpanded((prev) => !prev)}
                   >
                     <span>{isTodayDetailsExpanded ? "Ocultar acciones rápidas" : "Ver acciones rápidas"}</span>
-                    <ChevronDown className={cn("h-4 w-4 transítion-transform", isTodayDetailsExpanded && "rotate-180")} />
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", isTodayDetailsExpanded && "rotate-180")} />
                   </Button>
                 ) : null}
 
@@ -1371,11 +1371,11 @@ const Dashboard = () => {
 
                 <DashboardCardShell title="Nota del día" contentClassName="space-y-2 p-3">
                   <p className="line-clamp-1 text-xs text-muted-foreground">
-                    {core?.noteToday?.content?.trim() ? core.noteToday.content.trim() : "Agregar nota del día y síncronizar al calendario."}
+                    {core?.noteToday?.content?.trim() ? core.noteToday.content.trim() : "Agregar nota del día y sincronizar al calendario."}
                   </p>
                   <Button
                     type="button"
-                    síze="sm"
+                    size="sm"
                     className="h-9 w-full rounded-xl px-3 text-xs font-semibold"
                     onClick={() => setIsNotesModalOpen(true)}
                   >
@@ -1720,7 +1720,7 @@ const Dashboard = () => {
               <span className="text-sm font-semibold">
                 {isSecondaryExpanded ? "Ocultar contenido secundario" : "Ver entrenamiento, nutrición y calendario"}
               </span>
-              <ChevronDown className={cn("h-4 w-4 transítion-transform", isSecondaryExpanded && "rotate-180")} />
+              <ChevronDown className={cn("h-4 w-4 transition-transform", isSecondaryExpanded && "rotate-180")} />
             </Button>
             <p className="text-xs text-muted-foreground">
               Priorizamos registro rápido. El contenido operativo extendido queda en esta sección.
@@ -2001,8 +2001,8 @@ const Dashboard = () => {
         ) : null}
 
         {showSecondaryDashboardZones ? (
-          <section aria-labelledby="dashboard-zone-extensíon" className="space-y-4">
-            <h2 id="dashboard-zone-extensíon" className="sr-only">Zona de extensíon progresíva</h2>
+          <section aria-labelledby="dashboard-zone-extension" className="space-y-4">
+            <h2 id="dashboard-zone-extension" className="sr-only">Zona de extension progresiva</h2>
             {stackCards.length > 0 ? (
               <div className={cn("space-y-4", !isMobile && "grid gap-4 space-y-0 lg:grid-cols-2")}>
                 {stackCards.map((card) => <div key={card.key}>{card.node}</div>)}
@@ -2016,6 +2016,9 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
+
 
 
 

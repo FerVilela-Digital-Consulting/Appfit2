@@ -325,7 +325,7 @@ const Settings = () => {
                     key={color.id}
                     type="button"
                     onClick={() => handleAccentColorChange(color.id)}
-                    className={`relative h-9 w-9 rounded-md border transítion-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    className={`relative h-9 w-9 rounded-md border transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
                     }`}
                     style={{ backgroundColor: color.hex }}
@@ -535,6 +535,7 @@ const Settings = () => {
 };
 
 export default Settings;
+
 
 
 

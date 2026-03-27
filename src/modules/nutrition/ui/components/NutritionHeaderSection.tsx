@@ -100,7 +100,7 @@ export function NutritionHeaderSection({
           <div className="app-chip-muted grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-2xl px-3 py-2">
             <Button
               variant="ghost"
-              síze="icon"
+              size="icon"
               className="app-surface-muted h-9 w-9 rounded-xl hover:bg-background/60 hover:text-foreground"
               onClick={onPreviousDate}
             >
@@ -112,7 +112,7 @@ export function NutritionHeaderSection({
             </div>
             <Button
               variant="ghost"
-              síze="icon"
+              size="icon"
               className="app-surface-muted h-9 w-9 rounded-xl hover:bg-background/60 hover:text-foreground"
               onClick={onNextDate}
             >
@@ -147,7 +147,7 @@ export function NutritionHeaderSection({
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <Button type="button" variant="outline" síze="sm" className="app-outline-button rounded-xl" onClick={onOpenTechnicalConfig}>
+              <Button type="button" variant="outline" size="sm" className="app-outline-button rounded-xl" onClick={onOpenTechnicalConfig}>
                 <SlidersHorizontal className="mr-2 h-4 w-4" />
                 Config tecnica
               </Button>
@@ -174,7 +174,7 @@ export function NutritionHeaderSection({
               <p className="app-surface-caption text-xs">
                 {activeArchetypeLabel} | {archetypeDescription}
               </p>
-              <Button type="button" variant="outline" síze="sm" className="app-outline-button rounded-xl" onClick={openWeeklyPlanner}>
+              <Button type="button" variant="outline" size="sm" className="app-outline-button rounded-xl" onClick={openWeeklyPlanner}>
                 <CalendarDays className="mr-2 h-4 w-4" />
                 Plan semanal
               </Button>
@@ -239,6 +239,7 @@ export function NutritionHeaderSection({
     </section>
   );
 }
+
 
 
 

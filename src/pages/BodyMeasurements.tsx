@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CartesíanGrid, Line, LineChart, ResponsíveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CircleHelp, Pencil, Ruler, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,7 +13,7 @@ import {
   filterMeasurementsByRangePreset,
   type MeasurementMetricKey,
   type MeasurementRangePreset,
-} from "@/features/bodyMeasurements/measurementInsíghts";
+} from "@/features/bodyMeasurements/measurementInsights";
 import { getAllBodyMetrics, resolveWeightReferenceFromEntries } from "@/services/bodyMetrics";
 import {
   addBodyMeasurement,
@@ -376,7 +376,7 @@ const BodyMeasurements = () => {
                        <PopoverTrigger asChild>
                          <button
                            type="button"
-                           className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground transítion hover:border-primary/60 hover:text-primary md:hidden"
+                           className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition hover:border-primary/60 hover:text-primary md:hidden"
                            aria-label={`Ver formula de ${item.title}`}
                            aria-expanded={activeMobileInfoCard === item.title}
                          >
@@ -397,7 +397,7 @@ const BodyMeasurements = () => {
                        <TooltipTrigger asChild>
                          <button
                            type="button"
-                           className="hidden h-6 w-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground transítion hover:border-primary/60 hover:text-primary md:inline-flex"
+                           className="hidden h-6 w-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition hover:border-primary/60 hover:text-primary md:inline-flex"
                            aria-label={`Ver formula de ${item.title}`}
                          >
                            <CircleHelp className="h-3.5 w-3.5" />
@@ -504,9 +504,9 @@ const BodyMeasurements = () => {
               <p className="text-sm text-muted-foreground">Aún no hay datos suficientes para {chartConfig.label.toLowerCase()}.</p>
             ) : (
               <div className="h-[220px] w-full md:h-[280px]">
-                <ResponsíveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
-                    <CartesíanGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" tickFormatter={(value) => new Date(value).toLocaleDateString()} />
                     <YAxis />
                     <Tooltip
@@ -515,7 +515,7 @@ const BodyMeasurements = () => {
                     />
                     <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot />
                   </LineChart>
-                </ResponsíveContainer>
+                </ResponsiveContainer>
               </div>
             )}
           </CardContent>
@@ -619,11 +619,11 @@ const BodyMeasurements = () => {
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">{row.notes?.trim() ? row.notes : "--"}</p>
                     <div className="mt-4 grid gap-2">
-                      <Button className="w-full" síze="sm" variant="outline" onClick={() => handleEdit(row)}>
+                      <Button className="w-full" size="sm" variant="outline" onClick={() => handleEdit(row)}>
                         <Pencil className="mr-1 h-3.5 w-3.5" />
                         Editar
                       </Button>
-                      <Button className="w-full" síze="sm" variant="destructive" onClick={() => setDeleteTarget({ id: row.id, dateKey: row.date_key })}>
+                      <Button className="w-full" size="sm" variant="destructive" onClick={() => setDeleteTarget({ id: row.id, dateKey: row.date_key })}>
                         <Trash2 className="mr-1 h-3.5 w-3.5" />
                         Eliminar
                       </Button>
@@ -661,11 +661,11 @@ const BodyMeasurements = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button síze="sm" variant="outline" onClick={() => handleEdit(row)}>
+                            <Button size="sm" variant="outline" onClick={() => handleEdit(row)}>
                               <Pencil className="mr-1 h-3.5 w-3.5" />
                               Editar
                             </Button>
-                            <Button síze="sm" variant="destructive" onClick={() => setDeleteTarget({ id: row.id, dateKey: row.date_key })}>
+                            <Button size="sm" variant="destructive" onClick={() => setDeleteTarget({ id: row.id, dateKey: row.date_key })}>
                               <Trash2 className="mr-1 h-3.5 w-3.5" />
                               Eliminar
                             </Button>
@@ -701,6 +701,7 @@ const BodyMeasurements = () => {
 };
 
 export default BodyMeasurements;
+
 
 
 
