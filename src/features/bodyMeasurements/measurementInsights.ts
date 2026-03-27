@@ -1,4 +1,4 @@
-import type { BodyMeasurement } from "@/services/bodyMeasurements";
+﻿import type { BodyMeasurement } from "@/services/bodyMeasurements";
 
 export type MeasurementRangePreset = "30d" | "90d" | "180d" | "all";
 
@@ -105,7 +105,7 @@ export const deriveMeasurementSummary = (rows: BodyMeasurement[], targetDate?: D
     waistComparison: recentReference
       ? {
           deltaCm: metricDelta(latest.waist_cm, recentReference.waist_cm),
-          label: weeklyReference ? "vs 7 dias" : "vs registro previo",
+          label: weeklyReference ? "vs 7 días" : "vs registro previo",
           referenceDateKey: recentReference.date_key,
         }
       : {
@@ -159,3 +159,4 @@ export const buildMeasurementComparison = (
     })),
   };
 };
+

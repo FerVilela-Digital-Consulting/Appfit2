@@ -1,4 +1,4 @@
-import { Activity, ArrowRight, Crosshair, Dumbbell, Scale, Shrink, Target } from "lucide-react";
+﻿import { Activity, ArrowRight, Crosshair, Dumbbell, Scale, Shrink, Target } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -20,7 +20,7 @@ const PhysicalProgressHub = ({ loading = false, summary }: Props) => {
     return (
       <Card className="rounded-[22px] border-border/50 bg-card/80 md:rounded-[24px]">
         <CardHeader>
-          <CardTitle>Progreso fisico</CardTitle>
+          <CardTitle>Progreso físico</CardTitle>
           <CardDescription>Lectura central del estado corporal.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -64,7 +64,7 @@ const PhysicalProgressHub = ({ loading = false, summary }: Props) => {
     <Card className="rounded-[20px] border-border/50 bg-card/80 md:rounded-[24px]">
       <CardHeader className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:gap-4">
         <div>
-          <CardTitle>Progreso fisico</CardTitle>
+          <CardTitle>Progreso físico</CardTitle>
           <CardDescription>Estado actual del cuerpo, orientado por tu meta activa.</CardDescription>
         </div>
           <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
@@ -77,7 +77,7 @@ const PhysicalProgressHub = ({ loading = false, summary }: Props) => {
             <div>
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Foco actual</p>
               <h3 className="mt-2 text-lg font-semibold md:text-xl">{summary?.goalHeading ?? "Sin meta activa"}</h3>
-              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{summary?.goalSupport ?? "Registra peso y medidas para activar el resumen fisico."}</p>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{summary?.goalSupport ?? "Registra peso y medidas para activar el resumen físico."}</p>
             </div>
             <div className="rounded-2xl border border-border/60 bg-card px-3 py-2">
               <FocusIcon className="h-5 w-5 text-primary" />
@@ -119,3 +119,4 @@ const PhysicalProgressHub = ({ loading = false, summary }: Props) => {
 };
 
 export default PhysicalProgressHub;
+

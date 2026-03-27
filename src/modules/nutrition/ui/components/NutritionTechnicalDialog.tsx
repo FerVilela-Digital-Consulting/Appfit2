@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { CircleHelp, Flame, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -74,7 +74,7 @@ export function NutritionTechnicalDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="app-dialog-surface max-h-[90vh] max-w-4xl overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
-              <DialogTitle>Configuracion tecnica de nutricion</DialogTitle>
+              <DialogTitle>Configuracion tecnica de nutrición</DialogTitle>
               <DialogDescription>
                 Ajusta plantillas del dia, metas y base de calculo sin bloquear el flujo principal de registro diario.
               </DialogDescription>
@@ -86,7 +86,7 @@ export function NutritionTechnicalDialog({
               <div className="rounded-2xl border app-surface-soft p-4">
                 <div className="app-surface-caption inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.24em]">
                   TDEE base
-                  {renderCalcHint("Gasto total diario estimado segun tu perfil metabolico.")}
+                  {renderCalcHint("Gasto total diario estimado según tu perfil metabólico.")}
                 </div>
                 <div className="app-surface-heading mt-2 text-2xl font-black md:text-3xl">{formatMetric(target?.tdee)}</div>
                 <div className="app-surface-caption text-xs">antes del arquetipo</div>
@@ -275,7 +275,7 @@ export function NutritionTechnicalDialog({
           <div className="app-surface-panel rounded-[24px] p-4 sm:rounded-[28px] sm:p-5">
             <div className="app-surface-caption flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.26em]">
               <Flame className="h-3.5 w-3.5 text-primary" />
-              Perfil metabolico
+              Perfil metabólico
             </div>
             <div className="mt-4 grid gap-3">
               <div className="grid grid-cols-2 gap-3">
@@ -285,7 +285,7 @@ export function NutritionTechnicalDialog({
                 </div>
                 <div className="rounded-2xl border app-surface-soft p-3">
                   <div className="app-surface-caption text-[10px] uppercase tracking-[0.24em]">Edad</div>
-                  <div className="app-surface-heading mt-2 text-sm">{metabolicProfile?.age ?? "--"} anos</div>
+                  <div className="app-surface-heading mt-2 text-sm">{metabolicProfile?.age ?? "--"} años</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -356,3 +356,4 @@ export function NutritionTechnicalDialog({
     </>
   );
 }
+

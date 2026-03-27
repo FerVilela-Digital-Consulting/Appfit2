@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { addDays, format } from "date-fns";
 import { CalendarDays, ChevronLeft, ChevronRight, CircleHelp, SlidersHorizontal } from "lucide-react";
 
@@ -94,13 +94,13 @@ export function NutritionHeaderSection({
   return (
     <section className="space-y-4">
       {showIntro ? <div className="space-y-2 px-1">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-primary/80">Bitacora de nutricion</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-primary/80">Bitacora de nutrición</p>
         <div className="flex items-start justify-between gap-3">
-          <h1 className="app-surface-heading text-3xl font-black tracking-tight md:text-4xl">Nutricion - Hoy</h1>
+          <h1 className="app-surface-heading text-3xl font-black tracking-tight md:text-4xl">Nutrición - Hoy</h1>
           <div className="app-chip-muted grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-2xl px-3 py-2">
             <Button
               variant="ghost"
-              size="icon"
+              síze="icon"
               className="app-surface-muted h-9 w-9 rounded-xl hover:bg-background/60 hover:text-foreground"
               onClick={onPreviousDate}
             >
@@ -112,7 +112,7 @@ export function NutritionHeaderSection({
             </div>
             <Button
               variant="ghost"
-              size="icon"
+              síze="icon"
               className="app-surface-muted h-9 w-9 rounded-xl hover:bg-background/60 hover:text-foreground"
               onClick={onNextDate}
             >
@@ -120,7 +120,7 @@ export function NutritionHeaderSection({
             </Button>
           </div>
         </div>
-        <p className="app-surface-caption text-sm">Registra rapido y entiende exactamente que plan nutricional estas usando.</p>
+        <p className="app-surface-caption text-sm">Registra rápido y entiende exactamente que plan nutricional estás usando.</p>
       </div> : null}
 
       <div className="app-surface-hero rounded-[24px] px-4 py-5 sm:rounded-[28px] sm:px-6 sm:py-6">
@@ -136,9 +136,9 @@ export function NutritionHeaderSection({
                         <CircleHelp className="h-3.5 w-3.5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-[240px] text-xs">
+                    <TooltipContent síde="top" className="max-w-[240px] text-xs">
                       <p>
-                        Las plantillas de alimentacion ajustan tus calorias segun el tipo de dia: descanso (-300), esfuerzo alto (+150) o base (sin ajuste). Este ajuste se suma al calculo principal de tu Perfil Fitness.
+                        Las plantillas de alimentacion ajustan tus calorias segun el tipo de día: descanso (-300), esfuerzo alto (+150) o base (sin ajuste). Este ajuste se suma al calculo principal de tu Perfil Fitness.
                       </p>
                       <p className="mt-2">
                         Puedes guardar plantillas, marcar una como inicial, aplicarlas por fecha y conservar snapshots diarios para no alterar tu historial.
@@ -147,7 +147,7 @@ export function NutritionHeaderSection({
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <Button type="button" variant="outline" size="sm" className="app-outline-button rounded-xl" onClick={onOpenTechnicalConfig}>
+              <Button type="button" variant="outline" síze="sm" className="app-outline-button rounded-xl" onClick={onOpenTechnicalConfig}>
                 <SlidersHorizontal className="mr-2 h-4 w-4" />
                 Config tecnica
               </Button>
@@ -174,7 +174,7 @@ export function NutritionHeaderSection({
               <p className="app-surface-caption text-xs">
                 {activeArchetypeLabel} | {archetypeDescription}
               </p>
-              <Button type="button" variant="outline" size="sm" className="app-outline-button rounded-xl" onClick={openWeeklyPlanner}>
+              <Button type="button" variant="outline" síze="sm" className="app-outline-button rounded-xl" onClick={openWeeklyPlanner}>
                 <CalendarDays className="mr-2 h-4 w-4" />
                 Plan semanal
               </Button>
@@ -188,7 +188,7 @@ export function NutritionHeaderSection({
         <DialogContent className="app-dialog-surface max-h-[90vh] max-w-6xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Plan semanal de perfil nutricional</DialogTitle>
-            <DialogDescription>Asigna una plantilla por dia. Solo se aplicaran los dias que no esten en \"Sin cambios\".</DialogDescription>
+            <DialogDescription>Asigna una plantilla por día. Solo se aplicarán los días que no estén en \"Sin cambios\".</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
             {weekDays.map((day) => {
@@ -239,3 +239,6 @@ export function NutritionHeaderSection({
     </section>
   );
 }
+
+
+

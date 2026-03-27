@@ -1,4 +1,4 @@
-import { CircleHelp } from "lucide-react";
+﻿import { CircleHelp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
@@ -217,7 +217,7 @@ export function NutritionSidebarPanel({
           {formatMetric(goals?.calorie_goal, " kcal")}
         </p>
         <Button type="button" variant="outline" className="mt-4 w-full app-outline-button" onClick={onOpenTechnicalConfig}>
-          Ver configuracion tecnica
+          Ver configuración tecnica
         </Button>
       </div> : null}
 
@@ -272,3 +272,4 @@ export function NutritionSidebarPanel({
     </aside>
   );
 }
+

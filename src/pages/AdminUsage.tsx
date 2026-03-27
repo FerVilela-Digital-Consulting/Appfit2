@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Activity, BarChart3, CalendarRange, Users } from "lucide-react";
@@ -55,7 +55,7 @@ const AdminUsage = () => {
             </div>
             <div>
               <CardTitle className="text-sm">Vistas 30d</CardTitle>
-              <CardDescription>Total de vistas registradas para paneles del producto en los ultimos 30 dias.</CardDescription>
+              <CardDescription>Total de vistas registradas para paneles del producto en los ultimos 30 días.</CardDescription>
             </div>
           </CardHeader>
         </Card>
@@ -143,7 +143,7 @@ const AdminUsage = () => {
       <Card className="rounded-3xl border-border/60">
         <CardHeader>
           <CardTitle>Tendencia diaria</CardTitle>
-          <CardDescription>Serie corta de los ultimos dias para seguir adopcion y actividad reciente.</CardDescription>
+          <CardDescription>Serie corta de los últimos días para seguir adopcion y actividad reciente.</CardDescription>
         </CardHeader>
         <CardContent>
           {dailyUsageQuery.isLoading ? (
@@ -173,3 +173,4 @@ const AdminUsage = () => {
 };
 
 export default AdminUsage;
+

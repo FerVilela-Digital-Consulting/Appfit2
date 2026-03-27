@@ -1,4 +1,4 @@
-import { addDays, format, startOfWeek } from "date-fns";
+﻿import { addDays, format, startOfWeek } from "date-fns";
 
 import type { DashboardCheckinModuleKey } from "@/services/dashboardCheckinPreferences";
 import type {
@@ -191,7 +191,7 @@ export const buildDashboardViewModel = ({
   const pendingChecklist = missingModules.slice(0, 3);
   const nextActionLabel = nextModule
     ? `${nextModule.label}: siguiente registro recomendado`
-    : "Dia operativo completo. Revisa progreso o nutricion para interpretar tendencias.";
+    : "Dia operativo completo. Revisa progreso o nutrición para interpretar tendencias.";
 
   return {
     dailyModules,
@@ -207,3 +207,4 @@ export const buildDashboardViewModel = ({
     upcomingItems: buildUpcomingItems(core, activeWorkout, scheduledWorkout, nextModule),
   };
 };
+

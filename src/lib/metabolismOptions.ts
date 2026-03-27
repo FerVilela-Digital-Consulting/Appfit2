@@ -1,4 +1,4 @@
-import { NutritionActivityLevel, NutritionGoalType } from "@/types/nutrition";
+﻿import { NutritionActivityLevel, NutritionGoalType } from "@/types/nutrition";
 
 export type ActivityOption = {
   value: NutritionActivityLevel;
@@ -22,12 +22,12 @@ export const ACTIVITY_OPTIONS: ActivityOption[] = [
   {
     value: "moderate",
     label: "Moderado",
-    description: "Ejercicio ligero 1 a 3 dias por semana.",
+    description: "Ejercicio ligero 1 a 3 días por semana.",
   },
   {
     value: "high",
     label: "Alto",
-    description: "Entrenamiento intenso 3 a 5 dias por semana.",
+    description: "Entrenamiento intenso 3 a 5 días por semana.",
   },
   {
     value: "very_high",
@@ -37,7 +37,7 @@ export const ACTIVITY_OPTIONS: ActivityOption[] = [
   {
     value: "hyperactive",
     label: "Hiperactivo",
-    description: "Trabajo fisico extremo o actividad atletica profesional.",
+    description: "Trabajo físico extremo o actividad atlética profesional.",
   },
 ];
 
@@ -45,31 +45,31 @@ export const GOAL_OPTIONS: GoalOption[] = [
   {
     value: "lose",
     label: "Perder peso",
-    description: "Deficit agresivo para bajar peso mas rapido.",
+    description: "Déficit agresivo para bajar peso más rápido.",
     legacyGoalTypeLabel: "Lose Weight",
   },
   {
     value: "lose_slow",
     label: "Perder peso lentamente",
-    description: "Deficit moderado para una reduccion mas gradual.",
+    description: "Déficit moderado para una reducción más gradual.",
     legacyGoalTypeLabel: "Lose Weight Slowly",
   },
   {
     value: "maintain",
     label: "Mantener peso",
-    description: "Calorias de mantenimiento para sostener el peso actual.",
+    description: "Calorías de mantenimiento para sostener el peso actual.",
     legacyGoalTypeLabel: "Maintain Weight",
   },
   {
     value: "gain_slow",
     label: "Aumentar peso lentamente",
-    description: "Superavit moderado para subir de forma controlada.",
+    description: "Superávit moderado para subir de forma controlada.",
     legacyGoalTypeLabel: "Gain Weight Slowly",
   },
   {
     value: "gain",
     label: "Aumentar peso",
-    description: "Superavit alto para subir peso mas rapido.",
+    description: "Superávit alto para subir peso más rápido.",
     legacyGoalTypeLabel: "Gain Weight",
   },
 ];
@@ -79,3 +79,4 @@ export const findGoalOption = (value: string | null | undefined) =>
 
 export const findActivityOption = (value: string | null | undefined) =>
   ACTIVITY_OPTIONS.find((option) => option.value === value) ?? ACTIVITY_OPTIONS[1];
+

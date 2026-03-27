@@ -185,9 +185,9 @@ const TodayBiofeedbackModule = () => {
   const ringDash = Math.max(0, Math.min(ringCircumference, (readinessScore / 100) * ringCircumference));
 
   const metricRows = [
-    { key: "energy", label: "Energia", today: energyToday, avg7d: energy7d },
-    { key: "stress", label: "Estres", today: stressToday, avg7d: stress7d },
-    { key: "sleep", label: "Sueno", today: sleepToday, avg7d: sleep7d },
+    { key: "energy", label: "Energía", today: energyToday, avg7d: energy7d },
+    { key: "stress", label: "Estrés", today: stressToday, avg7d: stress7d },
+    { key: "sleep", label: "Sueño", today: sleepToday, avg7d: sleep7d },
   ] as const;
 
   return (
@@ -195,9 +195,9 @@ const TodayBiofeedbackModule = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <HeartPulse className="h-5 w-5 text-primary" />
-          Estado fisiologico
+          Estado fisiológico
         </CardTitle>
-        <CardDescription>Check-in subjetivo rapido para energia, estres y recuperacion.</CardDescription>
+        <CardDescription>Check-in subjetivo rápido para energía, estrés y recuperación.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)]">
@@ -227,9 +227,9 @@ const TodayBiofeedbackModule = () => {
                 </div>
               </div>
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Recomendacion de carga</p>
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Recomendación de carga</p>
                 <p className="text-sm font-semibold leading-tight text-foreground sm:text-base">{readinessTone.recommendation}</p>
-                <p className="text-xs text-muted-foreground">Basado en energia, estres y sueno.</p>
+                <p className="text-xs text-muted-foreground">Basado en energía, estrés y sueño.</p>
               </div>
             </div>
           </div>
@@ -263,7 +263,7 @@ const TodayBiofeedbackModule = () => {
 
         <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
           <p className="text-sm text-muted-foreground">
-            {todayData ? "Ya tienes check-in hoy. Puedes ajustarlo sin cambiar de pantalla." : "Aun no registras tu estado fisiologico de hoy."}
+            {todayData ? "Ya tienes check-in hoy. Puedes ajustarlo sin cambiar de pantalla." : "Aún no registras tu estado fisiológico de hoy."}
           </p>
           <Button className="mt-3" onClick={() => setDialogOpen(true)}>
             {todayData ? "Editar check-in" : "Registrar check-in"}
@@ -274,16 +274,16 @@ const TodayBiofeedbackModule = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Check-in fisiologico de hoy</DialogTitle>
-            <DialogDescription>Registra tus sensaciones del dia para dejar contexto de recuperacion, estres y energia.</DialogDescription>
+            <DialogTitle>Check-in fisiológico de hoy</DialogTitle>
+            <DialogDescription>Registra tus sensaciones del día para dejar contexto de recuperación, estrés y energía.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 md:grid-cols-2">
-            <MetricInput label="Calidad de sueno" value={values.sleep_quality} onChange={(next) => setValues((prev) => ({ ...prev, sleep_quality: next }))} />
+            <MetricInput label="Calidad de sueño" value={values.sleep_quality} onChange={(next) => setValues((prev) => ({ ...prev, sleep_quality: next }))} />
             <MetricInput label="Hambre" value={values.hunger_level} onChange={(next) => setValues((prev) => ({ ...prev, hunger_level: next }))} />
-            <MetricInput label="Energia diaria" value={values.daily_energy} onChange={(next) => setValues((prev) => ({ ...prev, daily_energy: next }))} />
-            <MetricInput label="Energia entrenando" value={values.training_energy} onChange={(next) => setValues((prev) => ({ ...prev, training_energy: next }))} />
-            <MetricInput label="Estres" value={values.perceived_stress} onChange={(next) => setValues((prev) => ({ ...prev, perceived_stress: next }))} />
-            <MetricInput label="Digestion" value={values.digestion} onChange={(next) => setValues((prev) => ({ ...prev, digestion: next }))} />
+            <MetricInput label="Energía diaria" value={values.daily_energy} onChange={(next) => setValues((prev) => ({ ...prev, daily_energy: next }))} />
+            <MetricInput label="Energía entrenando" value={values.training_energy} onChange={(next) => setValues((prev) => ({ ...prev, training_energy: next }))} />
+            <MetricInput label="Estrés" value={values.perceived_stress} onChange={(next) => setValues((prev) => ({ ...prev, perceived_stress: next }))} />
+            <MetricInput label="Digestión" value={values.digestion} onChange={(next) => setValues((prev) => ({ ...prev, digestion: next }))} />
             <MetricInput label="Libido" value={values.libido} onChange={(next) => setValues((prev) => ({ ...prev, libido: next }))} />
           </div>
           <div className="space-y-2">

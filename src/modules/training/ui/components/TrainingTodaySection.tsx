@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { CheckCircle2, PlayCircle, TimerReset, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -99,7 +99,7 @@ export function TrainingTodaySection({
       <Card>
         <CardHeader>
           <CardTitle>{copy.tabs.train}</CardTitle>
-          <CardDescription>La sesion activa tiene prioridad sobre todo lo demas.</CardDescription>
+          <CardDescription>La sesión activa tiene prioridad sobre todo lo demás.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {!activeSession && scheduledWorkout ? (
@@ -369,3 +369,4 @@ export function TrainingTodaySection({
     </div>
   );
 }
+

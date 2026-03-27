@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -121,7 +121,7 @@ export function StatsSummaryCards({
 
       <Card>
         <CardHeader>
-          <CardTitle>Resumen de sueno</CardTitle>
+          <CardTitle>Resumen de sueño</CardTitle>
           <CardDescription>Meta y cumplimiento dentro del rango seleccionado.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -188,7 +188,7 @@ export function StatsSummaryCards({
           <CardContent className="space-y-1">
             <p className="font-semibold">Energia: {biofeedbackRange?.avg_energy ?? 0}/10</p>
             <p className="font-semibold">Estres: {biofeedbackRange?.avg_stress ?? 0}/10</p>
-            <p className="font-semibold">Calidad de sueno: {biofeedbackRange?.avg_sleep_quality ?? 0}/10</p>
+            <p className="font-semibold">Calidad de sueño: {biofeedbackRange?.avg_sleep_quality ?? 0}/10</p>
             <p className="text-xs text-muted-foreground">Dias registrados: {biofeedbackRange?.days_logged ?? 0}</p>
             <Button asChild variant="outline" size="sm">
               <Link to="/today#biofeedback">Abrir biofeedback</Link>
@@ -225,7 +225,7 @@ export function StatsSummaryCards({
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Revision semanal</CardTitle>
+            <CardTitle className="text-sm">Revisión semanal</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
             <p className="font-semibold">
@@ -277,3 +277,4 @@ export function StatsSummaryCards({
     </>
   );
 }
+

@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronLeft, ChevronRight, Droplets, FileText, HeartPulse, Moon, Scale, UtensilsCrossed } from "lucide-react";
+﻿import { CheckCircle2, ChevronLeft, ChevronRight, Droplets, FileText, HeartPulse, Moon, Scale, UtensilsCrossed } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { AppPageIntro } from "@/components/layout/AppPageIntro";
@@ -126,7 +126,7 @@ const Calendar = () => {
       key: "sleep",
       icon: Moon,
       className: "text-indigo-500",
-      label: language === "es" ? "Sueno registrado" : "Sleep logged",
+      label: language === "es" ? "Sueño registrado" : "Sleep logged",
     },
     {
       key: "biofeedback",
@@ -138,7 +138,7 @@ const Calendar = () => {
       key: "nutrition",
       icon: UtensilsCrossed,
       className: "text-emerald-500",
-      label: language === "es" ? "Nutricion registrada" : "Nutrition logged",
+      label: language === "es" ? "Nutrición registrada" : "Nutrition logged",
     },
     {
       key: "note",
@@ -207,7 +207,7 @@ const Calendar = () => {
                   <p className="text-sm font-semibold">{language === "es" ? "Completar este dia" : "Complete this day"}</p>
                   <p className="text-sm text-muted-foreground">
                     {selectedDateKey < todayKey
-                      ? "Estas acciones siguen pendientes y aun no aparecen en la timeline porque no tienen hora real."
+                      ? "Estas acciones siguen pendientes y aún no aparecen en la timeline porque no tienen hora real."
                       : "Las acciones pendientes se gestionan aparte y solo entran a la timeline cuando tengan una hora real."}
                   </p>
                 </div>
@@ -225,7 +225,7 @@ const Calendar = () => {
           <div ref={timelineScrollRef} className="max-h-[68vh] overflow-y-auto rounded-[22px] border bg-background/60">
             {hourBuckets.every((bucket) => bucket.items.length === 0) ? (
               <div className="flex min-h-[22rem] items-center justify-center px-6 text-center text-sm text-muted-foreground">
-                {language === "es" ? "Aun no hay bloques para este dia. Registra algo o crea una nota para empezar a poblar la agenda." : "No blocks for this day yet. Log something or create a note to start building the day."}
+                {language === "es" ? "Aún no hay bloques para este día. Registra algo o crea una nota para empezar a poblar la agenda." : "No blocks for this day yet. Log something or create a note to start building the day."}
               </div>
             ) : (
               hourBuckets.map(({ hour, items }) => {
@@ -320,7 +320,7 @@ const Calendar = () => {
                 </div>
                 {activeTimelineItem.id.startsWith("bio-") && selectedBiofeedback ? (
                   <div className="rounded-[18px] border p-4 text-sm text-muted-foreground">
-                    {language === "es" ? "Energia" : "Energy"} {selectedBiofeedback.daily_energy}/10 | {language === "es" ? "Estres" : "Stress"} {selectedBiofeedback.perceived_stress}/10 | {language === "es" ? "Hambre" : "Hunger"} {selectedBiofeedback.hunger_level}/10
+                    {language === "es" ? "Energía" : "Energy"} {selectedBiofeedback.daily_energy}/10 | {language === "es" ? "Estrés" : "Stress"} {selectedBiofeedback.perceived_stress}/10 | {language === "es" ? "Hambre" : "Hunger"} {selectedBiofeedback.hunger_level}/10
                   </div>
                 ) : null}
               </>
@@ -332,7 +332,7 @@ const Calendar = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>{language === "es" ? "Nota del dia" : "Daily note"}</CardTitle>
+            <CardTitle>{language === "es" ? "Nota del día" : "Daily note"}</CardTitle>
             <CardDescription>
               {language === "es"
                 ? "La nota se guarda en la fecha seleccionada y aparece como bloque en la timeline segun la hora en que la registres."
@@ -340,8 +340,8 @@ const Calendar = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Textarea value={noteTitle} onChange={(event) => setNoteTitle(event.target.value)} placeholder="Titulo opcional" className="min-h-[72px]" maxLength={120} />
-            <Textarea value={noteContent} onChange={(event) => setNoteContent(event.target.value)} placeholder="Observaciones tacticas del dia..." className="min-h-[160px]" />
+            <Textarea value={noteTitle} onChange={(event) => setNoteTitle(event.target.value)} placeholder="Título opcional" className="min-h-[72px]" maxLength={120} />
+            <Textarea value={noteContent} onChange={(event) => setNoteContent(event.target.value)} placeholder="Observaciones tácticas del día..." className="min-h-[160px]" />
             <Button onClick={() => saveNoteMutation.mutate()} disabled={saveNoteMutation.isPending || !noteContent.trim()} className="w-full sm:w-auto">
               {saveNoteMutation.isPending ? (language === "es" ? "Guardando..." : "Saving...") : language === "es" ? "Guardar nota" : "Save note"}
             </Button>
@@ -354,7 +354,7 @@ const Calendar = () => {
   const viewTabs = (
     <div className="rounded-[18px] border bg-card/90 p-1">
       <div className="grid grid-cols-3 gap-1">
-        {[{ key: "agenda", label: language === "es" ? "Historial" : "Agenda" }, { key: "day", label: language === "es" ? "Dia" : "Day" }, { key: "month", label: language === "es" ? "Mes" : "Month" }].map((view) => (
+        {[{ key: "agenda", label: language === "es" ? "Historial" : "Agenda" }, { key: "day", label: language === "es" ? "Día" : "Day" }, { key: "month", label: language === "es" ? "Mes" : "Month" }].map((view) => (
           <button
             key={view.key}
             type="button"
@@ -372,7 +372,7 @@ const Calendar = () => {
     <Card>
       <CardHeader>
         <CardTitle className="capitalize">{monthLabel}</CardTitle>
-        <CardDescription>{language === "es" ? "Lista cronologica de dias con actividad durante el mes." : "Chronological list of active days in the month."}</CardDescription>
+        <CardDescription>{language === "es" ? "Lista cronológica de días con actividad durante el mes." : "Chronological list of active days in the month."}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {agendaDays.length === 0 ? (
@@ -422,12 +422,12 @@ const Calendar = () => {
   const selectedDaySummaryPanel = (
     <Card>
       <CardHeader>
-        <CardTitle>{language === "es" ? "Resumen del dia seleccionado" : "Selected day summary"}</CardTitle>
+        <CardTitle>{language === "es" ? "Resumen del día seleccionado" : "Selected day summary"}</CardTitle>
         <CardDescription className="capitalize">{selectedDateLabel}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!selectedDay ? (
-          <p className="text-sm text-muted-foreground">{language === "es" ? "Sin informacion para este dia." : "No information for this day."}</p>
+          <p className="text-sm text-muted-foreground">{language === "es" ? "Sin información para este día." : "No information for this day."}</p>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3">
@@ -450,13 +450,13 @@ const Calendar = () => {
             </div>
             {selectedNote?.content ? (
               <div className="rounded-[18px] border p-4">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{language === "es" ? "Nota del dia" : "Daily note"}</p>
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{language === "es" ? "Nota del día" : "Daily note"}</p>
                 <p className="mt-2 line-clamp-4 text-sm text-muted-foreground">{selectedNote.title?.trim() || selectedNote.content}</p>
               </div>
             ) : null}
             <div className="flex flex-wrap gap-2">
               <Button onClick={() => setCalendarView("day")} className="w-full sm:w-auto">
-                {language === "es" ? "Abrir timeline del dia" : "Open day timeline"}
+                {language === "es" ? "Abrir timeline del día" : "Open day timeline"}
               </Button>
               <Button variant="outline" onClick={() => setCalendarView("month")} className="w-full sm:w-auto">
                 {language === "es" ? "Ver en mes" : "View in month"}
@@ -490,7 +490,7 @@ const Calendar = () => {
           <CardContent className="flex items-center justify-between gap-3 pt-5">
             <Button variant="outline" size="icon" onClick={() => changeMonth(-1)}><ChevronLeft className="h-4 w-4" /></Button>
             <div className="min-w-0 text-center">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{calendarView === "day" ? (language === "es" ? "Dia seleccionado" : "Selected day") : t("calendar.title")}</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{calendarView === "day" ? (language === "es" ? "Día seleccionado" : "Selected day") : t("calendar.title")}</p>
               <p className="truncate text-lg font-semibold capitalize">{calendarView === "day" ? selectedDateLabel : monthLabel}</p>
             </div>
             <Button variant="outline" size="icon" onClick={() => changeMonth(1)}><ChevronRight className="h-4 w-4" /></Button>
@@ -518,3 +518,4 @@ const Calendar = () => {
 };
 
 export default Calendar;
+

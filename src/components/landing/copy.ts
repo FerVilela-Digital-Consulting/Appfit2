@@ -67,7 +67,7 @@ export const landingCopy: Record<LandingLanguage, {
       titleHighlight: "Appfit",
       titleSuffix: "",
       description:
-        "Centro operativo, nutricion, entrenamiento, cuerpo, calendario, biofeedback y panel admin conectados en un solo sistema.",
+        "Centro operativo, nutrición, entrenamiento, cuerpo, calendario, biofeedback y panel admin conectados en un solo sistema.",
       primary: "Entrar a Appfit",
       howItWorks: "Como funciona",
     },
@@ -76,19 +76,19 @@ export const landingCopy: Record<LandingLanguage, {
       description: "Un flujo unico: registra, compara y decide con datos reales del dia a dia.",
       steps: ["Registra tu dia", "Coordina modulos clave", "Revisa progreso semanal"],
       itemDescriptions: [
-        "Registra agua, sueno, nutricion, biofeedback y notas para construir un contexto diario confiable.",
-        "Conecta centro operativo, nutricion, entrenamiento y cuerpo para decidir con una sola lectura.",
+        "Registra agua, sueño, nutrición, biofeedback y notas para construir un contexto diario confiable.",
+        "Conecta centro operativo, nutrición, entrenamiento y cuerpo para decidir con una sola lectura.",
         "Evalua tendencias, cumplimiento de metas y observaciones para ajustar la siguiente semana.",
       ],
     },
     featureRows: {
       firstTitle: "Centro operativo + calendario en una sola vista",
       firstDescription:
-        "Abre el dia con prioridades claras y timeline real de agua, sueno, nutricion, biofeedback, peso y notas.",
+        "Abre el dia con prioridades claras y timeline real de agua, sueño, nutrición, biofeedback, peso y notas.",
       firstButton: "Ver centro operativo",
       secondTitle: "Nutricion, entrenamiento y cuerpo conectados",
       secondDescription:
-        "Plan nutricional, rutinas, progreso corporal y revision semanal en un mismo flujo. Incluye vista admin para equipos.",
+        "Plan nutriciónal, rutinas, progreso corporal y revisión semanal en un mismo flujo. Incluye vista admin para equipos.",
       secondButton: "Explorar modulos",
     },
     metrics: {
@@ -106,7 +106,7 @@ export const landingCopy: Record<LandingLanguage, {
         "Cuerpo (peso + mediciones)",
         "Calendario operativo",
         "Biofeedback diario",
-        "Progreso y revision semanal",
+        "Progreso y revisión semanal",
         "Admin (usuarios, roles y uso)",
       ],
     },
@@ -119,7 +119,7 @@ export const landingCopy: Record<LandingLanguage, {
         { title: "Inicio", items: ["Producto", "Precios", "Negocios", "Enterprise"] },
         { title: "Nosotros", items: ["Empresa", "Equipo", "Carreras", "Diversidad"] },
         { title: "Recursos", items: ["Guia de App", "Foro", "Soporte", "Eventos"] },
-        { title: "Tutoriales", items: ["Configurar entrenamiento", "Base nutricional", "Revision semanal", "Ver guias"] },
+        { title: "Tutoriales", items: ["Configurar entrenamiento", "Base nutriciónal", "Revisión semanal", "Ver guías"] },
       ],
       terms: "Terminos y Condiciones",
       privacy: "Politica de Privacidad",
@@ -203,4 +203,5 @@ export const landingCopy: Record<LandingLanguage, {
     },
   },
 };
+
 

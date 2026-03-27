@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 
 import { toast } from "@/components/ui/sonner";
 
@@ -18,7 +18,7 @@ const PwaLifecycleNotifier = () => {
 
     const handleOfflineReady = () => {
       toast("App lista para uso offline", {
-        description: "Ya puedes abrir la app aunque la red sea inestable.",
+        description: "Ya puedes abrir la app aúnque la red sea inestable.",
       });
     };
 
@@ -35,4 +35,5 @@ const PwaLifecycleNotifier = () => {
 };
 
 export default PwaLifecycleNotifier;
+
 

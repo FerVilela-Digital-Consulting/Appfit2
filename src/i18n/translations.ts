@@ -1,4 +1,4 @@
-export type AppLanguage = "en" | "es";
+﻿export type AppLanguage = "en" | "es";
 
 export type TranslationKey =
   | "nav.today"
@@ -284,7 +284,7 @@ export const translations: Record<AppLanguage, Dict> = {
     "nav.water": "Agua",
     "nav.weight": "Peso",
     "nav.sleep": "Sueño",
-    "nav.nutrition": "Alimentacion",
+    "nav.nutrition": "Alimentación",
     "nav.biofeedback": "Biofeedback",
     "nav.measurements": "Medidas",
     "nav.weeklyReview": "Revisión semanal",
@@ -322,10 +322,6 @@ export const translations: Record<AppLanguage, Dict> = {
     "settings.languageDescription": "Elige el idioma de la aplicación.",
     "settings.theme": "Tema",
     "settings.themeDescription": "Elige tema claro, oscuro o del sistema.",
-    "settings.language.en": "Inglés",
-    "settings.language.es": "Español",
-    "settings.theme.light": "Claro",
-    "settings.theme.dark": "Oscuro",
     "settings.accentColor": "Color principal de la UI",
     "settings.accentColorDescription": "Elige uno de los 16 colores de lana de Minecraft para el acento de la app.",
     "settings.accentSelected": "Color seleccionado",
@@ -335,6 +331,10 @@ export const translations: Record<AppLanguage, Dict> = {
     "settings.switchUserGuest": "Iniciar sesión con otro usuario",
     "settings.switchUserHint": "Serás redirigido a la pantalla de login.",
     "settings.switchUserError": "No se pudo cambiar de cuenta.",
+    "settings.language.en": "Inglés",
+    "settings.language.es": "Español",
+    "settings.theme.light": "Claro",
+    "settings.theme.dark": "Oscuro",
     "settings.theme.system": "Sistema",
     "settings.sleepGoal": "Meta de sueño (minutos)",
     "settings.sleepGoalHint": "Recomendado: 480 minutos (8 horas).",

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, BarChart3, ClipboardList, ShieldCheck, UserCheck, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,10 +11,10 @@ const metricCards = [
   { key: "total_users", title: "Usuarios totales", icon: Users, description: "Cuentas creadas en la plataforma." },
   { key: "completed_onboarding_users", title: "Onboarding completado", icon: UserCheck, description: "Usuarios listos para operar dentro de la app." },
   { key: "admin_users", title: "Cuentas admin", icon: ShieldCheck, description: "Usuarios con permisos elevados." },
-  { key: "nutrition_entries", title: "Logs de nutricion", icon: ClipboardList, description: "Entradas registradas por los usuarios." },
+  { key: "nutrition_entries", title: "Logs de nutrición", icon: ClipboardList, description: "Entradas registradas por los usuarios." },
   { key: "body_metrics_entries", title: "Registros de peso", icon: BarChart3, description: "Entradas de peso acumuladas." },
   { key: "body_measurements_entries", title: "Mediciones corporales", icon: ClipboardList, description: "Historial de mediciones disponibles." },
-  { key: "nutrition_profiles", title: "Perfiles nutricionales", icon: ClipboardList, description: "Perfiles y configuraciones activas." },
+  { key: "nutrition_profiles", title: "Perfiles nutriciónales", icon: ClipboardList, description: "Perfiles y configuraciónes activas." },
 ];
 
 const signalCards = [
@@ -33,7 +33,7 @@ const signalCards = [
   {
     key: "users_without_activity",
     title: "Usuarios sin actividad",
-    description: "Cuentas que aun no generan datos relevantes en la app.",
+    description: "Cuentas que aún no generan datos relevantes en la app.",
     filter: "without_activity",
   },
 ];
@@ -148,3 +148,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+

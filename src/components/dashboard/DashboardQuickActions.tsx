@@ -1,4 +1,4 @@
-import { ArrowUpRight, Activity, Ruler, Scale, UtensilsCrossed } from "lucide-react";
+﻿import { ArrowUpRight, Activity, Ruler, Scale, UtensilsCrossed } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -36,14 +36,14 @@ const QUICK_ACTIONS: QuickAction[] = [
   {
     key: "biofeedback",
     label: "Registrar biofeedback",
-    description: "Actualizar energia, estres y lectura diaria",
+    description: "Actualizar energía, estrés y lectura diaria",
     to: "/biofeedback",
     icon: Activity,
   },
   {
     key: "nutrition",
     label: "Registrar comida",
-    description: "Cargar consumo y avance nutricional",
+    description: "Cargar consumo y avance nutriciónal",
     to: "/nutrition",
     icon: UtensilsCrossed,
   },
@@ -112,3 +112,4 @@ const DashboardQuickActions = ({ embedded = false, excludeKeys = [] }: Props) =>
 };
 
 export default DashboardQuickActions;
+

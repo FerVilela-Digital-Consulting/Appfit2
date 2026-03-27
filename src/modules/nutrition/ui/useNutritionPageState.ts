@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays } from "date-fns";
 import { useSearchParams } from "react-router-dom";
@@ -330,7 +330,7 @@ export function useNutritionPageState() {
     },
     onSuccess: async (_, entries) => {
       await invalidateNutrition();
-      toast.success(`Plan semanal aplicado (${entries.length} dias actualizados).`);
+      toast.success(`Plan semanal aplicado (${entries.length} días actualizados).`);
     },
     onError: (error: unknown) => toast.error(getErrorMessage(error, "No se pudo aplicar el plan semanal.")),
   });
@@ -679,3 +679,4 @@ export function useNutritionPageState() {
     handleAddEntry,
   };
 }
+

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesíanGrid, Line, LineChart, ResponsíveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CircleHelp, Pencil, Ruler, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,7 +13,7 @@ import {
   filterMeasurementsByRangePreset,
   type MeasurementMetricKey,
   type MeasurementRangePreset,
-} from "@/features/bodyMeasurements/measurementInsights";
+} from "@/features/bodyMeasurements/measurementInsíghts";
 import { getAllBodyMetrics, resolveWeightReferenceFromEntries } from "@/services/bodyMetrics";
 import {
   addBodyMeasurement,
@@ -52,9 +52,9 @@ const toNullableNumber = (value: string) => {
 };
 
 const RANGE_OPTIONS: Array<{ value: MeasurementRangePreset; label: string }> = [
-  { value: "30d", label: "30 dias" },
-  { value: "90d", label: "90 dias" },
-  { value: "180d", label: "180 dias" },
+  { value: "30d", label: "30 días" },
+  { value: "90d", label: "90 días" },
+  { value: "180d", label: "180 días" },
   { value: "all", label: "Todo" },
 ];
 
@@ -169,14 +169,14 @@ const BodyMeasurements = () => {
         summary.latest?.lean_mass_kg !== null && summary.latest?.lean_mass_kg !== undefined
           ? `${Number(summary.latest.lean_mass_kg).toFixed(1)} kg`
           : "--",
-      description: "Todo lo que no es grasa: musculo, agua, hueso y organos.",
+      description: "Todo lo que no es grasa: musculo, agua, hueso y orgaños.",
       formula: "Peso total (kg) - masa grasa (kg)",
     },
     {
       title: "Registros",
       value: String(measurementRows.length),
       description: "Cantidad de mediciones guardadas para comparar tu evolucion.",
-      formula: "Conteo total de mediciones historicas registradas",
+      formula: "Conteo total de mediciones históricas registradas",
     },
   ] as const;
 
@@ -299,10 +299,10 @@ const BodyMeasurements = () => {
         await deleteMutation.mutateAsync(editingMeasurementId);
       }
 
-      toast.success(editingMeasurementId ? "Medicion actualizada." : "Medicion guardada.");
+      toast.success(editingMeasurementId ? "Medición actualizada." : "Medición guardada.");
       resetForm();
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "No se pudo guardar la medicion."));
+      toast.error(getErrorMessage(error, "No se pudo guardar la medición."));
     }
   };
 
@@ -323,12 +323,12 @@ const BodyMeasurements = () => {
 
     try {
       await deleteMutation.mutateAsync(deleteTarget.id);
-      toast.success("Medicion eliminada.");
+      toast.success("Medición eliminada.");
       if (editingMeasurementId === deleteTarget.id) {
         resetForm();
       }
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "No se pudo eliminar la medicion."));
+      toast.error(getErrorMessage(error, "No se pudo eliminar la medición."));
     } finally {
       setDeleteTarget(null);
     }
@@ -376,7 +376,7 @@ const BodyMeasurements = () => {
                        <PopoverTrigger asChild>
                          <button
                            type="button"
-                           className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition hover:border-primary/60 hover:text-primary md:hidden"
+                           className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground transítion hover:border-primary/60 hover:text-primary md:hidden"
                            aria-label={`Ver formula de ${item.title}`}
                            aria-expanded={activeMobileInfoCard === item.title}
                          >
@@ -385,8 +385,8 @@ const BodyMeasurements = () => {
                        </PopoverTrigger>
                        <PopoverContent
                          align="end"
-                         side="bottom"
-                         sideOffset={8}
+                         síde="bottom"
+                         sídeOffset={8}
                          className="z-[130] w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-border/70 bg-popover/95 p-3 shadow-xl md:hidden"
                        >
                          <p className="text-xs font-medium">{item.title}</p>
@@ -397,13 +397,13 @@ const BodyMeasurements = () => {
                        <TooltipTrigger asChild>
                          <button
                            type="button"
-                           className="hidden h-6 w-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition hover:border-primary/60 hover:text-primary md:inline-flex"
+                           className="hidden h-6 w-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground transítion hover:border-primary/60 hover:text-primary md:inline-flex"
                            aria-label={`Ver formula de ${item.title}`}
                          >
                            <CircleHelp className="h-3.5 w-3.5" />
                          </button>
                        </TooltipTrigger>
-                       <TooltipContent side="top" className="max-w-[240px]">
+                       <TooltipContent síde="top" className="max-w-[240px]">
                          <p className="text-xs font-medium">{item.title}</p>
                          <p className="mt-1 text-xs text-muted-foreground">{item.formula}</p>
                        </TooltipContent>
@@ -422,7 +422,7 @@ const BodyMeasurements = () => {
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.25fr_1fr]">
         <Card>
           <CardHeader>
-            <CardTitle>{editingMeasurementId ? "Editar medicion" : "Nueva medicion"}</CardTitle>
+            <CardTitle>{editingMeasurementId ? "Editar medición" : "Nueva medición"}</CardTitle>
             <CardDescription>Se usa el peso mas cercano a la fecha. Si no existe, se toma el ultimo disponible.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -445,7 +445,7 @@ const BodyMeasurements = () => {
                 <Input id="neck" type="number" step="0.1" value={neck} onChange={(e) => setNeck(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="hip">Cadera/Gluteo (cm)</Label>
+                <Label htmlFor="hip">Cadera/Glúteo (cm)</Label>
                 <Input id="hip" type="number" step="0.1" value={hip} onChange={(e) => setHip(e.target.value)} />
               </div>
               <div className="space-y-1">
@@ -464,17 +464,17 @@ const BodyMeasurements = () => {
                 id="measurement-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Cambios percibidos, edema, sensaciones o contexto de la medicion..."
+                placeholder="Cambios percibidos, edema, sensaciones o contexto de la medición..."
               />
             </div>
 
             <div className="flex flex-wrap gap-2">
               <Button onClick={handleSave} disabled={saveMutation.isPending || deleteMutation.isPending}>
-                {editingMeasurementId ? "Actualizar medicion" : "Guardar medicion"}
+                {editingMeasurementId ? "Actualizar medición" : "Guardar medición"}
               </Button>
               {editingMeasurementId && (
                 <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancelar edicion
+                  Cancelar edición
                 </Button>
               )}
             </div>
@@ -485,7 +485,7 @@ const BodyMeasurements = () => {
           <CardHeader className="flex flex-row items-center justify-between gap-3">
             <div>
               <CardTitle>Progreso</CardTitle>
-              <CardDescription>Una sola grafica, varias metricas para no saturar la pantalla.</CardDescription>
+              <CardDescription>Una sola gráfica, varias métricas para no saturar la pantalla.</CardDescription>
             </div>
             <select
               className="rounded-md border bg-background px-3 py-2 text-sm"
@@ -501,12 +501,12 @@ const BodyMeasurements = () => {
           </CardHeader>
           <CardContent>
             {chartData.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aun no hay datos suficientes para {chartConfig.label.toLowerCase()}.</p>
+              <p className="text-sm text-muted-foreground">Aún no hay datos suficientes para {chartConfig.label.toLowerCase()}.</p>
             ) : (
               <div className="h-[220px] w-full md:h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsíveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesíanGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" tickFormatter={(value) => new Date(value).toLocaleDateString()} />
                     <YAxis />
                     <Tooltip
@@ -515,7 +515,7 @@ const BodyMeasurements = () => {
                     />
                     <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot />
                   </LineChart>
-                </ResponsiveContainer>
+                </ResponsíveContainer>
               </div>
             )}
           </CardContent>
@@ -525,7 +525,7 @@ const BodyMeasurements = () => {
         <Card>
         <CardHeader>
           <CardTitle>Comparacion libre</CardTitle>
-          <CardDescription>Compara cualquier par de fechas guardadas y revisa el cambio por perimetro.</CardDescription>
+          <CardDescription>Compara cualquier par de fechas guardadas y revisa el cambio por perímetro.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
@@ -584,7 +584,7 @@ const BodyMeasurements = () => {
         <CardHeader className="flex flex-row items-center justify-between gap-3">
           <div>
             <CardTitle>Historial</CardTitle>
-            <CardDescription>Notas visibles, edicion rapida y eliminacion individual.</CardDescription>
+            <CardDescription>Notas visibles, edición rápida y eliminación individual.</CardDescription>
           </div>
           <select
             className="rounded-md border bg-background px-3 py-2 text-sm"
@@ -619,11 +619,11 @@ const BodyMeasurements = () => {
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">{row.notes?.trim() ? row.notes : "--"}</p>
                     <div className="mt-4 grid gap-2">
-                      <Button className="w-full" size="sm" variant="outline" onClick={() => handleEdit(row)}>
+                      <Button className="w-full" síze="sm" variant="outline" onClick={() => handleEdit(row)}>
                         <Pencil className="mr-1 h-3.5 w-3.5" />
                         Editar
                       </Button>
-                      <Button className="w-full" size="sm" variant="destructive" onClick={() => setDeleteTarget({ id: row.id, dateKey: row.date_key })}>
+                      <Button className="w-full" síze="sm" variant="destructive" onClick={() => setDeleteTarget({ id: row.id, dateKey: row.date_key })}>
                         <Trash2 className="mr-1 h-3.5 w-3.5" />
                         Eliminar
                       </Button>
@@ -661,11 +661,11 @@ const BodyMeasurements = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleEdit(row)}>
+                            <Button síze="sm" variant="outline" onClick={() => handleEdit(row)}>
                               <Pencil className="mr-1 h-3.5 w-3.5" />
                               Editar
                             </Button>
-                            <Button size="sm" variant="destructive" onClick={() => setDeleteTarget({ id: row.id, dateKey: row.date_key })}>
+                            <Button síze="sm" variant="destructive" onClick={() => setDeleteTarget({ id: row.id, dateKey: row.date_key })}>
                               <Trash2 className="mr-1 h-3.5 w-3.5" />
                               Eliminar
                             </Button>
@@ -684,9 +684,9 @@ const BodyMeasurements = () => {
         <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar medicion</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar medición</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteTarget ? `Se eliminara la medicion del ${deleteTarget.dateKey}. Esta accion no se puede deshacer.` : ""}
+              {deleteTarget ? `Se eliminará la medición del ${deleteTarget.dateKey}. Esta acción no se puede deshacer.` : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -701,3 +701,6 @@ const BodyMeasurements = () => {
 };
 
 export default BodyMeasurements;
+
+
+

@@ -1,4 +1,4 @@
-import {
+﻿import {
   BarChart3,
   CalendarDays,
   CircleHelp,
@@ -53,7 +53,7 @@ const DashboardHeader = () => {
       await signOut();
       navigate("/auth", { replace: true });
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "No se pudo cerrar sesion."));
+      toast.error(getErrorMessage(error, "No se pudo cerrar sesión."));
     }
   };
 
@@ -90,7 +90,7 @@ const DashboardHeader = () => {
                 onSelect={handleAuthAction}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                {isGuest ? "Cambiar cuenta" : "Cerrar sesion"}
+                {isGuest ? "Cambiar cuenta" : "Cerrar sesión"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -102,7 +102,7 @@ const DashboardHeader = () => {
         </div>
         <div className="ml-4 hidden items-end gap-2 md:flex">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Dia de la semana</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Día de la semana</span>
             <div className="flex items-center gap-1">
               {weeklyConsistency.days.map((day) => (
                 <span
@@ -126,7 +126,7 @@ const DashboardHeader = () => {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  aria-label="Como funciona la consistencia semanal"
+                  aria-label="Cómo funciona la consistencia semanal"
                   className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/70 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <CircleHelp className="h-3.5 w-3.5" />
@@ -134,8 +134,8 @@ const DashboardHeader = () => {
               </PopoverTrigger>
               <PopoverContent align="start" side="bottom" className="w-72 space-y-1.5">
                 <p className="text-sm font-semibold">Consistencia semanal</p>
-                <p className="text-xs text-muted-foreground">Mide cuantos dias completaste en la semana.</p>
-                <p className="text-xs text-muted-foreground">Un dia cuenta como completo al registrar 2 o mas controles: agua, sueno, comida, peso o biofeedback.</p>
+                <p className="text-xs text-muted-foreground">Mide cuántos días completaste en la semana.</p>
+                <p className="text-xs text-muted-foreground">Un día cuenta como completo al registrar 2 o más controles: agua, sueño, comida, peso o biofeedback.</p>
               </PopoverContent>
             </Popover>
           </div>
@@ -147,13 +147,13 @@ const DashboardHeader = () => {
           <DropdownMenuTrigger asChild>
             <button
               className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground md:hidden"
-              aria-label="Navegacion rapida"
+              aria-label="Navegación rápida"
             >
               <Plus className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[15.5rem] rounded-xl p-1.5 md:min-w-32">
-            <DropdownMenuLabel className="px-3 py-2 text-base font-bold">Navegacion rapida</DropdownMenuLabel>
+            <DropdownMenuLabel className="px-3 py-2 text-base font-bold">Navegación rápida</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {headerNavItems.map((item) => (
               <DropdownMenuItem key={item.path} className="min-h-12 px-3 py-2.5 text-base font-semibold" onSelect={() => navigate(item.path)}>
@@ -174,16 +174,16 @@ const DashboardHeader = () => {
           <DropdownMenuTrigger asChild>
             <button
               className="hidden h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground md:flex"
-              aria-label="Registro rapido"
+              aria-label="Registro rápido"
             >
               <Plus className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Registro rapido</DropdownMenuLabel>
+            <DropdownMenuLabel>Registro rápido</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => navigate("/today#water")}>Agregar agua</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => navigate("/today#sleep")}>Agregar sueno</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => navigate("/today#sleep")}>Agregar sueño</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => navigate("/today#weight")}>Agregar peso</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => navigate("/today#nutrition")}>Agregar comida</DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -196,8 +196,8 @@ const DashboardHeader = () => {
         <button
           className="hidden h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground md:flex"
           onClick={handleAuthAction}
-          aria-label={isGuest ? "Ir a iniciar sesion" : "Cerrar sesion"}
-          title={isGuest ? "Cambiar cuenta" : "Cerrar sesion"}
+          aria-label={isGuest ? "Ir a iniciar sesión" : "Cerrar sesión"}
+          title={isGuest ? "Cambiar cuenta" : "Cerrar sesión"}
         >
           <LogOut className="h-5 w-5" />
         </button>
@@ -207,3 +207,4 @@ const DashboardHeader = () => {
 };
 
 export default DashboardHeader;
+

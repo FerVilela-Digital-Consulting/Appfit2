@@ -1,4 +1,4 @@
-import { createClientId } from "@/lib/id";
+﻿import { createClientId } from "@/lib/id";
 import { MAX_NOTES_LENGTH } from "@/services/trainingHelpers";
 import { loadExercisesByIds } from "@/services/trainingCatalog";
 import { readGuestTrainingState, saveGuestTrainingState } from "@/services/trainingGuestState";
@@ -452,7 +452,7 @@ export const finishWorkoutSession = async (
   options?: TrainingOptions,
 ) => {
   const detail = await getWorkoutSessionDetail(userId, sessionId, options);
-  if (!detail) throw new Error("No se encontro la sesion.");
+  if (!detail) throw new Error("No se encontró la sesión.");
   const status = params?.status ?? "completed";
   const totalVolume = round2(detail.exercises.reduce((sum, exercise) => sum + exercise.sets.filter((set) => set.completed).reduce((inner, set) => inner + computeSetVolume(set), 0), 0));
   const endedAt = new Date().toISOString();
@@ -480,7 +480,7 @@ export const finishWorkoutSession = async (
   }
 
   const updated = await getWorkoutSessionDetail(userId, sessionId, options);
-  if (!updated) throw new Error("No se pudo recargar la sesion.");
+  if (!updated) throw new Error("No se pudo recargar la sesión.");
   const prs = status === "completed" ? await evaluateSessionPrs(userId, updated, options) : [];
   return { session: updated, prs };
 };
@@ -585,3 +585,4 @@ export const getExercisePrs = async (userId: string | null, exerciseId: string, 
   if (error) throw error;
   return (data || []).map(normalizeExercisePr);
 };
+

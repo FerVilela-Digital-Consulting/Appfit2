@@ -90,7 +90,7 @@ const Onboarding = () => {
     if (birthDate) {
       const age = calculateAge(birthDate);
       if (age === null || age < 12 || age > 95) {
-        toast.error("La edad debe estar entre 12 y 95 anos.");
+        toast.error("La edad debe estar entre 12 y 95 años.");
         return false;
       }
     }
@@ -145,7 +145,7 @@ const Onboarding = () => {
     if (birthDate) {
       const age = calculateAge(birthDate);
       if (age === null || age < 12 || age > 95) {
-        toast.error("La edad debe estar entre 12 y 95 anos.");
+        toast.error("La edad debe estar entre 12 y 95 años.");
         return;
       }
     }
@@ -206,9 +206,9 @@ const Onboarding = () => {
       <div className="mx-auto max-w-3xl">
         <Card>
           <CardHeader>
-            <CardTitle>Configura tu perfil metabolico</CardTitle>
+            <CardTitle>Configura tu perfil metabólico</CardTitle>
             <CardDescription>
-              Esta configuracion conecta onboarding, perfil, biometria y nutricion para calcular targets automaticos.
+              Esta configuración conecta onboarding, perfil, biometría y nutrición para calcular objetivos automáticos.
             </CardDescription>
           </CardHeader>
 
@@ -233,7 +233,7 @@ const Onboarding = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Sexo biologico</Label>
+                      <Label>Sexo biológico</Label>
                       <Select value={biologicalSex} onValueChange={(value) => setBiologicalSex(value as "male" | "female")}>
                         <SelectTrigger>
                           <SelectValue />
@@ -257,7 +257,7 @@ const Onboarding = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Objetivo fisico</Label>
+                    <Label>Objetivo físico</Label>
                     <Select value={nutritionGoalType} onValueChange={(value) => setNutritionGoalType(value as typeof nutritionGoalType)}>
                       <SelectTrigger>
                         <SelectValue />
@@ -294,7 +294,7 @@ const Onboarding = () => {
                 <TabsContent value="goal" className="space-y-4 pt-3">
                   <div className="space-y-1">
                     <p className="text-sm font-semibold">Meta de peso (opcional)</p>
-                    <p className="text-xs text-muted-foreground">Si la completas, activamos progreso desde el primer dia.</p>
+                    <p className="text-xs text-muted-foreground">Si la completas, activamos progreso desde el primer día.</p>
                   </div>
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
@@ -306,7 +306,7 @@ const Onboarding = () => {
                       <Input id="targetDate" type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label>Direccion de la meta</Label>
+                      <Label>Dirección de la meta</Label>
                       <Select value={goalDirection} onValueChange={(value) => setGoalDirection(value as GoalDirection)}>
                         <SelectTrigger>
                           <SelectValue />
@@ -341,7 +341,7 @@ const Onboarding = () => {
                   }}
                   disabled={(activeTab === "base" && !canSkipToDashboard) || isSaving}
                 >
-                  {activeTab === "base" ? "Omitir" : "Atras"}
+                  {activeTab === "base" ? "Omitir" : "Atrás"}
                 </Button>
                 {activeTab === "base" && (
                   <Button type="button" onClick={goNextFromBase}>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Flag, Target, User } from "lucide-react";
 import { toast } from "sonner";
@@ -254,7 +254,7 @@ const Profile = () => {
         <AppPageIntro
           eyebrow="Perfil Fitness"
           icon={<Flag className="h-3.5 w-3.5" />}
-          title={fullName || (isGuest ? "Usuario invitado" : "Mi plan metabolico")}
+          title={fullName || (isGuest ? "Usuario invitado" : "Mi plan metabólico")}
           description="Configura en una sola vista tus datos base, actividad, objetivo corporal, meta de peso y metas metabólicas."
         />
 
@@ -438,3 +438,6 @@ const Profile = () => {
 };
 
 export default Profile;
+
+
+

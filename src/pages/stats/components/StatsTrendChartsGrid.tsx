@@ -1,4 +1,4 @@
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+﻿import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BiofeedbackChartPoint, BodyFatChartPoint, NutritionTrendPoint } from "@/pages/stats/types";
@@ -67,7 +67,7 @@ export function StatsTrendChartsGrid({
       <Card>
         <CardHeader>
           <CardTitle>Biofeedback ({rangeLabel})</CardTitle>
-          <CardDescription>Energia, estres y calidad de sueno por dia.</CardDescription>
+          <CardDescription>Energia, estres y calidad de sueño por dia.</CardDescription>
         </CardHeader>
         <CardContent>
           {biofeedbackChartData.length === 0 ? (
@@ -143,3 +143,4 @@ export function StatsTrendChartsGrid({
     </div>
   );
 }
+

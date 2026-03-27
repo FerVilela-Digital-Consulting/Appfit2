@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   DifficultyLevel,
   ExerciseRecord,
   MovementType,
@@ -386,7 +386,7 @@ export const DEFAULT_TEMPLATE_SEEDS: WorkoutTemplateDetail[] = [
   {
     id: "22222222-2222-2222-2222-222222222224",
     name: "Full Body",
-    description: "Sesion compacta para dias de tiempo corto.",
+    description: "Sesión compacta para días de tiempo corto.",
     focus_tags: ["full_body"],
     is_system: true,
     created_at: createdAt,
@@ -439,9 +439,10 @@ const TEMPLATE_TRANSLATIONS: Record<string, Pick<WorkoutTemplateDetail, "name_i1
   },
   "22222222-2222-2222-2222-222222222224": {
     name_i18n: { en: "Full Body", es: "Cuerpo completo" },
-    description_i18n: { en: "Compact session for short-time days.", es: "Sesion compacta para dias de poco tiempo." },
+    description_i18n: { en: "Compact session for short-time days.", es: "Sesión compacta para días de poco tiempo." },
   },
 };
 
 DEFAULT_EXERCISE_SEEDS.forEach((exercise) => Object.assign(exercise, EXERCISE_TRANSLATIONS[exercise.id] ?? {}));
 DEFAULT_TEMPLATE_SEEDS.forEach((template) => Object.assign(template, TEMPLATE_TRANSLATIONS[template.id] ?? {}));
+

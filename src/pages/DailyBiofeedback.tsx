@@ -205,14 +205,14 @@ const DailyBiofeedback = () => {
       Number((summaryRows.reduce((sum, row) => sum + selector(row), 0) / count).toFixed(1));
 
     return [
-      { key: "daily_energy", label: "Energia diaria", value: average((row) => row.daily_energy), suffix: "/10" },
-      { key: "training_energy", label: "Energia entrenando", value: average((row) => row.training_energy), suffix: "/10" },
-      { key: "perceived_stress", label: "Estres", value: average((row) => row.perceived_stress), suffix: "/10" },
-      { key: "sleep_quality", label: "Calidad de sueno", value: average((row) => row.sleep_quality), suffix: "/10" },
+      { key: "daily_energy", label: "Energía diaria", value: average((row) => row.daily_energy), suffix: "/10" },
+      { key: "training_energy", label: "Energía entrenando", value: average((row) => row.training_energy), suffix: "/10" },
+      { key: "perceived_stress", label: "Estrés", value: average((row) => row.perceived_stress), suffix: "/10" },
+      { key: "sleep_quality", label: "Calidad de sueño", value: average((row) => row.sleep_quality), suffix: "/10" },
       { key: "hunger_level", label: "Hambre", value: average((row) => row.hunger_level), suffix: "/10" },
       { key: "libido", label: "Libido", value: average((row) => row.libido), suffix: "/10" },
-      { key: "digestion", label: "Digestion", value: average((row) => row.digestion), suffix: "/10" },
-      { key: "days_logged", label: "Dias con check-in", value: summaryRows.length, suffix: summaryRange === "7d" ? "/7" : "" },
+      { key: "digestion", label: "Digestión", value: average((row) => row.digestion), suffix: "/10" },
+      { key: "days_logged", label: "Días con check-in", value: summaryRows.length, suffix: summaryRange === "7d" ? "/7" : "" },
     ];
   }, [summaryRange, summaryRows]);
 
@@ -249,15 +249,15 @@ const DailyBiofeedback = () => {
         <HeartPulse className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-2xl font-bold md:text-3xl">Daily Biofeedback Check-in</h1>
-          <p className="text-sm text-muted-foreground">Escala subjetiva 1-10 para estado fisiologico diario.</p>
+          <p className="text-sm text-muted-foreground">Escala subjetiva 1-10 para estado fisiológico diario.</p>
         </div>
       </div>
 
       <Card>
         <CardHeader className="gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <CardTitle>Resumen fisiologico</CardTitle>
-            <CardDescription>Promedio por indicador segun el rango seleccionado.</CardDescription>
+            <CardTitle>Resumen fisiológico</CardTitle>
+            <CardDescription>Promedio por indicador según el rango seleccionado.</CardDescription>
           </div>
           <SummaryRangeControl value={summaryRange} onChange={setSummaryRange} />
         </CardHeader>
@@ -294,7 +294,7 @@ const DailyBiofeedback = () => {
             </div>
 
             <MetricRow
-              label="Calidad de sueno"
+              label="Calidad de sueño"
               value={values.sleep_quality}
               onChange={(next) => setValues((prev) => ({ ...prev, sleep_quality: next }))}
             />
@@ -304,17 +304,17 @@ const DailyBiofeedback = () => {
               onChange={(next) => setValues((prev) => ({ ...prev, hunger_level: next }))}
             />
             <MetricRow
-              label="Energia diaria"
+              label="Energía diaria"
               value={values.daily_energy}
               onChange={(next) => setValues((prev) => ({ ...prev, daily_energy: next }))}
             />
             <MetricRow
-              label="Energia en entrenamiento"
+              label="Energía en entrenamiento"
               value={values.training_energy}
               onChange={(next) => setValues((prev) => ({ ...prev, training_energy: next }))}
             />
             <MetricRow
-              label="Estres percibido"
+              label="Estrés percibido"
               value={values.perceived_stress}
               onChange={(next) => setValues((prev) => ({ ...prev, perceived_stress: next }))}
             />
@@ -324,7 +324,7 @@ const DailyBiofeedback = () => {
               onChange={(next) => setValues((prev) => ({ ...prev, libido: next }))}
             />
             <MetricRow
-              label="Digestion"
+              label="Digestión"
               value={values.digestion}
               onChange={(next) => setValues((prev) => ({ ...prev, digestion: next }))}
             />
@@ -347,18 +347,18 @@ const DailyBiofeedback = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Ultimos check-ins</CardTitle>
-            <CardDescription>Historial rapido</CardDescription>
+            <CardTitle>Últimos check-ins</CardTitle>
+            <CardDescription>Historial rápido</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {recentRows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin registros aun.</p>
+              <p className="text-sm text-muted-foreground">Sin registros aún.</p>
             ) : (
               recentRows.map((row) => (
                 <div key={row.id} className="rounded-lg border p-3 text-sm">
                   <p className="font-medium">{row.date_key}</p>
                   <p className="text-muted-foreground">
-                    Energia {row.daily_energy}/10 | Estres {row.perceived_stress}/10 | Sueno {row.sleep_quality}/10
+                    Energía {row.daily_energy}/10 | Estrés {row.perceived_stress}/10 | Sueño {row.sleep_quality}/10
                   </p>
                 </div>
               ))

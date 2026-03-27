@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -23,11 +23,11 @@ const isInvalidCredentialsError = (message: string) => {
 
 const mapAuthErrorMessage = (message: string) => {
   if (isEmailRateLimitError(message)) {
-    return "Hemos alcanzado el limite temporal de envio de correos. Espera unos minutos y revisa tu bandeja (incluido spam) antes de volver a intentar.";
+    return "Hemos alcanzado el límite temporal de envío de correos. Espera unos minutos y revisa tu bandeja, incluido spam, antes de volver a intentarlo.";
   }
 
   if (isInvalidCredentialsError(message)) {
-    return "Correo o contrasena incorrectos. Si acabas de registrarte, primero confirma tu cuenta desde el correo. Si ya la confirmaste, restablece tu contrasena e intenta nuevamente.";
+    return "Correo o contraseña incorrectos. Si acabas de registrarte, primero confirma tu cuenta desde el correo. Si ya la confirmaste, restablece tu contraseña e intenta nuevamente.";
   }
 
   return message;
@@ -76,7 +76,7 @@ const Auth = () => {
                 const { requiresEmailConfirmation } = await signUp(email, password);
                 if (requiresEmailConfirmation) {
                     setPendingEmailConfirmation(true);
-                    toast.success("Cuenta creada. Revisa tu correo y confirma tu cuenta antes de iniciar sesion.");
+                    toast.success("Cuenta creada. Revisa tu correo y confirma tu cuenta antes de iniciar sesión.");
                     return;
                 }
                 toast.success("Account created successfully!");
@@ -96,17 +96,17 @@ const Auth = () => {
 
     const handleResendConfirmation = async () => {
         if (!email) {
-            toast.error("Enter your email first so we know where to resend the confirmation.");
+            toast.error("Ingresa primero tu correo para reenviar la confirmación.");
             return;
         }
 
         setResendingEmail(true);
         try {
             await resendConfirmationEmail(email);
-            toast.success("We sent a new confirmation email.");
+            toast.success("Te enviamos un nuevo correo de confirmación.");
         } catch (error: unknown) {
             console.error("Resend confirmation error:", error);
-            toast.error(getErrorMessage(error, "We could not resend the confirmation email."));
+            toast.error(getErrorMessage(error, "No pudimos reenviar el correo de confirmación."));
         } finally {
             setResendingEmail(false);
         }
@@ -114,17 +114,17 @@ const Auth = () => {
 
     const handleForgotPassword = async () => {
         if (!email) {
-            toast.error("Ingresa tu correo para enviarte el enlace de recuperacion.");
+            toast.error("Ingresa tu correo para enviarte el enlace de recuperación.");
             return;
         }
 
         setSendingResetEmail(true);
         try {
             await requestPasswordReset(email);
-            toast.success("Te enviamos un correo para restablecer tu contrasena.");
+            toast.success("Te enviamos un correo para restablecer tu contraseña.");
         } catch (error: unknown) {
             console.error("Password reset error:", error);
-            toast.error(mapAuthErrorMessage(getErrorMessage(error, "No se pudo enviar el correo de recuperacion.")));
+            toast.error(mapAuthErrorMessage(getErrorMessage(error, "No se pudo enviar el correo de recuperación.")));
         } finally {
             setSendingResetEmail(false);
         }
@@ -143,23 +143,23 @@ const Auth = () => {
                                 value="login"
                                 onClick={() => setAuthErrorMessage("")}
                             >
-                                Login
+                                Iniciar sesión
                             </TabsTrigger>
                             <TabsTrigger
                                 value="register"
                                 onClick={() => setAuthErrorMessage("")}
                             >
-                                Register
+                                Registrarse
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <CardTitle className="text-2xl font-bold">
-                        {mode === "login" ? "Welcome Back" : "Create Account"}
+                        {mode === "login" ? "Bienvenido de nuevo" : "Crear cuenta"}
                     </CardTitle>
                     <CardDescription>
                         {mode === "login"
-                            ? "Sign in to your account to continue your fitness journey."
-                            : "Join Appfit and start tracking your fitness goals today."}
+                            ? "Inicia sesión para continuar con tu seguimiento fitness."
+                            : "Únete a AppFit y empieza a registrar tus objetivos fitness hoy."}
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
@@ -176,7 +176,7 @@ const Auth = () => {
                                 <Mail className="h-4 w-4" />
                                 <AlertTitle>Importante: confirma tu correo</AlertTitle>
                                 <AlertDescription>
-                                    Despues de crear tu cuenta, te enviaremos un correo de verificacion. Debes abrir ese correo y hacer clic en el enlace para activar tu cuenta.
+                                    Después de crear tu cuenta, te enviaremos un correo de verificación. Debes abrir ese correo y hacer clic en el enlace para activar tu cuenta.
                                 </AlertDescription>
                             </Alert>
                         )}
@@ -185,7 +185,7 @@ const Auth = () => {
                                 <Mail className="h-4 w-4" />
                                 <AlertTitle>Cuenta creada: revisa tu correo para activarla</AlertTitle>
                                 <AlertDescription>
-                                    Te enviamos un enlace de confirmacion a tu email. Abre ese enlace para activar tu cuenta y luego inicia sesion en AppFit.
+                                    Te enviamos un enlace de confirmación a tu correo. Ábrelo para activar tu cuenta y luego inicia sesión en AppFit.
                                 </AlertDescription>
                                 <Button
                                     type="button"
@@ -200,7 +200,7 @@ const Auth = () => {
                                             Reenviando correo...
                                         </>
                                     ) : (
-                                        "Reenviar correo de confirmacion"
+                                        "Reenviar correo de confirmación"
                                     )}
                                 </Button>
                             </Alert>
@@ -221,7 +221,7 @@ const Auth = () => {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">Contraseña</Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
@@ -237,7 +237,7 @@ const Auth = () => {
                         </div>
                         {mode === "register" && (
                             <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
-                                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                                <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
                                 <div className="relative">
                                     <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                     <Input
@@ -258,7 +258,7 @@ const Auth = () => {
                             {loading ? (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             ) : (
-                                mode === "login" ? "Sign in" : "Create account"
+                                mode === "login" ? "Entrar" : "Crear cuenta"
                             )}
                         </Button>
                         {mode === "login" && (
@@ -269,7 +269,7 @@ const Auth = () => {
                                 onClick={handleForgotPassword}
                                 disabled={sendingResetEmail || loading}
                             >
-                                {sendingResetEmail ? "Enviando correo de recuperacion..." : "Olvide mi contrasena"}
+                                {sendingResetEmail ? "Enviando correo de recuperación..." : "Olvidé mi contraseña"}
                             </Button>
                         )}
                         {showGuestAccess && (
@@ -279,7 +279,7 @@ const Auth = () => {
                                         <span className="w-full border-t" />
                                     </div>
                                     <div className="relative flex justify-center text-xs uppercase">
-                                        <span className="bg-background px-2 text-muted-foreground">Or</span>
+                                        <span className="bg-background px-2 text-muted-foreground">O</span>
                                     </div>
                                 </div>
                                 <Button
@@ -291,7 +291,7 @@ const Auth = () => {
                                         navigate("/today");
                                     }}
                                 >
-                                    Continue as Guest
+                                    Continuar como invitado
                                 </Button>
                             </>
                         )}
@@ -303,3 +303,4 @@ const Auth = () => {
 };
 
 export default Auth;
+

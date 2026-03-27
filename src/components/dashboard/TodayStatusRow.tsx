@@ -1,4 +1,4 @@
-import { Droplets, Flame, Moon, Zap } from "lucide-react";
+﻿import { Droplets, Flame, Moon, Zap } from "lucide-react";
 import type { ComponentType } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -82,7 +82,7 @@ const TodayStatusRow = ({
         icon={Moon}
         progress={sleepProgress}
       />
-      <Item title="Biofeedback" value={`E ${energy ?? "--"} | S ${stress ?? "--"}`} subtitle="Energia y estres diarios" icon={Zap} />
+      <Item title="Biofeedback" value={`E ${energy ?? "--"} | S ${stress ?? "--"}`} subtitle="Energía y estrés diarios" icon={Zap} />
       <Item
         title="Consistencia"
         value={`${streakDays} dias`}
@@ -95,3 +95,4 @@ const TodayStatusRow = ({
 };
 
 export default TodayStatusRow;
+

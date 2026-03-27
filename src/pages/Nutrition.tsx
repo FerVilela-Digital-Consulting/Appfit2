@@ -1,4 +1,4 @@
-import { addDays, format } from "date-fns";
+﻿import { addDays, format } from "date-fns";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
@@ -51,8 +51,8 @@ const Nutrition = () => {
     setSugar,
     sodium,
     setSodium,
-    potassium,
-    setPotassium,
+    potassíum,
+    setPotassíum,
     selectedFavoriteId,
     setSelectedFavoriteId,
     selectedYesterdayId,
@@ -118,7 +118,7 @@ const Nutrition = () => {
     handleAddEntry,
   } = useNutritionPageState();
 
-  const sidebarPanel = (
+  const sídebarPanel = (
     <NutritionSidebarPanel
       effectiveProfileLabel={effectiveProfileLabel}
       activeArchetype={activeArchetype}
@@ -144,13 +144,13 @@ const Nutrition = () => {
         <div className="grid gap-6 xl:grid-cols-[1.65fr_0.8fr]">
           <section className="space-y-5">
             <div className="space-y-2 px-1 sm:hidden">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-primary/80">Bitacora de nutricion</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-primary/80">Bitacora de nutrición</p>
               <div className="flex items-start justify-between gap-3">
-                <h1 className="app-surface-heading text-3xl font-black tracking-tight">Nutricion - Hoy</h1>
+                <h1 className="app-surface-heading text-3xl font-black tracking-tight">Nutrición - Hoy</h1>
                 <div className="app-chip-muted grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-2xl px-3 py-2">
                   <Button
                     variant="ghost"
-                    size="icon"
+                    síze="icon"
                     className="app-surface-muted h-9 w-9 rounded-xl hover:bg-background/60 hover:text-foreground"
                     onClick={() => setSelectedDate((prev) => addDays(prev, -1))}
                   >
@@ -162,7 +162,7 @@ const Nutrition = () => {
                   </div>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    síze="icon"
                     className="app-surface-muted h-9 w-9 rounded-xl hover:bg-background/60 hover:text-foreground"
                     onClick={() => setSelectedDate((prev) => addDays(prev, 1))}
                   >
@@ -170,7 +170,7 @@ const Nutrition = () => {
                   </Button>
                 </div>
               </div>
-              <p className="app-surface-caption text-sm">Registra rapido y entiende exactamente que plan nutricional estas usando.</p>
+              <p className="app-surface-caption text-sm">Registra rápido y entiende exactamente que plan nutricional estás usando.</p>
             </div>
             <div className="hidden sm:block">
               <NutritionHeaderSection
@@ -198,7 +198,7 @@ const Nutrition = () => {
                   className="absolute bottom-1 left-1 top-1 rounded-xl bg-primary"
                   style={{ width: "calc((100% - 0.5rem) / 3)" }}
                   animate={{ x: `${MOBILE_NUTRITION_VIEWS.findIndex((view) => view === activeMainView) * 100}%` }}
-                  transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  transítion={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                 />
                 <button
                   type="button"
@@ -228,7 +228,7 @@ const Nutrition = () => {
                   className="absolute bottom-1 left-1 top-1 rounded-xl bg-primary"
                   style={{ width: "calc((100% - 0.5rem) / 2)" }}
                   animate={{ x: `${DESKTOP_NUTRITION_VIEWS.findIndex((view) => view === desktopMainView) * 100}%` }}
-                  transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  transítion={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                 />
                 <button
                   type="button"
@@ -267,7 +267,7 @@ const Nutrition = () => {
                     onOpenTechnicalConfig={() => setTechnicalOpen(true)}
                     showIntro={false}
                   />
-                  {sidebarPanel}
+                  {sídebarPanel}
                 </div>
                 <div className="hidden sm:block">
                   <NutritionMealsSection
@@ -297,7 +297,7 @@ const Nutrition = () => {
             )}
           </section>
 
-          <div className="hidden sm:block">{sidebarPanel}</div>
+          <div className="hidden sm:block">{sídebarPanel}</div>
         </div>
       </div>
 
@@ -335,7 +335,7 @@ const Nutrition = () => {
         fiber={fiber}
         sugar={sugar}
         sodium={sodium}
-        potassium={potassium}
+        potassíum={potassíum}
         saveAsFavorite={saveAsFavorite}
         selectedFavoriteId={selectedFavoriteId}
         selectedYesterdayId={selectedYesterdayId}
@@ -362,7 +362,7 @@ const Nutrition = () => {
         onFiberChange={setFiber}
         onSugarChange={setSugar}
         onSodiumChange={setSodium}
-        onPotassiumChange={setPotassium}
+        onPotassíumChange={setPotassíum}
         onSaveAsFavoriteChange={setSaveAsFavorite}
         onSelectedFavoriteIdChange={setSelectedFavoriteId}
         onSelectedYesterdayIdChange={setSelectedYesterdayId}
@@ -389,3 +389,6 @@ const Nutrition = () => {
 };
 
 export default Nutrition;
+
+
+

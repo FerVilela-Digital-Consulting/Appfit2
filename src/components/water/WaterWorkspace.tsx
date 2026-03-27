@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
@@ -86,7 +86,7 @@ const WaterWorkspace = ({ embedded = false }: WaterWorkspaceProps) => {
             </div>
             <div className="rounded-lg border p-3">
               <p className="text-xs text-muted-foreground">Rango</p>
-              <p className="text-xl font-semibold">{range === "7d" ? "Ultimos 7 dias" : range === "30d" ? "Ultimos 30 dias" : "Este mes"}</p>
+              <p className="text-xl font-semibold">{range === "7d" ? "Últimos 7 días" : range === "30d" ? "Últimos 30 días" : "Este mes"}</p>
             </div>
           </div>
 
@@ -157,4 +157,5 @@ const WaterWorkspace = ({ embedded = false }: WaterWorkspaceProps) => {
 };
 
 export default WaterWorkspace;
+
 

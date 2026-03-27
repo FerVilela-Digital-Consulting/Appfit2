@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Bell, CheckCheck, CircleAlert, Info, Send } from "lucide-react";
@@ -27,7 +27,7 @@ import {
 
 const severityMeta: Record<UserNotification["severity"], { label: string; icon: typeof Info }> = {
   info: { label: "Info", icon: Info },
-  warning: { label: "Accion pendiente", icon: CircleAlert },
+  warning: { label: "Acción pendiente", icon: CircleAlert },
   action: { label: "Importante", icon: Send },
 };
 
@@ -113,8 +113,8 @@ const NotificationCenter = () => {
       return {
         id: TOUR_INVITE_NOTIFICATION_ID,
         notification_kind: "general",
-        title: "Quieres hacer un recorrido guiado?",
-        body: "Podemos mostrarte un tour rapido por cada pestana para que conozcas la app en pocos minutos.",
+        title: "¿Quieres hacer un recorrido guiado?",
+        body: "Podemos mostrarte un tour rápido por cada pestaña para que conozcas la app en pocos minutos.",
         action_path: `${nextTab.route}?tour=1`,
         action_label: "Iniciar tour",
         severity: "info",
@@ -132,7 +132,7 @@ const NotificationCenter = () => {
         id: TOUR_CONTINUE_NOTIFICATION_ID,
         notification_kind: "general",
         title: "Recorrido en progreso",
-        body: "Te faltan algunas pestanas. Puedes continuar el recorrido cuando quieras.",
+        body: "Te faltan algunas pestañas. Puedes continuar el recorrido cuando quieras.",
         action_path: `${nextTab.route}?tour=1`,
         action_label: "Continuar recorrido",
         severity: "info",
@@ -149,7 +149,7 @@ const NotificationCenter = () => {
       id: TOUR_INVITE_NOTIFICATION_ID,
       notification_kind: "general",
       title: "Recorrido disponible",
-      body: "Puedes iniciar o retomar el recorrido guiado desde aqui en cualquier momento.",
+      body: "Puedes iniciar o retomar el recorrido guiado desde aquí en cualquier momento.",
       action_path: `${nextTab.route}?tour=1`,
       action_label: "Iniciar recorrido",
       severity: "info",
@@ -350,7 +350,7 @@ const NotificationCenter = () => {
                             onClick={() => void handleMarkRead(notification)}
                             disabled={markReadMutation.isPending || markAllMutation.isPending}
                           >
-                            Marcar leida
+                            Marcar leída
                           </Button>
                         ) : null}
                       </div>
@@ -359,7 +359,7 @@ const NotificationCenter = () => {
                 })
               ) : (
                 <div className="rounded-2xl border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
-                  Aun no tienes notificaciones. Este centro ya queda listo para recordatorios, avisos operativos y mensajes futuros.
+                  Aún no tienes notificaciones. Este centro ya queda listo para recordatorios, avisos operativos y mensajes futuros.
                 </div>
               )}
             </div>
@@ -371,3 +371,4 @@ const NotificationCenter = () => {
 };
 
 export default NotificationCenter;
+

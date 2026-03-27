@@ -1,4 +1,4 @@
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+﻿import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const data = [
   { day: "Mon", Exercise: 45, Meals: 1800, Sleep: 7.5 },
@@ -15,7 +15,7 @@ const ActivityChart = () => {
     <div className="bg-card rounded-2xl p-6 shadow-sm border border-border relative">
       <div className="absolute inset-0 z-10 bg-background/20 backdrop-blur-[2px] flex items-center justify-center rounded-2xl">
         <p className="bg-card px-4 py-2 rounded-full border border-border shadow-sm text-sm font-medium">
-          Modulo de actividad aun no implementado
+          Módulo de actividad aún no implementado
         </p>
       </div>
       <h3 className="text-base font-semibold text-card-foreground mb-6">Actividad semanal</h3>
@@ -58,3 +58,4 @@ const ActivityChart = () => {
 };
 
 export default ActivityChart;
+

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+﻿import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startOfMonth } from "date-fns";
 import {
@@ -17,9 +17,9 @@ import {
   Settings2,
   Sparkles,
   TimerReset,
-  UtensilsCrossed,
+  UtensílsCrossed,
 } from "lucide-react";
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesíanGrid, Line, LineChart, ReferenceLine, ResponsíveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { motion } from "motion/react";
@@ -49,10 +49,10 @@ import { useAuth } from "@/context/AuthContext";
 import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
-  loadDashboardCardDensity,
-  saveDashboardCardDensity,
-  type DashboardCardDensity,
-} from "@/features/dashboard/dashboardDensity";
+  loadDashboardCardDensíty,
+  saveDashboardCardDensíty,
+  type DashboardCardDensíty,
+} from "@/features/dashboard/dashboardDensíty";
 import { buildDashboardViewModel } from "@/features/dashboard/dashboardViewModel";
 import type { DashboardStackCard } from "@/features/dashboard/dashboardTypes";
 import { NUTRITION_ARCHETYPE_META } from "@/features/nutrition/nutritionProfiles";
@@ -122,7 +122,7 @@ const DashboardMetricCard = ({
                 type="button"
                 onClick={onActionClick}
                 aria-label={actionLabel}
-                className="inline-flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-sm font-medium leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-sm font-medium leading-none text-muted-foreground transítion-colors hover:bg-muted hover:text-foreground"
               >
                 {actionLabel}
               </button>
@@ -130,7 +130,7 @@ const DashboardMetricCard = ({
               <Link
                 to={actionHref}
                 aria-label={actionLabel}
-                className="inline-flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-sm font-medium leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center self-center rounded-full border border-border/60 bg-background/40 text-sm font-medium leading-none text-muted-foreground transítion-colors hover:bg-muted hover:text-foreground"
               >
                 {actionLabel}
               </Link>
@@ -203,7 +203,7 @@ const WeightRangeControl = ({ value, onChange, layoutId, className }: WeightRang
       className="absolute bottom-1 left-1 top-1 rounded-lg bg-primary"
       style={{ width: "calc((100% - 0.5rem) / 3)" }}
       animate={{ x: `${WEIGHT_RANGE_OPTIONS.findIndex((option) => option.key === value) * 100}%` }}
-      transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      transítion={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
     />
     {WEIGHT_RANGE_OPTIONS.map((option) => {
       const isActive = value === option.key;
@@ -227,8 +227,8 @@ const Dashboard = () => {
   const { user, isGuest, profile } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
   const snapshot = useDashboardSnapshot(currentMonth);
-  const [visibleModuleKey, setVisibleModuleKey] = useState<string | null>(null);
-  const [isModuleTransitioning, setIsModuleTransitioning] = useState(false);
+  const [visibleModuleKey, setVisíbleModuleKey] = useState<string | null>(null);
+  const [isModuleTransítioning, setIsModuleTransítioning] = useState(false);
   const [isWaterModalOpen, setIsWaterModalOpen] = useState(false);
   const [isSleepModalOpen, setIsSleepModalOpen] = useState(false);
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
@@ -240,14 +240,14 @@ const Dashboard = () => {
   const [isSecondaryExpanded, setIsSecondaryExpanded] = useState(false);
   const [isTodayDetailsExpanded, setIsTodayDetailsExpanded] = useState(false);
   const [mobileCarouselIndex, setMobileCarouselIndex] = useState(0);
-  const [cardDensity, setCardDensity] = useState<DashboardCardDensity>(() => loadDashboardCardDensity());
+  const [cardDensíty, setCardDensíty] = useState<DashboardCardDensíty>(() => loadDashboardCardDensíty());
   const mobileCarouselRef = useRef<HTMLDivElement | null>(null);
   const timeZone = profile?.timezone || DEFAULT_WATER_TIMEZONE;
 
   const saveNoteMutation = useMutation({
     mutationFn: (payload: { title?: string | null; content: string }) => snapshot.saveTodayNote(payload),
     onSuccess: async () => {
-      toast.success("Nota diaria guardada.");
+      toast.success("Nota díaria guardada.");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
         queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
@@ -282,14 +282,14 @@ const Dashboard = () => {
     queryFn: () => getWorkoutDetail(user?.id ?? null, selectedTrainingWorkoutId!, { isGuest, timeZone }),
     enabled: Boolean(selectedTrainingWorkoutId) && (Boolean(user?.id) || isGuest),
   });
-  const workoutCardTitle = activeWorkout?.name ?? scheduledWorkout?.name ?? (isTrainingRestDay ? "Dia de descanso" : "Sin rutina asignada");
+  const workoutCardTitle = activeWorkout?.name ?? scheduledWorkout?.name ?? (isTrainingRestDay ? "Día de descanso" : "Sin rutina asignada");
   const workoutCardSubtitle = activeWorkout
-    ? "Sesion activa en curso."
+    ? "Sesión activa en curso."
     : scheduledWorkout
       ? "Rutina programada para hoy."
       : isTrainingRestDay
-        ? "Hoy toca descanso programado. Prioriza recuperacion, movilidad y sueno."
-        : "Asigna una rutina para ver tu bloque del dia aqui.";
+        ? "Hoy toca descanso programado. Prioriza recuperación, movilidad y sueño."
+        : "Asigna una rutina para ver tu bloque del día aquí.";
   const modulePreferencesQuery = useQuery({
     queryKey: modulePreferencesKey,
     queryFn: () => getDashboardCheckinModulePreferences(user?.id ?? null, { isGuest }),
@@ -333,31 +333,31 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!nextModule) {
-      setVisibleModuleKey(null);
-      setIsModuleTransitioning(false);
+      setVisíbleModuleKey(null);
+      setIsModuleTransítioning(false);
       return;
     }
 
     if (!visibleModuleKey) {
-      setVisibleModuleKey(nextModule.key);
-      setIsModuleTransitioning(false);
+      setVisíbleModuleKey(nextModule.key);
+      setIsModuleTransítioning(false);
       return;
     }
 
     if (visibleModuleKey === nextModule.key) return;
 
-    setIsModuleTransitioning(true);
+    setIsModuleTransítioning(true);
     const timeoutId = window.setTimeout(() => {
-      setVisibleModuleKey(nextModule.key);
-      setIsModuleTransitioning(false);
+      setVisíbleModuleKey(nextModule.key);
+      setIsModuleTransítioning(false);
     }, 180);
 
     return () => window.clearTimeout(timeoutId);
   }, [nextModule, visibleModuleKey]);
 
   useEffect(() => {
-    saveDashboardCardDensity(cardDensity);
-  }, [cardDensity]);
+    saveDashboardCardDensíty(cardDensíty);
+  }, [cardDensíty]);
 
   useEffect(() => {
     if (!isTrainingSummaryOpen) return;
@@ -376,7 +376,7 @@ const Dashboard = () => {
       toast.success("Modulos del check-in actualizados.");
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, "No se pudieron guardar los modulos."));
+      toast.error(getErrorMessage(error, "No se pudieron guardar los módulos."));
     },
   });
   const saveWidgetPreferencesMutation = useMutation({
@@ -395,7 +395,7 @@ const Dashboard = () => {
       ? Array.from(new Set([...selectedModuleKeys, moduleKey]))
       : selectedModuleKeys.filter((key) => key !== moduleKey);
     if (next.length === 0) {
-      toast.error("Debes mantener al menos un modulo activo.");
+      toast.error("Debes mantener al menos un módulo activo.");
       return;
     }
     saveModulePreferencesMutation.mutate(next);
@@ -438,10 +438,10 @@ const Dashboard = () => {
     isWidgetVisible("weight");
   const stackCards = useMemo(() => {
     const cards: DashboardStackCard[] = [];
-    const widgetIsVisible = (widgetKey: DashboardHomeWidgetKey) =>
+    const widgetIsVisíble = (widgetKey: DashboardHomeWidgetKey) =>
       widgetKey === "hero_modules" || visibleWidgetKeySet.has(widgetKey);
 
-    if (!isMobile && SHOW_CALENDAR_CARD_IN_DASHBOARD && widgetIsVisible("calendar")) {
+    if (!isMobile && SHOW_CALENDAR_CARD_IN_DASHBOARD && widgetIsVisíble("calendar")) {
       cards.push({
         key: "calendar",
         placement: {
@@ -471,13 +471,13 @@ const Dashboard = () => {
     snapshot.monthActivity,
     snapshot.monthActivityLoading,
   ]);
-  const isCompactDensity = cardDensity === "compact";
+  const isCompactDensity = cardDensíty === "compact";
   const denseSectionGapClass = isCompactDensity ? "gap-2" : "gap-3";
   const denseCardContentClass = isCompactDensity ? "space-y-2 p-3 md:p-4" : "space-y-3 p-4 md:p-5";
   const denseActionContentClass = isCompactDensity ? "space-y-3 p-3 md:p-4" : "space-y-4 p-4 md:p-5";
   const greetingLabel = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Buenos dias";
+    if (hour < 12) return "Buenos días";
     if (hour < 19) return "Buenas tardes";
     return "Buenas noches";
   }, []);
@@ -510,7 +510,7 @@ const Dashboard = () => {
       queryClient.invalidateQueries({ queryKey: ["dashboard_training_today"] }),
       queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
     ]);
-    toast.success("Dashboard sincronizado.");
+    toast.success("Dashboard síncronizado.");
   };
 
   const recoveryScore = core?.recovery.score ?? 0;
@@ -542,10 +542,10 @@ const Dashboard = () => {
   const dayDemandLabel = isTrainingRestDay
     ? "Descanso planificado para hoy"
     : recoveryScore >= 75
-      ? "Dia de alto rendimiento"
+      ? "Día de alto rendimiento"
       : recoveryScore >= 45
-        ? "Dia de carga media"
-        : "Dia de descarga";
+        ? "Día de carga media"
+        : "Día de descarga";
 
   const nutritionTotals = core?.nutritionToday?.totals;
   const nutritionGoals = core?.nutritionToday?.goals;
@@ -593,7 +593,7 @@ const Dashboard = () => {
         ? "Ya superaste calorias; prioriza proteina magra y vegetales."
         : remainingProtein > 0
           ? `Prioriza una comida con ${Math.min(Math.max(Math.round(remainingProtein), 20), 45)} g de proteina.`
-          : "Vas en buena ruta. Mantén porciones para cerrar el dia.";
+          : "Vas en buena ruta. Mantén porciones para cerrar el día.";
   const nutritionContextChip = core?.nutritionToday?.targetBreakdown?.tdee
     ? `TDEE ${Math.round(core.nutritionToday.targetBreakdown.tdee).toLocaleString("es-PE")} kcal`
     : null;
@@ -701,7 +701,7 @@ const Dashboard = () => {
           : "text-muted-foreground";
   const physicalSummary = core?.physicalSummary ?? null;
   const focusHeading = (physicalSummary?.goalHeading ?? "Sin meta activa").replace(/^Meta activa:\s*/i, "");
-  const compactPhysicalMetrics =
+  const compactPhysícalMetrics =
     physicalSummary?.focusMode === "muscle_gain"
       ? [
           { label: "Masa magra", value: physicalSummary.leanMassKg !== null ? `${physicalSummary.leanMassKg.toFixed(1)} kg` : "--" },
@@ -728,7 +728,7 @@ const Dashboard = () => {
 
   const remainingActionsCount = Math.max(missingModules.length, 0);
   const quickActionsVisible = isWidgetVisible("quick_actions");
-  const mobilePhysicalHighlights = compactPhysicalMetrics.slice(0, 2);
+  const mobilePhysícalHighlights = compactPhysícalMetrics.slice(0, 2);
   const targetWeightKg = core?.goal?.target_weight_kg ?? null;
   const currentWeightKg = core?.latestMeasurementWeight ?? core?.latestWeight ?? null;
   const goalGapKg =
@@ -741,7 +741,7 @@ const Dashboard = () => {
       : goalGapKg < 0.05
         ? "Meta de peso alcanzada."
         : `Te faltan ${goalGapKg.toFixed(1)} kg para tu meta.`;
-  const nextRequiredActionLabel = nextModule ? `Registrar ${nextModule.label.toLowerCase()}` : "Dia completado";
+  const nextRequiredActionLabel = nextModule ? `Registrar ${nextModule.label.toLowerCase()}` : "Día completado";
   const nextRequiredActionHref = nextModule?.href ?? primaryAction.href;
   const nextRequiredActionModal = nextRequiredActionHref === "#water"
     ? "water"
@@ -825,7 +825,7 @@ const Dashboard = () => {
         queryClient.invalidateQueries({ queryKey: ["training", "schedule"] }),
       ]);
       setIsTrainingSummaryOpen(false);
-      toast.success("Sesion iniciada.");
+      toast.success("Sesión iniciada.");
       navigate("/training?tab=train");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "No se pudo iniciar el entrenamiento."));
@@ -846,23 +846,23 @@ const Dashboard = () => {
             <button
               type="button"
               aria-label="Como funciona el recovery score"
-              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border/70 bg-background/70 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border/70 bg-background/70 text-muted-foreground transítion-colors hover:bg-muted hover:text-foreground"
             >
               <CircleHelp className="h-3.5 w-3.5" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" side="top" className="w-80 space-y-2">
+          <PopoverContent align="start" síde="top" className="w-80 space-y-2">
             <p className="text-sm font-semibold">Como funciona este card</p>
             <p className="text-xs text-muted-foreground">
-              El score (0-100) combina sueno, biofeedback, hidratacion y consistencia semanal para estimar tu capacidad de carga del dia.
+              El score (0-100) combina sueño, biofeedback, hidratación y consistencia semanal para estimar tu capacidad de carga del día.
             </p>
             <p className="text-xs text-muted-foreground">
-              Rangos: 0-44 (ligero), 45-74 (moderado), 75-100 (fuerte). Es una guia de intensidad, no un diagnostico medico.
+              Rangos: 0-44 (ligero), 45-74 (moderado), 75-100 (fuerte). Es una guía de intensidad, no un diagnóstico médico.
             </p>
             <p className="text-xs text-muted-foreground">Drivers: {recoveryDriversLabel}</p>
             <div className="grid grid-cols-2 gap-2 pt-1">
               <div className="rounded-md border border-border/60 px-2 py-1.5">
-                <p className="text-[11px] text-muted-foreground">Sueno</p>
+                <p className="text-[11px] text-muted-foreground">Sueño</p>
                 <div className="mt-1 h-1.5 rounded-full bg-muted"><div className={cn("h-1.5 rounded-full", recoveryBarClass)} style={{ width: `${Math.max(0, Math.min(100, recoverySubscores.sleep))}%` }} /></div>
               </div>
               <div className="rounded-md border border-border/60 px-2 py-1.5">
@@ -870,11 +870,11 @@ const Dashboard = () => {
                 <div className="mt-1 h-1.5 rounded-full bg-muted"><div className={cn("h-1.5 rounded-full", recoveryBarClass)} style={{ width: `${Math.max(0, Math.min(100, recoverySubscores.biofeedback))}%` }} /></div>
               </div>
               <div className="rounded-md border border-border/60 px-2 py-1.5">
-                <p className="text-[11px] text-muted-foreground">Hidratacion</p>
+                <p className="text-[11px] text-muted-foreground">Hidratación</p>
                 <div className="mt-1 h-1.5 rounded-full bg-muted"><div className={cn("h-1.5 rounded-full", recoveryBarClass)} style={{ width: `${Math.max(0, Math.min(100, recoverySubscores.hydration))}%` }} /></div>
               </div>
               <div className="rounded-md border border-border/60 px-2 py-1.5">
-                <p className="text-[11px] text-muted-foreground">Consistencia</p>
+                <p className="text-[11px] text-muted-foreground">Consístencia</p>
                 <div className="mt-1 h-1.5 rounded-full bg-muted"><div className={cn("h-1.5 rounded-full", recoveryBarClass)} style={{ width: `${Math.max(0, Math.min(100, recoverySubscores.consistency))}%` }} /></div>
               </div>
             </div>
@@ -936,9 +936,9 @@ const Dashboard = () => {
     <div className="rounded-xl border border-border/60 bg-muted/10 p-2.5">
       <div className={heightClassName}>
         {hasWeightTrend ? (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsíveContainer width="100%" height="100%">
             <LineChart data={weightChartData} margin={{ top: 8, right: 10, left: 0, bottom: 2 }}>
-              <CartesianGrid vertical={false} stroke="hsl(var(--border) / 0.45)" />
+              <CartesíanGrid vertical={false} stroke="hsl(var(--border) / 0.45)" />
               <XAxis
                 type="number"
                 dataKey="x"
@@ -1005,7 +1005,7 @@ const Dashboard = () => {
                 }}
               />
             </LineChart>
-          </ResponsiveContainer>
+          </ResponsíveContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Sin tendencia</div>
         )}
@@ -1040,30 +1040,30 @@ const Dashboard = () => {
           description={todayDateLabel}
           actions={
             <div className="hidden items-center gap-2 md:flex">
-              <Button variant="outline" size="sm" className="h-10 rounded-xl px-4">
-                Dia
+              <Button variant="outline" síze="sm" className="h-10 rounded-xl px-4">
+                Día
               </Button>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 rounded-xl px-3">
+                  <Button variant="outline" síze="sm" className="h-10 rounded-xl px-3">
                     <Settings2 className="mr-2 h-4 w-4" />
-                    Widgets y densidad
+                    Widgets y densídad
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-80 space-y-4">
                   <div className="space-y-2 border-b pb-4">
-                    <p className="text-sm font-medium">Densidad visual</p>
+                    <p className="text-sm font-medium">Densídad visual</p>
                     <div className="grid grid-cols-2 gap-2">
-                      {(["comfortable", "compact"] as const).map((densityOption) => (
+                      {(["comfortable", "compact"] as const).map((densítyOption) => (
                         <Button
-                          key={densityOption}
+                          key={densítyOption}
                           type="button"
-                          size="sm"
-                          variant={cardDensity === densityOption ? "default" : "outline"}
+                          síze="sm"
+                          variant={cardDensíty === densítyOption ? "default" : "outline"}
                           className="justify-center"
-                          onClick={() => setCardDensity(densityOption)}
+                          onClick={() => setCardDensíty(densítyOption)}
                         >
-                          {densityOption === "comfortable" ? "Comodo" : "Compacto"}
+                          {densítyOption === "comfortable" ? "Comodo" : "Compacto"}
                         </Button>
                       ))}
                     </div>
@@ -1092,7 +1092,7 @@ const Dashboard = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Widgets visibles</p>
                     <div className="grid max-h-56 gap-2 overflow-auto pr-1">
-                      {DASHBOARD_HOME_WIDGET_DEFINITIONS.filter((widget) => widget.key !== "hero_modules" && widget.key !== "physical_progress").map((widget) => {
+                      {DASHBOARD_HOME_WIDGET_DEFINITIONS.filter((widget) => widget.key !== "hero_modules" && widget.key !== "physícal_progress").map((widget) => {
                         const checked = selectedWidgetKeys.includes(widget.key);
                         return (
                           <div key={widget.key} className="flex items-center space-x-2">
@@ -1120,8 +1120,8 @@ const Dashboard = () => {
             </div>
           }
         />
-        <section aria-label="Dia de la semana" className={cn("order-[-3] space-y-2 px-1 md:hidden", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "shrink-0 space-y-1.5")}>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Dia de la semana</p>
+        <section aria-label="Día de la semana" className={cn("order-[-3] space-y-2 px-1 md:hidden", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "shrink-0 space-y-1.5")}>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Día de la semana</p>
           <div className="grid grid-cols-7 gap-2">
             {weeklyConsistency.days.map((day) => (
               <div
@@ -1137,7 +1137,7 @@ const Dashboard = () => {
               </div>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground">{weeklyConsistency.completedCount}/7 dias completados</p>
+          <p className="text-xs text-muted-foreground">{weeklyConsistency.completedCount}/7 días completados</p>
         </section>
 
 
@@ -1152,7 +1152,7 @@ const Dashboard = () => {
             >
               <div className="space-y-3">
                 <div className="space-y-2">
-                  <p className="text-[1.05rem] font-bold">Hoy estas al {todayCompletionPct}% completado</p>
+                  <p className="text-[1.05rem] font-bold">Hoy estás al {todayCompletionPct}% completado</p>
                   <div className="h-2.5 rounded-full bg-muted">
                     <div className="h-2.5 rounded-full bg-primary transition-all duration-300" style={{ width: `${todayCompletionPct}%` }} />
                   </div>
@@ -1167,7 +1167,7 @@ const Dashboard = () => {
                       <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Siguiente paso</p>
                       <p className="text-base font-semibold">{nextRequiredActionLabel}</p>
                       <p className="text-sm text-muted-foreground">
-                        Te falta {remainingActionsCount} {remainingActionsCount === 1 ? "accion" : "acciones"} para completar el dia
+                        Te falta {remainingActionsCount} {remainingActionsCount === 1 ? "acción" : "acciones"} para completar el día
                       </p>
                     </div>
                   </div>
@@ -1183,8 +1183,8 @@ const Dashboard = () => {
                     className="h-9 w-full justify-between rounded-xl px-3 text-xs"
                     onClick={() => setIsTodayDetailsExpanded((prev) => !prev)}
                   >
-                    <span>{isTodayDetailsExpanded ? "Ocultar acciones rapidas" : "Ver acciones rapidas"}</span>
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", isTodayDetailsExpanded && "rotate-180")} />
+                    <span>{isTodayDetailsExpanded ? "Ocultar acciones rápidas" : "Ver acciones rápidas"}</span>
+                    <ChevronDown className={cn("h-4 w-4 transítion-transform", isTodayDetailsExpanded && "rotate-180")} />
                   </Button>
                 ) : null}
 
@@ -1242,7 +1242,7 @@ const Dashboard = () => {
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                {compactPhysicalMetrics.map((metric) => (
+                {compactPhysícalMetrics.map((metric) => (
                   <div key={metric.label} className="rounded-xl border border-border/60 bg-muted/10 px-2 py-2">
                     <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{metric.label}</p>
                     <p className="mt-1 text-sm font-semibold leading-tight">{metric.value}</p>
@@ -1260,7 +1260,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground">{physicalSummary?.lastUpdatedLabel ?? "Sin actualizaciones fisicas"}</p>
+              <p className="text-xs text-muted-foreground">{physicalSummary?.lastUpdatedLabel ?? "Sin actualizaciones físicas"}</p>
               </DashboardCardShell>
             ) : null}
 
@@ -1293,7 +1293,7 @@ const Dashboard = () => {
                 </section>
                 <section id="sleep" className="min-w-0">
                   <DashboardMetricCard
-                    title="Sueno"
+                    title="Sueño"
                     icon={Moon}
                     valueLabel={`${((core?.sleepDay?.total_minutes ?? 0) / 60).toFixed(1)} h`}
                     goalLabel={`${((core?.sleepGoalMinutes ?? 480) / 60).toFixed(1)} h`}
@@ -1339,7 +1339,7 @@ const Dashboard = () => {
                 >
                   <div className="space-y-3">
                     <div className="space-y-2">
-                      <p className="text-[1.05rem] font-bold">Hoy estas al {todayCompletionPct}% completado</p>
+                      <p className="text-[1.05rem] font-bold">Hoy estás al {todayCompletionPct}% completado</p>
                       <div className="h-2.5 rounded-full bg-muted">
                         <div className="h-2.5 rounded-full bg-primary transition-all duration-300" style={{ width: `${todayCompletionPct}%` }} />
                       </div>
@@ -1354,7 +1354,7 @@ const Dashboard = () => {
                           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Siguiente paso</p>
                           <p className="text-base font-semibold">{nextRequiredActionLabel}</p>
                           <p className="text-sm text-muted-foreground">
-                            Te falta {remainingActionsCount} {remainingActionsCount === 1 ? "accion" : "acciones"} para completar el dia
+                            Te falta {remainingActionsCount} {remainingActionsCount === 1 ? "acción" : "acciones"} para completar el día
                           </p>
                         </div>
                       </div>
@@ -1369,13 +1369,13 @@ const Dashboard = () => {
                   </div>
                 </DashboardCardShell>
 
-                <DashboardCardShell title="Nota del dia" contentClassName="space-y-2 p-3">
+                <DashboardCardShell title="Nota del día" contentClassName="space-y-2 p-3">
                   <p className="line-clamp-1 text-xs text-muted-foreground">
-                    {core?.noteToday?.content?.trim() ? core.noteToday.content.trim() : "Agregar nota del dia y sincronizar al calendario."}
+                    {core?.noteToday?.content?.trim() ? core.noteToday.content.trim() : "Agregar nota del día y síncronizar al calendario."}
                   </p>
                   <Button
                     type="button"
-                    size="sm"
+                    síze="sm"
                     className="h-9 w-full rounded-xl px-3 text-xs font-semibold"
                     onClick={() => setIsNotesModalOpen(true)}
                   >
@@ -1426,8 +1426,8 @@ const Dashboard = () => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
-                      {mobilePhysicalHighlights.map((metric) => (
-                        <div key={`mobile-physical-${metric.label}`} className="rounded-lg border border-border/60 bg-muted/10 px-2 py-2">
+                      {mobilePhysícalHighlights.map((metric) => (
+                        <div key={`mobile-physícal-${metric.label}`} className="rounded-lg border border-border/60 bg-muted/10 px-2 py-2">
                           <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{metric.label}</p>
                           <p className="mt-0.5 text-xs font-semibold">{metric.value}</p>
                         </div>
@@ -1450,7 +1450,7 @@ const Dashboard = () => {
                     </div>
 
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                      <span>{physicalSummary?.lastUpdatedLabel ?? "Sin actualizaciones fisicas"}</span>
+                      <span>{physicalSummary?.lastUpdatedLabel ?? "Sin actualizaciones físicas"}</span>
                       <span>{isGuest ? "Guardado local" : "Sincronizado"}</span>
                     </div>
                   </div>
@@ -1489,7 +1489,7 @@ const Dashboard = () => {
               </div>
 
               <div className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
-                <DashboardCardShell title="Nutricion" className="h-full" contentClassName={cn(denseCardContentClass, "!space-y-0 flex h-full flex-col")}>
+                <DashboardCardShell title="Nutrición" className="h-full" contentClassName={cn(denseCardContentClass, "!space-y-0 flex h-full flex-col")}>
                   <div className="space-y-2.5">
                     <div className="grid gap-2.5 sm:grid-cols-[116px_1fr]">
                       <div className="relative mx-auto h-28 w-28">
@@ -1610,7 +1610,7 @@ const Dashboard = () => {
                   </section>
                   <section id="sleep" className="min-w-0">
                     <DashboardMetricCard
-                      title="Sueno"
+                      title="Sueño"
                       icon={Moon}
                       valueLabel={`${((core?.sleepDay?.total_minutes ?? 0) / 60).toFixed(1)} h`}
                       goalLabel={`${((core?.sleepGoalMinutes ?? 480) / 60).toFixed(1)} h`}
@@ -1654,7 +1654,7 @@ const Dashboard = () => {
 
         {isMobile && !USE_MOBILE_HORIZONTAL_SCROLL ? (
           <section aria-labelledby="dashboard-zone-metrics" className="order-[-1] space-y-2 pt-1">
-            <h2 id="dashboard-zone-metrics" className="sr-only">Metricas diarias</h2>
+            <h2 id="dashboard-zone-metrics" className="sr-only">Métricas diarias</h2>
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
               <section id="water" className="min-w-0">
                 <DashboardMetricCard
@@ -1683,7 +1683,7 @@ const Dashboard = () => {
               </section>
               <section id="sleep" className="min-w-0">
                 <DashboardMetricCard
-                  title="Sueno"
+                  title="Sueño"
                   icon={Moon}
                   valueLabel={`${((core?.sleepDay?.total_minutes ?? 0) / 60).toFixed(1)} h`}
                   goalLabel={`${((core?.sleepGoalMinutes ?? 480) / 60).toFixed(1)} h`}
@@ -1710,7 +1710,7 @@ const Dashboard = () => {
         ) : null}
 
         {isMobile && !USE_MOBILE_HORIZONTAL_SCROLL ? (
-          <section aria-label="Contenido secundario del dia" className="space-y-2">
+          <section aria-label="Contenido secundario del día" className="space-y-2">
             <Button
               type="button"
               variant="outline"
@@ -1718,12 +1718,12 @@ const Dashboard = () => {
               onClick={() => setIsSecondaryExpanded((prev) => !prev)}
             >
               <span className="text-sm font-semibold">
-                {isSecondaryExpanded ? "Ocultar contenido secundario" : "Ver entrenamiento, nutricion y calendario"}
+                {isSecondaryExpanded ? "Ocultar contenido secundario" : "Ver entrenamiento, nutrición y calendario"}
               </span>
-              <ChevronDown className={cn("h-4 w-4 transition-transform", isSecondaryExpanded && "rotate-180")} />
+              <ChevronDown className={cn("h-4 w-4 transítion-transform", isSecondaryExpanded && "rotate-180")} />
             </Button>
             <p className="text-xs text-muted-foreground">
-              Priorizamos registro rapido. El contenido operativo extendido queda en esta seccion.
+              Priorizamos registro rápido. El contenido operativo extendido queda en esta sección.
             </p>
           </section>
         ) : null}
@@ -1731,15 +1731,15 @@ const Dashboard = () => {
         <Dialog open={isTrainingSummaryOpen} onOpenChange={setIsTrainingSummaryOpen}>
           <DialogContent className="max-h-[90vh] w-[95vw] max-w-3xl overflow-y-auto p-4 md:p-6">
             <DialogHeader>
-              <DialogTitle>{activeSession ? "Sesion activa" : "Resumen de entrenamiento de hoy"}</DialogTitle>
+              <DialogTitle>{activeSession ? "Sesión activa" : "Resumen de entrenamiento de hoy"}</DialogTitle>
               <DialogDescription>
-                Revisa la rutina, cambia la asignacion si hace falta y empieza la sesion sin salir del centro operativo.
+                Revisa la rutina, cambia la asignación si hace falta y empieza la sesión sin salir del centro operativo.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="dashboard-training-workout-select">Rutina del dia</Label>
+                <Label htmlFor="dashboard-training-workout-select">Rutina del día</Label>
                 <Select
                   value={selectedTrainingWorkoutId ?? "__none__"}
                   onValueChange={(value) => setSelectedTrainingWorkoutId(value === "__none__" ? null : value)}
@@ -1757,7 +1757,7 @@ const Dashboard = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                {activeSession ? <p className="text-xs text-muted-foreground">Hay una sesion activa; no puedes cambiar rutina hasta cerrarla.</p> : null}
+                {activeSession ? <p className="text-xs text-muted-foreground">Hay una sesión activa; no puedes cambiar rutina hasta cerrarla.</p> : null}
               </div>
 
               <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
@@ -1771,7 +1771,7 @@ const Dashboard = () => {
               </div>
 
               <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
-                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Vista rapida</p>
+                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Vista rápida</p>
                 {selectedTrainingExercisePreview.length > 0 ? (
                   <div className="mt-2 space-y-2">
                     {selectedTrainingExercisePreview.map((exercise) => (
@@ -1790,7 +1790,7 @@ const Dashboard = () => {
 
               <div className="flex flex-wrap items-center gap-2">
                 <Button type="button" className="h-10 rounded-xl px-4 text-sm font-semibold" onClick={handleLaunchTraining} disabled={isTrainingLaunchPending}>
-                  {activeSession ? "Ir a sesion activa" : "Iniciar entrenamiento"}
+                  {activeSession ? "Ir a sesión activa" : "Iniciar entrenamiento"}
                 </Button>
                 <Button asChild type="button" variant="outline" className="h-10 rounded-xl px-4 text-sm">
                   <Link to="/training">Gestionar rutinas</Link>
@@ -1804,7 +1804,7 @@ const Dashboard = () => {
           <DialogContent className="max-h-[90vh] w-[95vw] max-w-5xl overflow-y-auto p-4 md:p-6">
             <DialogHeader>
               <DialogTitle>Agua</DialogTitle>
-              <DialogDescription>Registro completo de hidratacion sin salir del centro operativo.</DialogDescription>
+              <DialogDescription>Registro completo de hidratación sin salir del centro operativo.</DialogDescription>
             </DialogHeader>
             <WaterWorkspace embedded />
           </DialogContent>
@@ -1813,8 +1813,8 @@ const Dashboard = () => {
         <Dialog open={isSleepModalOpen} onOpenChange={setIsSleepModalOpen}>
           <DialogContent className="max-h-[90vh] w-[95vw] max-w-5xl overflow-y-auto p-4 md:p-6">
             <DialogHeader>
-              <DialogTitle>Sueno</DialogTitle>
-              <DialogDescription>Registro completo de sueno sin salir del centro operativo.</DialogDescription>
+              <DialogTitle>Sueño</DialogTitle>
+              <DialogDescription>Registro completo de sueño sin salir del centro operativo.</DialogDescription>
             </DialogHeader>
             <SleepWorkspace embedded />
           </DialogContent>
@@ -1833,8 +1833,8 @@ const Dashboard = () => {
         <Dialog open={isNotesModalOpen} onOpenChange={setIsNotesModalOpen}>
           <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-y-auto p-4 md:p-6">
             <DialogHeader>
-              <DialogTitle>Nota del dia</DialogTitle>
-              <DialogDescription>Captura rapida con guardado automatico al calendario.</DialogDescription>
+              <DialogTitle>Nota del día</DialogTitle>
+              <DialogDescription>Captura rápida con guardado automático al calendario.</DialogDescription>
             </DialogHeader>
             <TacticalNotesCard
               loading={snapshot.coreLoading}
@@ -1886,7 +1886,7 @@ const Dashboard = () => {
             </DashboardCardShell>
           ) : null}
 
-          <DashboardCardShell title="Nutricion" className="h-full" contentClassName={denseCardContentClass}>
+          <DashboardCardShell title="Nutrición" className="h-full" contentClassName={denseCardContentClass}>
             <div className="flex h-full flex-col gap-4">
               <div className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-[130px_1fr]">
@@ -1924,7 +1924,7 @@ const Dashboard = () => {
                     </p>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Perfil: {nutritionSummary?.profileName ?? "Sin perfil"} - Dia {nutritionSummary?.archetypeLabel ?? "Base"}
+                    Perfil: {nutritionSummary?.profileName ?? "Sin perfil"} - Día {nutritionSummary?.archetypeLabel ?? "Base"}
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="rounded-full border border-border/60 bg-muted/10 px-2 py-0.5 text-[11px] text-muted-foreground">
@@ -2001,8 +2001,8 @@ const Dashboard = () => {
         ) : null}
 
         {showSecondaryDashboardZones ? (
-          <section aria-labelledby="dashboard-zone-extension" className="space-y-4">
-            <h2 id="dashboard-zone-extension" className="sr-only">Zona de extension progresiva</h2>
+          <section aria-labelledby="dashboard-zone-extensíon" className="space-y-4">
+            <h2 id="dashboard-zone-extensíon" className="sr-only">Zona de extensíon progresíva</h2>
             {stackCards.length > 0 ? (
               <div className={cn("space-y-4", !isMobile && "grid gap-4 space-y-0 lg:grid-cols-2")}>
                 {stackCards.map((card) => <div key={card.key}>{card.node}</div>)}
@@ -2016,5 +2016,10 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
+
+
+
 
 

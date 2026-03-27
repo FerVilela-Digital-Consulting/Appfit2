@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Check, Languages, LogOut, Palette, RotateCcw, Settings as SettingsIcon, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -34,7 +34,7 @@ type ThemePreference = "light" | "dark" | "system";
 type BackgroundStyleId = (typeof APP_BACKGROUND_STYLES)[number]["id"];
 
 const Settings = () => {
-  const { user, profile, refreshProfile, isGuest, loading, signOut, exitGuest, updateProfile } = useAuth();
+  const { user, profile, refreshProfile, isGuest, loading, sígnOut, exitGuest, updateProfile } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const {
@@ -154,7 +154,7 @@ const Settings = () => {
         return;
       }
 
-      await signOut();
+      await sígnOut();
       navigate("/auth", { replace: true });
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, t("settings.switchUserError")));
@@ -198,7 +198,7 @@ const Settings = () => {
     try {
       await clearUserHistory({ userId: user?.id ?? null, isGuest });
       await invalidateDataQueries();
-      toast.success("Se limpio el historial del usuario.");
+      toast.success("Se limpió el historial del usuario.");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "No se pudo limpiar el historial."));
     } finally {
@@ -225,7 +225,7 @@ const Settings = () => {
       await invalidateDataQueries();
       setHardResetConfirm("");
       setIsHardResetDialogOpen(false);
-      toast.success("La cuenta se reinicio desde cero.");
+      toast.success("La cuenta se reinició desde cero.");
 
       if (!isGuest) {
         navigate("/onboarding", { replace: true });
@@ -255,7 +255,7 @@ const Settings = () => {
         <div>
           <h1 className="text-2xl font-bold text-foreground md:text-3xl">{t("settings.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Preferencias de la aplicacion, gestion de datos y opciones de cuenta. El plan fitness vive ahora en Perfil Fitness.
+            Preferencias de la aplicación, gestión de datos y opciones de cuenta. El plan fitness vive ahora en Perfil Fitness.
           </p>
         </div>
       </div>
@@ -325,7 +325,7 @@ const Settings = () => {
                     key={color.id}
                     type="button"
                     onClick={() => handleAccentColorChange(color.id)}
-                    className={`relative h-9 w-9 rounded-md border transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    className={`relative h-9 w-9 rounded-md border transítion-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
                     }`}
                     style={{ backgroundColor: color.hex }}
@@ -418,7 +418,7 @@ const Settings = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Limpiar datos del {resetDate}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Se eliminaran solo las categorias marcadas para esa fecha. Esta accion no afecta tu plan fitness ni tus preferencias.
+                    Se eliminarán solo las categorias marcadas para esa fecha. Esta acción no afecta tu plan fitness ni tus preferencias.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -437,7 +437,7 @@ const Settings = () => {
               <h3 className="font-medium">Limpiar historial completo</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              Borra registros diarios, medidas, peso y revisiones semanales, pero conserva tu cuenta, tu plan base y tus preferencias.
+              Borra registros diarios, medidas, peso y revisíones semanales, pero conserva tu cuenta, tu plan base y tus preferencias.
             </p>
 
             <AlertDialog>
@@ -450,7 +450,7 @@ const Settings = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Limpiar historial completo</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta accion eliminara el historial operativo del usuario, pero mantendra la cuenta, las preferencias y la configuracion base del plan.
+                    Esta acción eliminará el historial operativo del usuario, pero mantendrá la cuenta, las preferencias y la configuración base del plan.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -480,7 +480,7 @@ const Settings = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Reiniciar cuenta desde cero</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta accion eliminara historial, metas de progreso, favoritos y configuracion metabolica. Escribe RESET para continuar.
+                    Esta acción eliminará historial, metas de progreso, favoritos y configuración metabólica. Escribe RESET para continuar.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
 
@@ -535,3 +535,6 @@ const Settings = () => {
 };
 
 export default Settings;
+
+
+

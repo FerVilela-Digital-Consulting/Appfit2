@@ -145,14 +145,14 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
       await updateSleepGoal(user?.id ?? null, goalMinutes, { isGuest });
     },
     onSuccess: async () => {
-      toast.success("Meta diaria de sueno actualizada.");
+      toast.success("Meta diaria de sueño actualizada.");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["sleep_goal"] }),
         queryClient.invalidateQueries({ queryKey: ["sleep_range"] }),
         queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
       ]);
     },
-    onError: (error: unknown) => toast.error(getErrorMessage(error, "No se pudo actualizar la meta de sueno.")),
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "No se pudo actualizar la meta de sueño.")),
   });
 
   const undoMutation = useMutation({
@@ -179,9 +179,9 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
         queryClient.invalidateQueries({ queryKey: ["header_weekly_consistency"] }),
         queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
       ]);
-      toast.success("Se reinicio el sueno del dia seleccionado.");
+      toast.success("Se reinició el sueño del día seleccionado.");
     },
-    onError: (error: unknown) => toast.error(getErrorMessage(error, "No se pudo reiniciar el sueno de hoy.")),
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "No se pudo reiniciar el sueño de hoy.")),
   });
 
   return (
@@ -266,7 +266,7 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  if (!window.confirm("Esto eliminara todos los registros de sueno de este dia. Continuar?")) return;
+                  if (!window.confirm("Esto eliminará todos los registros de sueño de este día. ¿Continuar?")) return;
                   resetDayMutation.mutate();
                 }}
                 disabled={resetDayMutation.isPending || !dayData || dayData.logs.length === 0}
@@ -280,13 +280,13 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
         <Card>
           <CardHeader>
             <CardTitle>{t("sleep.page.addTitle")}</CardTitle>
-            <CardDescription>Ajusta tu meta diaria y registra el sueno del dia sin bajar en el popup.</CardDescription>
+            <CardDescription>Ajusta tu meta diaria y registra el sueño del día sin bajar en el popup.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-xl border border-border/70 bg-background/40 p-4">
               <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                 <div className="space-y-1">
-                  <Label>Meta diaria de sueno (horas)</Label>
+                  <Label>Meta diaria de sueño (horas)</Label>
                   <Input
                     type="number"
                     min="1"
@@ -411,10 +411,10 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
                     formatter={(value: number | string | null, _name, entry) => {
                       const payload = entry?.payload as { hasData?: boolean } | undefined;
                       if (!payload?.hasData || value === null || value === undefined) {
-                        return ["Sin registro", "Sueno"];
+                        return ["Sin registro", "Sueño"];
                       }
                       const hoursValue = typeof value === "number" ? value : Number(value);
-                      return [`${hoursValue.toFixed(1)} h`, "Sueno"];
+                      return [`${hoursValue.toFixed(1)} h`, "Sueño"];
                     }}
                   />
                   <Line

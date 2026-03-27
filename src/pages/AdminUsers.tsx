@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { AlertTriangle, BellRing, Shield, ShieldAlert, UserCog, Users } from "lucide-react";
@@ -357,7 +357,7 @@ const AdminUsers = () => {
         <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
             <div className="flex items-center gap-2 text-sm font-medium"><Shield className="h-4 w-4 text-primary" /> Usuario regular</div>
-            <p className="mt-2 text-sm text-muted-foreground">Usa la app, registra datos y solo accede a su propia informacion.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Usa la app, registra datos y solo accede a su propia información.</p>
           </div>
           <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
             <div className="flex items-center gap-2 text-sm font-medium"><UserCog className="h-4 w-4 text-primary" /> Admin designado</div>
@@ -420,7 +420,7 @@ const AdminUsers = () => {
             >
               <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Usuarios sin actividad</p>
               <p className="mt-3 text-3xl font-black">{signalSummary.withoutActivity}</p>
-              <p className="mt-2 text-sm text-muted-foreground">Cuentas sin nutricion, peso ni medidas registradas.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Cuentas sin nutrición, peso ni medidas registradas.</p>
             </button>
           </div>
 
@@ -626,7 +626,7 @@ const AdminUsers = () => {
             </div>
           ) : notificationAuditQuery.isError ? (
             <div className="rounded-2xl border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
-              La auditoria de recordatorios aun no esta disponible o no pudo cargarse.
+              La auditoria de recordatorios aún no esta disponible o no pudo cargarse.
             </div>
           ) : notificationAuditQuery.data && notificationAuditQuery.data.length > 0 ? (
             <div className="overflow-x-auto rounded-2xl border border-border/60">
@@ -848,7 +848,7 @@ const AdminUsers = () => {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {accountStatusTarget?.account_status === "active"
-                ? "La cuenta perdera acceso a la app hasta que vuelvas a activarla. No se elimina informacion."
+                ? "La cuenta perdera acceso a la app hasta que vuelvas a activarla. No se elimina información."
                 : "La cuenta volvera a poder iniciar sesion y operar con normalidad."}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -901,3 +901,4 @@ const AdminUsers = () => {
 };
 
 export default AdminUsers;
+

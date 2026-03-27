@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+﻿import React, { useState, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { ACTIVITY_OPTIONS, GOAL_OPTIONS } from "@/lib/metabolismOptions";
@@ -93,7 +93,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
     if (!file) return;
 
     if (isGuest) {
-      toast.info("Modo invitado: la carga de avatar esta deshabilitada.");
+      toast.info("Modo invitado: la carga de avatar está deshabilitada.");
       return;
     }
 
@@ -121,17 +121,17 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
     const parsedBirthDate = birthDate ? new Date(`${birthDate}T00:00:00`) : null;
 
     if (parsedHeight !== null && (!Number.isFinite(parsedHeight) || parsedHeight <= 0)) {
-      toast.error("La altura debe ser un numero positivo.");
+      toast.error("La altura debe ser un número positivo.");
       return;
     }
 
     if (parsedWeight !== null && (!Number.isFinite(parsedWeight) || parsedWeight <= 0)) {
-      toast.error("El peso debe ser un numero positivo.");
+      toast.error("El peso debe ser un número positivo.");
       return;
     }
 
     if (parsedBirthDate && Number.isNaN(parsedBirthDate.getTime())) {
-      toast.error("La fecha de nacimiento no es valida.");
+      toast.error("La fecha de nacimiento no es válida.");
       return;
     }
     if (parsedBirthDate) {
@@ -243,7 +243,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
             </div>
 
             <div className="space-y-2">
-              <Label>Sexo biologico</Label>
+              <Label>Sexo biológico</Label>
               <Select value={biologicalSex} onValueChange={(value) => setBiologicalSex(value as "male" | "female")}>
                 <SelectTrigger>
                   <SelectValue />
@@ -270,7 +270,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
 
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
-                <Target className="h-4 w-4" /> Objetivo fisico
+                <Target className="h-4 w-4" /> Objetivo físico
               </Label>
               <Select value={nutritionGoalType} onValueChange={(value) => setNutritionGoalType(value as typeof nutritionGoalType)}>
                 <SelectTrigger>
@@ -322,3 +322,4 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ open, onOpenChange 
 };
 
 export default EditProfileModal;
+

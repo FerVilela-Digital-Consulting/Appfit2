@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+﻿import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -94,7 +94,7 @@ export function NutritionMealsSection({
                       {entries.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="app-surface-caption px-4 py-8 text-center text-sm">
-                            Esta comida aun esta vacia.
+                            Esta comida aún esta vacia.
                           </td>
                         </tr>
                       ) : (
@@ -135,7 +135,7 @@ export function NutritionMealsSection({
                 <div className="space-y-3 md:hidden">
                   {entries.length === 0 ? (
                     <div className="app-surface-caption rounded-2xl border border-dashed border-border/50 px-4 py-6 text-center text-sm">
-                      Esta comida aun esta vacia.
+                      Esta comida aún esta vacia.
                     </div>
                   ) : (
                     entries.map((entry) => (
@@ -186,3 +186,4 @@ export function NutritionMealsSection({
     </div>
   );
 }
+

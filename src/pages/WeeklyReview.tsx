@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startOfWeek } from "date-fns";
 import { ClipboardList } from "lucide-react";
@@ -77,7 +77,7 @@ const WeeklyReview = () => {
         { isGuest },
       ),
     onSuccess: async () => {
-      toast.success("Revision semanal guardada.");
+      toast.success("Revisíón semanal guardada.");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["weekly_review_observation"] }),
         queryClient.invalidateQueries({ queryKey: ["weekly_review_summary"] }),
@@ -86,7 +86,7 @@ const WeeklyReview = () => {
       ]);
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, "No se pudo guardar la revision semanal."));
+      toast.error(getErrorMessage(error, "No se pudo guardar la revisíón semanal."));
     },
   });
 
@@ -99,7 +99,7 @@ const WeeklyReview = () => {
       <div className="flex items-center gap-3">
         <ClipboardList className="w-8 h-8 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold md:text-3xl">Revision semanal</h1>
+          <h1 className="text-2xl font-bold md:text-3xl">Revisíón semanal</h1>
           <p className="text-sm text-muted-foreground">Resumen automático de los últimos 7 días + observaciones.</p>
         </div>
       </div>
@@ -136,7 +136,7 @@ const WeeklyReview = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Adherencia nutricion</CardTitle>
+            <CardTitle className="text-sm">Adherencia nutricional</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">
@@ -157,8 +157,8 @@ const WeeklyReview = () => {
         <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="rounded-lg border p-3">
             <p className="text-sm text-muted-foreground">Biofeedback</p>
-            <p className="font-medium">Energia: {summary?.avgBioEnergy ?? 0}/10</p>
-            <p className="font-medium">Estres: {summary?.avgBioStress ?? 0}/10</p>
+            <p className="font-medium">Energía: {summary?.avgBioEnergy ?? 0}/10</p>
+            <p className="font-medium">Estrés: {summary?.avgBioStress ?? 0}/10</p>
             <p className="font-medium">Sueño subjetivo: {summary?.avgBioSleepQuality ?? 0}/10</p>
           </div>
           <div className="rounded-lg border p-3">
@@ -178,7 +178,7 @@ const WeeklyReview = () => {
             </p>
           </div>
           <div className="rounded-lg border p-3 md:col-span-2">
-            <p className="text-sm text-muted-foreground">Nutricion</p>
+            <p className="text-sm text-muted-foreground">Nutrición</p>
             <p className="font-medium">
               Dias con registros: {summary?.nutritionDaysWithData ?? 0}/{summary?.nutritionDaysTotal ?? 7}
             </p>
@@ -198,7 +198,7 @@ const WeeklyReview = () => {
       <Card>
         <CardHeader>
           <CardTitle>Observaciones de la semana</CardTitle>
-          <CardDescription>Autoevaluacion para contextualizar tendencias.</CardDescription>
+          <CardDescription>Autoevaluación para contextualizar tendencias.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -211,7 +211,7 @@ const WeeklyReview = () => {
                 onChange={(e) => setHydrationState(e.target.value as HydrationState)}
               >
                 <option value="dry">Seco</option>
-                <option value="retention">Retencion</option>
+                <option value="retention">Retención</option>
                 <option value="variable">Variable</option>
               </select>
             </div>
@@ -237,7 +237,7 @@ const WeeklyReview = () => {
               id="weekly-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Que factores impactaron tu semana?"
+              placeholder="¿Qué factores impactaron tu semana?"
             />
           </div>
 
@@ -251,3 +251,6 @@ const WeeklyReview = () => {
 };
 
 export default WeeklyReview;
+
+
+

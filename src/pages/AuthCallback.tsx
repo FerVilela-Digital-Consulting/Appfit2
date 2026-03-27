@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -34,7 +34,7 @@ const AuthCallback = () => {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) throw error;
         } else if (tokenHash && type) {
-          setMessage(type === "recovery" ? "Validando enlace de recuperacion..." : "Verificando tu correo...");
+          setMessage(type === "recovery" ? "Validando enlace de recuperación..." : "Verificando tu correo...");
           const { error } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
             type: type as "signup" | "invite" | "magiclink" | "recovery" | "email_change" | "email",
@@ -52,7 +52,7 @@ const AuthCallback = () => {
         }
 
         if (type === "recovery") {
-          toast.success("Enlace de recuperacion valido. Crea tu nueva contrasena.");
+          toast.success("Enlace de recuperación válido. Crea tu nueva contraseña.");
           finish("/auth/reset-password");
           return;
         }
@@ -79,7 +79,7 @@ const AuthCallback = () => {
     <div className="app-shell min-h-screen flex items-center justify-center bg-background p-4">
       <div className="glass-card w-full max-w-md rounded-2xl border p-8 text-center shadow-xl">
         <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary" />
-        <h1 className="text-xl font-semibold">Autenticacion</h1>
+        <h1 className="text-xl font-semibold">Autenticación</h1>
         <p className="mt-2 text-sm text-muted-foreground">{message}</p>
       </div>
     </div>
@@ -87,3 +87,4 @@ const AuthCallback = () => {
 };
 
 export default AuthCallback;
+

@@ -1,4 +1,4 @@
-import { supabase } from "@/services/supabaseClient";
+﻿import { supabase } from "@/services/supabaseClient";
 
 export type TourTabKey =
   | "today"
@@ -44,22 +44,22 @@ export const APP_TOUR_TABS: TourTabDefinition[] = [
     key: "today",
     route: "/today",
     title: "Centro operativo",
-    description: "Vista diaria de prioridades, modulos y acciones rapidas.",
+    description: "Vista diaria de prioridades, módulos y acciones rápidas.",
     tools: [
       {
         title: "Que hacer hoy",
-        summary: "Prioridad principal del dia",
-        detail: "Te indica la siguiente accion clave para avanzar en tu adherencia diaria.",
+        summary: "Prioridad principal del día",
+        detail: "Te indica la siguiente acción clave para avanzar en tu adherencia diaria.",
       },
       {
-        title: "Modulos diarios",
-        summary: "Agua, sueno, peso y nutricion",
-        detail: "Bloques rapidos para registrar o actualizar datos del dia sin salir de la vista.",
+        title: "Módulos diarios",
+        summary: "Agua, sueño, peso y nutrición",
+        detail: "Bloques rápidos para registrar o actualizar datos del día sin salir de la vista.",
       },
       {
         title: "Entrenamiento de hoy",
         summary: "Rutina activa o programada",
-        detail: "Resume la sesion del dia y te permite iniciar o continuar entrenamiento.",
+        detail: "Resume la sesión del día y te permite iniciar o continuar entrenamiento.",
       },
     ],
   },
@@ -71,13 +71,13 @@ export const APP_TOUR_TABS: TourTabDefinition[] = [
     tools: [
       {
         title: "Entrenar",
-        summary: "Sesion actual y ejecucion",
-        detail: "Gestiona sets, notas y cierre de sesion con seguimiento de rendimiento.",
+        summary: "Sesión actual y ejecución",
+        detail: "Gestiona sets, notas y cierre de sesión con seguimiento de rendimiento.",
       },
       {
         title: "Planificar",
         summary: "Rutinas y calendario semanal",
-        detail: "Define que rutina toca cada dia y ajusta la carga de trabajo.",
+        detail: "Define qué rutina toca cada día y ajusta la carga de trabajo.",
       },
       {
         title: "Progreso",
@@ -89,13 +89,13 @@ export const APP_TOUR_TABS: TourTabDefinition[] = [
   {
     key: "nutrition",
     route: "/nutrition",
-    title: "Nutricion",
+    title: "Nutrición",
     description: "Gestiona logbook, biblioteca y objetivos nutricionales.",
     tools: [
       {
         title: "Resumen",
         summary: "Objetivo vs consumo",
-        detail: "Muestra calorias y macros del dia contra tu plan nutricional activo.",
+        detail: "Muestra calorías y macros del día contra tu plan nutricional activo.",
       },
       {
         title: "Logbook",
@@ -113,22 +113,22 @@ export const APP_TOUR_TABS: TourTabDefinition[] = [
     key: "body",
     route: "/body",
     title: "Cuerpo",
-    description: "Registra medidas corporales y compara evolucion.",
+    description: "Registra medidas corporales y compara evolución.",
     tools: [
       {
-        title: "Nueva medicion",
-        summary: "Perimetros corporales",
+        title: "Nueva medición",
+        summary: "Perímetros corporales",
         detail: "Guarda cintura, cuello, cadera, muslo y brazo para evaluar cambios reales.",
       },
       {
-        title: "Grafica de metricas",
+        title: "Gráfica de métricas",
         summary: "Tendencia por indicador",
-        detail: "Visualiza la evolucion por rango de fechas para detectar patrones.",
+        detail: "Visualiza la evolución por rango de fechas para detectar patrones.",
       },
       {
-        title: "Comparacion libre",
+        title: "Comparación libre",
         summary: "Fecha inicial vs final",
-        detail: "Compara dos mediciones y revisa delta por cada perimetro.",
+        detail: "Compara dos mediciones y revisa delta por cada perímetro.",
       },
     ],
   },
@@ -136,20 +136,20 @@ export const APP_TOUR_TABS: TourTabDefinition[] = [
     key: "progress",
     route: "/progress",
     title: "Progreso",
-    description: "Analiza tendencias y revision semanal en un solo contexto.",
+    description: "Analiza tendencias y revisión semanal en un solo contexto.",
     tools: [
       {
         title: "Resumen de objetivo",
         summary: "Estado global actual",
-        detail: "Integra peso, sueno, nutricion y biofeedback para lectura ejecutiva.",
+        detail: "Integra peso, sueño, nutrición y biofeedback para lectura ejecutiva.",
       },
       {
-        title: "Graficas de tendencia",
-        summary: "Evolucion por rango",
+        title: "Gráficas de tendencia",
+        summary: "Evolución por rango",
         detail: "Permite analizar comportamiento semanal/mensual con enfoque longitudinal.",
       },
       {
-        title: "Revision semanal",
+        title: "Revisión semanal",
         summary: "Observaciones y ajustes",
         detail: "Guarda notas de la semana para mejorar decisiones del siguiente ciclo.",
       },
@@ -159,21 +159,21 @@ export const APP_TOUR_TABS: TourTabDefinition[] = [
     key: "calendar",
     route: "/calendar",
     title: "Calendario",
-    description: "Sigue tu timeline operativo dia por dia.",
+    description: "Sigue tu timeline operativo día por día.",
     tools: [
       {
         title: "Vista mes",
         summary: "Mapa de actividad",
-        detail: "Identifica rapidamente dias con registros o vacios operativos.",
+        detail: "Identifica rápidamente días con registros o vacíos operativos.",
       },
       {
         title: "Timeline diario",
-        summary: "Orden cronologico",
-        detail: "Muestra bloques reales por hora para comprender tu dia completo.",
+        summary: "Orden cronológico",
+        detail: "Muestra bloques reales por hora para comprender tu día completo.",
       },
       {
-        title: "Nota del dia",
-        summary: "Contexto tactico",
+        title: "Nota del día",
+        summary: "Contexto táctico",
         detail: "Captura observaciones y decisiones para cerrar el ciclo de aprendizaje diario.",
       },
     ],
@@ -182,22 +182,22 @@ export const APP_TOUR_TABS: TourTabDefinition[] = [
     key: "fitness_profile",
     route: "/fitness-profile",
     title: "Perfil fitness",
-    description: "Configura objetivos y parametros metabolicos del plan.",
+    description: "Configura objetivos y parámetros metabólicos del plan.",
     tools: [
       {
         title: "Datos base",
-        summary: "Perfil personal y biologico",
-        detail: "Centraliza variables que afectan calculo de objetivos y recomendaciones.",
+        summary: "Perfil personal y biológico",
+        detail: "Centraliza variables que afectan cálculo de objetivos y recomendaciones.",
       },
       {
         title: "Objetivo de peso",
-        summary: "Direccion y fecha",
+        summary: "Dirección y fecha",
         detail: "Define si buscas bajar, subir o mantener y registra meta temporal.",
       },
       {
-        title: "Metas metabolicas",
-        summary: "Sueno, calorias y macros",
-        detail: "Ajusta parametros que impactan nutricion y seguimiento operativo diario.",
+        title: "Metas metabólicas",
+        summary: "Sueño, calorías y macros",
+        detail: "Ajusta parámetros que impactan nutrición y seguimiento operativo diario.",
       },
     ],
   },
@@ -205,7 +205,7 @@ export const APP_TOUR_TABS: TourTabDefinition[] = [
     key: "settings",
     route: "/settings",
     title: "Ajustes",
-    description: "Personaliza app, cuenta y gestion de datos.",
+    description: "Personaliza app, cuenta y gestión de datos.",
     tools: [
       {
         title: "Preferencias visuales",
@@ -219,7 +219,7 @@ export const APP_TOUR_TABS: TourTabDefinition[] = [
       },
       {
         title: "Cuenta",
-        summary: "Cambio de sesion",
+        summary: "Cambio de sesión",
         detail: "Permite salir e ingresar con otra cuenta cuando lo necesites.",
       },
     ],
@@ -430,3 +430,4 @@ export const restartTourProgress = (userId: string | null, options?: { isGuest?:
     },
     options,
   );
+

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { addDays, addMonths, endOfMonth, endOfWeek, format, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -54,13 +54,13 @@ const CalendarMiniWidget = ({ month, onMonthChange, activity, loading = false }:
         <div className="flex items-center justify-between gap-3">
           <div>
             <CardTitle>Actividad en calendario</CardTitle>
-            <CardDescription>Dias con actividad y resumen rapido.</CardDescription>
+            <CardDescription>Días con actividad y resumen rápido.</CardDescription>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon" className="h-9 w-9 md:h-8 md:w-8" onClick={() => onMonthChange(addMonths(month, -1))}>
+            <Button variant="outline" síze="icon" className="h-9 w-9 md:h-8 md:w-8" onClick={() => onMonthChange(addMonths(month, -1))}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-9 w-9 md:h-8 md:w-8" onClick={() => onMonthChange(addMonths(month, 1))}>
+            <Button variant="outline" síze="icon" className="h-9 w-9 md:h-8 md:w-8" onClick={() => onMonthChange(addMonths(month, 1))}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -83,7 +83,7 @@ const CalendarMiniWidget = ({ month, onMonthChange, activity, loading = false }:
                   key={key}
                   type="button"
                   onClick={() => setSelectedDateKey(key)}
-                    className={`h-8 rounded-md text-[11px] transition border md:h-9 md:text-xs ${
+                    className={`h-8 rounded-md text-[11px] transítion border md:h-9 md:text-xs ${
                     isSelected
                       ? "border-primary bg-primary/15"
                       : hasAny
@@ -115,7 +115,7 @@ const CalendarMiniWidget = ({ month, onMonthChange, activity, loading = false }:
           </p>
           <p className="text-muted-foreground">
             Peso: {selected?.weightKg !== null && selected?.weightKg !== undefined ? `${selected.weightKg} kg` : "--"} | Bio:{" "}
-            {selected?.hasBiofeedback ? "si" : "no"} | Nota: {selected?.hasNote ? "si" : "no"} | Nutricion: {selected?.hasNutrition ? "si" : "no"}
+            {selected?.hasBiofeedback ? "sí" : "no"} | Nota: {selected?.hasNote ? "sí" : "no"} | Nutrición: {selected?.hasNutrition ? "sí" : "no"}
           </p>
         </div>
       </CardContent>
@@ -124,3 +124,5 @@ const CalendarMiniWidget = ({ month, onMonthChange, activity, loading = false }:
 };
 
 export default CalendarMiniWidget;
+
+

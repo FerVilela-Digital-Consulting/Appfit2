@@ -18,17 +18,17 @@ const ResetPassword = () => {
     event.preventDefault();
 
     if (!password || !confirmPassword) {
-      toast.error("Completa ambos campos de contrasena.");
+      toast.error("Completa ambos campos de contraseña.");
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("Las contrasenas no coinciden.");
+      toast.error("Las contraseñas no coinciden.");
       return;
     }
 
     if (password.length < 8) {
-      toast.error("La contrasena debe tener al menos 8 caracteres.");
+      toast.error("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
 
@@ -37,11 +37,11 @@ const ResetPassword = () => {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
 
-      toast.success("Contrasena actualizada correctamente. Ya puedes iniciar sesion.");
+      toast.success("Contraseña actualizada correctamente. Ya puedes iniciar sesión.");
       navigate("/auth", { replace: true });
     } catch (error) {
       console.error("Password update error:", error);
-      toast.error(error instanceof Error ? error.message : "No pudimos actualizar tu contrasena.");
+      toast.error(error instanceof Error ? error.message : "No pudimos actualizar tu contraseña.");
     } finally {
       setLoading(false);
     }
@@ -54,15 +54,15 @@ const ResetPassword = () => {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Lock className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">Nueva contrasena</CardTitle>
+          <CardTitle className="text-2xl font-bold">Nueva contraseña</CardTitle>
           <CardDescription>
-            Ingresa una nueva contrasena para completar la recuperacion de tu cuenta.
+            Ingresa una nueva contraseña para completar la recuperación de tu cuenta.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="newPassword">Nueva contrasena</Label>
+              <Label htmlFor="newPassword">Nueva contraseña</Label>
               <Input
                 id="newPassword"
                 type="password"
@@ -73,7 +73,7 @@ const ResetPassword = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmNewPassword">Confirmar contrasena</Label>
+              <Label htmlFor="confirmNewPassword">Confirmar contraseña</Label>
               <Input
                 id="confirmNewPassword"
                 type="password"
@@ -92,7 +92,7 @@ const ResetPassword = () => {
                   Actualizando...
                 </>
               ) : (
-                "Guardar nueva contrasena"
+                "Guardar nueva contraseña"
               )}
             </Button>
             <Button type="button" variant="ghost" className="w-full" onClick={() => navigate("/auth")}>

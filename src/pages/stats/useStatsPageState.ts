@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startOfWeek } from "date-fns";
 import { toast } from "sonner";
@@ -59,9 +59,9 @@ const rangeDaysMap: Record<Range, number> = {
 };
 
 const rangeLabelMap: Record<Range, string> = {
-  "7d": "7 dias",
-  "30d": "30 dias",
-  "90d": "90 dias",
+  "7d": "7 días",
+  "30d": "30 días",
+  "90d": "90 días",
   all: "Historico",
 };
 
@@ -358,7 +358,7 @@ export function useStatsPageState() {
         { isGuest },
       ),
     onSuccess: async () => {
-      toast.success("Revision semanal guardada.");
+      toast.success("Revisión semanal guardada.");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["weekly_review_observation"] }),
         queryClient.invalidateQueries({ queryKey: ["weekly_review_summary"] }),
@@ -368,7 +368,7 @@ export function useStatsPageState() {
       ]);
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, "No se pudo guardar la revision semanal."));
+      toast.error(getErrorMessage(error, "No se pudo guardar la revisión semanal."));
     },
   });
 
@@ -418,3 +418,4 @@ export function useStatsPageState() {
     saveWeeklyReviewMutation,
   };
 }
+

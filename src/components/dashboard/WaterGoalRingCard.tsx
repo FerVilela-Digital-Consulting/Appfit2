@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Droplets, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -134,7 +134,7 @@ const WaterGoalRingCard = ({ waterMl, goalMl, loading = false }: WaterGoalRingCa
       <Dialog open={customOpen} onOpenChange={setCustomOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Agregar agua rapido</DialogTitle>
+            <DialogTitle>Agregar agua rápido</DialogTitle>
             <DialogDescription>
               Introduce una cantidad puntual para sumarla al consumo de agua del dia actual.
             </DialogDescription>
@@ -173,3 +173,4 @@ const WaterGoalRingCard = ({ waterMl, goalMl, loading = false }: WaterGoalRingCa
 };
 
 export default WaterGoalRingCard;
+

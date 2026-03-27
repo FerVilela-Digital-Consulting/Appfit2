@@ -1,4 +1,4 @@
-import { supabase } from "@/services/supabaseClient";
+﻿import { supabase } from "@/services/supabaseClient";
 
 export type NotificationSeverity = "info" | "warning" | "action";
 export type NotificationKind = "complete_profile" | "resolve_onboarding" | "log_first_activity" | "general";
@@ -54,7 +54,7 @@ export const reminderTemplates: Record<Exclude<NotificationKind, "general">, Rem
   complete_profile: {
     kind: "complete_profile",
     title: "Completa tu perfil base",
-    body: "Tu cuenta aun necesita completar los datos base del perfil para que la experiencia quede bien configurada.",
+    body: "Tu cuenta aún necesita completar los datos base del perfil para que la experiencia quede bien configurada.",
     actionPath: "/fitness-profile",
     actionLabel: "Completar perfil",
     severity: "warning",
@@ -179,3 +179,4 @@ export async function getAdminNotificationAudit(limit = 100) {
     created_at: row.created_at ?? null,
   }));
 }
+
