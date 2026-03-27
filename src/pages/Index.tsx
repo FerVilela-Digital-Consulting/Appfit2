@@ -40,14 +40,12 @@ const Index = () => {
 
   return (
     <div className="bg-white text-[#1e194d]">
-      <div className="mx-auto w-full max-w-[1440px] overflow-hidden">
-        <LandingHeader language={language} onPrimary={goPrimary} onToggleLanguage={toggleLanguage} />
-        <LandingHero language={language} onPrimary={goPrimary} />
-        <LandingHowItWorks language={language} />
-        <LandingFeatureRows language={language} onPrimary={goPrimary} />
-        <LandingMetricsAndBenefits language={language} />
-        <LandingFooter language={language} />
-      </div>
+      <LandingHeader language={language} onPrimary={goPrimary} onToggleLanguage={toggleLanguage} />
+      <LandingHero language={language} onPrimary={goPrimary} />
+      <LandingHowItWorks language={language} />
+      <LandingFeatureRows language={language} onPrimary={goPrimary} />
+      <LandingMetricsAndBenefits language={language} />
+      <LandingFooter language={language} />
     </div>
   );
 };
