@@ -54,6 +54,7 @@ const NotificationCenter = () => {
   const queryClient = useQueryClient();
   const { user, isGuest } = useAuth();
   const [open, setOpen] = useState(false);
+  const tourQueryKey = ["tour_progress", user?.id, isGuest] as const;
 
   const notificationsQuery = useQuery({
     queryKey: ["user_notifications"],
@@ -61,7 +62,7 @@ const NotificationCenter = () => {
     enabled: Boolean(user?.id) && !isGuest,
   });
   const tourStateQuery = useQuery({
-    queryKey: ["tour_progress", user?.id, isGuest],
+    queryKey: tourQueryKey,
     queryFn: () => getTourProgressState(user?.id ?? null, { isGuest }),
     enabled: Boolean(user?.id) && !isGuest,
   });
@@ -168,7 +169,7 @@ const NotificationCenter = () => {
 
       if (notification.id === TOUR_INVITE_NOTIFICATION_ID) {
         await markTourInviteResponded(user.id, { isGuest: false });
-        await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+        await queryClient.invalidateQueries({ queryKey: tourQueryKey });
         if (notification.action_path) {
           setOpen(false);
           navigate(notification.action_path);
@@ -180,7 +181,7 @@ const NotificationCenter = () => {
         const firstTab = getFirstTourTab();
         if (!firstTab) return;
         await restartTourProgress(user.id, { isGuest: false });
-        await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+        await queryClient.invalidateQueries({ queryKey: tourQueryKey });
         setOpen(false);
         navigate(`${firstTab.route}?tour=1`);
         return;
@@ -208,11 +209,11 @@ const NotificationCenter = () => {
     if (isLocalTourNotification(notification)) {
       if (notification.id === TOUR_INVITE_NOTIFICATION_ID || notification.id === TOUR_CONTINUE_NOTIFICATION_ID) {
         await markTourInviteResponded(user.id, { isGuest: false });
-        await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+        await queryClient.invalidateQueries({ queryKey: tourQueryKey });
       }
       return;
     }
-    markReadMutation.mutate(notification.id);
+    await markReadMutation.mutateAsync(notification.id);
   };
 
   const handleMarkAll = async () => {
@@ -222,10 +223,10 @@ const NotificationCenter = () => {
       (localTourNotification?.id === TOUR_INVITE_NOTIFICATION_ID || localTourNotification?.id === TOUR_CONTINUE_NOTIFICATION_ID)
     ) {
       await markTourInviteResponded(user.id, { isGuest: false });
-      await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+      await queryClient.invalidateQueries({ queryKey: tourQueryKey });
     }
     if ((notifications ?? []).some((item) => !item.read_at)) {
-      markAllMutation.mutate();
+      await markAllMutation.mutateAsync();
     }
   };
 
@@ -234,7 +235,7 @@ const NotificationCenter = () => {
     const firstTab = getFirstTourTab();
     if (!firstTab) return;
     await restartTourProgress(user.id, { isGuest: false });
-    await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+    await queryClient.invalidateQueries({ queryKey: tourQueryKey });
     setOpen(false);
     navigate(`${firstTab.route}?tour=1`);
   };
@@ -267,7 +268,7 @@ const NotificationCenter = () => {
                 <SheetTitle>Notificaciones</SheetTitle>
                 <SheetDescription>Recordatorios internos, avisos operativos y futuras comunicaciones dentro de la app.</SheetDescription>
               </div>
-              {unreadCount > 0 ? <Badge variant="default">{unreadCount} sin leer</Badge> : null}
+              {unreadCount > 0 ? <Badge variant="default">{unreadCount > 99 ? "99+" : unreadCount}</Badge> : null}
             </div>
           </SheetHeader>
 
@@ -339,7 +340,7 @@ const NotificationCenter = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => void handleMarkRead(notification)}
-                            disabled={markReadMutation.isPending}
+                            disabled={markReadMutation.isPending || markAllMutation.isPending}
                           >
                             Marcar leida
                           </Button>

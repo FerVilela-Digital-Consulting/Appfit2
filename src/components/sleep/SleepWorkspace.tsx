@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Moon, Undo2 } from "lucide-react";
@@ -7,7 +7,15 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { usePreferences } from "@/context/PreferencesContext";
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
-import { addSleepLog, clearSleepLogsByDate, deleteSleepLog, getSleepDay, getSleepGoal, getSleepRangeTotals } from "@/services/sleep";
+import {
+  addSleepLog,
+  clearSleepLogsByDate,
+  deleteSleepLog,
+  getSleepDay,
+  getSleepGoal,
+  getSleepRangeTotals,
+  updateSleepGoal,
+} from "@/services/sleep";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,6 +43,7 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
   const [advanced, setAdvanced] = useState(false);
   const [sleepStart, setSleepStart] = useState("");
   const [sleepEnd, setSleepEnd] = useState("");
+  const [goalHours, setGoalHours] = useState("8");
 
   const timeZone = profile?.timezone || DEFAULT_WATER_TIMEZONE;
 
@@ -75,6 +84,10 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
     total_minutes: row.total_minutes,
   }));
 
+  useEffect(() => {
+    setGoalHours(String(Math.round((goalData.sleep_goal_minutes ?? 480) / 60)));
+  }, [goalData.sleep_goal_minutes]);
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const h = Number(hours || 0);
@@ -109,6 +122,23 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
       ]);
     },
     onError: (error: unknown) => toast.error(getErrorMessage(error, t("sleep.page.saveError"))),
+  });
+
+  const goalMutation = useMutation({
+    mutationFn: async () => {
+      const parsedHours = Number(goalHours || 0);
+      const goalMinutes = Math.round(parsedHours * 60);
+      await updateSleepGoal(user?.id ?? null, goalMinutes, { isGuest });
+    },
+    onSuccess: async () => {
+      toast.success("Meta diaria de sueno actualizada.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["sleep_goal"] }),
+        queryClient.invalidateQueries({ queryKey: ["sleep_range"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
+      ]);
+    },
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "No se pudo actualizar la meta de sueno.")),
   });
 
   const undoMutation = useMutation({
@@ -150,77 +180,26 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">{t("sleep.page.today")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{((dayData?.total_minutes ?? 0) / 60).toFixed(1)}h</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">{t("sleep.page.goal")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{(goalData.sleep_goal_minutes / 60).toFixed(1)}h</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">{t("sleep.page.avg")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{(avgMinutes / 60).toFixed(1)}h</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">{t("sleep.page.daysMet")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{daysMet}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{t("nav.sleep")}</CardTitle>
-          <div className="flex gap-2">
-            <Button size="sm" variant={range === "7d" ? "default" : "outline"} onClick={() => setRange("7d")}>
-              {t("sleep.page.range.7d")}
-            </Button>
-            <Button size="sm" variant={range === "30d" ? "default" : "outline"} onClick={() => setRange("30d")}>
-              {t("sleep.page.range.30d")}
-            </Button>
-            <Button size="sm" variant={range === "month" ? "default" : "outline"} onClick={() => setRange("month")}>
-              {t("sleep.page.range.month")}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {chartData.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("sleep.page.noLogs")}</p>
-          ) : (
-            <div className="h-[240px] w-full md:h-[320px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
-                  <YAxis />
-                  <Tooltip
-                    formatter={(value: number | string) => {
-                      const hoursValue = typeof value === "number" ? value : Number(value);
-                      return [`${Math.round(hoursValue * 60)} min`, "Total"];
-                    }}
-                  />
-                  <Bar dataKey="hours" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="grid grid-cols-2 divide-x divide-y border-border/60 sm:grid-cols-4 sm:divide-y-0">
+            <div className="space-y-1 p-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("sleep.page.today")}</p>
+              <p className="text-xl font-semibold md:text-2xl">{((dayData?.total_minutes ?? 0) / 60).toFixed(1)}h</p>
             </div>
-          )}
+            <div className="space-y-1 p-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("sleep.page.goal")}</p>
+              <p className="text-xl font-semibold md:text-2xl">{(goalData.sleep_goal_minutes / 60).toFixed(1)}h</p>
+            </div>
+            <div className="space-y-1 p-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("sleep.page.avg")}</p>
+              <p className="text-xl font-semibold md:text-2xl">{(avgMinutes / 60).toFixed(1)}h</p>
+            </div>
+            <div className="space-y-1 p-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("sleep.page.daysMet")}</p>
+              <p className="text-xl font-semibold md:text-2xl">{daysMet}</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -287,8 +266,34 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
         <Card>
           <CardHeader>
             <CardTitle>{t("sleep.page.addTitle")}</CardTitle>
+            <CardDescription>Ajusta tu meta diaria y registra el sueno del dia sin bajar en el popup.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
+            <div className="rounded-xl border border-border/70 bg-background/40 p-4">
+              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                <div className="space-y-1">
+                  <Label>Meta diaria de sueno (horas)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="24"
+                    step="0.5"
+                    value={goalHours}
+                    onChange={(e) => setGoalHours(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">Por defecto son 8 horas, pero cada usuario puede personalizarla.</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => goalMutation.mutate()}
+                  disabled={goalMutation.isPending}
+                >
+                  Guardar meta
+                </Button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label>{t("sleep.page.totalHours")}</Label>
@@ -300,9 +305,14 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
               </div>
             </div>
 
-            <Button type="button" variant="ghost" size="sm" onClick={() => setAdvanced((v) => !v)}>
-              {t("sleep.page.advanced")}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setAdvanced((v) => !v)}>
+                {t("sleep.page.advanced")}
+              </Button>
+              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+                {t("sleep.page.save")}
+              </Button>
+            </div>
 
             {advanced && (
               <div className="space-y-2">
@@ -326,13 +336,48 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
                 </div>
               </div>
             )}
-
-            <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
-              {t("sleep.page.save")}
-            </Button>
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>{t("nav.sleep")}</CardTitle>
+          <div className="flex gap-2">
+            <Button size="sm" variant={range === "7d" ? "default" : "outline"} onClick={() => setRange("7d")}>
+              {t("sleep.page.range.7d")}
+            </Button>
+            <Button size="sm" variant={range === "30d" ? "default" : "outline"} onClick={() => setRange("30d")}>
+              {t("sleep.page.range.30d")}
+            </Button>
+            <Button size="sm" variant={range === "month" ? "default" : "outline"} onClick={() => setRange("month")}>
+              {t("sleep.page.range.month")}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {chartData.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("sleep.page.noLogs")}</p>
+          ) : (
+            <div className="h-[190px] w-full md:h-[240px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value: number | string) => {
+                      const hoursValue = typeof value === "number" ? value : Number(value);
+                      return [`${Math.round(hoursValue * 60)} min`, "Total"];
+                    }}
+                  />
+                  <Bar dataKey="hours" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

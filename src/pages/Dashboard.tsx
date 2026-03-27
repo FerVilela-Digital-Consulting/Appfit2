@@ -138,14 +138,16 @@ const DashboardMetricCard = ({
           </>
         )}
       </div>
-      <div className="flex items-end justify-between gap-3 pt-0.5">
-        <p className="whitespace-nowrap text-[0.95rem] font-black leading-none tracking-tight text-foreground">{valueLabel}</p>
-        <div className="shrink-0 text-right">
-          <p className="whitespace-nowrap text-[0.65rem] font-semibold uppercase leading-none tracking-[0.12em] text-muted-foreground/80">
-            Meta {goalLabel}
-          </p>
+        <div className="flex items-end justify-between gap-3 pt-0.5">
+          <p className="whitespace-nowrap text-[0.95rem] font-black leading-none tracking-tight text-foreground">{valueLabel}</p>
+          {!comingSoon ? (
+            <div className="shrink-0 text-right">
+              <p className="whitespace-nowrap text-[0.65rem] font-semibold uppercase leading-none tracking-[0.12em] text-muted-foreground/80">
+                Meta {goalLabel}
+              </p>
+            </div>
+          ) : null}
         </div>
-      </div>
       <div className="h-2 rounded-full bg-muted/70">
         <div
           className={cn("h-2 rounded-full transition-all duration-300", accentClassName)}
@@ -1312,6 +1314,7 @@ const Dashboard = () => {
                     accentClassName="bg-emerald-500/90 text-emerald-100"
                     actionHref="/calendar"
                     actionLabel="+"
+                    comingSoon
                   />
                 </section>
               </div>
@@ -1628,6 +1631,7 @@ const Dashboard = () => {
                       accentClassName="bg-emerald-500/90 text-emerald-100"
                       actionHref="/calendar"
                       actionLabel="+"
+                      comingSoon
                     />
                   </section>
                 </div>
@@ -1699,6 +1703,7 @@ const Dashboard = () => {
                 accentClassName="bg-emerald-500/90 text-emerald-100"
                 actionHref="/calendar"
                 actionLabel="+"
+                comingSoon
               />
             </div>
           </section>

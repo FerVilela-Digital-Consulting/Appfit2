@@ -66,6 +66,7 @@ const Onboarding = () => {
 
   const selectedActivity = useMemo(() => ACTIVITY_OPTIONS.find((option) => option.value === activityLevel), [activityLevel]);
   const selectedGoal = useMemo(() => GOAL_OPTIONS.find((option) => option.value === nutritionGoalType), [nutritionGoalType]);
+  const canSkipToDashboard = Boolean(profile?.onboarding_completed);
 
   const validateBaseStep = () => {
     const parsedWeight = Number(weightKg);
@@ -329,11 +330,18 @@ const Onboarding = () => {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    if (activeTab === "goal") setActiveTab("base");
+                    if (activeTab === "goal") {
+                      setActiveTab("base");
+                      return;
+                    }
+
+                    if (canSkipToDashboard) {
+                      navigate("/today", { replace: true });
+                    }
                   }}
-                  disabled={activeTab === "base" || isSaving}
+                  disabled={(activeTab === "base" && !canSkipToDashboard) || isSaving}
                 >
-                  Atras
+                  {activeTab === "base" ? "Omitir" : "Atras"}
                 </Button>
                 {activeTab === "base" && (
                   <Button type="button" onClick={goNextFromBase}>

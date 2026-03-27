@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { HeartPulse } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
 import { DEFAULT_WATER_TIMEZONE } from "@/features/water/waterUtils";
 import {
-  getBiofeedbackWeeklyAverages,
+  getBiofeedbackRange,
   getDailyBiofeedback,
   listRecentBiofeedback,
   upsertDailyBiofeedback,
+  type DailyBiofeedback,
 } from "@/services/dailyBiofeedback";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage } from "@/lib/errors";
+import { cn } from "@/lib/utils";
 
 type BiofeedbackValues = {
   sleep_quality: number;
@@ -30,6 +33,8 @@ type BiofeedbackValues = {
   digestion: number;
 };
 
+type BiofeedbackSummaryRange = "7d" | "month" | "all";
+
 const defaultValues = (): BiofeedbackValues => ({
   sleep_quality: 5,
   hunger_level: 5,
@@ -39,6 +44,12 @@ const defaultValues = (): BiofeedbackValues => ({
   libido: 5,
   digestion: 5,
 });
+
+const SUMMARY_RANGE_LABELS: Record<BiofeedbackSummaryRange, string> = {
+  "7d": "7D",
+  month: "30D",
+  all: "Todo",
+};
 
 const toDateKey = (date: Date) => date.toISOString().slice(0, 10);
 
@@ -77,6 +88,37 @@ const MetricRow = ({
   </div>
 );
 
+const SummaryRangeControl = ({
+  value,
+  onChange,
+}: {
+  value: BiofeedbackSummaryRange;
+  onChange: (value: BiofeedbackSummaryRange) => void;
+}) => (
+  <div className="relative inline-flex w-full min-w-[11.5rem] max-w-[13.25rem] items-center rounded-xl border border-border/60 bg-muted/10 p-1">
+    <motion.span
+      aria-hidden
+      className="absolute bottom-1 left-1 top-1 rounded-lg bg-primary"
+      style={{ width: "calc((100% - 0.5rem) / 3)" }}
+      animate={{ x: `${(["7d", "month", "all"] as BiofeedbackSummaryRange[]).findIndex((option) => option === value) * 100}%` }}
+      transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+    />
+    {(["7d", "month", "all"] as BiofeedbackSummaryRange[]).map((option) => {
+      const isActive = value === option;
+      return (
+        <button
+          key={option}
+          type="button"
+          onClick={() => onChange(option)}
+          className="relative z-10 flex-1 overflow-hidden rounded-lg px-3 py-1.5 text-xs font-semibold"
+        >
+          <span className={cn(isActive ? "text-primary-foreground" : "text-muted-foreground")}>{SUMMARY_RANGE_LABELS[option]}</span>
+        </button>
+      );
+    })}
+  </div>
+);
+
 const DailyBiofeedback = () => {
   const { user, isGuest, profile } = useAuth();
   const queryClient = useQueryClient();
@@ -88,11 +130,23 @@ const DailyBiofeedback = () => {
   }, [location.search]);
 
   const [selectedDateKey, setSelectedDateKey] = useState(() => dateFromQuery ?? toDateKey(new Date()));
+  const [summaryRange, setSummaryRange] = useState<BiofeedbackSummaryRange>("7d");
   const [values, setValues] = useState<BiofeedbackValues>(() => defaultValues());
   const [notes, setNotes] = useState("");
 
   const timeZone = profile?.timezone || DEFAULT_WATER_TIMEZONE;
   const selectedDate = useMemo(() => new Date(`${selectedDateKey}T12:00:00`), [selectedDateKey]);
+  const summaryRangeDates = useMemo(() => {
+    const to = new Date(`${selectedDateKey}T12:00:00`);
+    to.setHours(0, 0, 0, 0);
+    const from = new Date(to);
+
+    if (summaryRange === "7d") from.setDate(from.getDate() - 6);
+    if (summaryRange === "month") from.setDate(1);
+    if (summaryRange === "all") from.setFullYear(2020, 0, 1);
+
+    return { from, to };
+  }, [selectedDateKey, summaryRange]);
 
   useEffect(() => {
     if (dateFromQuery && dateFromQuery !== selectedDateKey) {
@@ -106,9 +160,18 @@ const DailyBiofeedback = () => {
     enabled: Boolean(user?.id) || isGuest,
   });
 
-  const { data: weeklyAverages } = useQuery({
-    queryKey: ["daily_biofeedback_weekly", user?.id, selectedDateKey, isGuest, timeZone],
-    queryFn: () => getBiofeedbackWeeklyAverages(user?.id ?? null, selectedDate, { isGuest, timeZone }),
+  const { data: summaryRows = [] } = useQuery({
+    queryKey: [
+      "daily_biofeedback_summary",
+      user?.id,
+      selectedDateKey,
+      summaryRange,
+      isGuest,
+      timeZone,
+      summaryRangeDates.from.toISOString(),
+      summaryRangeDates.to.toISOString(),
+    ],
+    queryFn: () => getBiofeedbackRange(user?.id ?? null, summaryRangeDates.from, summaryRangeDates.to, { isGuest, timeZone }),
     enabled: Boolean(user?.id) || isGuest,
   });
 
@@ -136,6 +199,23 @@ const DailyBiofeedback = () => {
     setNotes(dayData.notes || "");
   }, [dayData]);
 
+  const summaryMetrics = useMemo(() => {
+    const count = summaryRows.length || 1;
+    const average = (selector: (row: DailyBiofeedback) => number) =>
+      Number((summaryRows.reduce((sum, row) => sum + selector(row), 0) / count).toFixed(1));
+
+    return [
+      { key: "daily_energy", label: "Energia diaria", value: average((row) => row.daily_energy), suffix: "/10" },
+      { key: "training_energy", label: "Energia entrenando", value: average((row) => row.training_energy), suffix: "/10" },
+      { key: "perceived_stress", label: "Estres", value: average((row) => row.perceived_stress), suffix: "/10" },
+      { key: "sleep_quality", label: "Calidad de sueno", value: average((row) => row.sleep_quality), suffix: "/10" },
+      { key: "hunger_level", label: "Hambre", value: average((row) => row.hunger_level), suffix: "/10" },
+      { key: "libido", label: "Libido", value: average((row) => row.libido), suffix: "/10" },
+      { key: "digestion", label: "Digestion", value: average((row) => row.digestion), suffix: "/10" },
+      { key: "days_logged", label: "Dias con check-in", value: summaryRows.length, suffix: summaryRange === "7d" ? "/7" : "" },
+    ];
+  }, [summaryRange, summaryRows]);
+
   const saveMutation = useMutation({
     mutationFn: async () =>
       upsertDailyBiofeedback({
@@ -150,7 +230,7 @@ const DailyBiofeedback = () => {
       toast.success("Check-in guardado.");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["daily_biofeedback"] }),
-        queryClient.invalidateQueries({ queryKey: ["daily_biofeedback_weekly"] }),
+        queryClient.invalidateQueries({ queryKey: ["daily_biofeedback_summary"] }),
         queryClient.invalidateQueries({ queryKey: ["daily_biofeedback_recent"] }),
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
         queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
@@ -166,47 +246,35 @@ const DailyBiofeedback = () => {
   return (
     <div className="container max-w-5xl space-y-5 py-6 md:space-y-6 md:py-8">
       <div className="flex items-center gap-3">
-        <HeartPulse className="w-8 h-8 text-primary" />
+        <HeartPulse className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-2xl font-bold md:text-3xl">Daily Biofeedback Check-in</h1>
-          <p className="text-sm text-muted-foreground">Escala subjetiva 1-10 para estado fisiológico diario.</p>
+          <p className="text-sm text-muted-foreground">Escala subjetiva 1-10 para estado fisiologico diario.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Energia (7d)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{weeklyAverages?.avg_energy ?? 0}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Estres (7d)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{weeklyAverages?.avg_stress ?? 0}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Sueño (7d)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{weeklyAverages?.avg_sleep_quality ?? 0}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Dias con check-in</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{weeklyAverages?.days_logged ?? 0}/7</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader className="gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <CardTitle>Resumen fisiologico</CardTitle>
+            <CardDescription>Promedio por indicador segun el rango seleccionado.</CardDescription>
+          </div>
+          <SummaryRangeControl value={summaryRange} onChange={setSummaryRange} />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
+            {summaryMetrics.map((metric) => (
+              <div key={metric.key} className="rounded-xl border border-border/60 bg-background/40 p-3">
+                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">{metric.label}</p>
+                <p className="mt-2 text-xl font-semibold">
+                  {metric.value}
+                  {metric.suffix}
+                </p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.8fr_1fr]">
         <Card>
@@ -226,7 +294,7 @@ const DailyBiofeedback = () => {
             </div>
 
             <MetricRow
-              label="Calidad de sueño"
+              label="Calidad de sueno"
               value={values.sleep_quality}
               onChange={(next) => setValues((prev) => ({ ...prev, sleep_quality: next }))}
             />
@@ -236,7 +304,7 @@ const DailyBiofeedback = () => {
               onChange={(next) => setValues((prev) => ({ ...prev, hunger_level: next }))}
             />
             <MetricRow
-              label="Energía diaria"
+              label="Energia diaria"
               value={values.daily_energy}
               onChange={(next) => setValues((prev) => ({ ...prev, daily_energy: next }))}
             />
@@ -279,7 +347,7 @@ const DailyBiofeedback = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Últimos check-ins</CardTitle>
+            <CardTitle>Ultimos check-ins</CardTitle>
             <CardDescription>Historial rapido</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -290,7 +358,7 @@ const DailyBiofeedback = () => {
                 <div key={row.id} className="rounded-lg border p-3 text-sm">
                   <p className="font-medium">{row.date_key}</p>
                   <p className="text-muted-foreground">
-                    Energía {row.daily_energy}/10 | Estrés {row.perceived_stress}/10 | Sueño {row.sleep_quality}/10
+                    Energia {row.daily_energy}/10 | Estres {row.perceived_stress}/10 | Sueno {row.sleep_quality}/10
                   </p>
                 </div>
               ))
