@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import LandingHeader from "@/components/landing/LandingHeader";
@@ -9,26 +9,12 @@ import LandingMetricsAndBenefits from "@/components/landing/LandingMetricsAndBen
 import LandingFooter from "@/components/landing/LandingFooter";
 import type { LandingLanguage } from "@/components/landing/types";
 
-const LANDING_LANGUAGE_KEY = "appfit.landing.language";
-
 const Index = () => {
   const { user, isGuest, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const initialLanguage = useMemo<LandingLanguage>(() => {
-    const cached = localStorage.getItem(LANDING_LANGUAGE_KEY);
-    if (cached === "es" || cached === "en") {
-      return cached;
-    }
-    return navigator.language.toLowerCase().startsWith("es") ? "es" : "en";
-  }, []);
-  const [language, setLanguage] = useState<LandingLanguage>(initialLanguage);
+  const [language] = useState<LandingLanguage>("es");
 
   const goPrimary = () => navigate(user || isGuest ? "/today" : "/auth");
-  const toggleLanguage = () => {
-    const next = language === "es" ? "en" : "es";
-    setLanguage(next);
-    localStorage.setItem(LANDING_LANGUAGE_KEY, next);
-  };
 
   if (authLoading) {
     return (
@@ -40,7 +26,7 @@ const Index = () => {
 
   return (
     <div className="bg-white text-[#1e194d]">
-      <LandingHeader language={language} onPrimary={goPrimary} onToggleLanguage={toggleLanguage} />
+      <LandingHeader language={language} onPrimary={goPrimary} />
       <main className="pt-[90px] md:pt-[100px]">
         <LandingHero language={language} onPrimary={goPrimary} />
         <LandingHowItWorks language={language} />

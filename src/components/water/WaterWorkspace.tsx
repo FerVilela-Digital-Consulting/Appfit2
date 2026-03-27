@@ -1,7 +1,7 @@
 ﻿import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Droplets } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { useAuth } from "@/context/AuthContext";
 import { DEFAULT_WATER_TIMEZONE, getDateKeyForTimezone } from "@/features/water/waterUtils";
@@ -64,12 +64,24 @@ const WaterWorkspace = ({ embedded = false }: WaterWorkspaceProps) => {
     date: item.date_key,
     liters: Number((item.total_ml / 1000).toFixed(2)),
     total_ml: item.total_ml,
+    x: new Date(`${item.date_key}T00:00:00`).getTime(),
   }));
 
   const avgMl = totals.length
     ? Math.round(totals.reduce((sum, item) => sum + item.total_ml, 0) / totals.length)
     : 0;
   const daysMet = totals.filter((item) => item.total_ml >= goal.water_goal_ml).length;
+  const waterSeries = chartData.map((item) => item.liters);
+  const axisMin = 0;
+  const rawAxisMax = waterSeries.length > 0 ? Math.ceil(Math.max(...waterSeries)) : 0;
+  const axisMax = rawAxisMax <= axisMin ? 2 : rawAxisMax + 0.5;
+  const rangeStartMs = new Date(`${rangeDates.from.toISOString().slice(0, 10)}T00:00:00`).getTime();
+  const rangeEndMs = new Date(`${rangeDates.to.toISOString().slice(0, 10)}T00:00:00`).getTime();
+  const rangeMidMs = rangeStartMs + (rangeEndMs - rangeStartMs) / 2;
+  const yTicks = [axisMin, Number(((axisMin + axisMax) / 2).toFixed(1)), axisMax];
+  const goalLiters = Number((goal.water_goal_ml / 1000).toFixed(2));
+  const formatAxisDate = (value: number) =>
+    new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short" }).format(new Date(value)).replace(".", "");
 
   return (
     <div className={embedded ? "space-y-5 md:space-y-6" : "container max-w-6xl space-y-5 py-6 md:space-y-6 md:py-8"}>
@@ -163,24 +175,29 @@ const WaterWorkspace = ({ embedded = false }: WaterWorkspaceProps) => {
           ) : (
             <div className="h-[190px] w-full md:h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 8, right: 10, left: 0, bottom: 2 }}>
+                <LineChart data={chartData} margin={{ top: 8, right: 10, left: 0, bottom: 2 }}>
                   <CartesianGrid vertical={false} stroke="hsl(var(--border) / 0.45)" />
                   <XAxis
-                    dataKey="date"
-                    tickFormatter={(value) =>
-                      new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short" }).format(new Date(value)).replace(".", "")
-                    }
+                    type="number"
+                    dataKey="x"
+                    domain={[rangeStartMs, rangeEndMs]}
+                    ticks={[rangeStartMs, rangeMidMs, rangeEndMs]}
+                    tickFormatter={(value) => formatAxisDate(Number(value))}
                     tickLine={false}
                     axisLine={{ stroke: "hsl(var(--border) / 0.7)" }}
                     tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                     dy={8}
                   />
                   <YAxis
-                    tickFormatter={(value) => `${Math.round(Number(value) * 1000)} ml`}
+                    type="number"
+                    domain={[axisMin, axisMax]}
+                    ticks={yTicks}
+                    tickFormatter={(value) => `${Number(value).toFixed(1)} L`}
                     tickLine={false}
                     axisLine={{ stroke: "hsl(var(--border) / 0.7)" }}
                     tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                   />
+                  <ReferenceLine y={goalLiters} stroke="hsl(var(--primary) / 0.35)" strokeDasharray="4 4" />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--popover))",
@@ -190,16 +207,21 @@ const WaterWorkspace = ({ embedded = false }: WaterWorkspaceProps) => {
                     }}
                     itemStyle={{ color: "hsl(var(--popover-foreground))" }}
                     labelStyle={{ color: "hsl(var(--muted-foreground))" }}
-                    labelFormatter={(value) =>
-                      new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short" }).format(new Date(String(value))).replace(".", "")
-                    }
+                    labelFormatter={(value) => formatAxisDate(Number(value))}
                     formatter={(value: number | string) => {
                       const liters = typeof value === "number" ? value : Number(value);
                       return [`${Math.round(liters * 1000)} ml`, "Agua"];
                     }}
                   />
-                  <Bar dataKey="liters" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-                </BarChart>
+                  <Line
+                    type="monotone"
+                    dataKey="liters"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={3}
+                    dot={{ r: 0 }}
+                    activeDot={{ r: 6, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                  />
+                </LineChart>
               </ResponsiveContainer>
             </div>
           )}

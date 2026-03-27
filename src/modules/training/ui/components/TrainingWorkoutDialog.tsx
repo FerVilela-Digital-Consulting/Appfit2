@@ -1,7 +1,7 @@
 import { CirclePlus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -51,58 +51,69 @@ export function TrainingWorkoutDialog({
 }: TrainingWorkoutDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl">
+      <DialogContent className="max-w-6xl overflow-hidden p-0">
+        <div className="flex max-h-[88vh] flex-col">
         <DialogHeader>
-          <DialogTitle>{editingWorkoutId ? copy.editRoutine : copy.createRoutine}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="px-6 pt-6">{editingWorkoutId ? copy.editRoutine : copy.createRoutine}</DialogTitle>
+          <DialogDescription className="px-6">
             Define el nombre, la descripcion y los ejercicios que formaran parte de la rutina.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-5 xl:grid-cols-[0.95fr_1.2fr]">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nombre</Label>
-              <Input value={workoutName} onChange={(event) => onWorkoutNameChange(event.target.value)} />
+        <div className="grid min-h-0 flex-1 gap-5 px-6 pb-6 xl:grid-cols-[0.95fr_1.2fr]">
+          <div className="flex min-h-0 flex-col space-y-4 xl:pr-2">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Nombre</Label>
+                <Input value={workoutName} onChange={(event) => onWorkoutNameChange(event.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Descripcion</Label>
+                <Textarea value={workoutDescription} onChange={(event) => onWorkoutDescriptionChange(event.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>{copy.addExercise}</Label>
+                <Select value={exercisePickerId} onValueChange={onExercisePickerChange}>
+                  <SelectTrigger><SelectValue placeholder={copy.selectExercise} /></SelectTrigger>
+                  <SelectContent>{exerciseLibrary.map((exercise) => <SelectItem key={exercise.id} value={exercise.id}>{formatExerciseName(exercise)}</SelectItem>)}</SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const exercise = exerciseLibrary.find((row) => row.id === exercisePickerId);
+                    if (!exercise) return;
+                    onWorkoutExercisesChange((current) => [
+                      ...current,
+                      {
+                        clientId: createClientId(),
+                        exercise_id: exercise.id,
+                        order_index: current.length,
+                        target_sets: 3,
+                        target_reps: "8-10",
+                        rest_seconds: 90,
+                        notes: "",
+                        exercise,
+                      },
+                    ]);
+                    onExercisePickerChange("");
+                  }}
+                  disabled={!exercisePickerId}
+                >
+                  <CirclePlus className="mr-2 h-4 w-4" />
+                  {copy.addExercise}
+                </Button>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Descripcion</Label>
-              <Textarea value={workoutDescription} onChange={(event) => onWorkoutDescriptionChange(event.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>{copy.addExercise}</Label>
-              <Select value={exercisePickerId} onValueChange={onExercisePickerChange}>
-                <SelectTrigger><SelectValue placeholder={copy.selectExercise} /></SelectTrigger>
-                <SelectContent>{exerciseLibrary.map((exercise) => <SelectItem key={exercise.id} value={exercise.id}>{formatExerciseName(exercise)}</SelectItem>)}</SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const exercise = exerciseLibrary.find((row) => row.id === exercisePickerId);
-                  if (!exercise) return;
-                  onWorkoutExercisesChange((current) => [
-                    ...current,
-                    {
-                      clientId: createClientId(),
-                      exercise_id: exercise.id,
-                      order_index: current.length,
-                      target_sets: 3,
-                      target_reps: "8-10",
-                      rest_seconds: 90,
-                      notes: "",
-                      exercise,
-                    },
-                  ]);
-                  onExercisePickerChange("");
-                }}
-                disabled={!exercisePickerId}
-              >
-                <CirclePlus className="mr-2 h-4 w-4" />
-                {copy.addExercise}
+            <div className="mt-auto grid gap-2 pt-2">
+              <Button className="w-full sm:w-auto" variant="outline" onClick={() => onOpenChange(false)}>
+                {copy.cancel}
+              </Button>
+              <Button className="w-full sm:w-auto" onClick={onSave} disabled={isPending}>
+                {copy.saveRoutine}
               </Button>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="min-h-0 space-y-3 overflow-y-auto pr-1 xl:pr-3">
             {workoutExercises.map((exercise, index) => (
               <div key={exercise.clientId} className="rounded-2xl border p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -146,10 +157,7 @@ export function TrainingWorkoutDialog({
             ))}
           </div>
         </div>
-        <DialogFooter>
-          <Button className="w-full sm:w-auto" variant="outline" onClick={() => onOpenChange(false)}>{copy.cancel}</Button>
-          <Button className="w-full sm:w-auto" onClick={onSave} disabled={isPending}>{copy.saveRoutine}</Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

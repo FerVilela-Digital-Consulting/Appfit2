@@ -34,7 +34,7 @@ type ThemePreference = "light" | "dark" | "system";
 type BackgroundStyleId = (typeof APP_BACKGROUND_STYLES)[number]["id"];
 
 const Settings = () => {
-  const { user, profile, refreshProfile, isGuest, loading, sígnOut, exitGuest, updateProfile } = useAuth();
+  const { user, profile, refreshProfile, isGuest, loading, signOut, exitGuest, updateProfile } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const {
@@ -108,8 +108,8 @@ const Settings = () => {
     });
   };
 
-  const handleLanguageChange = async (value: string) => {
-    const next = value === "es" ? "es" : "en";
+  const handleLanguageChange = async (_value: string) => {
+    const next = "es";
     try {
       await setLanguagePreference(next);
       toast.success(t("settings.success"));
@@ -154,7 +154,7 @@ const Settings = () => {
         return;
       }
 
-      await sígnOut();
+      await signOut();
       navigate("/auth", { replace: true });
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, t("settings.switchUserError")));
@@ -279,12 +279,11 @@ const Settings = () => {
                 {t("settings.language")}
               </Label>
               <p className="text-xs text-muted-foreground">{t("settings.languageDescription")}</p>
-              <Select value={language} onValueChange={handleLanguageChange}>
+              <Select value={language} onValueChange={handleLanguageChange} disabled>
                 <SelectTrigger id="language" className="bg-background/50">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="en">{t("settings.language.en")}</SelectItem>
                   <SelectItem value="es">{t("settings.language.es")}</SelectItem>
                 </SelectContent>
               </Select>

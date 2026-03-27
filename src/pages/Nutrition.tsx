@@ -51,8 +51,8 @@ const Nutrition = () => {
     setSugar,
     sodium,
     setSodium,
-    potassíum,
-    setPotassíum,
+    potassium,
+    setPotassium,
     selectedFavoriteId,
     setSelectedFavoriteId,
     selectedYesterdayId,
@@ -118,7 +118,7 @@ const Nutrition = () => {
     handleAddEntry,
   } = useNutritionPageState();
 
-  const sídebarPanel = (
+  const sidebarPanel = (
     <NutritionSidebarPanel
       effectiveProfileLabel={effectiveProfileLabel}
       activeArchetype={activeArchetype}
@@ -150,7 +150,7 @@ const Nutrition = () => {
                 <div className="app-chip-muted grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-2xl px-3 py-2">
                   <Button
                     variant="ghost"
-                    síze="icon"
+                    size="icon"
                     className="app-surface-muted h-9 w-9 rounded-xl hover:bg-background/60 hover:text-foreground"
                     onClick={() => setSelectedDate((prev) => addDays(prev, -1))}
                   >
@@ -162,7 +162,7 @@ const Nutrition = () => {
                   </div>
                   <Button
                     variant="ghost"
-                    síze="icon"
+                    size="icon"
                     className="app-surface-muted h-9 w-9 rounded-xl hover:bg-background/60 hover:text-foreground"
                     onClick={() => setSelectedDate((prev) => addDays(prev, 1))}
                   >
@@ -198,7 +198,7 @@ const Nutrition = () => {
                   className="absolute bottom-1 left-1 top-1 rounded-xl bg-primary"
                   style={{ width: "calc((100% - 0.5rem) / 3)" }}
                   animate={{ x: `${MOBILE_NUTRITION_VIEWS.findIndex((view) => view === activeMainView) * 100}%` }}
-                  transítion={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                 />
                 <button
                   type="button"
@@ -228,7 +228,7 @@ const Nutrition = () => {
                   className="absolute bottom-1 left-1 top-1 rounded-xl bg-primary"
                   style={{ width: "calc((100% - 0.5rem) / 2)" }}
                   animate={{ x: `${DESKTOP_NUTRITION_VIEWS.findIndex((view) => view === desktopMainView) * 100}%` }}
-                  transítion={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                 />
                 <button
                   type="button"
@@ -267,7 +267,7 @@ const Nutrition = () => {
                     onOpenTechnicalConfig={() => setTechnicalOpen(true)}
                     showIntro={false}
                   />
-                  {sídebarPanel}
+                  {sidebarPanel}
                 </div>
                 <div className="hidden sm:block">
                   <NutritionMealsSection
@@ -297,7 +297,7 @@ const Nutrition = () => {
             )}
           </section>
 
-          <div className="hidden sm:block">{sídebarPanel}</div>
+          <div className="hidden sm:block">{sidebarPanel}</div>
         </div>
       </div>
 
@@ -335,7 +335,7 @@ const Nutrition = () => {
         fiber={fiber}
         sugar={sugar}
         sodium={sodium}
-        potassíum={potassíum}
+        potassium={potassium}
         saveAsFavorite={saveAsFavorite}
         selectedFavoriteId={selectedFavoriteId}
         selectedYesterdayId={selectedYesterdayId}
@@ -362,7 +362,7 @@ const Nutrition = () => {
         onFiberChange={setFiber}
         onSugarChange={setSugar}
         onSodiumChange={setSodium}
-        onPotassíumChange={setPotassíum}
+        onPotassiumChange={setPotassium}
         onSaveAsFavoriteChange={setSaveAsFavorite}
         onSelectedFavoriteIdChange={setSelectedFavoriteId}
         onSelectedYesterdayIdChange={setSelectedYesterdayId}

@@ -69,34 +69,17 @@ const BodyMeasurementsCard = ({
     );
   }
 
-  if (!latest) {
-    return (
-      <Card className={`rounded-2xl border-border/60 bg-card/80 shadow-sm ${className ?? ""}`}>
-        <CardHeader>
-          <CardTitle>Resumen de medidas corporales</CardTitle>
-          <CardDescription>Aun no hay medidas corporales</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">Registra cuello, cintura, cadera, brazo y muslo para ver el maniqui interactivo.</p>
-          <Button asChild>
-            <Link to="/body">Agregar medidas</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const neckDelta = metricDelta(latest.neck_cm, previous?.neck_cm ?? null);
-  const waistDelta = metricDelta(latest.waist_cm, previous?.waist_cm ?? null);
-  const hipDelta = metricDelta(latest.hip_cm, previous?.hip_cm ?? null);
-  const armDelta = metricDelta(latest.arm_cm, previous?.arm_cm ?? null);
-  const thighDelta = metricDelta(latest.thigh_cm, previous?.thigh_cm ?? null);
+  const neckDelta = metricDelta(latest?.neck_cm ?? null, previous?.neck_cm ?? null);
+  const waistDelta = metricDelta(latest?.waist_cm ?? null, previous?.waist_cm ?? null);
+  const hipDelta = metricDelta(latest?.hip_cm ?? null, previous?.hip_cm ?? null);
+  const armDelta = metricDelta(latest?.arm_cm ?? null, previous?.arm_cm ?? null);
+  const thighDelta = metricDelta(latest?.thigh_cm ?? null, previous?.thigh_cm ?? null);
 
   const points: MeasurementPoint[] = [
     {
       key: "neck",
       label: "Cuello",
-      valueText: `${latest.neck_cm.toFixed(1)} cm`,
+      valueText: latest?.neck_cm !== null && latest?.neck_cm !== undefined ? `${latest.neck_cm.toFixed(1)} cm` : "Sin datos",
       deltaText: formatDelta(neckDelta),
       x: 50,
       y: 18,
@@ -105,7 +88,7 @@ const BodyMeasurementsCard = ({
     {
       key: "arm",
       label: "Brazo",
-      valueText: latest.arm_cm ? `${Number(latest.arm_cm).toFixed(1)} cm` : "--",
+      valueText: latest?.arm_cm ? `${Number(latest.arm_cm).toFixed(1)} cm` : "Sin datos",
       deltaText: formatDelta(armDelta),
       x: 28,
       y: 38,
@@ -114,7 +97,7 @@ const BodyMeasurementsCard = ({
     {
       key: "waist",
       label: "Cintura",
-      valueText: `${latest.waist_cm.toFixed(1)} cm`,
+      valueText: latest?.waist_cm !== null && latest?.waist_cm !== undefined ? `${latest.waist_cm.toFixed(1)} cm` : "Sin datos",
       deltaText: formatDelta(waistDelta),
       x: 59,
       y: 36,
@@ -123,7 +106,7 @@ const BodyMeasurementsCard = ({
     {
       key: "hip",
       label: "Cadera",
-      valueText: latest.hip_cm ? `${Number(latest.hip_cm).toFixed(1)} cm` : "--",
+      valueText: latest?.hip_cm ? `${Number(latest.hip_cm).toFixed(1)} cm` : "Sin datos",
       deltaText: formatDelta(hipDelta),
       x: 60,
       y: 44,
@@ -132,7 +115,7 @@ const BodyMeasurementsCard = ({
     {
       key: "thigh",
       label: "Muslo",
-      valueText: latest.thigh_cm ? `${Number(latest.thigh_cm).toFixed(1)} cm` : "--",
+      valueText: latest?.thigh_cm ? `${Number(latest.thigh_cm).toFixed(1)} cm` : "Sin datos",
       deltaText: formatDelta(thighDelta),
       x: 38,
       y: 58,
@@ -145,10 +128,10 @@ const BodyMeasurementsCard = ({
       <CardHeader className="flex flex-row items-center justify-between gap-3">
         <div>
           <CardTitle>Resumen de medidas corporales</CardTitle>
-          <CardDescription>Ultima medicion: {latest.date_key}</CardDescription>
+          <CardDescription>{latest ? `Ultima medicion: ${latest.date_key}` : "Ultima medicion: Sin datos"}</CardDescription>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link to="/body">Editar medidas</Link>
+          <Link to="/body">{latest ? "Editar medidas" : "Agregar medidas"}</Link>
         </Button>
       </CardHeader>
       <CardContent className="grid gap-4 lg:grid-cols-[0.72fr_1.08fr]">
@@ -158,19 +141,19 @@ const BodyMeasurementsCard = ({
         <div className="w-full space-y-2 lg:max-w-[34rem]">
           <div className="rounded-lg border border-border/60 p-3">
             <p className="text-xs text-muted-foreground">Peso de referencia</p>
-            <p className="text-lg font-semibold">{latestWeight !== null ? `${latestWeight.toFixed(1)} kg` : "--"}</p>
+            <p className="text-lg font-semibold">{latestWeight !== null ? `${latestWeight.toFixed(1)} kg` : "Sin datos"}</p>
           </div>
           <div className="rounded-lg border border-border/60 p-3">
             <p className="text-xs text-muted-foreground">Grasa corporal estimada</p>
             <p className="text-lg font-semibold">
-              {latest.body_fat_pct !== null && latest.body_fat_pct !== undefined ? `${Number(latest.body_fat_pct).toFixed(1)}%` : "--"}
+              {latest?.body_fat_pct !== null && latest?.body_fat_pct !== undefined ? `${Number(latest.body_fat_pct).toFixed(1)}%` : "Sin datos"}
             </p>
           </div>
           <div className="rounded-lg border border-border/60 p-3">
             <p className="text-xs text-muted-foreground">Cambio de cintura</p>
             <p className="text-sm font-medium">
               {waistComparison.deltaCm === null
-                ? "--"
+                ? "Sin datos"
                 : `${waistComparison.deltaCm > 0 ? "+" : ""}${waistComparison.deltaCm.toFixed(1)} cm`}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">{waistComparison.label}</p>

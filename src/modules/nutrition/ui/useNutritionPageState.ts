@@ -147,6 +147,28 @@ export function useNutritionPageState() {
     enabled: queryEnabled,
   });
 
+  const foodSearchResults = useMemo(() => {
+    const serverResults = foodSearchQuery.data;
+    if (Array.isArray(serverResults) && serverResults.length > 0) return serverResults;
+
+    const library = Array.isArray(foodLibraryQuery.data) ? foodLibraryQuery.data : [];
+    const normalizedQuery = searchFood.trim().toLowerCase();
+    const normalizedCategory = foodCategory.trim().toLowerCase();
+    const byCategory =
+      normalizedCategory && normalizedCategory !== "all"
+        ? library.filter((row) => row.category.trim().toLowerCase() === normalizedCategory)
+        : library;
+
+    const filtered = normalizedQuery
+      ? byCategory.filter((row) => {
+          const haystack = `${row.food_name} ${row.category} ${row.serving_unit}`.toLowerCase();
+          return haystack.includes(normalizedQuery);
+        })
+      : byCategory;
+
+    return filtered.slice(0, 35);
+  }, [foodSearchQuery.data, foodLibraryQuery.data, searchFood, foodCategory]);
+
   const invalidateNutrition = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["nutrition_day_summary"] }),
@@ -384,11 +406,11 @@ export function useNutritionPageState() {
   }, [yesterdayQuery.data]);
 
   const selectedFoodPreview = useMemo(() => {
-    const selectedFood = (foodSearchQuery.data || []).find((row) => row.id === selectedFoodDatabaseId);
+    const selectedFood = foodSearchResults.find((row) => row.id === selectedFoodDatabaseId);
     const amount = Number(consumedAmount);
     if (!selectedFood || !Number.isFinite(amount) || amount <= 0) return null;
     return calculateNutritionFromFood(selectedFood as FoodDatabaseItem, amount);
-  }, [foodSearchQuery.data, selectedFoodDatabaseId, consumedAmount]);
+  }, [foodSearchResults, selectedFoodDatabaseId, consumedAmount]);
 
   const mealOverview = useMemo(
     () =>
@@ -465,7 +487,7 @@ export function useNutritionPageState() {
     }
 
     if (mode === "database") {
-      const food = (foodSearchQuery.data || []).find((row) => row.id === selectedFoodDatabaseId);
+      const food = foodSearchResults.find((row) => row.id === selectedFoodDatabaseId);
       if (!food || !selectedFoodPreview) {
         toast.error("Selecciona un alimento de la base.");
         return;
@@ -658,7 +680,7 @@ export function useNutritionPageState() {
     selectedFoodPreview,
     mealOverview,
     categories: categoriesQuery.data || [],
-    foodSearchResults: foodSearchQuery.data || [],
+    foodSearchResults,
     foodLibraryItems: foodLibraryQuery.data || [],
     favorites: favoritesQuery.data || [],
     recentEntries: recentQuery.data || [],

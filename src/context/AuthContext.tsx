@@ -141,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             carb_goal_g: data?.carb_goal_g ?? 250,
             fat_goal_g: data?.fat_goal_g ?? 70,
             onboarding_completed: data?.onboarding_completed ?? null,
-            app_language: (data?.app_language as Profile["app_language"]) ?? "en",
+            app_language: (data?.app_language as Profile["app_language"]) ?? "es",
             theme_preference: (data?.theme_preference as Profile["theme_preference"]) ?? "system",
             theme_accent_color: data?.theme_accent_color ?? "cyan",
             theme_background_style: data?.theme_background_style ?? "focus",

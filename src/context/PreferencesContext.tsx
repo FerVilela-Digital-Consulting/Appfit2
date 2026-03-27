@@ -37,7 +37,7 @@ const BACKGROUND_STYLE_STORAGE_KEY = "appfit_background_style";
 
 const PreferencesContext = createContext<PreferencesContextValue | undefined>(undefined);
 
-const isLanguage = (value: string | null | undefined): value is AppLanguage => value === "en" || value === "es";
+const isLanguage = (value: string | null | undefined): value is AppLanguage => value === "es";
 const isTheme = (value: string | null | undefined): value is ThemePreference =>
   value === "light" || value === "dark" || value === "system";
 const isSchemaMissingError = (error: unknown, columnName: string) => {
@@ -49,19 +49,13 @@ const PreferencesInnerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const { profile, updateProfile, isGuest, user } = useAuth();
   const { setTheme, resolvedTheme } = useTheme();
 
-  const [language, setLanguage] = useState<AppLanguage>("en");
+  const [language, setLanguage] = useState<AppLanguage>("es");
   const [themePreference, setThemePreferenceState] = useState<ThemePreference>("system");
   const [accentColorId, setAccentColorId] = useState<AccentColorId>(getDefaultAccentColorId());
   const [backgroundStyleId, setBackgroundStyleId] = useState<AppBackgroundStyleId>(getDefaultBackgroundStyleId());
 
   useEffect(() => {
-    const profileLanguage = profile?.app_language;
-    const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    const nextLanguage = isLanguage(profileLanguage)
-      ? profileLanguage
-      : isLanguage(storedLanguage)
-      ? storedLanguage
-      : "en";
+    const nextLanguage: AppLanguage = "es";
 
     setLanguage(nextLanguage);
     localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
@@ -108,7 +102,8 @@ const PreferencesInnerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     document.documentElement.dataset.appBg = backgroundStyleId;
   }, [backgroundStyleId]);
 
-  const setLanguagePreference = async (nextLanguage: AppLanguage) => {
+  const setLanguagePreference = async (_nextLanguage: AppLanguage) => {
+    const nextLanguage: AppLanguage = "es";
     setLanguage(nextLanguage);
     document.documentElement.lang = nextLanguage;
     localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);

@@ -136,7 +136,7 @@ export function NutritionHeaderSection({
                         <CircleHelp className="h-3.5 w-3.5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent síde="top" className="max-w-[240px] text-xs">
+                    <TooltipContent side="top" className="max-w-[240px] text-xs">
                       <p>
                         Las plantillas de alimentacion ajustan tus calorias segun el tipo de día: descanso (-300), esfuerzo alto (+150) o base (sin ajuste). Este ajuste se suma al calculo principal de tu Perfil Fitness.
                       </p>
