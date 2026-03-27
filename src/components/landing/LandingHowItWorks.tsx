@@ -26,7 +26,7 @@ export default function LandingHowItWorks({ language }: Props) {
               <span className="h-2 w-16 rounded-full bg-[#1f9ea0]" />
             </div>
             <h3 className="text-xl font-semibold">{title}</h3>
-            <p className="mt-3 text-base text-[#9e9baa]">{copy.itemDescription}</p>
+            <p className="mt-3 text-base text-[#9e9baa]">{copy.itemDescriptions[idx] ?? ""}</p>
           </article>
           ))}
         </div>

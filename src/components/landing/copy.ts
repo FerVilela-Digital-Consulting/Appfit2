@@ -24,7 +24,7 @@ export const landingCopy: Record<LandingLanguage, {
     title: string;
     description: string;
     steps: string[];
-    itemDescription: string;
+    itemDescriptions: string[];
   };
   featureRows: {
     firstTitle: string;
@@ -75,8 +75,11 @@ export const landingCopy: Record<LandingLanguage, {
       title: "Como funciona",
       description: "Un flujo unico: registra, compara y decide con datos reales del dia a dia.",
       steps: ["Registra tu dia", "Coordina modulos clave", "Revisa progreso semanal"],
-      itemDescription:
-        "Todo en una misma plataforma: centro operativo, nutricion, entrenamiento, cuerpo, calendario y biofeedback.",
+      itemDescriptions: [
+        "Registra agua, sueno, nutricion, biofeedback y notas para construir un contexto diario confiable.",
+        "Conecta centro operativo, nutricion, entrenamiento y cuerpo para decidir con una sola lectura.",
+        "Evalua tendencias, cumplimiento de metas y observaciones para ajustar la siguiente semana.",
+      ],
     },
     featureRows: {
       firstTitle: "Centro operativo + calendario en una sola vista",
@@ -148,8 +151,11 @@ export const landingCopy: Record<LandingLanguage, {
       title: "How it works",
       description: "One connected flow: log, compare, and decide with real day-to-day data.",
       steps: ["Log your day", "Coordinate key modules", "Review weekly progress"],
-      itemDescription:
-        "Everything in one platform: operations hub, nutrition, training, body, calendar, and biofeedback.",
+      itemDescriptions: [
+        "Log water, sleep, nutrition, biofeedback, and notes to build reliable daily context.",
+        "Connect operations hub, nutrition, training, and body data to make decisions from one view.",
+        "Review trends, goal adherence, and observations to adjust your next week with clarity.",
+      ],
     },
     featureRows: {
       firstTitle: "Operations hub + calendar in one view",
