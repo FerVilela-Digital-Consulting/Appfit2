@@ -15,6 +15,12 @@ export type TourTabDefinition = {
   route: string;
   title: string;
   description: string;
+  tools: Array<{
+    title: string;
+    summary: string;
+    detail: string;
+    href?: string;
+  }>;
 };
 
 export type TourProgressState = {
@@ -36,48 +42,184 @@ export const APP_TOUR_TABS: TourTabDefinition[] = [
     route: "/today",
     title: "Centro operativo",
     description: "Vista diaria de prioridades, modulos y acciones rapidas.",
+    tools: [
+      {
+        title: "Que hacer hoy",
+        summary: "Prioridad principal del dia",
+        detail: "Te indica la siguiente accion clave para avanzar en tu adherencia diaria.",
+      },
+      {
+        title: "Modulos diarios",
+        summary: "Agua, sueno, peso y nutricion",
+        detail: "Bloques rapidos para registrar o actualizar datos del dia sin salir de la vista.",
+      },
+      {
+        title: "Entrenamiento de hoy",
+        summary: "Rutina activa o programada",
+        detail: "Resume la sesion del dia y te permite iniciar o continuar entrenamiento.",
+      },
+    ],
   },
   {
     key: "training",
     route: "/training",
     title: "Entrenamiento",
     description: "Planifica rutinas, ejecuta sesiones y revisa progreso.",
+    tools: [
+      {
+        title: "Entrenar",
+        summary: "Sesion actual y ejecucion",
+        detail: "Gestiona sets, notas y cierre de sesion con seguimiento de rendimiento.",
+      },
+      {
+        title: "Planificar",
+        summary: "Rutinas y calendario semanal",
+        detail: "Define que rutina toca cada dia y ajusta la carga de trabajo.",
+      },
+      {
+        title: "Progreso",
+        summary: "Historial y PRs",
+        detail: "Consulta avances por ejercicio y marcas personales para tomar decisiones.",
+      },
+    ],
   },
   {
     key: "nutrition",
     route: "/nutrition",
     title: "Nutricion",
     description: "Gestiona logbook, biblioteca y objetivos nutricionales.",
+    tools: [
+      {
+        title: "Resumen",
+        summary: "Objetivo vs consumo",
+        detail: "Muestra calorias y macros del dia contra tu plan nutricional activo.",
+      },
+      {
+        title: "Logbook",
+        summary: "Registro por comidas",
+        detail: "Agrega, edita y elimina entradas para desayuno, almuerzo, cena y snacks.",
+      },
+      {
+        title: "Biblioteca",
+        summary: "Base y alimentos personalizados",
+        detail: "Busca alimentos, usa favoritos y crea items propios para acelerar el registro.",
+      },
+    ],
   },
   {
     key: "body",
     route: "/body",
     title: "Cuerpo",
     description: "Registra medidas corporales y compara evolucion.",
+    tools: [
+      {
+        title: "Nueva medicion",
+        summary: "Perimetros corporales",
+        detail: "Guarda cintura, cuello, cadera, muslo y brazo para evaluar cambios reales.",
+      },
+      {
+        title: "Grafica de metricas",
+        summary: "Tendencia por indicador",
+        detail: "Visualiza la evolucion por rango de fechas para detectar patrones.",
+      },
+      {
+        title: "Comparacion libre",
+        summary: "Fecha inicial vs final",
+        detail: "Compara dos mediciones y revisa delta por cada perimetro.",
+      },
+    ],
   },
   {
     key: "progress",
     route: "/progress",
     title: "Progreso",
     description: "Analiza tendencias y revision semanal en un solo contexto.",
+    tools: [
+      {
+        title: "Resumen de objetivo",
+        summary: "Estado global actual",
+        detail: "Integra peso, sueno, nutricion y biofeedback para lectura ejecutiva.",
+      },
+      {
+        title: "Graficas de tendencia",
+        summary: "Evolucion por rango",
+        detail: "Permite analizar comportamiento semanal/mensual con enfoque longitudinal.",
+      },
+      {
+        title: "Revision semanal",
+        summary: "Observaciones y ajustes",
+        detail: "Guarda notas de la semana para mejorar decisiones del siguiente ciclo.",
+      },
+    ],
   },
   {
     key: "calendar",
     route: "/calendar",
     title: "Calendario",
     description: "Sigue tu timeline operativo dia por dia.",
+    tools: [
+      {
+        title: "Vista mes",
+        summary: "Mapa de actividad",
+        detail: "Identifica rapidamente dias con registros o vacios operativos.",
+      },
+      {
+        title: "Timeline diario",
+        summary: "Orden cronologico",
+        detail: "Muestra bloques reales por hora para comprender tu dia completo.",
+      },
+      {
+        title: "Nota del dia",
+        summary: "Contexto tactico",
+        detail: "Captura observaciones y decisiones para cerrar el ciclo de aprendizaje diario.",
+      },
+    ],
   },
   {
     key: "fitness_profile",
     route: "/fitness-profile",
     title: "Perfil fitness",
     description: "Configura objetivos y parametros metabolicos del plan.",
+    tools: [
+      {
+        title: "Datos base",
+        summary: "Perfil personal y biologico",
+        detail: "Centraliza variables que afectan calculo de objetivos y recomendaciones.",
+      },
+      {
+        title: "Objetivo de peso",
+        summary: "Direccion y fecha",
+        detail: "Define si buscas bajar, subir o mantener y registra meta temporal.",
+      },
+      {
+        title: "Metas metabolicas",
+        summary: "Sueno, calorias y macros",
+        detail: "Ajusta parametros que impactan nutricion y seguimiento operativo diario.",
+      },
+    ],
   },
   {
     key: "settings",
     route: "/settings",
     title: "Ajustes",
     description: "Personaliza app, cuenta y gestion de datos.",
+    tools: [
+      {
+        title: "Preferencias visuales",
+        summary: "Idioma, tema y color",
+        detail: "Configura la experiencia de uso y apariencia general de la app.",
+      },
+      {
+        title: "Gestion de datos",
+        summary: "Limpieza y reinicio",
+        detail: "Corrige fechas, limpia historial o reinicia cuenta con control.",
+      },
+      {
+        title: "Cuenta",
+        summary: "Cambio de sesion",
+        detail: "Permite salir e ingresar con otra cuenta cuando lo necesites.",
+      },
+    ],
   },
 ];
 
