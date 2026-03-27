@@ -22,9 +22,10 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "placeholder.svg"],
       manifest: {
-        name: "AppFit",
-        short_name: "AppFit",
-        description: "AppFit - Your personal fitness tracking dashboard",
+        name: "The Prime Protocol",
+        short_name: "Appfit",
+        description: "Centro operativo para nutricion, entrenamiento, progreso corporal y calendario en un solo sistema.",
+        lang: "es",
         start_url: "/today",
         scope: "/",
         display: "standalone",
