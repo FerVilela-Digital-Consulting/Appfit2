@@ -161,6 +161,10 @@ const DashboardHeader = () => {
                 {item.label}
               </DropdownMenuItem>
             ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="min-h-12 px-3 py-2.5 text-base font-semibold" onSelect={() => navigate("/onboarding")}>
+              Test onboarding (temporal)
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="md:hidden">
@@ -182,6 +186,8 @@ const DashboardHeader = () => {
             <DropdownMenuItem onSelect={() => navigate("/today#sleep")}>Agregar sueno</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => navigate("/today#weight")}>Agregar peso</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => navigate("/today#nutrition")}>Agregar comida</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => navigate("/onboarding")}>Test onboarding (temporal)</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="hidden md:flex">
