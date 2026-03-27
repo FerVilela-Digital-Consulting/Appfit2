@@ -10,19 +10,11 @@ import LandingFooter from "@/components/landing/LandingFooter";
 import type { LandingLanguage } from "@/components/landing/types";
 
 const Index = () => {
-  const { user, isGuest, loading: authLoading } = useAuth();
+  const { user, isGuest } = useAuth();
   const navigate = useNavigate();
   const [language] = useState<LandingLanguage>("es");
 
   const goPrimary = () => navigate(user || isGuest ? "/today" : "/auth");
-
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-white text-[#1e194d]">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#1f9ea0] border-t-transparent" />
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white text-[#1e194d]">

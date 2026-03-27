@@ -1,11 +1,19 @@
 ﻿import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Bell, CheckCheck, CircleAlert, Info, Send } from "lucide-react";
+import { Bell, CheckCheck, ChevronDown, CircleAlert, Info, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/context/AuthContext";
 import { listMyNotifications, markAllMyNotificationsRead, markMyNotificationRead, type UserNotification } from "@/services/notifications";
@@ -161,9 +169,7 @@ const NotificationCenter = () => {
     };
   })();
 
-  const composedNotifications: Array<UserNotification | LocalTourNotification> = localTourNotification
-    ? [localTourNotification, ...notifications]
-    : notifications;
+  const composedNotifications: UserNotification[] = notifications.filter((item) => item.metadata?.source !== "local_tour");
   const unreadCount = composedNotifications.filter((item) => !item.read_at).length;
   const hasLocalUnread = Boolean(localTourNotification && !localTourNotification.read_at);
 
@@ -223,16 +229,6 @@ const NotificationCenter = () => {
 
   const handleMarkAll = async () => {
     if (!user?.id) return;
-    if (
-      hasLocalUnread &&
-      (localTourNotification?.id === TOUR_INVITE_NOTIFICATION_ID || localTourNotification?.id === TOUR_CONTINUE_NOTIFICATION_ID)
-    ) {
-      await markTourInviteResponded(user.id, { isGuest: false });
-    }
-    if (hasLocalUnread && localTourNotification) {
-      await markTourNotificationRead(user.id, localTourNotification.id, { isGuest: false });
-      await queryClient.invalidateQueries({ queryKey: tourQueryKey });
-    }
     if ((notifications ?? []).some((item) => !item.read_at)) {
       await markAllMutation.mutateAsync();
     }
@@ -283,9 +279,41 @@ const NotificationCenter = () => {
           <div className="flex items-center justify-between border-b border-border/60 px-6 py-3">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Centro de mensajes</p>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => void handleQuickRestartTour()}>
-                Rehacer recorrido
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="relative">
+                    Recorrido
+                    <ChevronDown className="ml-1.5 h-4 w-4" />
+                    {hasLocalUnread ? (
+                      <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                    ) : null}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72">
+                  <DropdownMenuLabel>Recorrido guiado</DropdownMenuLabel>
+                  {localTourNotification ? (
+                    <>
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">{localTourNotification.body}</div>
+                      <DropdownMenuItem onClick={() => void handleNotificationAction(localTourNotification)}>
+                        {localTourNotification.action_label ?? "Abrir recorrido"}
+                      </DropdownMenuItem>
+                      {localTourNotification.id !== TOUR_REPLAY_NOTIFICATION_ID ? (
+                        <DropdownMenuItem onClick={() => void handleQuickRestartTour()}>
+                          Rehacer desde el inicio
+                        </DropdownMenuItem>
+                      ) : null}
+                      <DropdownMenuSeparator />
+                      {!localTourNotification.read_at ? (
+                        <DropdownMenuItem onClick={() => void handleMarkRead(localTourNotification)}>
+                          Marcar como visto
+                        </DropdownMenuItem>
+                      ) : null}
+                    </>
+                  ) : (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">Sin recorrido pendiente.</div>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 variant="ghost"
                 size="sm"
@@ -300,7 +328,7 @@ const NotificationCenter = () => {
 
           <ScrollArea className="min-h-0 flex-1">
             <div className="space-y-3 p-6">
-              {notificationsQuery.isLoading && !localTourNotification ? (
+              {notificationsQuery.isLoading ? (
                 <div className="space-y-3">
                   <div className="h-24 rounded-2xl border border-border/60 bg-muted/20" />
                   <div className="h-24 rounded-2xl border border-border/60 bg-muted/20" />
@@ -309,7 +337,6 @@ const NotificationCenter = () => {
                 composedNotifications.map((notification) => {
                   const severity = severityMeta[notification.severity];
                   const SeverityIcon = severity.icon;
-                  const localTour = isLocalTourNotification(notification);
 
                   return (
                     <div
@@ -330,11 +357,11 @@ const NotificationCenter = () => {
 
                       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span>{notification.created_at ? format(new Date(notification.created_at), "yyyy-MM-dd HH:mm") : "--"}</span>
-                        <span>{localTour ? "tour interactivo" : notification.sender_email ? `por ${notification.sender_email}` : "sistema interno"}</span>
+                        <span>{notification.sender_email ? `por ${notification.sender_email}` : "sistema interno"}</span>
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
-                        {notification.action_path || localTour ? (
+                        {notification.action_path ? (
                           <Button
                             size="sm"
                             onClick={() => void handleNotificationAction(notification)}
