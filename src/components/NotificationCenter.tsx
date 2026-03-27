@@ -9,12 +9,41 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/context/AuthContext";
 import { listMyNotifications, markAllMyNotificationsRead, markMyNotificationRead, type UserNotification } from "@/services/notifications";
+import {
+  TOUR_INVITE_NOTIFICATION_ID,
+  TOUR_REPLAY_NOTIFICATION_ID,
+  getFirstTourTab,
+  getNextIncompleteTourTab,
+  getTourProgressState,
+  isTourCompleted,
+  markTourInviteResponded,
+  restartTourProgress,
+  shouldPromptTourInvite,
+} from "@/services/tourProgress";
 
 const severityMeta: Record<UserNotification["severity"], { label: string; icon: typeof Info }> = {
   info: { label: "Info", icon: Info },
   warning: { label: "Accion pendiente", icon: CircleAlert },
   action: { label: "Importante", icon: Send },
 };
+
+type LocalTourNotification = {
+  id: typeof TOUR_INVITE_NOTIFICATION_ID | typeof TOUR_REPLAY_NOTIFICATION_ID;
+  notification_kind: "general";
+  title: string;
+  body: string;
+  action_path: string | null;
+  action_label: string | null;
+  severity: "info" | "warning" | "action";
+  metadata: Record<string, string | number | boolean | null>;
+  sender_user_id: null;
+  sender_email: null;
+  read_at: null;
+  created_at: string | null;
+};
+
+const isLocalTourNotification = (notification: UserNotification | LocalTourNotification): notification is LocalTourNotification =>
+  notification.id === TOUR_INVITE_NOTIFICATION_ID || notification.id === TOUR_REPLAY_NOTIFICATION_ID;
 
 const NotificationCenter = () => {
   const navigate = useNavigate();
@@ -25,6 +54,11 @@ const NotificationCenter = () => {
   const notificationsQuery = useQuery({
     queryKey: ["user_notifications"],
     queryFn: () => listMyNotifications(25),
+    enabled: Boolean(user?.id) && !isGuest,
+  });
+  const tourStateQuery = useQuery({
+    queryKey: ["tour_progress", user?.id, isGuest],
+    queryFn: () => getTourProgressState(user?.id ?? null, { isGuest }),
     enabled: Boolean(user?.id) && !isGuest,
   });
 
@@ -43,9 +77,78 @@ const NotificationCenter = () => {
   });
 
   const notifications = notificationsQuery.data ?? [];
-  const unreadCount = notifications.filter((item) => !item.read_at).length;
+  const localTourNotification: LocalTourNotification | null = (() => {
+    if (!user?.id || isGuest || !tourStateQuery.data) return null;
 
-  const handleNotificationAction = async (notification: UserNotification) => {
+    if (shouldPromptTourInvite(tourStateQuery.data)) {
+      const nextTab = getNextIncompleteTourTab(tourStateQuery.data);
+      if (!nextTab) return null;
+      return {
+        id: TOUR_INVITE_NOTIFICATION_ID,
+        notification_kind: "general",
+        title: "¿Quieres hacer un recorrido guiado?",
+        body: "Podemos mostrarte un tour rapido por cada pestaña para que conozcas la app en pocos minutos.",
+        action_path: `${nextTab.route}?tour=1`,
+        action_label: "Iniciar tour",
+        severity: "info",
+        metadata: { source: "local_tour" },
+        sender_user_id: null,
+        sender_email: null,
+        read_at: null,
+        created_at: new Date().toISOString(),
+      };
+    }
+
+    if (isTourCompleted(tourStateQuery.data)) {
+      return {
+        id: TOUR_REPLAY_NOTIFICATION_ID,
+        notification_kind: "general",
+        title: "Recorrido completado",
+        body: "Puedes rehacer el recorrido cuando quieras desde este centro de mensajes.",
+        action_path: null,
+        action_label: "Rehacer recorrido",
+        severity: "info",
+        metadata: { source: "local_tour" },
+        sender_user_id: null,
+        sender_email: null,
+        read_at: null,
+        created_at: new Date().toISOString(),
+      };
+    }
+
+    return null;
+  })();
+  const composedNotifications: Array<UserNotification | LocalTourNotification> = localTourNotification
+    ? [localTourNotification, ...notifications]
+    : notifications;
+  const unreadCount = composedNotifications.filter((item) => !item.read_at).length;
+  const hasLocalUnread = Boolean(localTourNotification && !localTourNotification.read_at);
+
+  const handleNotificationAction = async (notification: UserNotification | LocalTourNotification) => {
+    if (isLocalTourNotification(notification)) {
+      if (!user?.id) return;
+
+      if (notification.id === TOUR_INVITE_NOTIFICATION_ID) {
+        await markTourInviteResponded(user.id, { isGuest: false });
+        await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+        if (notification.action_path) {
+          setOpen(false);
+          navigate(notification.action_path);
+        }
+        return;
+      }
+
+      if (notification.id === TOUR_REPLAY_NOTIFICATION_ID) {
+        const firstTab = getFirstTourTab();
+        if (!firstTab) return;
+        await restartTourProgress(user.id, { isGuest: false });
+        await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+        setOpen(false);
+        navigate(`${firstTab.route}?tour=1`);
+      }
+      return;
+    }
+
     if (!notification.read_at) {
       await markReadMutation.mutateAsync(notification.id);
     }
@@ -53,6 +156,29 @@ const NotificationCenter = () => {
     if (notification.action_path) {
       setOpen(false);
       navigate(notification.action_path);
+    }
+  };
+
+  const handleMarkRead = async (notification: UserNotification | LocalTourNotification) => {
+    if (!user?.id) return;
+    if (isLocalTourNotification(notification)) {
+      if (notification.id === TOUR_INVITE_NOTIFICATION_ID) {
+        await markTourInviteResponded(user.id, { isGuest: false });
+        await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+      }
+      return;
+    }
+    markReadMutation.mutate(notification.id);
+  };
+
+  const handleMarkAll = async () => {
+    if (!user?.id) return;
+    if (hasLocalUnread && localTourNotification?.id === TOUR_INVITE_NOTIFICATION_ID) {
+      await markTourInviteResponded(user.id, { isGuest: false });
+      await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+    }
+    if ((notifications ?? []).some((item) => !item.read_at)) {
+      markAllMutation.mutate();
     }
   };
 
@@ -94,7 +220,7 @@ const NotificationCenter = () => {
               variant="ghost"
               size="sm"
               disabled={unreadCount === 0 || markAllMutation.isPending}
-              onClick={() => markAllMutation.mutate()}
+              onClick={() => void handleMarkAll()}
             >
               <CheckCheck className="mr-2 h-4 w-4" />
               Marcar todas
@@ -108,10 +234,11 @@ const NotificationCenter = () => {
                   <div className="h-24 rounded-2xl border border-border/60 bg-muted/20" />
                   <div className="h-24 rounded-2xl border border-border/60 bg-muted/20" />
                 </div>
-              ) : notifications.length > 0 ? (
-                notifications.map((notification) => {
+              ) : composedNotifications.length > 0 ? (
+                composedNotifications.map((notification) => {
                   const severity = severityMeta[notification.severity];
                   const SeverityIcon = severity.icon;
+                  const localTour = isLocalTourNotification(notification);
 
                   return (
                     <div
@@ -132,11 +259,17 @@ const NotificationCenter = () => {
 
                       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span>{notification.created_at ? format(new Date(notification.created_at), "yyyy-MM-dd HH:mm") : "--"}</span>
-                        <span>{notification.sender_email ? `por ${notification.sender_email}` : "sistema interno"}</span>
+                        <span>
+                          {localTour
+                            ? "tour interactivo"
+                            : notification.sender_email
+                              ? `por ${notification.sender_email}`
+                              : "sistema interno"}
+                        </span>
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
-                        {notification.action_path ? (
+                        {notification.action_path || localTour ? (
                           <Button
                             size="sm"
                             onClick={() => void handleNotificationAction(notification)}
@@ -149,7 +282,7 @@ const NotificationCenter = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => markReadMutation.mutate(notification.id)}
+                            onClick={() => void handleMarkRead(notification)}
                             disabled={markReadMutation.isPending}
                           >
                             Marcar leida
