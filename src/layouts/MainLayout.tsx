@@ -7,6 +7,7 @@ import GuestWarningBanner from "@/components/GuestWarningBanner";
 import { useAuth } from "@/context/AuthContext";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import MobileConnectionBanner from "@/components/MobileConnectionBanner";
+import TabTourDialog from "@/components/tour/TabTourDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -84,6 +85,7 @@ const MainLayout = () => {
           <Outlet />
         </main>
         <MobileBottomNav />
+        <TabTourDialog />
       </div>
     </div>
   );
