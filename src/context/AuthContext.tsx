@@ -545,8 +545,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const profileUpdate = await supabase
                 .from("profiles")
-                .update({ onboarding_completed: true })
-                .eq("id", user.id);
+                .upsert({ id: user.id, onboarding_completed: true }, { onConflict: "id" });
 
             if (profileUpdate.error && !profileUpdate.error.message?.includes("onboarding_completed")) {
                 throw profileUpdate.error;
@@ -618,41 +617,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthedProfile(nextProfile);
 
         const payload: ProfileUpdatePayload = { ...data, updated_at: new Date().toISOString() };
+        const isUpdatedAtMissing = (errorMessage?: string) =>
+            Boolean(errorMessage?.includes("Could not find the 'updated_at' column"));
+        const isSchemaCompatibilityError = (errorMessage?: string) =>
+            Boolean(
+                errorMessage?.includes("schema cache") ||
+                errorMessage?.toLowerCase().includes("column")
+            );
 
-        let updateResult = await supabase
-            .from('profiles')
-            .update(payload)
-            .eq('id', user.id)
-            .select('id')
-            .maybeSingle();
+        const runUpsert = async (profilePayload: Partial<ProfileUpdatePayload>) =>
+            supabase
+                .from('profiles')
+                .upsert({ id: user.id, ...profilePayload }, { onConflict: 'id' })
+                .select('id')
+                .maybeSingle();
+
+        let updateResult = await runUpsert(payload);
 
         // Some projects don't have updated_at in profiles; retry without it.
-        if (updateResult.error && updateResult.error.message?.includes("Could not find the 'updated_at' column")) {
-            updateResult = await supabase
-                .from('profiles')
-                .update(data)
-                .eq('id', user.id)
-                .select('id')
-                .maybeSingle();
+        if (updateResult.error && isUpdatedAtMissing(updateResult.error.message)) {
+            updateResult = await runUpsert(data);
         }
 
-        // If no profile row exists yet, create it so onboarding/profile data persists.
-        if (!updateResult.error && !updateResult.data) {
-            let upsertResult = await supabase
-                .from('profiles')
-                .upsert({ id: user.id, ...payload }, { onConflict: 'id' })
-                .select('id')
-                .maybeSingle();
-
-            if (upsertResult.error && upsertResult.error.message?.includes("Could not find the 'updated_at' column")) {
-                upsertResult = await supabase
-                    .from('profiles')
-                    .upsert({ id: user.id, ...data }, { onConflict: 'id' })
-                    .select('id')
-                    .maybeSingle();
-            }
-
-            updateResult = upsertResult;
+        // Backward compatibility for older schemas that do not have new onboarding fields yet.
+        if (updateResult.error && isSchemaCompatibilityError(updateResult.error.message)) {
+            const legacyPayload: Partial<Profile> = {
+                full_name: data.full_name ?? null,
+                height: data.height ?? null,
+                weight: data.weight ?? null,
+                goal_type: data.goal_type ?? null,
+                avatar_url: data.avatar_url ?? null,
+            };
+            updateResult = await runUpsert(legacyPayload);
         }
 
         if (updateResult.error) {
