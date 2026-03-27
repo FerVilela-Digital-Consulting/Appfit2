@@ -25,7 +25,7 @@ export default function LandingHero({ onPrimary, language }: Props) {
           <p className="mt-4 text-base leading-8 text-[#748795] md:text-2xl md:leading-[1.6]">{copy.description}</p>
           <div className="mt-7">
             <Button className="h-12 rounded-full bg-[#1f9ea0] px-10 text-base font-semibold tracking-[0.04em] text-white hover:bg-[#198b8d]" onClick={onPrimary}>
-              RESGISTRATE AHORA
+              {copy.primary}
             </Button>
           </div>
         </div>
