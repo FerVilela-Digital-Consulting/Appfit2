@@ -36,6 +36,7 @@ const TOUR_SCHEMA_FLAG_KEY = "appfit_tour_progress_schema_unavailable";
 let tourSchemaUnavailable = localStorage.getItem(TOUR_SCHEMA_FLAG_KEY) === "true";
 export const TOUR_INVITE_NOTIFICATION_ID = "local-tour-invite";
 export const TOUR_REPLAY_NOTIFICATION_ID = "local-tour-replay";
+export const TOUR_CONTINUE_NOTIFICATION_ID = "local-tour-continue";
 
 export const APP_TOUR_TABS: TourTabDefinition[] = [
   {
@@ -263,6 +264,9 @@ const getLocalTourProgress = (userId: string | null, options?: { isGuest?: boole
     return createDefaultState();
   }
 };
+
+export const getTourProgressLocalSnapshot = (userId: string | null, options?: { isGuest?: boolean }) =>
+  getLocalTourProgress(userId, options);
 
 const saveLocalTourProgress = (
   userId: string | null,

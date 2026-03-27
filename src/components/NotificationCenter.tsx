@@ -10,10 +10,12 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { useAuth } from "@/context/AuthContext";
 import { listMyNotifications, markAllMyNotificationsRead, markMyNotificationRead, type UserNotification } from "@/services/notifications";
 import {
+  TOUR_CONTINUE_NOTIFICATION_ID,
   TOUR_INVITE_NOTIFICATION_ID,
   TOUR_REPLAY_NOTIFICATION_ID,
   getFirstTourTab,
   getNextIncompleteTourTab,
+  getTourProgressLocalSnapshot,
   getTourProgressState,
   isTourCompleted,
   markTourInviteResponded,
@@ -28,7 +30,7 @@ const severityMeta: Record<UserNotification["severity"], { label: string; icon: 
 };
 
 type LocalTourNotification = {
-  id: typeof TOUR_INVITE_NOTIFICATION_ID | typeof TOUR_REPLAY_NOTIFICATION_ID;
+  id: typeof TOUR_INVITE_NOTIFICATION_ID | typeof TOUR_REPLAY_NOTIFICATION_ID | typeof TOUR_CONTINUE_NOTIFICATION_ID;
   notification_kind: "general";
   title: string;
   body: string;
@@ -43,7 +45,9 @@ type LocalTourNotification = {
 };
 
 const isLocalTourNotification = (notification: UserNotification | LocalTourNotification): notification is LocalTourNotification =>
-  notification.id === TOUR_INVITE_NOTIFICATION_ID || notification.id === TOUR_REPLAY_NOTIFICATION_ID;
+  notification.id === TOUR_INVITE_NOTIFICATION_ID ||
+  notification.id === TOUR_REPLAY_NOTIFICATION_ID ||
+  notification.id === TOUR_CONTINUE_NOTIFICATION_ID;
 
 const NotificationCenter = () => {
   const navigate = useNavigate();
@@ -78,28 +82,11 @@ const NotificationCenter = () => {
 
   const notifications = notificationsQuery.data ?? [];
   const localTourNotification: LocalTourNotification | null = (() => {
-    if (!user?.id || isGuest || !tourStateQuery.data) return null;
+    if (!user?.id || isGuest) return null;
+    const tourState = tourStateQuery.data ?? getTourProgressLocalSnapshot(user.id, { isGuest: false });
+    const nextTab = getNextIncompleteTourTab(tourState) ?? getFirstTourTab();
 
-    if (shouldPromptTourInvite(tourStateQuery.data)) {
-      const nextTab = getNextIncompleteTourTab(tourStateQuery.data);
-      if (!nextTab) return null;
-      return {
-        id: TOUR_INVITE_NOTIFICATION_ID,
-        notification_kind: "general",
-        title: "¿Quieres hacer un recorrido guiado?",
-        body: "Podemos mostrarte un tour rapido por cada pestaña para que conozcas la app en pocos minutos.",
-        action_path: `${nextTab.route}?tour=1`,
-        action_label: "Iniciar tour",
-        severity: "info",
-        metadata: { source: "local_tour" },
-        sender_user_id: null,
-        sender_email: null,
-        read_at: null,
-        created_at: new Date().toISOString(),
-      };
-    }
-
-    if (isTourCompleted(tourStateQuery.data)) {
+    if (isTourCompleted(tourState)) {
       return {
         id: TOUR_REPLAY_NOTIFICATION_ID,
         notification_kind: "general",
@@ -116,8 +103,59 @@ const NotificationCenter = () => {
       };
     }
 
-    return null;
+    if (shouldPromptTourInvite(tourState)) {
+      if (!nextTab) return null;
+      return {
+        id: TOUR_INVITE_NOTIFICATION_ID,
+        notification_kind: "general",
+        title: "Quieres hacer un recorrido guiado?",
+        body: "Podemos mostrarte un tour rapido por cada pestana para que conozcas la app en pocos minutos.",
+        action_path: `${nextTab.route}?tour=1`,
+        action_label: "Iniciar tour",
+        severity: "info",
+        metadata: { source: "local_tour" },
+        sender_user_id: null,
+        sender_email: null,
+        read_at: null,
+        created_at: new Date().toISOString(),
+      };
+    }
+
+    if (tourState.inviteResponded && tourState.completedTabs.length > 0) {
+      if (!nextTab) return null;
+      return {
+        id: TOUR_CONTINUE_NOTIFICATION_ID,
+        notification_kind: "general",
+        title: "Recorrido en progreso",
+        body: "Te faltan algunas pestanas. Puedes continuar el recorrido cuando quieras.",
+        action_path: `${nextTab.route}?tour=1`,
+        action_label: "Continuar recorrido",
+        severity: "info",
+        metadata: { source: "local_tour" },
+        sender_user_id: null,
+        sender_email: null,
+        read_at: null,
+        created_at: new Date().toISOString(),
+      };
+    }
+
+    if (!nextTab) return null;
+    return {
+      id: TOUR_INVITE_NOTIFICATION_ID,
+      notification_kind: "general",
+      title: "Recorrido disponible",
+      body: "Puedes iniciar o retomar el recorrido guiado desde aqui en cualquier momento.",
+      action_path: `${nextTab.route}?tour=1`,
+      action_label: "Iniciar recorrido",
+      severity: "info",
+      metadata: { source: "local_tour" },
+      sender_user_id: null,
+      sender_email: null,
+      read_at: null,
+      created_at: new Date().toISOString(),
+    };
   })();
+
   const composedNotifications: Array<UserNotification | LocalTourNotification> = localTourNotification
     ? [localTourNotification, ...notifications]
     : notifications;
@@ -145,6 +183,12 @@ const NotificationCenter = () => {
         await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
         setOpen(false);
         navigate(`${firstTab.route}?tour=1`);
+        return;
+      }
+
+      if (notification.id === TOUR_CONTINUE_NOTIFICATION_ID && notification.action_path) {
+        setOpen(false);
+        navigate(notification.action_path);
       }
       return;
     }
@@ -162,7 +206,7 @@ const NotificationCenter = () => {
   const handleMarkRead = async (notification: UserNotification | LocalTourNotification) => {
     if (!user?.id) return;
     if (isLocalTourNotification(notification)) {
-      if (notification.id === TOUR_INVITE_NOTIFICATION_ID) {
+      if (notification.id === TOUR_INVITE_NOTIFICATION_ID || notification.id === TOUR_CONTINUE_NOTIFICATION_ID) {
         await markTourInviteResponded(user.id, { isGuest: false });
         await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
       }
@@ -173,13 +217,26 @@ const NotificationCenter = () => {
 
   const handleMarkAll = async () => {
     if (!user?.id) return;
-    if (hasLocalUnread && localTourNotification?.id === TOUR_INVITE_NOTIFICATION_ID) {
+    if (
+      hasLocalUnread &&
+      (localTourNotification?.id === TOUR_INVITE_NOTIFICATION_ID || localTourNotification?.id === TOUR_CONTINUE_NOTIFICATION_ID)
+    ) {
       await markTourInviteResponded(user.id, { isGuest: false });
       await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
     }
     if ((notifications ?? []).some((item) => !item.read_at)) {
       markAllMutation.mutate();
     }
+  };
+
+  const handleQuickRestartTour = async () => {
+    if (!user?.id) return;
+    const firstTab = getFirstTourTab();
+    if (!firstTab) return;
+    await restartTourProgress(user.id, { isGuest: false });
+    await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+    setOpen(false);
+    navigate(`${firstTab.route}?tour=1`);
   };
 
   if (isGuest || !user?.id) {
@@ -216,20 +273,25 @@ const NotificationCenter = () => {
 
           <div className="flex items-center justify-between border-b border-border/60 px-6 py-3">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Centro de mensajes</p>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={unreadCount === 0 || markAllMutation.isPending}
-              onClick={() => void handleMarkAll()}
-            >
-              <CheckCheck className="mr-2 h-4 w-4" />
-              Marcar todas
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => void handleQuickRestartTour()}>
+                Rehacer recorrido
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={unreadCount === 0 || markAllMutation.isPending}
+                onClick={() => void handleMarkAll()}
+              >
+                <CheckCheck className="mr-2 h-4 w-4" />
+                Marcar todas
+              </Button>
+            </div>
           </div>
 
           <ScrollArea className="min-h-0 flex-1">
             <div className="space-y-3 p-6">
-              {notificationsQuery.isLoading ? (
+              {notificationsQuery.isLoading && !localTourNotification ? (
                 <div className="space-y-3">
                   <div className="h-24 rounded-2xl border border-border/60 bg-muted/20" />
                   <div className="h-24 rounded-2xl border border-border/60 bg-muted/20" />
@@ -259,13 +321,7 @@ const NotificationCenter = () => {
 
                       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span>{notification.created_at ? format(new Date(notification.created_at), "yyyy-MM-dd HH:mm") : "--"}</span>
-                        <span>
-                          {localTour
-                            ? "tour interactivo"
-                            : notification.sender_email
-                              ? `por ${notification.sender_email}`
-                              : "sistema interno"}
-                        </span>
+                        <span>{localTour ? "tour interactivo" : notification.sender_email ? `por ${notification.sender_email}` : "sistema interno"}</span>
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
