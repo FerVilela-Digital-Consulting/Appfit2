@@ -35,6 +35,7 @@ const TOUR_STORAGE_PREFIX = "appfit_tour_progress_";
 const TOUR_SCHEMA_FLAG_KEY = "appfit_tour_progress_schema_unavailable";
 let tourSchemaUnavailable = localStorage.getItem(TOUR_SCHEMA_FLAG_KEY) === "true";
 export const TOUR_INVITE_NOTIFICATION_ID = "local-tour-invite";
+export const TOUR_REPLAY_NOTIFICATION_ID = "local-tour-replay";
 
 export const APP_TOUR_TABS: TourTabDefinition[] = [
   {

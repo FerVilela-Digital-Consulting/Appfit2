@@ -9,6 +9,7 @@ import { listMyNotifications, markMyNotificationRead } from "@/services/notifica
 import {
   getFirstTourTab,
   TOUR_INVITE_NOTIFICATION_ID,
+  TOUR_REPLAY_NOTIFICATION_ID,
   getNextIncompleteTourTab,
   getTourProgressState,
   isTourCompleted,
@@ -25,6 +26,16 @@ type LocalTourInviteNotification = {
   action_label: string | null;
   read_at: string | null;
   isLocalTourInvite: true;
+};
+
+type LocalTourReplayNotification = {
+  id: typeof TOUR_REPLAY_NOTIFICATION_ID;
+  title: string;
+  body: string;
+  action_path: string | null;
+  action_label: string | null;
+  read_at: string | null;
+  isLocalTourReplay: true;
 };
 
 const NotificationBanner = () => {
@@ -75,14 +86,37 @@ const NotificationBanner = () => {
       isLocalTourInvite: true,
     };
   }, [isGuest, tourStateQuery.data, tourStateQuery.isLoading, user?.id]);
-  const unreadNotification = firstUnread ?? localTourInvite;
-  const canReplayTour = Boolean(user?.id) && !isGuest && Boolean(tourStateQuery.data) && isTourCompleted(tourStateQuery.data);
+  const localTourReplay = useMemo<LocalTourReplayNotification | null>(() => {
+    if (!user?.id || isGuest) return null;
+    if (tourStateQuery.isLoading || !tourStateQuery.data) return null;
+    if (!isTourCompleted(tourStateQuery.data)) return null;
+    return {
+      id: TOUR_REPLAY_NOTIFICATION_ID,
+      title: "Recorrido completado",
+      body: "Puedes rehacer el recorrido guiado cuando quieras para repasar cada pestaña.",
+      action_path: null,
+      action_label: "Rehacer recorrido",
+      read_at: null,
+      isLocalTourReplay: true,
+    };
+  }, [isGuest, tourStateQuery.data, tourStateQuery.isLoading, user?.id]);
+  const unreadNotification = firstUnread ?? localTourInvite ?? localTourReplay;
+  const isReplayNotification = unreadNotification?.id === TOUR_REPLAY_NOTIFICATION_ID;
 
-  if (isGuest || !user?.id || (!unreadNotification && !canReplayTour)) {
+  if (isGuest || !user?.id || !unreadNotification) {
     return null;
   }
 
   const handleAction = async () => {
+    if (unreadNotification.id === TOUR_REPLAY_NOTIFICATION_ID) {
+      const firstTab = getFirstTourTab();
+      if (!firstTab) return;
+      await restartTourProgress(user.id, { isGuest: false });
+      await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+      navigate(`${firstTab.route}?tour=1`);
+      return;
+    }
+
     if (unreadNotification.id === TOUR_INVITE_NOTIFICATION_ID) {
       await markTourInviteResponded(user.id, { isGuest: false });
       await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
@@ -100,7 +134,7 @@ const NotificationBanner = () => {
   };
 
   const handleDismiss = () => {
-    if (!unreadNotification) return;
+    if (!unreadNotification || unreadNotification.id === TOUR_REPLAY_NOTIFICATION_ID) return;
     if (unreadNotification.id === TOUR_INVITE_NOTIFICATION_ID) {
       void markTourInviteResponded(user.id, { isGuest: false });
       void queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
@@ -108,15 +142,6 @@ const NotificationBanner = () => {
     }
     markReadMutation.mutate(unreadNotification.id);
   };
-  const handleReplayTour = async () => {
-    if (!user?.id) return;
-    const firstTab = getFirstTourTab();
-    if (!firstTab) return;
-    await restartTourProgress(user.id, { isGuest: false });
-    await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
-    navigate(`${firstTab.route}?tour=1`);
-  };
-
   const bannerTitle = unreadNotification?.title ?? "Recorrido guiado";
   const bannerBody =
     unreadNotification?.body ??
@@ -136,15 +161,12 @@ const NotificationBanner = () => {
                 <Button size="sm" onClick={() => void handleAction()} disabled={markReadMutation.isPending}>
                   {actionLabel}
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleDismiss} disabled={markReadMutation.isPending}>
-                  Marcar leida
-                </Button>
+                {!isReplayNotification ? (
+                  <Button variant="outline" size="sm" onClick={handleDismiss} disabled={markReadMutation.isPending}>
+                    Marcar leida
+                  </Button>
+                ) : null}
               </>
-            ) : null}
-            {canReplayTour ? (
-              <Button variant={unreadNotification ? "outline" : "default"} size="sm" onClick={() => void handleReplayTour()}>
-                Rehacer recorrido
-              </Button>
             ) : null}
           </div>
         </AlertDescription>
