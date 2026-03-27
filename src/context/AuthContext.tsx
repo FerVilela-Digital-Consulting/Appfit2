@@ -488,6 +488,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) throw error;
     };
 
+    const requestPasswordReset = async (email: string) => {
+        logFlow("Requesting password reset email...");
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: getEmailVerificationRedirectUrl(),
+        });
+
+        if (error) throw error;
+    };
+
     const signOut = async () => {
         logFlow("Signing out...");
         setIsGuest(false);
@@ -665,6 +674,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             signIn,
             signUp,
             resendConfirmationEmail,
+            requestPasswordReset,
             signOut,
             completeOnboarding,
             refreshProfile,

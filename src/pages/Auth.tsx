@@ -13,6 +13,26 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
+const isEmailRateLimitError = (message: string) =>
+  message.toLowerCase().includes("email rate limit exceeded");
+
+const isInvalidCredentialsError = (message: string) => {
+  const normalized = message.toLowerCase();
+  return normalized.includes("invalid login credentials") || normalized.includes("invalid_credentials");
+};
+
+const mapAuthErrorMessage = (message: string) => {
+  if (isEmailRateLimitError(message)) {
+    return "Hemos alcanzado el limite temporal de envio de correos. Espera unos minutos y revisa tu bandeja (incluido spam) antes de volver a intentar.";
+  }
+
+  if (isInvalidCredentialsError(message)) {
+    return "Correo o contrasena incorrectos. Si acabas de registrarte, primero confirma tu cuenta desde el correo. Si ya la confirmaste, restablece tu contrasena e intenta nuevamente.";
+  }
+
+  return message;
+};
+
 const Auth = () => {
     const [mode, setMode] = useState<"login" | "register">("login");
     const [email, setEmail] = useState("");
@@ -20,10 +40,11 @@ const Auth = () => {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [resendingEmail, setResendingEmail] = useState(false);
+    const [sendingResetEmail, setSendingResetEmail] = useState(false);
     const [pendingEmailConfirmation, setPendingEmailConfirmation] = useState(false);
     const [authErrorMessage, setAuthErrorMessage] = useState("");
 
-    const { user, isGuest, signIn, signUp, resendConfirmationEmail, continueAsGuest } = useAuth();
+    const { user, isGuest, signIn, signUp, resendConfirmationEmail, requestPasswordReset, continueAsGuest } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const allowGuestAuth = Boolean((location.state as { fromGuestSwitch?: boolean } | null)?.fromGuestSwitch);
@@ -55,7 +76,7 @@ const Auth = () => {
                 const { requiresEmailConfirmation } = await signUp(email, password);
                 if (requiresEmailConfirmation) {
                     setPendingEmailConfirmation(true);
-                    toast.error("Email confirmation is enabled in Supabase. Confirm your email before signing in.");
+                    toast.success("Cuenta creada. Revisa tu correo y confirma tu cuenta antes de iniciar sesion.");
                     return;
                 }
                 toast.success("Account created successfully!");
@@ -63,7 +84,7 @@ const Auth = () => {
             }
         } catch (error: unknown) {
             console.error("Auth error:", error);
-            const nextMessage = getErrorMessage(error, "Authentication failed.");
+            const nextMessage = mapAuthErrorMessage(getErrorMessage(error, "Authentication failed."));
             setAuthErrorMessage(nextMessage);
             if (!nextMessage.toLowerCase().includes("desactivada")) {
                 toast.error(nextMessage);
@@ -88,6 +109,24 @@ const Auth = () => {
             toast.error(getErrorMessage(error, "We could not resend the confirmation email."));
         } finally {
             setResendingEmail(false);
+        }
+    };
+
+    const handleForgotPassword = async () => {
+        if (!email) {
+            toast.error("Ingresa tu correo para enviarte el enlace de recuperacion.");
+            return;
+        }
+
+        setSendingResetEmail(true);
+        try {
+            await requestPasswordReset(email);
+            toast.success("Te enviamos un correo para restablecer tu contrasena.");
+        } catch (error: unknown) {
+            console.error("Password reset error:", error);
+            toast.error(mapAuthErrorMessage(getErrorMessage(error, "No se pudo enviar el correo de recuperacion.")));
+        } finally {
+            setSendingResetEmail(false);
         }
     };
 
@@ -132,12 +171,21 @@ const Auth = () => {
                                 <AlertDescription>{authErrorMessage}</AlertDescription>
                             </Alert>
                         )}
-                        {pendingEmailConfirmation && (
-                            <Alert variant="destructive">
-                                <AlertTriangle className="h-4 w-4" />
-                                <AlertTitle>Check your inbox to verify your email</AlertTitle>
+                        {mode === "register" && !pendingEmailConfirmation && (
+                            <Alert>
+                                <Mail className="h-4 w-4" />
+                                <AlertTitle>Importante: confirma tu correo</AlertTitle>
                                 <AlertDescription>
-                                    Open the confirmation link we sent to your email. You will be redirected back to AppFit automatically.
+                                    Despues de crear tu cuenta, te enviaremos un correo de verificacion. Debes abrir ese correo y hacer clic en el enlace para activar tu cuenta.
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                        {pendingEmailConfirmation && (
+                            <Alert>
+                                <Mail className="h-4 w-4" />
+                                <AlertTitle>Cuenta creada: revisa tu correo para activarla</AlertTitle>
+                                <AlertDescription>
+                                    Te enviamos un enlace de confirmacion a tu email. Abre ese enlace para activar tu cuenta y luego inicia sesion en AppFit.
                                 </AlertDescription>
                                 <Button
                                     type="button"
@@ -149,10 +197,10 @@ const Auth = () => {
                                     {resendingEmail ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Resending email...
+                                            Reenviando correo...
                                         </>
                                     ) : (
-                                        "Resend confirmation email"
+                                        "Reenviar correo de confirmacion"
                                     )}
                                 </Button>
                             </Alert>
@@ -213,6 +261,17 @@ const Auth = () => {
                                 mode === "login" ? "Sign in" : "Create account"
                             )}
                         </Button>
+                        {mode === "login" && (
+                            <Button
+                                type="button"
+                                variant="link"
+                                className="h-auto p-0 text-sm"
+                                onClick={handleForgotPassword}
+                                disabled={sendingResetEmail || loading}
+                            >
+                                {sendingResetEmail ? "Enviando correo de recuperacion..." : "Olvide mi contrasena"}
+                            </Button>
+                        )}
                         {showGuestAccess && (
                             <>
                                 <div className="relative w-full">
