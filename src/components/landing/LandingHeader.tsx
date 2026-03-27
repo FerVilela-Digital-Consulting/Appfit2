@@ -29,11 +29,8 @@ export default function LandingHeader({ onPrimary, language, onToggleLanguage }:
           <Languages className="h-4 w-4" />
         </button>
         <span className="min-w-8 text-center text-xs font-semibold uppercase text-[#6f748a]">{language}</span>
-        <button className="hidden text-sm font-medium text-[#1d1d20] sm:inline-flex" onClick={onPrimary} type="button">
-          {copy.login}
-        </button>
         <Button className="h-10 rounded-full bg-[#1f9ea0] px-6 text-white hover:bg-[#198b8d]" onClick={onPrimary}>
-          {copy.startFree}
+          {`${copy.login} / ${copy.startFree}`}
         </Button>
       </div>
     </header>
