@@ -372,11 +372,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             logFlow(`Auth state change: ${event}`);
             if (!isMounted) return;
 
-            if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+            if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
                 try {
                     if (session?.user) {
                         await syncAuthenticatedUser(session.user, { source: event });
-                    } else if (localStorage.getItem(GUEST_STORAGE_KEY) !== 'true') {
+                    } else if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && localStorage.getItem(GUEST_STORAGE_KEY) !== 'true') {
                         setUser(null);
                         setAuthedProfile(null);
                         setAccountRole("member");
@@ -401,8 +401,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         setLoading(false);
                     }
                 }
-            } else if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-                logFlow(`Skipping loading transition for ${event}`);
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);
                 setAuthedProfile(null);

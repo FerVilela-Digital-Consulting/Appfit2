@@ -80,17 +80,17 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
 
   const chartData = rangeTotals.map((row) => ({
     x: new Date(`${row.date_key}T00:00:00`).getTime(),
-    hours: row.total_minutes > 0 ? Number((row.total_minutes / 60).toFixed(2)) : null,
+    hours: Number((row.total_minutes / 60).toFixed(2)),
     total_minutes: row.total_minutes,
     date_key: row.date_key,
     hasData: row.total_minutes > 0,
   }));
-  const sleepSeries = chartData.map((row) => row.hours).filter((value): value is number => typeof value === "number");
+  const sleepSeries = chartData.filter((row) => row.hasData).map((row) => row.hours);
   const sleepMin = sleepSeries.length > 0 ? Math.min(...sleepSeries) : 0;
   const sleepMax = sleepSeries.length > 0 ? Math.max(...sleepSeries) : 0;
-  const sleepAxisMin = Math.max(0, Math.floor(sleepMin));
+  const sleepAxisMin = 0;
   const rawSleepAxisMax = Math.ceil(sleepMax);
-  const sleepAxisMax = rawSleepAxisMax <= sleepAxisMin ? sleepAxisMin + 2 : rawSleepAxisMax + 1;
+  const sleepAxisMax = rawSleepAxisMax <= sleepAxisMin ? 8 : rawSleepAxisMax + 1;
   const rangeStartMs = new Date(`${rangeDates.from.toISOString().slice(0, 10)}T00:00:00`).getTime();
   const rangeEndMs = new Date(`${rangeDates.to.toISOString().slice(0, 10)}T00:00:00`).getTime();
   const rangeMidMs = rangeStartMs + (rangeEndMs - rangeStartMs) / 2;
@@ -422,7 +422,6 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
                     dataKey="hours"
                     stroke="hsl(var(--primary))"
                     strokeWidth={3}
-                    connectNulls={false}
                     dot={{ r: 0 }}
                     activeDot={{ r: 6, fill: "hsl(var(--primary))", strokeWidth: 0 }}
                   />
