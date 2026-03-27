@@ -90,4 +90,25 @@ describe("AuthCallback", () => {
 
     expect(mockToastError).toHaveBeenCalled();
   });
+
+  it("redirects recovery callbacks to reset-password instead of onboarding", async () => {
+    window.history.replaceState({}, "", "/auth/callback?token_hash=hash-2&type=recovery");
+
+    render(
+      <MemoryRouter initialEntries={["/auth/callback?token_hash=hash-2&type=recovery"]}>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/auth/reset-password" element={<div>Reset password page</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mockVerifyOtp).toHaveBeenCalledWith({
+        token_hash: "hash-2",
+        type: "recovery",
+      });
+      expect(screen.getByText("Reset password page")).toBeInTheDocument();
+    });
+  });
 });

@@ -8,7 +8,7 @@ const getHashParams = () => new URLSearchParams(window.location.hash.replace(/^#
 
 const AuthCallback = () => {
   const navigate = useNavigate();
-  const [message, setMessage] = useState("Confirming your email...");
+  const [message, setMessage] = useState("Confirmando acceso...");
 
   useEffect(() => {
     let isMounted = true;
@@ -34,7 +34,7 @@ const AuthCallback = () => {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) throw error;
         } else if (tokenHash && type) {
-          setMessage("Verifying your email...");
+          setMessage(type === "recovery" ? "Validando enlace de recuperacion..." : "Verificando tu correo...");
           const { error } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
             type: type as "signup" | "invite" | "magiclink" | "recovery" | "email_change" | "email",
@@ -51,7 +51,13 @@ const AuthCallback = () => {
           throw new Error("Email verification finished without an active session.");
         }
 
-        toast.success("Email verified successfully.");
+        if (type === "recovery") {
+          toast.success("Enlace de recuperacion valido. Crea tu nueva contrasena.");
+          finish("/auth/reset-password");
+          return;
+        }
+
+        toast.success("Email verificado correctamente.");
         finish("/onboarding");
       } catch (error) {
         console.error("Error completing email verification:", error);
@@ -73,7 +79,7 @@ const AuthCallback = () => {
     <div className="app-shell min-h-screen flex items-center justify-center bg-background p-4">
       <div className="glass-card w-full max-w-md rounded-2xl border p-8 text-center shadow-xl">
         <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary" />
-        <h1 className="text-xl font-semibold">Email confirmation</h1>
+        <h1 className="text-xl font-semibold">Autenticacion</h1>
         <p className="mt-2 text-sm text-muted-foreground">{message}</p>
       </div>
     </div>

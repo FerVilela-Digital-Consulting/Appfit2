@@ -14,6 +14,7 @@ import AdminUsage from "@/pages/AdminUsage";
 
 import Auth from "@/pages/Auth";
 import AuthCallback from "@/pages/AuthCallback";
+import ResetPassword from "@/pages/ResetPassword";
 
 const CHUNK_RELOAD_KEY = "appfit.chunk-reload";
 
@@ -71,6 +72,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/auth/reset-password" element={<ResetPassword />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/onboarding" element={withRouteFallback(<Onboarding />)} />
