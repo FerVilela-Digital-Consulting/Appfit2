@@ -62,7 +62,7 @@ export const landingCopy: Record<LandingLanguage, {
       switchLabel: "Cambiar a ingles",
     },
     hero: {
-      badge: "Bienvenido a Appfit",
+      badge: "Bienvenido a The Prime Protocol",
       title: "Gestiona tu progreso fitness con",
       titleHighlight: "Appfit",
       titleSuffix: "",
@@ -126,7 +126,7 @@ export const landingCopy: Record<LandingLanguage, {
       switchLabel: "Switch to Spanish",
     },
     hero: {
-      badge: "Welcome to Appfit",
+      badge: "Welcome to The Prime Protocol",
       title: "Manage your fitness progress with",
       titleHighlight: "Appfit",
       titleSuffix: "",

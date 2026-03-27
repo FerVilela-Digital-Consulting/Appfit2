@@ -13,13 +13,17 @@ export default function LandingMetricsAndBenefits({ language }: Props) {
 
   return (
     <>
-      <section className="mx-auto grid w-full max-w-[820px] grid-cols-2 gap-6 px-4 py-10 text-center text-[#1e194d] sm:grid-cols-4">
-        {copy.items.map((item) => (
-          <div key={item.label}>
+      <section className="relative mx-auto w-full max-w-[980px] px-4 py-10">
+        <div className="pointer-events-none absolute inset-x-8 top-4 h-[76%] rounded-[24px] bg-[linear-gradient(180deg,rgba(191,232,233,0.2),rgba(191,232,233,0.06))]" />
+        <div className="relative grid grid-cols-2 gap-6 text-center text-[#1e194d] sm:grid-cols-4">
+        {copy.items.map((item, idx) => (
+          <div className="relative" key={item.label}>
+            {idx > 0 ? <span className="pointer-events-none absolute -left-3 top-1/2 hidden h-10 -translate-y-1/2 border-l border-[#d9ecec] sm:block" /> : null}
             <p className="text-2xl font-semibold">{item.value}</p>
             <p className="text-sm text-[#9e9baa]">{item.label}</p>
           </div>
         ))}
+        </div>
       </section>
 
       <section className="mx-auto grid w-full max-w-[1280px] gap-10 px-4 py-12 md:px-6 lg:grid-cols-2 lg:items-center">
@@ -32,7 +36,9 @@ export default function LandingMetricsAndBenefits({ language }: Props) {
           <ul className="mt-6 space-y-4">
             {copy.bullets.map((f) => (
               <li className="flex items-center gap-3 text-[#59616a]" key={f}>
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#e7f7f7] text-[#1f9ea0]"><Check className="h-4 w-4" /></span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#bfe8e9] bg-[linear-gradient(180deg,#f1fbfb,#dff5f5)] text-[#1f9ea0] shadow-[0_2px_6px_rgba(31,158,160,0.16)]">
+                  <Check className="h-4 w-4" />
+                </span>
                 {f}
               </li>
             ))}

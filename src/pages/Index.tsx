@@ -41,7 +41,7 @@ const Index = () => {
   return (
     <div className="bg-white text-[#1e194d]">
       <LandingHeader language={language} onPrimary={goPrimary} onToggleLanguage={toggleLanguage} />
-      <main className="pt-[84px] md:pt-[92px]">
+      <main className="pt-[90px] md:pt-[100px]">
         <LandingHero language={language} onPrimary={goPrimary} />
         <LandingHowItWorks language={language} />
         <LandingFeatureRows language={language} onPrimary={goPrimary} />
