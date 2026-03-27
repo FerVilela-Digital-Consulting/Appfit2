@@ -363,6 +363,8 @@ export const getTourTabByPath = (pathname: string) => APP_TOUR_TABS.find((tab) =
 export const getNextIncompleteTourTab = (state: TourProgressState) =>
   APP_TOUR_TABS.find((tab) => !state.completedTabs.includes(tab.key)) ?? null;
 
+export const getFirstTourTab = () => APP_TOUR_TABS[0] ?? null;
+
 export const markTourTabCompleted = async (userId: string | null, tabKey: TourTabKey, options?: { isGuest?: boolean }) => {
   const state = await getTourProgressState(userId, options);
   const completedTabs = Array.from(new Set([...state.completedTabs, tabKey]));
@@ -380,3 +382,13 @@ export const markTourInviteResponded = (userId: string | null, options?: { isGue
   saveTourProgressState(userId, { inviteResponded: true }, options);
 
 export const shouldPromptTourInvite = (state: TourProgressState) => !state.inviteResponded && !isTourCompleted(state);
+
+export const restartTourProgress = (userId: string | null, options?: { isGuest?: boolean }) =>
+  saveTourProgressState(
+    userId,
+    {
+      completedTabs: [],
+      inviteResponded: true,
+    },
+    options,
+  );

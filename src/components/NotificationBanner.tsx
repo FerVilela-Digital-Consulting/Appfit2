@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { listMyNotifications, markMyNotificationRead } from "@/services/notifications";
 import {
+  getFirstTourTab,
   TOUR_INVITE_NOTIFICATION_ID,
   getNextIncompleteTourTab,
   getTourProgressState,
+  isTourCompleted,
   markTourInviteResponded,
+  restartTourProgress,
   shouldPromptTourInvite,
 } from "@/services/tourProgress";
 
@@ -73,8 +76,9 @@ const NotificationBanner = () => {
     };
   }, [isGuest, tourStateQuery.data, tourStateQuery.isLoading, user?.id]);
   const unreadNotification = firstUnread ?? localTourInvite;
+  const canReplayTour = Boolean(user?.id) && !isGuest && Boolean(tourStateQuery.data) && isTourCompleted(tourStateQuery.data);
 
-  if (isGuest || !user?.id || !unreadNotification) {
+  if (isGuest || !user?.id || (!unreadNotification && !canReplayTour)) {
     return null;
   }
 
@@ -96,6 +100,7 @@ const NotificationBanner = () => {
   };
 
   const handleDismiss = () => {
+    if (!unreadNotification) return;
     if (unreadNotification.id === TOUR_INVITE_NOTIFICATION_ID) {
       void markTourInviteResponded(user.id, { isGuest: false });
       void queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
@@ -103,21 +108,44 @@ const NotificationBanner = () => {
     }
     markReadMutation.mutate(unreadNotification.id);
   };
+  const handleReplayTour = async () => {
+    if (!user?.id) return;
+    const firstTab = getFirstTourTab();
+    if (!firstTab) return;
+    await restartTourProgress(user.id, { isGuest: false });
+    await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+    navigate(`${firstTab.route}?tour=1`);
+  };
+
+  const bannerTitle = unreadNotification?.title ?? "Recorrido guiado";
+  const bannerBody =
+    unreadNotification?.body ??
+    "Ya completaste el recorrido inicial. Puedes rehacerlo cuando quieras para refrescar cada pestaña.";
+  const actionLabel = unreadNotification?.action_label ?? "Revisar";
 
   return (
     <div className="border-b border-primary/15 bg-primary/5 px-4 py-3 md:px-8">
       <Alert className="mx-auto max-w-7xl border-primary/20 bg-transparent">
         <BellRing className="h-4 w-4 text-primary" />
-        <AlertTitle>{unreadNotification.title}</AlertTitle>
+        <AlertTitle>{bannerTitle}</AlertTitle>
         <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <span>{unreadNotification.body}</span>
+          <span>{bannerBody}</span>
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={() => void handleAction()} disabled={markReadMutation.isPending}>
-              {unreadNotification.action_label ?? "Revisar"}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleDismiss} disabled={markReadMutation.isPending}>
-              Marcar leida
-            </Button>
+            {unreadNotification ? (
+              <>
+                <Button size="sm" onClick={() => void handleAction()} disabled={markReadMutation.isPending}>
+                  {actionLabel}
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDismiss} disabled={markReadMutation.isPending}>
+                  Marcar leida
+                </Button>
+              </>
+            ) : null}
+            {canReplayTour ? (
+              <Button variant={unreadNotification ? "outline" : "default"} size="sm" onClick={() => void handleReplayTour()}>
+                Rehacer recorrido
+              </Button>
+            ) : null}
           </div>
         </AlertDescription>
       </Alert>
