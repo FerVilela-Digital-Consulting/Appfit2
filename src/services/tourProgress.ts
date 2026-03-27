@@ -27,6 +27,7 @@ export type TourProgressState = {
   version: number;
   completedTabs: TourTabKey[];
   inviteResponded: boolean;
+  readNotificationIds: string[];
   updatedAt: string | null;
 };
 
@@ -229,6 +230,7 @@ const createDefaultState = (): TourProgressState => ({
   version: TOUR_VERSION,
   completedTabs: [],
   inviteResponded: false,
+  readNotificationIds: [],
   updatedAt: null,
 });
 
@@ -246,6 +248,9 @@ const normalizeState = (value: unknown): TourProgressState => {
     version: TOUR_VERSION,
     completedTabs: normalizeTourTabKeys(raw.completedTabs),
     inviteResponded: Boolean(raw.inviteResponded),
+    readNotificationIds: Array.isArray(raw.readNotificationIds)
+      ? Array.from(new Set(raw.readNotificationIds.filter((item): item is string => typeof item === "string")))
+      : [],
     updatedAt: typeof raw.updatedAt === "string" ? raw.updatedAt : null,
   };
 };
@@ -386,6 +391,33 @@ export const markTourTabCompleted = async (userId: string | null, tabKey: TourTa
 export const markTourInviteResponded = (userId: string | null, options?: { isGuest?: boolean }) =>
   saveTourProgressState(userId, { inviteResponded: true }, options);
 
+export const isTourNotificationRead = (
+  state: TourProgressState,
+  notificationId:
+    | typeof TOUR_INVITE_NOTIFICATION_ID
+    | typeof TOUR_REPLAY_NOTIFICATION_ID
+    | typeof TOUR_CONTINUE_NOTIFICATION_ID,
+) => state.readNotificationIds.includes(notificationId);
+
+export const markTourNotificationRead = async (
+  userId: string | null,
+  notificationId:
+    | typeof TOUR_INVITE_NOTIFICATION_ID
+    | typeof TOUR_REPLAY_NOTIFICATION_ID
+    | typeof TOUR_CONTINUE_NOTIFICATION_ID,
+  options?: { isGuest?: boolean },
+) => {
+  const state = await getTourProgressState(userId, options);
+  const nextReadNotificationIds = Array.from(new Set([...state.readNotificationIds, notificationId]));
+  return saveTourProgressState(
+    userId,
+    {
+      readNotificationIds: nextReadNotificationIds,
+    },
+    options,
+  );
+};
+
 export const shouldPromptTourInvite = (state: TourProgressState) => !state.inviteResponded && !isTourCompleted(state);
 
 export const restartTourProgress = (userId: string | null, options?: { isGuest?: boolean }) =>
@@ -394,6 +426,7 @@ export const restartTourProgress = (userId: string | null, options?: { isGuest?:
     {
       completedTabs: [],
       inviteResponded: true,
+      readNotificationIds: [],
     },
     options,
   );

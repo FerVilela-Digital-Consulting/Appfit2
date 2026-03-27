@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Moon, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -79,10 +79,23 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
   const daysMet = rangeTotals.filter((row) => row.total_minutes >= goalData.sleep_goal_minutes).length;
 
   const chartData = rangeTotals.map((row) => ({
-    date: row.date_key,
+    x: new Date(`${row.date_key}T00:00:00`).getTime(),
     hours: Number((row.total_minutes / 60).toFixed(2)),
     total_minutes: row.total_minutes,
+    date_key: row.date_key,
   }));
+  const sleepSeries = chartData.map((row) => row.hours);
+  const sleepMin = sleepSeries.length > 0 ? Math.min(...sleepSeries) : 0;
+  const sleepMax = sleepSeries.length > 0 ? Math.max(...sleepSeries) : 0;
+  const sleepAxisMin = Math.max(0, Math.floor(sleepMin));
+  const rawSleepAxisMax = Math.ceil(sleepMax);
+  const sleepAxisMax = rawSleepAxisMax <= sleepAxisMin ? sleepAxisMin + 2 : rawSleepAxisMax + 1;
+  const rangeStartMs = new Date(`${rangeDates.from.toISOString().slice(0, 10)}T00:00:00`).getTime();
+  const rangeEndMs = new Date(`${rangeDates.to.toISOString().slice(0, 10)}T00:00:00`).getTime();
+  const rangeMidMs = rangeStartMs + (rangeEndMs - rangeStartMs) / 2;
+  const sleepYAxisTicks = [sleepAxisMin, Number(((sleepAxisMin + sleepAxisMax) / 2).toFixed(1)), sleepAxisMax];
+  const formatAxisDate = (value: number) =>
+    new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short" }).format(new Date(value)).replace(".", "");
 
   useEffect(() => {
     setGoalHours(String(Math.round((goalData.sleep_goal_minutes ?? 480) / 60)));
@@ -361,18 +374,45 @@ const SleepWorkspace = ({ embedded = false }: SleepWorkspaceProps) => {
           ) : (
             <div className="h-[190px] w-full md:h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
-                  <YAxis />
+                <LineChart data={chartData} margin={{ top: 8, right: 10, left: 0, bottom: 2 }}>
+                  <CartesianGrid vertical={false} stroke="hsl(var(--border) / 0.45)" />
+                  <XAxis
+                    type="number"
+                    dataKey="x"
+                    domain={[rangeStartMs, rangeEndMs]}
+                    ticks={[rangeStartMs, rangeMidMs, rangeEndMs]}
+                    tickFormatter={(value) => formatAxisDate(Number(value))}
+                    tickLine={false}
+                    axisLine={{ stroke: "hsl(var(--border) / 0.7)" }}
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    dy={8}
+                  />
+                  <YAxis
+                    type="number"
+                    domain={[sleepAxisMin, sleepAxisMax]}
+                    ticks={sleepYAxisTicks}
+                    tickFormatter={(value) => `${Number(value).toFixed(0)} h`}
+                    tickLine={false}
+                    axisLine={{ stroke: "hsl(var(--border) / 0.7)" }}
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  />
+                  <ReferenceLine y={Number((goalData.sleep_goal_minutes / 60).toFixed(2))} stroke="hsl(var(--primary) / 0.35)" strokeDasharray="4 4" />
                   <Tooltip
+                    labelFormatter={(value) => formatAxisDate(Number(value))}
                     formatter={(value: number | string) => {
                       const hoursValue = typeof value === "number" ? value : Number(value);
-                      return [`${Math.round(hoursValue * 60)} min`, "Total"];
+                      return [`${hoursValue.toFixed(1)} h`, "Sueno"];
                     }}
                   />
-                  <Bar dataKey="hours" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                  <Line
+                    type="monotone"
+                    dataKey="hours"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={3}
+                    dot={{ r: 0 }}
+                    activeDot={{ r: 6, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                  />
+                </LineChart>
               </ResponsiveContainer>
             </div>
           )}

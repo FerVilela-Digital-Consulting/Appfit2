@@ -43,7 +43,7 @@ const TabTourDialog = () => {
     },
     onSuccess: async () => {
       if (!user?.id) return;
-      await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+      await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id, isGuest] });
       closeTourQuery();
       toast.info("Tour pausado. Puedes retomarlo cuando quieras.");
     },
@@ -56,7 +56,7 @@ const TabTourDialog = () => {
     },
     onSuccess: async (nextState) => {
       if (!user?.id) return;
-      await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id] });
+      await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id, isGuest] });
       if (!nextState) return;
 
       const nextTab = getNextIncompleteTourTab(nextState);

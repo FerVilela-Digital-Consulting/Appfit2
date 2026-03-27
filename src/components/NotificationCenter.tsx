@@ -17,7 +17,9 @@ import {
   getNextIncompleteTourTab,
   getTourProgressLocalSnapshot,
   getTourProgressState,
+  isTourNotificationRead,
   isTourCompleted,
+  markTourNotificationRead,
   markTourInviteResponded,
   restartTourProgress,
   shouldPromptTourInvite,
@@ -86,6 +88,8 @@ const NotificationCenter = () => {
     if (!user?.id || isGuest) return null;
     const tourState = tourStateQuery.data ?? getTourProgressLocalSnapshot(user.id, { isGuest: false });
     const nextTab = getNextIncompleteTourTab(tourState) ?? getFirstTourTab();
+    const buildReadAt = (notificationId: LocalTourNotification["id"]) =>
+      isTourNotificationRead(tourState, notificationId) ? tourState.updatedAt ?? new Date().toISOString() : null;
 
     if (isTourCompleted(tourState)) {
       return {
@@ -99,7 +103,7 @@ const NotificationCenter = () => {
         metadata: { source: "local_tour" },
         sender_user_id: null,
         sender_email: null,
-        read_at: null,
+        read_at: buildReadAt(TOUR_REPLAY_NOTIFICATION_ID),
         created_at: new Date().toISOString(),
       };
     }
@@ -117,7 +121,7 @@ const NotificationCenter = () => {
         metadata: { source: "local_tour" },
         sender_user_id: null,
         sender_email: null,
-        read_at: null,
+        read_at: buildReadAt(TOUR_INVITE_NOTIFICATION_ID),
         created_at: new Date().toISOString(),
       };
     }
@@ -135,7 +139,7 @@ const NotificationCenter = () => {
         metadata: { source: "local_tour" },
         sender_user_id: null,
         sender_email: null,
-        read_at: null,
+        read_at: buildReadAt(TOUR_CONTINUE_NOTIFICATION_ID),
         created_at: new Date().toISOString(),
       };
     }
@@ -152,7 +156,7 @@ const NotificationCenter = () => {
       metadata: { source: "local_tour" },
       sender_user_id: null,
       sender_email: null,
-      read_at: null,
+      read_at: buildReadAt(TOUR_INVITE_NOTIFICATION_ID),
       created_at: new Date().toISOString(),
     };
   })();
@@ -209,8 +213,9 @@ const NotificationCenter = () => {
     if (isLocalTourNotification(notification)) {
       if (notification.id === TOUR_INVITE_NOTIFICATION_ID || notification.id === TOUR_CONTINUE_NOTIFICATION_ID) {
         await markTourInviteResponded(user.id, { isGuest: false });
-        await queryClient.invalidateQueries({ queryKey: tourQueryKey });
       }
+      await markTourNotificationRead(user.id, notification.id, { isGuest: false });
+      await queryClient.invalidateQueries({ queryKey: tourQueryKey });
       return;
     }
     await markReadMutation.mutateAsync(notification.id);
@@ -223,6 +228,9 @@ const NotificationCenter = () => {
       (localTourNotification?.id === TOUR_INVITE_NOTIFICATION_ID || localTourNotification?.id === TOUR_CONTINUE_NOTIFICATION_ID)
     ) {
       await markTourInviteResponded(user.id, { isGuest: false });
+    }
+    if (hasLocalUnread && localTourNotification) {
+      await markTourNotificationRead(user.id, localTourNotification.id, { isGuest: false });
       await queryClient.invalidateQueries({ queryKey: tourQueryKey });
     }
     if ((notifications ?? []).some((item) => !item.read_at)) {
