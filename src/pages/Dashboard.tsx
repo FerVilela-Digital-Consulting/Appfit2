@@ -1550,36 +1550,32 @@ const Dashboard = () => {
                     </div>
                     <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
                     <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
-                      <div className="grid gap-3 sm:grid-cols-[132px_1fr] sm:items-center">
-                        <div className="flex flex-col items-center justify-center text-center">
-                          <div className="relative h-32 w-32">
-                            <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-                              <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
-                              <circle
-                                cx="60"
-                                cy="60"
-                                r="48"
-                                stroke="currentColor"
-                                strokeWidth="12"
-                                strokeLinecap="round"
-                                className="text-primary"
-                                fill="none"
-                                strokeDasharray={`${Math.min(100, Math.max(0, caloriesProgress)) * 3.02} 999`}
-                              />
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                              <p className="text-xs text-muted-foreground">Calorías</p>
-                              <p className="text-2xl font-black">{caloriesProgress}%</p>
-                            </div>
+                      <div className="flex flex-col items-center gap-3 text-center">
+                        <div className="relative h-32 w-32">
+                          <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
+                            <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
+                            <circle
+                              cx="60"
+                              cy="60"
+                              r="48"
+                              stroke="currentColor"
+                              strokeWidth="12"
+                              strokeLinecap="round"
+                              className="text-primary"
+                              fill="none"
+                              strokeDasharray={`${Math.min(100, Math.max(0, caloriesProgress)) * 3.02} 999`}
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <p className="text-xs text-muted-foreground">Calorías</p>
+                            <p className="text-2xl font-black">{caloriesProgress}%</p>
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <div className="rounded-xl border border-border/60 bg-background/40 px-3 py-2">
-                            <p className="text-xs text-muted-foreground">Consumidas / Meta</p>
-                            <p className="mt-1 text-[1.7rem] font-black leading-none tracking-tight">
-                              {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
-                            </p>
-                          </div>
+                        <div className="w-full rounded-xl border border-border/60 bg-background/40 px-3 py-2 text-left">
+                          <p className="text-xs text-muted-foreground">Consumidas / Meta</p>
+                          <p className="mt-1 text-[1.7rem] font-black leading-none tracking-tight">
+                            {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1912,37 +1908,33 @@ const Dashboard = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
                 <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
-                  <div className="grid gap-3 sm:grid-cols-[144px_1fr] sm:items-center">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <div className="relative mx-auto h-32 w-32">
-                        <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-                          <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
-                          <circle
-                            cx="60"
-                            cy="60"
-                            r="48"
-                            stroke="currentColor"
-                            strokeWidth="12"
-                            strokeLinecap="round"
-                            className="text-primary"
-                            fill="none"
-                            strokeDasharray={`${Math.min(100, Math.max(0, caloriesProgress)) * 3.02} 999`}
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                          <p className="text-xs text-muted-foreground">Calorías</p>
-                          <p className="text-xl font-black">{caloriesProgress}%</p>
-                        </div>
+                  <div className="flex flex-col items-center gap-3 text-center">
+                    <div className="relative mx-auto h-32 w-32">
+                      <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
+                        <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
+                        <circle
+                          cx="60"
+                          cy="60"
+                          r="48"
+                          stroke="currentColor"
+                          strokeWidth="12"
+                          strokeLinecap="round"
+                          className="text-primary"
+                          fill="none"
+                          strokeDasharray={`${Math.min(100, Math.max(0, caloriesProgress)) * 3.02} 999`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                        <p className="text-xs text-muted-foreground">Calorías</p>
+                        <p className="text-xl font-black">{caloriesProgress}%</p>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="rounded-xl border border-border/60 bg-background/40 px-3 py-2">
-                        <p className="text-xs text-muted-foreground">Consumidas / Meta</p>
-                        <p className="text-lg font-bold">
-                          {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
-                        </p>
-                      </div>
+                    <div className="w-full rounded-xl border border-border/60 bg-background/40 px-3 py-2 text-left">
+                      <p className="text-xs text-muted-foreground">Consumidas / Meta</p>
+                      <p className="text-lg font-bold">
+                        {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
+                      </p>
                     </div>
                   </div>
                 </div>
