@@ -837,9 +837,6 @@ const Dashboard = () => {
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
           <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Recovery score</p>
-          <p className="text-xs text-muted-foreground">
-            Capacidad de carga recomendada para entrenar hoy: <span className={cn("font-semibold", recoveryAccentClass)}>{recoveryBand}</span>
-          </p>
         </div>
         <Popover>
           <PopoverTrigger asChild>
@@ -885,31 +882,38 @@ const Dashboard = () => {
       <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-2 md:grid-cols-[minmax(180px,220px)_1fr] md:gap-3">
         <div className="rounded-lg border border-border/60 bg-background/40 p-2.5 md:p-3">
           <div className="flex items-center gap-3 md:flex-col md:items-center md:gap-2">
-            <div className="relative h-20 w-20 shrink-0 md:h-28 md:w-28">
-              <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-                <circle cx="60" cy="60" r={recoveryRingRadius} className="fill-none stroke-muted/40" strokeWidth="10" />
-                <circle
-                  cx="60"
-                  cy="60"
-                  r={recoveryRingRadius}
-                  className={cn("fill-none", recoveryStrokeClass)}
-                  strokeWidth="10"
-                  strokeLinecap="round"
-                  strokeDasharray={`${recoveryRingDash} ${recoveryRingCircumference - recoveryRingDash}`}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <p className={cn("text-2xl font-black leading-none md:text-3xl", recoveryAccentClass)}>{recoveryScore}</p>
-                <p className="text-[10px] uppercase text-muted-foreground">/100</p>
+            <div className="flex flex-1 flex-col items-center text-center">
+              <div className="relative h-20 w-20 shrink-0 md:h-28 md:w-28">
+                <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
+                  <circle cx="60" cy="60" r={recoveryRingRadius} className="fill-none stroke-muted/40" strokeWidth="10" />
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r={recoveryRingRadius}
+                    className={cn("fill-none", recoveryStrokeClass)}
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray={`${recoveryRingDash} ${recoveryRingCircumference - recoveryRingDash}`}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <p className={cn("text-2xl font-black leading-none md:text-3xl", recoveryAccentClass)}>{recoveryScore}</p>
+                  <p className="text-[10px] uppercase text-muted-foreground">/100</p>
+                </div>
               </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Carga recomendada: <span className={cn("font-semibold", recoveryAccentClass)}>{recoveryBand}</span>
+              </p>
             </div>
           </div>
         </div>
 
         <div className="rounded-lg border border-border/60 bg-background/40 p-2.5 md:p-3">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Recomendacion de carga</p>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Carga fisica recomendada</p>
           <p className="mt-1 text-sm font-black leading-tight md:text-base">{recommendationLabel}</p>
-          <p className={cn("mt-1 text-xs font-semibold", recoveryAccentClass)}>{recoveryStatusLabel}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Segun tu descanso y recuperacion: <span className={cn("font-semibold", recoveryAccentClass)}>{recommendationLabel}</span>
+          </p>
           <p className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
             Detalles en el boton
             <CircleHelp className="h-3.5 w-3.5" />
@@ -2016,8 +2020,6 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-
 
 
 

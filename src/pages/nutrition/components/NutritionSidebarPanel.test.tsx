@@ -100,6 +100,8 @@ describe("NutritionSidebarPanel", () => {
     expect(screen.getByText("Balance energetico")).toBeInTheDocument();
     expect(screen.getByText("Macros")).toBeInTheDocument();
     expect(screen.getByText("2650 kcal")).toBeInTheDocument();
+    expect(screen.getByText("Meta final")).toBeInTheDocument();
+    expect(screen.queryByText("TDEE base")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Ver configuracion tecnica/i })).toBeInTheDocument();
   });
 
@@ -108,5 +110,14 @@ describe("NutritionSidebarPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Ver configuracion tecnica/i }));
     expect(callbacks.onOpenTechnicalConfig).toHaveBeenCalled();
+  });
+
+  it("reveals calorie calculation details on demand", () => {
+    renderPanel();
+
+    fireEvent.click(screen.getByRole("button", { name: /Ver detalle del calculo calorico/i }));
+
+    expect(screen.getByText("TDEE base")).toBeInTheDocument();
+    expect(screen.getByText(/Formula:/i)).toBeInTheDocument();
   });
 });

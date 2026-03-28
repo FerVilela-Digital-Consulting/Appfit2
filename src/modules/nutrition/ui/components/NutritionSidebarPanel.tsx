@@ -1,5 +1,6 @@
 ﻿import { CircleHelp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -174,48 +175,66 @@ export function NutritionSidebarPanel({
           {" | "}
           Objetivo: {String(goalLabel).toLowerCase()}
         </p>
-        <div className="app-surface-caption mt-4 grid gap-2 text-xs uppercase tracking-[0.2em]">
-          <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1">
-              TDEE base
-              {renderCalcHint("Es tu gasto total diario estimado segun edad, peso, altura y actividad.")}
-            </span>
-            <span>{formatMetric(target?.tdee)}</span>
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1">
-              Objetivo
-              {renderCalcHint("Multiplicador por objetivo: perder, mantener o ganar peso.")}
-            </span>
-            <span>{target ? `x${target.goalMultiplier.toFixed(2)}` : "--"}</span>
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1">
-              Base objetivo
-              {renderCalcHint("Resultado de TDEE base x objetivo, antes del ajuste del dia.")}
-            </span>
-            <span>{formatMetric(target?.calorieTarget, " kcal")}</span>
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1">
-              Ajuste del dia
-              {renderCalcHint("Ajuste por plantilla del dia: Base (0), Heavy (+150), Recovery (-300).")}
-            </span>
-            <span>{target ? `${target.archetypeDelta >= 0 ? "+" : ""}${target.archetypeDelta} kcal` : "--"}</span>
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1">
-              Meta final
-              {renderCalcHint("Formula final: (TDEE x objetivo) + ajuste del dia.")}
-            </span>
-            <span>{formatMetric(goals?.calorie_goal, " kcal")}</span>
-          </div>
-        </div>
-        <p className="app-surface-caption mt-2 text-[11px] leading-relaxed">
-          Formula: ({formatMetric(target?.tdee)} x {target ? target.goalMultiplier.toFixed(2) : "--"}) +{" "}
-          {target ? `${target.archetypeDelta >= 0 ? "+" : ""}${target.archetypeDelta}` : "--"} ={" "}
-          {formatMetric(goals?.calorie_goal, " kcal")}
-        </p>
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/30 px-4 py-3 text-left transition-colors hover:bg-background/40"
+              aria-label="Ver detalle del calculo calorico"
+            >
+              <div>
+                <p className="app-surface-caption text-[10px] uppercase tracking-[0.22em]">Meta final</p>
+                <p className="mt-1 text-2xl font-black text-primary">{formatMetric(goals?.calorie_goal, " kcal")}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Toca para ver como se calcula</p>
+              </div>
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Expandir</span>
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+            <div className="app-surface-caption mt-4 grid gap-2 text-xs uppercase tracking-[0.2em]">
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1">
+                  TDEE base
+                  {renderCalcHint("Es tu gasto total diario estimado segun edad, peso, altura y actividad.")}
+                </span>
+                <span>{formatMetric(target?.tdee)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1">
+                  Objetivo
+                  {renderCalcHint("Multiplicador por objetivo: perder, mantener o ganar peso.")}
+                </span>
+                <span>{target ? `x${target.goalMultiplier.toFixed(2)}` : "--"}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1">
+                  Base objetivo
+                  {renderCalcHint("Resultado de TDEE base x objetivo, antes del ajuste del dia.")}
+                </span>
+                <span>{formatMetric(target?.calorieTarget, " kcal")}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1">
+                  Ajuste del dia
+                  {renderCalcHint("Ajuste por plantilla del dia: Base (0), Heavy (+150), Recovery (-300).")}
+                </span>
+                <span>{target ? `${target.archetypeDelta >= 0 ? "+" : ""}${target.archetypeDelta} kcal` : "--"}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1">
+                  Meta final
+                  {renderCalcHint("Formula final: (TDEE x objetivo) + ajuste del dia.")}
+                </span>
+                <span>{formatMetric(goals?.calorie_goal, " kcal")}</span>
+              </div>
+            </div>
+            <p className="app-surface-caption mt-2 text-[11px] leading-relaxed">
+              Formula: ({formatMetric(target?.tdee)} x {target ? target.goalMultiplier.toFixed(2) : "--"}) +{" "}
+              {target ? `${target.archetypeDelta >= 0 ? "+" : ""}${target.archetypeDelta}` : "--"} ={" "}
+              {formatMetric(goals?.calorie_goal, " kcal")}
+            </p>
+          </CollapsibleContent>
+        </Collapsible>
         <Button type="button" variant="outline" className="mt-4 w-full app-outline-button" onClick={onOpenTechnicalConfig}>
           Ver configuración tecnica
         </Button>
