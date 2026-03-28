@@ -50,7 +50,8 @@ export default defineConfig(({ mode }) => ({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Keep install/update lightweight: avoid precaching every lazy JS chunk on each deploy.
+        globPatterns: ["**/*.{html,ico,png,svg,woff2,webmanifest}"],
         globIgnores: ["**/body-mannequin.png"],
         runtimeCaching: [
           {
@@ -63,10 +64,9 @@ export default defineConfig(({ mode }) => ({
           },
           {
             urlPattern: ({ request }) => request.destination === "script" || request.destination === "style",
-            handler: "NetworkFirst",
+            handler: "StaleWhileRevalidate",
             options: {
               cacheName: "app-assets",
-              networkTimeoutSeconds: 3,
             },
           },
           {

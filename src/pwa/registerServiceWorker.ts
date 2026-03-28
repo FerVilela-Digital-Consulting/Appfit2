@@ -11,19 +11,44 @@ export const registerAppServiceWorker = () => {
     return;
   }
 
-  const updateSW = registerSW({
-    immediate: true,
-    onNeedRefresh() {
-      window.dispatchEvent(new CustomEvent("appfit:pwa-update-available"));
-    },
-    onOfflineReady() {
-      window.dispatchEvent(new CustomEvent("appfit:pwa-offline-ready"));
-    },
-    onRegisterError(error) {
-      console.warn("[PWA] Service Worker registration failed.", error);
-    },
-  });
+  const register = () => {
+    const updateSW = registerSW({
+      immediate: false,
+      onNeedRefresh() {
+        window.dispatchEvent(new CustomEvent("appfit:pwa-update-available"));
+      },
+      onOfflineReady() {
+        window.dispatchEvent(new CustomEvent("appfit:pwa-offline-ready"));
+      },
+      onRegisterError(error) {
+        console.warn("[PWA] Service Worker registration failed.", error);
+      },
+    });
 
-  window.__appfitUpdateSW = updateSW;
+    window.__appfitUpdateSW = updateSW;
+  };
+
+  const isPublicBootRoute =
+    window.location.pathname === "/" ||
+    window.location.pathname.startsWith("/auth");
+
+  if (!isPublicBootRoute) {
+    register();
+    return;
+  }
+
+  const scheduleRegister = () => {
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(() => register(), { timeout: 3500 });
+      return;
+    }
+    window.setTimeout(register, 1500);
+  };
+
+  if (document.readyState === "complete") {
+    scheduleRegister();
+  } else {
+    window.addEventListener("load", scheduleRegister, { once: true });
+  }
 };
 

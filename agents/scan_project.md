@@ -1,12 +1,18 @@
-Actúa como un Staff Engineer especializado en análisis de repositorios y arquitectura de software.
+﻿RUTA UNICA DE DOCUMENTACION (OBLIGATORIA)
 
-Tu tarea es analizar completamente este repositorio y preparar la documentación técnica base para desarrollo asistido por IA.
+- Usar solo la carpeta: docs/
+- No usar ni crear: agents/docs/
+- Toda lectura de contexto debe salir de docs/.
+- Si falta un archivo en docs/, reportarlo; no crear otra carpeta de documentacion.
+ActÃºa como un Staff Engineer especializado en anÃ¡lisis de repositorios y arquitectura de software.
+
+Tu tarea es analizar completamente este repositorio y preparar la documentaciÃ³n tÃ©cnica base para desarrollo asistido por IA.
 
 ---
 
 OBJETIVO
 
-Escanear el repositorio completo y generar la documentación técnica inicial dentro de la carpeta docs/.
+Escanear el repositorio completo y generar la documentaciÃ³n tÃ©cnica inicial dentro de la carpeta docs/.
 
 Los documentos que debes generar son:
 
@@ -69,7 +75,7 @@ Nginx
 VPS en Linode  
 acceso SSH  
 
-El sistema también puede utilizar una plataforma de despliegue como:
+El sistema tambiÃ©n puede utilizar una plataforma de despliegue como:
 
 Dokploy
 
@@ -79,7 +85,7 @@ En ese caso debes identificar:
 - puertos expuestos
 - variables de entorno necesarias
 - servicios desplegados
-- configuración de proxy (Traefik o Nginx)
+- configuraciÃ³n de proxy (Traefik o Nginx)
 
 Si detectas:
 
@@ -97,30 +103,30 @@ debes documentarlo.
 
 ---
 
-INFORMACIÓN QUE DEBES EXTRAER
+INFORMACIÃ“N QUE DEBES EXTRAER
 
-1. Stack tecnológico detectado
+1. Stack tecnolÃ³gico detectado
 2. Arquitectura del sistema
-3. Dependencias críticas
+3. Dependencias crÃ­ticas
 4. Flujo de datos
 5. Integraciones externas
 6. Comandos operativos
 7. Estrategia de despliegue
-8. Riesgos técnicos
+8. Riesgos tÃ©cnicos
 9. posibles bugs comunes
-10. exposición de secretos (si hay `.env` versionado o credenciales hardcodeadas)
+10. exposiciÃ³n de secretos (si hay `.env` versionado o credenciales hardcodeadas)
 
 ---
 
 FORMATO DE DOCUMENTOS
 
-Cada documento debe estar estructurado y ser fácil de entender tanto para ingenieros humanos como para agentes de IA.
+Cada documento debe estar estructurado y ser fÃ¡cil de entender tanto para ingenieros humanos como para agentes de IA.
 
-Aplicar buenas prácticas utilizadas por equipos de ingeniería de grandes empresas.
+Aplicar buenas prÃ¡cticas utilizadas por equipos de ingenierÃ­a de grandes empresas.
 
 Reglas de seguridad obligatorias:
 - Al analizar `.env`, documentar solo nombres de variables y riesgos; nunca copiar valores reales.
-- Si detectas credenciales expuestas en el repositorio, registrarlo como bug crítico con plan de rotación.
+- Si detectas credenciales expuestas en el repositorio, registrarlo como bug crÃ­tico con plan de rotaciÃ³n.
 - Usar placeholders en ejemplos (`<RESEND_API_KEY>`, `<CRON_SECRET>`, `<SUPABASE_SERVICE_ROLE>`).
 
 ---
@@ -138,6 +144,7 @@ Debugging Agent
 Cybersecurity Agent  
 Server / DevOps Agent  
 
-El runbook debe servir como memoria técnica del sistema.
+El runbook debe servir como memoria tÃ©cnica del sistema.
 
-Si hay incertidumbre en algún punto debes indicarlo claramente.
+Si hay incertidumbre en algÃºn punto debes indicarlo claramente.
+

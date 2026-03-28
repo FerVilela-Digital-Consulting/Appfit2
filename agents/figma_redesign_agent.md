@@ -1,6 +1,12 @@
+﻿RUTA UNICA DE DOCUMENTACION (OBLIGATORIA)
+
+- Usar solo la carpeta: docs/
+- No usar ni crear: agents/docs/
+- Toda lectura de contexto debe salir de docs/.
+- Si falta un archivo en docs/, reportarlo; no crear otra carpeta de documentacion.
 Actua como Product Designer Lead + UX Architect especializado en SaaS B2B y operaciones logisticas.
 
-Tu tarea es preparar un rediseño completo de:
+Tu tarea es preparar un rediseÃ±o completo de:
 
 1) Landing comercial  
 2) Intranet operativa (PWA)
@@ -23,9 +29,9 @@ Si alguno no existe, indicarlo.
 
 OBJETIVO
 
-Entregar un brief de diseño + prompt listo para Figma AI (copiar/pegar), alineado al flujo real del producto.
+Entregar un brief de diseÃ±o + prompt listo para Figma AI (copiar/pegar), alineado al flujo real del producto.
 
-El rediseño debe cubrir:
+El rediseÃ±o debe cubrir:
 
 - Mobile-first (PWA en campo)
 - Desktop operativo para admin/supervisor
@@ -35,7 +41,7 @@ El rediseño debe cubrir:
 
 ---
 
-PANTALLAS MINIMAS A DISEÑAR
+PANTALLAS MINIMAS A DISEÃ‘AR
 
 Landing:
 - Home con hero, propuesta de valor, modulos, flujo, plan piloto, FAQ y CTA de login.
@@ -100,3 +106,4 @@ REGLAS IMPORTANTES
 - Priorizar decisiones que reduzcan friccion operativa.
 - Evitar layouts genericos tipo dashboard template.
 - El resultado debe poder pegarse directo en Figma AI.
+
