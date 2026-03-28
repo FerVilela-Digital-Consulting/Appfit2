@@ -15,6 +15,7 @@ import {
   Moon,
   RefreshCcw,
   Settings2,
+  SlidersHorizontal,
   Sparkles,
   TimerReset,
   UtensilsCrossed,
@@ -41,7 +42,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -413,37 +413,45 @@ const Dashboard = () => {
     saveWidgetPreferencesMutation.mutate(next);
   };
 
-  const renderCheckinModuleSelector = (className?: string) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" className={cn("h-9 justify-between rounded-xl px-3 text-xs font-semibold", className)}>
-          <span>Modulos check-in</span>
-          <span className="inline-flex items-center gap-2 text-muted-foreground">
-            {selectedModuleKeys.length}
-            <ChevronDown className="h-4 w-4" />
-          </span>
+  const renderCheckinModuleSelector = () => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-xl border border-border/60 bg-background/60 text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+          aria-label="Lista de check-in activos"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64 rounded-xl p-2">
-        <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Checklist visible
-        </DropdownMenuLabel>
-        {DASHBOARD_CHECKIN_MODULE_DEFINITIONS.map((module) => {
-          const checked = selectedModuleKeys.includes(module.key);
-          return (
-            <DropdownMenuCheckboxItem
-              key={module.key}
-              checked={checked}
-              disabled={saveModulePreferencesMutation.isPending}
-              className="rounded-lg px-2 py-2 text-sm font-medium"
-              onCheckedChange={(value) => handleToggleModule(module.key, Boolean(value))}
-            >
-              {module.label}
-            </DropdownMenuCheckboxItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 space-y-3 rounded-2xl p-3">
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Checklist activa</p>
+          <p className="text-sm text-muted-foreground">Elige los módulos que quieres mostrar en tu lista de check-in de hoy.</p>
+        </div>
+        <div className="grid gap-1">
+          {DASHBOARD_CHECKIN_MODULE_DEFINITIONS.map((module) => {
+            const checked = selectedModuleKeys.includes(module.key);
+            return (
+              <div key={module.key} className="flex items-center space-x-3 rounded-xl px-2 py-2 hover:bg-muted/40">
+                <Checkbox
+                  id={`dashboard-module-${module.key}`}
+                  checked={checked}
+                  onCheckedChange={(value) => handleToggleModule(module.key, Boolean(value))}
+                  disabled={saveModulePreferencesMutation.isPending}
+                  className="shrink-0"
+                />
+                <Label htmlFor={`dashboard-module-${module.key}`} className="text-sm font-normal leading-none">
+                  {module.label}
+                </Label>
+              </div>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 
   const nutritionSummary = useMemo(
@@ -735,34 +743,8 @@ const Dashboard = () => {
           : "text-muted-foreground";
   const physicalSummary = core?.physicalSummary ?? null;
   const focusHeading = (physicalSummary?.goalHeading ?? "Sin meta activa").replace(/^Meta activa:\s*/i, "");
-  const compactPhysicalMetrics =
-    physicalSummary?.focusMode === "muscle_gain"
-      ? [
-          { label: "Masa magra", value: physicalSummary.leanMassKg !== null ? `${physicalSummary.leanMassKg.toFixed(1)} kg` : "--" },
-          { label: "Brazo", value: physicalSummary.armCm !== null ? `${physicalSummary.armCm.toFixed(1)} cm` : "--" },
-          { label: "Muslo", value: physicalSummary.thighCm !== null ? `${physicalSummary.thighCm.toFixed(1)} cm` : "--" },
-        ]
-      : [
-          {
-            label: "Cintura",
-            value:
-              physicalSummary?.waistChangeCm !== null && physicalSummary?.waistChangeCm !== undefined
-                ? `${physicalSummary.waistChangeCm > 0 ? "+" : ""}${physicalSummary.waistChangeCm.toFixed(1)} cm`
-                : "--",
-          },
-          {
-            label: "% graso",
-            value:
-              physicalSummary?.bodyFatPct !== null && physicalSummary?.bodyFatPct !== undefined
-                ? `${physicalSummary.bodyFatPct.toFixed(1)}%`
-                : "--",
-          },
-          { label: "Cambio 7d", value: weightDeltaLabel },
-        ];
-
   const remainingActionsCount = Math.max(missingModules.length, 0);
   const quickActionsVisible = isWidgetVisible("quick_actions");
-  const mobilePhysicalHighlights = compactPhysicalMetrics.slice(0, 2);
   const targetWeightKg = core?.goal?.target_weight_kg ?? null;
   const currentWeightKg = core?.latestMeasurementWeight ?? core?.latestWeight ?? null;
   const goalGapKg =
@@ -1165,6 +1147,10 @@ const Dashboard = () => {
               className="xl:col-span-2"
             >
               <div className="space-y-3">
+                <div className="flex items-center justify-start">
+                  {renderCheckinModuleSelector()}
+                </div>
+
                 <div className="space-y-2">
                   <p className="text-[1.05rem] font-bold">Hoy estás al {todayCompletionPct}% completado</p>
                   <div className="h-2.5 rounded-full bg-muted">
@@ -1191,23 +1177,19 @@ const Dashboard = () => {
                 </div>
 
                 {isMobile ? (
-                  <div className="flex flex-col gap-2">
-                    {renderCheckinModuleSelector("w-full")}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-9 w-full justify-between rounded-xl px-3 text-xs"
-                      onClick={() => setIsTodayDetailsExpanded((prev) => !prev)}
-                    >
-                      <span>{isTodayDetailsExpanded ? "Ocultar acciones rápidas" : "Ver acciones rápidas"}</span>
-                      <ChevronDown className={cn("h-4 w-4 transition-transform", isTodayDetailsExpanded && "rotate-180")} />
-                    </Button>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9 w-full justify-between rounded-xl px-3 text-xs"
+                    onClick={() => setIsTodayDetailsExpanded((prev) => !prev)}
+                  >
+                    <span>{isTodayDetailsExpanded ? "Ocultar acciones rápidas" : "Ver acciones rápidas"}</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", isTodayDetailsExpanded && "rotate-180")} />
+                  </Button>
                 ) : null}
 
                 {!isMobile || isTodayDetailsExpanded ? (
                   <div className="space-y-3">
-                    {!isMobile ? renderCheckinModuleSelector() : null}
                     {isWidgetVisible("quick_actions") ? (
                       <DashboardQuickActions
                         embedded
@@ -1257,15 +1239,6 @@ const Dashboard = () => {
                 <Button asChild type="button" variant="outline" className="h-9 rounded-xl px-3 text-xs font-semibold">
                   <Link to="/body">Ir a medidas</Link>
                 </Button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                {compactPhysicalMetrics.map((metric) => (
-                  <div key={metric.label} className="rounded-xl border border-border/60 bg-muted/10 px-2 py-2">
-                    <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{metric.label}</p>
-                    <p className="mt-1 text-sm font-semibold leading-tight">{metric.value}</p>
-                  </div>
-                ))}
               </div>
 
               <div className="space-y-1">
@@ -1356,6 +1329,10 @@ const Dashboard = () => {
                   contentClassName={denseActionContentClass}
                 >
                   <div className="space-y-3">
+                    <div className="flex items-center justify-start">
+                      {renderCheckinModuleSelector()}
+                    </div>
+
                     <div className="space-y-2">
                       <p className="text-[1.05rem] font-bold">Hoy estás al {todayCompletionPct}% completado</p>
                       <div className="h-2.5 rounded-full bg-muted">
@@ -1380,8 +1357,6 @@ const Dashboard = () => {
                         {nextRequiredActionButtonLabel}
                       </Button>
                     </div>
-
-                    {renderCheckinModuleSelector("w-full")}
 
                     {quickActionsVisible ? (
                       <DashboardQuickActions embedded excludeKeys={["measurements", "nutrition"]} />
@@ -1443,15 +1418,6 @@ const Dashboard = () => {
                         <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${weightGoalProgressSafe ?? 0}%` }} />
                       </div>
                       <p className="text-[11px] text-muted-foreground">{goalGapLabel}</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      {mobilePhysicalHighlights.map((metric) => (
-                        <div key={`mobile-physical-${metric.label}`} className="rounded-lg border border-border/60 bg-muted/10 px-2 py-2">
-                          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{metric.label}</p>
-                          <p className="mt-0.5 text-xs font-semibold">{metric.value}</p>
-                        </div>
-                      ))}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -1559,41 +1525,6 @@ const Dashboard = () => {
                     <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
                   </div>
                   <div className="mt-2 flex flex-1 flex-col gap-2">
-                    <div className="grid gap-1.5 sm:grid-cols-3">
-                      <div className="rounded-xl border border-border/60 bg-muted/10 px-2 py-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span>Proteina</span>
-                          <span>{proteinProgress}%</span>
-                        </div>
-                        <div className="mt-1 h-1.5 rounded-full bg-muted">
-                          <div className="h-1.5 rounded-full bg-emerald-500" style={{ width: `${proteinProgress}%` }} />
-                        </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">{Math.round(proteinCurrent)} / {Math.round(proteinGoal)} g</p>
-                      </div>
-                      <div className="rounded-xl border border-border/60 bg-muted/10 px-2 py-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span>Carbs</span>
-                          <span>{carbsProgress}%</span>
-                        </div>
-                        <div className="mt-1 h-1.5 rounded-full bg-muted">
-                          <div className="h-1.5 rounded-full bg-amber-500" style={{ width: `${carbsProgress}%` }} />
-                        </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">{Math.round(carbsCurrent)} / {Math.round(carbsGoal)} g</p>
-                      </div>
-                      <div className="rounded-xl border border-border/60 bg-muted/10 px-2 py-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span>Grasas</span>
-                          <span>{fatProgress}%</span>
-                        </div>
-                        <div className="mt-1 h-1.5 rounded-full bg-muted">
-                          <div className="h-1.5 rounded-full bg-rose-500" style={{ width: `${fatProgress}%` }} />
-                        </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">{Math.round(fatCurrent)} / {Math.round(fatGoal)} g</p>
-                      </div>
-                    </div>
-                    <div className="rounded-xl border border-border/60 bg-background/35 px-3 py-1.5 text-xs text-muted-foreground">
-                      Restan <span className="font-semibold text-foreground">{remainingCalories.toLocaleString("es-PE")} kcal</span> para cumplir tu objetivo de hoy.
-                    </div>
                     <Button asChild className="mt-auto h-9 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
                       <Link to="/nutrition">Registrar comida</Link>
                     </Button>
@@ -1959,45 +1890,9 @@ const Dashboard = () => {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
-
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <div className="rounded-xl border border-border/60 bg-muted/10 px-2.5 py-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span>Proteina</span>
-                      <span>{proteinProgress}%</span>
-                    </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-muted">
-                      <div className="h-1.5 rounded-full bg-emerald-500" style={{ width: `${proteinProgress}%` }} />
-                    </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{Math.round(proteinCurrent)} / {Math.round(proteinGoal)} g</p>
-                  </div>
-                  <div className="rounded-xl border border-border/60 bg-muted/10 px-2.5 py-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span>Carbs</span>
-                      <span>{carbsProgress}%</span>
-                    </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-muted">
-                      <div className="h-1.5 rounded-full bg-amber-500" style={{ width: `${carbsProgress}%` }} />
-                    </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{Math.round(carbsCurrent)} / {Math.round(carbsGoal)} g</p>
-                  </div>
-                  <div className="rounded-xl border border-border/60 bg-muted/10 px-2.5 py-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span>Grasas</span>
-                      <span>{fatProgress}%</span>
-                    </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-muted">
-                      <div className="h-1.5 rounded-full bg-rose-500" style={{ width: `${fatProgress}%` }} />
-                    </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{Math.round(fatCurrent)} / {Math.round(fatGoal)} g</p>
-                  </div>
-                </div>
               </div>
 
               <div className="space-y-2">
-                <div className="rounded-xl border border-border/60 bg-background/35 px-3 py-2 text-xs text-muted-foreground">
-                  Restan <span className="font-semibold text-foreground">{remainingCalories.toLocaleString("es-PE")} kcal</span> para cumplir tu objetivo de hoy.
-                </div>
                 <Button asChild className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
                   <Link to="/nutrition">Registrar comida</Link>
                 </Button>
