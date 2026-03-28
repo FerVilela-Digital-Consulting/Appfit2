@@ -1460,7 +1460,6 @@ const Dashboard = () => {
               <div className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <DashboardCardShell title="Entrenamiento" className="h-full xl:col-span-2" contentClassName={denseCardContentClass}>
                   <div className="space-y-3">
-                    {renderTrainingRecoveryPanel()}
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Rutina de hoy</p>
@@ -1472,6 +1471,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">El resumen de ejercicios se muestra al iniciar entrenamiento.</p>
+                    {renderTrainingRecoveryPanel()}
                     <div className="flex flex-wrap items-center gap-2">
                       <Button type="button" className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90" onClick={handleOpenTrainingSummary}>
                         {activeSession ? "Continuar entrenamiento" : "Iniciar entrenamiento"}
@@ -1852,8 +1852,6 @@ const Dashboard = () => {
           {!isMobile ? (
             <DashboardCardShell title="Entrenamiento" className="h-full" contentClassName={denseCardContentClass}>
               <div className="space-y-3">
-              {renderTrainingRecoveryPanel()}
-
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Rutina de hoy</p>
@@ -1868,6 +1866,8 @@ const Dashboard = () => {
                 <p className="text-xs text-muted-foreground">
                   El resumen de ejercicios se muestra al iniciar entrenamiento.
                 </p>
+
+                {renderTrainingRecoveryPanel()}
 
                 <div className="flex flex-wrap items-center gap-2">
                   <Button type="button" className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90" onClick={handleOpenTrainingSummary}>
@@ -2016,7 +2016,6 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
 
 
 
