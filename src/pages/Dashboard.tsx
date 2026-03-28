@@ -14,6 +14,8 @@ import {
   Footprints,
   Moon,
   RefreshCcw,
+  Ruler,
+  Scale,
   Settings2,
   SlidersHorizontal,
   Sparkles,
@@ -29,7 +31,6 @@ import DashboardCardShell from "@/components/dashboard/DashboardCardShell";
 import DashboardEmptyState from "@/components/dashboard/DashboardEmptyState";
 import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState";
 import CalendarMiniWidget from "@/components/dashboard/CalendarMiniWidget";
-import DashboardQuickActions from "@/components/dashboard/DashboardQuickActions";
 import TacticalNotesCard from "@/components/dashboard/TacticalNotesCard";
 import TodayStatusRow from "@/components/dashboard/TodayStatusRow";
 import TodayMealsModule from "@/components/daily/TodayMealsModule";
@@ -327,6 +328,7 @@ const Dashboard = () => {
   const {
     missingModules,
     nextModule,
+    pendingChecklist,
     todayCompletionPct,
     primaryAction,
     weeklyConsistency,
@@ -606,7 +608,6 @@ const Dashboard = () => {
   const carbsProgress = Math.min(100, Math.round((carbsCurrent / Math.max(carbsGoal, 1)) * 100));
   const fatProgress = Math.min(100, Math.round((fatCurrent / Math.max(fatGoal, 1)) * 100));
   const remainingProtein = Math.max(proteinGoal - proteinCurrent, 0);
-  const remainingProteinLabel = `${Math.round(remainingProtein).toLocaleString("es-PE")} g`;
   const hasNutritionLogs = consumedCalories > 0 || proteinCurrent > 0 || carbsCurrent > 0 || fatCurrent > 0;
   const nutritionStatus =
     !hasNutritionLogs
@@ -636,9 +637,6 @@ const Dashboard = () => {
         : remainingProtein > 0
           ? `Prioriza una comida con ${Math.min(Math.max(Math.round(remainingProtein), 20), 45)} g de proteína.`
           : "Vas en buena ruta. Mantén porciones para cerrar el día.";
-  const nutritionContextChip = core?.nutritionToday?.targetBreakdown?.tdee
-    ? `TDEE ${Math.round(core.nutritionToday.targetBreakdown.tdee).toLocaleString("es-PE")} kcal`
-    : null;
 
   const workoutExercises = activeWorkout?.exercises ?? scheduledWorkout?.exercises ?? [];
   const estimatedWorkoutMinutes = Math.max(
@@ -744,7 +742,6 @@ const Dashboard = () => {
   const physicalSummary = core?.physicalSummary ?? null;
   const focusHeading = (physicalSummary?.goalHeading ?? "Sin meta activa").replace(/^Meta activa:\s*/i, "");
   const remainingActionsCount = Math.max(missingModules.length, 0);
-  const quickActionsVisible = isWidgetVisible("quick_actions");
   const targetWeightKg = core?.goal?.target_weight_kg ?? null;
   const currentWeightKg = core?.latestMeasurementWeight ?? core?.latestWeight ?? null;
   const goalGapKg =
@@ -771,20 +768,41 @@ const Dashboard = () => {
       ? DASHBOARD_MODULE_ROUTE_FALLBACK[nextRequiredActionHref] ?? "/today"
       : nextRequiredActionHref;
   const nextRequiredActionButtonLabel = nextModule ? "Ir al registro" : primaryAction.label;
-  const handleNextRequiredAction = () => {
-    if (nextRequiredActionModal === "water") {
+  const getModuleIcon = (moduleKey: DashboardCheckinModuleKey) => {
+    switch (moduleKey) {
+      case "water":
+        return Droplets;
+      case "sleep":
+        return Moon;
+      case "weight":
+        return Scale;
+      case "measurements":
+        return Ruler;
+      case "biofeedback":
+        return Activity;
+      case "nutrition":
+        return UtensilsCrossed;
+      default:
+        return CheckCircle2;
+    }
+  };
+  const openDashboardModuleAction = (href: string) => {
+    if (href === "#water") {
       setIsWaterModalOpen(true);
       return;
     }
-    if (nextRequiredActionModal === "sleep") {
+    if (href === "#sleep") {
       setIsSleepModalOpen(true);
       return;
     }
-    if (nextRequiredActionModal === "weight") {
+    if (href === "#weight") {
       setIsWeightModalOpen(true);
       return;
     }
-    navigate(resolvedNextRequiredActionHref);
+    navigate(href.startsWith("#") ? DASHBOARD_MODULE_ROUTE_FALLBACK[href] ?? "/today" : href);
+  };
+  const handleNextRequiredAction = () => {
+    openDashboardModuleAction(nextRequiredActionModal ? nextRequiredActionHref : resolvedNextRequiredActionHref);
   };
   const showSecondaryDashboardZones = !isMobile;
   const getWorkoutExerciseName = (exercise: {
@@ -1180,21 +1198,43 @@ const Dashboard = () => {
                     className="h-9 w-full justify-between rounded-xl px-3 text-xs"
                     onClick={() => setIsTodayDetailsExpanded((prev) => !prev)}
                   >
-                    <span>{isTodayDetailsExpanded ? "Ocultar acciones rápidas" : "Ver acciones rápidas"}</span>
+                    <span>{isTodayDetailsExpanded ? "Ocultar pendientes" : "Ver pendientes"}</span>
                     <ChevronDown className={cn("h-4 w-4 transition-transform", isTodayDetailsExpanded && "rotate-180")} />
                   </Button>
                 ) : null}
 
-                {!isMobile || isTodayDetailsExpanded ? (
-                  <div className="space-y-3">
-                    {isWidgetVisible("quick_actions") ? (
-                      <DashboardQuickActions
-                        embedded
-                        excludeKeys={!isMobile ? ["measurements", "nutrition"] : []}
-                      />
-                    ) : null}
+                {!isMobile || isTodayDetailsExpanded ? pendingChecklist.length > 0 ? (
+                  <div className="space-y-2 rounded-xl border border-border/60 bg-muted/10 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Pendientes</p>
+                      <span className="text-[11px] text-muted-foreground">{pendingChecklist.length} activos</span>
+                    </div>
+                    <div className="grid gap-2">
+                      {pendingChecklist.map((module) => {
+                        const Icon = getModuleIcon(module.key);
+                        return (
+                          <button
+                            key={`pending-desktop-${module.key}`}
+                            type="button"
+                            className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/55 px-3 py-2 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                            onClick={() => openDashboardModuleAction(module.href)}
+                          >
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="rounded-xl border border-border/60 bg-card p-2">
+                                <Icon className="h-4 w-4 text-primary" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold">{module.label}</p>
+                                <p className="text-xs text-muted-foreground">Pendiente por completar</p>
+                              </div>
+                            </div>
+                            <ChevronDown className="-rotate-90 h-4 w-4 shrink-0 text-muted-foreground" />
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                ) : null}
+                ) : null : null}
               </div>
             </DashboardCardShell>
 
@@ -1352,8 +1392,37 @@ const Dashboard = () => {
                       </Button>
                     </div>
 
-                    {quickActionsVisible ? (
-                      <DashboardQuickActions embedded excludeKeys={["measurements", "nutrition"]} />
+                    {pendingChecklist.length > 0 ? (
+                      <div className="space-y-2 rounded-xl border border-border/60 bg-muted/10 p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Pendientes</p>
+                          <span className="text-[11px] text-muted-foreground">{pendingChecklist.length} activos</span>
+                        </div>
+                        <div className="grid gap-2">
+                          {pendingChecklist.map((module) => {
+                            const Icon = getModuleIcon(module.key);
+                            return (
+                              <button
+                                key={`pending-mobile-${module.key}`}
+                                type="button"
+                                className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/55 px-3 py-2 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                                onClick={() => openDashboardModuleAction(module.href)}
+                              >
+                                <div className="flex min-w-0 items-center gap-3">
+                                  <div className="rounded-xl border border-border/60 bg-card p-2">
+                                    <Icon className="h-4 w-4 text-primary" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-semibold">{module.label}</p>
+                                    <p className="text-xs text-muted-foreground">Pendiente por completar</p>
+                                  </div>
+                                </div>
+                                <ChevronDown className="-rotate-90 h-4 w-4 shrink-0 text-muted-foreground" />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 </DashboardCardShell>
@@ -1415,15 +1484,13 @@ const Dashboard = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {!quickActionsVisible ? (
-                        <Button
-                          type="button"
-                          className="h-9 rounded-xl px-3 text-xs font-semibold"
-                          onClick={() => setIsWeightModalOpen(true)}
-                        >
-                          Registrar peso
-                        </Button>
-                      ) : null}
+                      <Button
+                        type="button"
+                        className="h-9 rounded-xl px-3 text-xs font-semibold"
+                        onClick={() => setIsWeightModalOpen(true)}
+                      >
+                        Registrar peso
+                      </Button>
                       <Button asChild type="button" variant="outline" className="h-9 rounded-xl px-3 text-xs font-semibold">
                         <Link to="/body">Ver medidas</Link>
                       </Button>
@@ -1483,9 +1550,9 @@ const Dashboard = () => {
                     </div>
                     <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
                     <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
-                      <div className="grid gap-3 sm:grid-cols-[116px_1fr] sm:items-center">
+                      <div className="grid gap-3 sm:grid-cols-[132px_1fr] sm:items-center">
                         <div className="flex flex-col items-center justify-center text-center">
-                          <div className="relative h-28 w-28">
+                          <div className="relative h-32 w-32">
                             <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
                               <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
                               <circle
@@ -1512,16 +1579,6 @@ const Dashboard = () => {
                             <p className="mt-1 text-[1.7rem] font-black leading-none tracking-tight">
                               {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
                             </p>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[10px] text-muted-foreground">
-                              Proteína restante: <span className="font-semibold text-foreground">{remainingProteinLabel}</span>
-                            </span>
-                            {nutritionContextChip ? (
-                              <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[10px] text-muted-foreground">
-                                {nutritionContextChip}
-                              </span>
-                            ) : null}
                           </div>
                         </div>
                       </div>
@@ -1855,9 +1912,9 @@ const Dashboard = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
                 <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
-                  <div className="grid gap-3 sm:grid-cols-[130px_1fr] sm:items-center">
+                  <div className="grid gap-3 sm:grid-cols-[144px_1fr] sm:items-center">
                     <div className="flex flex-col items-center justify-center text-center">
-                      <div className="relative mx-auto h-28 w-28">
+                      <div className="relative mx-auto h-32 w-32">
                         <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
                           <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
                           <circle
@@ -1885,16 +1942,6 @@ const Dashboard = () => {
                         <p className="text-lg font-bold">
                           {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
                         </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[11px] text-muted-foreground">
-                          Proteína restante: <span className="font-semibold text-foreground">{remainingProteinLabel}</span>
-                        </span>
-                        {nutritionContextChip ? (
-                          <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[11px] text-muted-foreground">
-                            {nutritionContextChip}
-                          </span>
-                        ) : null}
                       </div>
                     </div>
                   </div>
