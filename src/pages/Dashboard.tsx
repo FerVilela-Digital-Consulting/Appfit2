@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -411,6 +412,39 @@ const Dashboard = () => {
     }
     saveWidgetPreferencesMutation.mutate(next);
   };
+
+  const renderCheckinModuleSelector = (className?: string) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="outline" className={cn("h-9 justify-between rounded-xl px-3 text-xs font-semibold", className)}>
+          <span>Modulos check-in</span>
+          <span className="inline-flex items-center gap-2 text-muted-foreground">
+            {selectedModuleKeys.length}
+            <ChevronDown className="h-4 w-4" />
+          </span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-64 rounded-xl p-2">
+        <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Checklist visible
+        </DropdownMenuLabel>
+        {DASHBOARD_CHECKIN_MODULE_DEFINITIONS.map((module) => {
+          const checked = selectedModuleKeys.includes(module.key);
+          return (
+            <DropdownMenuCheckboxItem
+              key={module.key}
+              checked={checked}
+              disabled={saveModulePreferencesMutation.isPending}
+              className="rounded-lg px-2 py-2 text-sm font-medium"
+              onCheckedChange={(value) => handleToggleModule(module.key, Boolean(value))}
+            >
+              {module.label}
+            </DropdownMenuCheckboxItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   const nutritionSummary = useMemo(
     () => {
@@ -910,10 +944,7 @@ const Dashboard = () => {
 
         <div className="rounded-lg border border-border/60 bg-background/40 p-2.5 md:p-3">
           <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Carga fisica recomendada</p>
-          <p className="mt-1 text-sm font-black leading-tight md:text-base">{recommendationLabel}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Segun tu descanso y recuperacion: <span className={cn("font-semibold", recoveryAccentClass)}>{recommendationLabel}</span>
-          </p>
+          <p className={cn("mt-1 text-sm font-black leading-tight md:text-base", recoveryAccentClass)}>{recommendationLabel}</p>
           <p className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
             Detalles en el boton
             <CircleHelp className="h-3.5 w-3.5" />
@@ -1072,27 +1103,6 @@ const Dashboard = () => {
                       ))}
                     </div>
                   </div>
-                  <div className="space-y-2 border-b pb-4">
-                    <p className="text-sm font-medium">Modulos de check-in</p>
-                    <div className="grid max-h-56 gap-2 overflow-auto pr-1">
-                      {DASHBOARD_CHECKIN_MODULE_DEFINITIONS.map((module) => {
-                        const checked = selectedModuleKeys.includes(module.key);
-                        return (
-                          <div key={module.key} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`dashboard-module-${module.key}`}
-                              checked={checked}
-                              onCheckedChange={(value) => handleToggleModule(module.key, Boolean(value))}
-                              disabled={saveModulePreferencesMutation.isPending}
-                            />
-                            <Label htmlFor={`dashboard-module-${module.key}`} className="text-sm font-normal">
-                              {module.label}
-                            </Label>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Widgets visibles</p>
                     <div className="grid max-h-56 gap-2 overflow-auto pr-1">
@@ -1181,19 +1191,23 @@ const Dashboard = () => {
                 </div>
 
                 {isMobile ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-9 w-full justify-between rounded-xl px-3 text-xs"
-                    onClick={() => setIsTodayDetailsExpanded((prev) => !prev)}
-                  >
-                    <span>{isTodayDetailsExpanded ? "Ocultar acciones rápidas" : "Ver acciones rápidas"}</span>
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", isTodayDetailsExpanded && "rotate-180")} />
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    {renderCheckinModuleSelector("w-full")}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9 w-full justify-between rounded-xl px-3 text-xs"
+                      onClick={() => setIsTodayDetailsExpanded((prev) => !prev)}
+                    >
+                      <span>{isTodayDetailsExpanded ? "Ocultar acciones rápidas" : "Ver acciones rápidas"}</span>
+                      <ChevronDown className={cn("h-4 w-4 transition-transform", isTodayDetailsExpanded && "rotate-180")} />
+                    </Button>
+                  </div>
                 ) : null}
 
                 {!isMobile || isTodayDetailsExpanded ? (
                   <div className="space-y-3">
+                    {!isMobile ? renderCheckinModuleSelector() : null}
                     {isWidgetVisible("quick_actions") ? (
                       <DashboardQuickActions
                         embedded
@@ -1366,6 +1380,8 @@ const Dashboard = () => {
                         {nextRequiredActionButtonLabel}
                       </Button>
                     </div>
+
+                    {renderCheckinModuleSelector("w-full")}
 
                     {quickActionsVisible ? (
                       <DashboardQuickActions embedded excludeKeys={["measurements", "nutrition"]} />
@@ -2020,8 +2036,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-
-
-
-
