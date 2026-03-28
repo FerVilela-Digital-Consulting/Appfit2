@@ -1143,14 +1143,11 @@ const Dashboard = () => {
           <div className={cn("grid", denseSectionGapClass, "xl:grid-cols-5")}>
             <DashboardCardShell
               title="Qué hacer hoy"
+              titleRight={renderCheckinModuleSelector()}
               contentClassName={denseActionContentClass}
               className="xl:col-span-2"
             >
               <div className="space-y-3">
-                <div className="flex items-center justify-start">
-                  {renderCheckinModuleSelector()}
-                </div>
-
                 <div className="space-y-2">
                   <p className="text-[1.05rem] font-bold">Hoy estás al {todayCompletionPct}% completado</p>
                   <div className="h-2.5 rounded-full bg-muted">
@@ -1325,14 +1322,11 @@ const Dashboard = () => {
                 <div className="flex h-full flex-col gap-3">
                 <DashboardCardShell
                   title="Qué hacer hoy"
+                  titleRight={renderCheckinModuleSelector()}
                   className="flex-1"
                   contentClassName={denseActionContentClass}
                 >
                   <div className="space-y-3">
-                    <div className="flex items-center justify-start">
-                      {renderCheckinModuleSelector()}
-                    </div>
-
                     <div className="space-y-2">
                       <p className="text-[1.05rem] font-bold">Hoy estás al {todayCompletionPct}% completado</p>
                       <div className="h-2.5 rounded-full bg-muted">
@@ -1476,55 +1470,64 @@ const Dashboard = () => {
 
               <div className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <DashboardCardShell title="Nutrición" className="h-full" contentClassName={cn(denseCardContentClass, "!space-y-0 flex h-full flex-col")}>
-                  <div className="space-y-2.5">
-                    <div className="grid gap-2.5 sm:grid-cols-[116px_1fr]">
-                      <div className="relative mx-auto h-28 w-28">
-                        <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-                          <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
-                          <circle
-                            cx="60"
-                            cy="60"
-                            r="48"
-                            stroke="currentColor"
-                            strokeWidth="12"
-                            strokeLinecap="round"
-                            className="text-primary"
-                            fill="none"
-                            strokeDasharray={`${Math.min(100, Math.max(0, caloriesProgress)) * 3.02} 999`}
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                          <p className="text-xs text-muted-foreground">Calorias</p>
-                          <p className="text-2xl font-black">{caloriesProgress}%</p>
-                        </div>
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Plan de hoy</p>
+                        <p className="text-2xl font-black leading-tight">{nutritionSummary?.profileName ?? "Sin perfil"}</p>
+                        <p className="text-sm text-muted-foreground">Día {nutritionSummary?.archetypeLabel ?? "Base"}</p>
                       </div>
-                      <div className="space-y-1.5">
-                        <div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-1.5">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-xs text-muted-foreground">Consumidas / Meta</p>
-                            <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-semibold", nutritionStatus.className)}>
-                              {nutritionStatus.label}
-                            </span>
-                          </div>
-                          <p className="text-[1.7rem] font-black leading-none tracking-tight">
-                            {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="rounded-full border border-border/60 bg-muted/10 px-2 py-0.5 text-[10px] text-muted-foreground">
-                            Proteina restante: <span className="font-semibold text-foreground">{remainingProteinLabel}</span>
-                          </span>
-                          {nutritionContextChip ? (
-                            <span className="rounded-full border border-border/60 bg-muted/10 px-2 py-0.5 text-[10px] text-muted-foreground">
-                              {nutritionContextChip}
-                            </span>
-                          ) : null}
-                        </div>
+                      <div className={cn("rounded-full border px-3 py-1 text-xs font-semibold", nutritionStatus.className)}>
+                        {nutritionStatus.label}
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
+                    <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                      <div className="grid gap-3 sm:grid-cols-[116px_1fr] sm:items-center">
+                        <div className="flex flex-col items-center justify-center text-center">
+                          <div className="relative h-28 w-28">
+                            <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
+                              <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
+                              <circle
+                                cx="60"
+                                cy="60"
+                                r="48"
+                                stroke="currentColor"
+                                strokeWidth="12"
+                                strokeLinecap="round"
+                                className="text-primary"
+                                fill="none"
+                                strokeDasharray={`${Math.min(100, Math.max(0, caloriesProgress)) * 3.02} 999`}
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                              <p className="text-xs text-muted-foreground">Calorías</p>
+                              <p className="text-2xl font-black">{caloriesProgress}%</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="rounded-xl border border-border/60 bg-background/40 px-3 py-2">
+                            <p className="text-xs text-muted-foreground">Consumidas / Meta</p>
+                            <p className="mt-1 text-[1.7rem] font-black leading-none tracking-tight">
+                              {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[10px] text-muted-foreground">
+                              Proteína restante: <span className="font-semibold text-foreground">{remainingProteinLabel}</span>
+                            </span>
+                            {nutritionContextChip ? (
+                              <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[10px] text-muted-foreground">
+                                {nutritionContextChip}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-2 flex flex-1 flex-col gap-2">
+                  <div className="mt-3 flex flex-1 flex-col gap-2">
                     <Button asChild className="mt-auto h-9 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
                       <Link to="/nutrition">Registrar comida</Link>
                     </Button>
@@ -1840,56 +1843,62 @@ const Dashboard = () => {
           <DashboardCardShell title="Nutrición" className="h-full" contentClassName={denseCardContentClass}>
             <div className="flex h-full flex-col gap-4">
               <div className="space-y-3">
-                <div className="grid gap-3 sm:grid-cols-[130px_1fr]">
-                <div className="relative mx-auto h-28 w-28">
-                  <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-                    <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="48"
-                      stroke="currentColor"
-                      strokeWidth="12"
-                      strokeLinecap="round"
-                      className="text-primary"
-                      fill="none"
-                      strokeDasharray={`${Math.min(100, Math.max(0, caloriesProgress)) * 3.02} 999`}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <p className="text-xs text-muted-foreground">Calorias</p>
-                    <p className="text-xl font-black">{caloriesProgress}%</p>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Plan de hoy</p>
+                    <p className="text-2xl font-black leading-tight">{nutritionSummary?.profileName ?? "Sin perfil"}</p>
+                    <p className="text-sm text-muted-foreground">Día {nutritionSummary?.archetypeLabel ?? "Base"}</p>
+                  </div>
+                  <div className={cn("rounded-full border px-3 py-1 text-xs font-semibold", nutritionStatus.className)}>
+                    {nutritionStatus.label}
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-xs text-muted-foreground">Consumidas / Meta</p>
-                      <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-semibold", nutritionStatus.className)}>
-                        {nutritionStatus.label}
-                      </span>
+                <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
+                <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                  <div className="grid gap-3 sm:grid-cols-[130px_1fr] sm:items-center">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <div className="relative mx-auto h-28 w-28">
+                        <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
+                          <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="12" className="text-muted/30" fill="none" />
+                          <circle
+                            cx="60"
+                            cy="60"
+                            r="48"
+                            stroke="currentColor"
+                            strokeWidth="12"
+                            strokeLinecap="round"
+                            className="text-primary"
+                            fill="none"
+                            strokeDasharray={`${Math.min(100, Math.max(0, caloriesProgress)) * 3.02} 999`}
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                          <p className="text-xs text-muted-foreground">Calorías</p>
+                          <p className="text-xl font-black">{caloriesProgress}%</p>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-lg font-bold">
-                      {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
-                    </p>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Perfil: {nutritionSummary?.profileName ?? "Sin perfil"} - Día {nutritionSummary?.archetypeLabel ?? "Base"}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="rounded-full border border-border/60 bg-muted/10 px-2 py-0.5 text-[11px] text-muted-foreground">
-                      Proteina restante: <span className="font-semibold text-foreground">{remainingProteinLabel}</span>
-                    </span>
-                    {nutritionContextChip ? (
-                      <span className="rounded-full border border-border/60 bg-muted/10 px-2 py-0.5 text-[11px] text-muted-foreground">
-                        {nutritionContextChip}
-                      </span>
-                    ) : null}
+
+                    <div className="space-y-2">
+                      <div className="rounded-xl border border-border/60 bg-background/40 px-3 py-2">
+                        <p className="text-xs text-muted-foreground">Consumidas / Meta</p>
+                        <p className="text-lg font-bold">
+                          {consumedCalories.toLocaleString("es-PE")} / {targetCalories.toLocaleString("es-PE")} kcal
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[11px] text-muted-foreground">
+                          Proteína restante: <span className="font-semibold text-foreground">{remainingProteinLabel}</span>
+                        </span>
+                        {nutritionContextChip ? (
+                          <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[11px] text-muted-foreground">
+                            {nutritionContextChip}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
               </div>
 
               <div className="space-y-2">
