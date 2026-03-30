@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGetSession = vi.fn();
+const mockGetUser = vi.fn();
 const mockOnAuthStateChange = vi.fn();
 const mockSignInWithPassword = vi.fn();
 const mockSignUp = vi.fn();
@@ -42,6 +43,7 @@ vi.mock("@/services/supabaseClient", () => ({
   supabase: {
     auth: {
       getSession: () => mockGetSession(),
+      getUser: () => mockGetUser(),
       onAuthStateChange: (...args: unknown[]) => mockOnAuthStateChange(...args),
       signInWithPassword: (...args: unknown[]) => mockSignInWithPassword(...args),
       signUp: (...args: unknown[]) => mockSignUp(...args),
@@ -94,6 +96,7 @@ describe("AuthProvider", () => {
     localStorage.clear();
     mockGetSession.mockReset();
     mockOnAuthStateChange.mockReset();
+    mockGetUser.mockReset();
     mockSignInWithPassword.mockReset();
     mockSignUp.mockReset();
     mockResend.mockReset();
@@ -103,6 +106,7 @@ describe("AuthProvider", () => {
     mockUpsertMaybeSingle.mockReset();
 
     mockGetSession.mockResolvedValue({ data: { session: null } });
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
     mockOnAuthStateChange.mockReturnValue({
       data: {
         subscription: {
@@ -175,6 +179,12 @@ describe("AuthProvider", () => {
         },
       },
     });
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: "user-1" },
+      },
+      error: null,
+    });
 
     renderAuthProvider();
 
@@ -201,6 +211,12 @@ describe("AuthProvider", () => {
         },
       },
     });
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: "user-2" },
+      },
+      error: null,
+    });
     mockMaybeSingle.mockRejectedValueOnce(new Error("profiles unavailable"));
 
     renderAuthProvider();
@@ -220,6 +236,12 @@ describe("AuthProvider", () => {
           user: { id: "user-3" },
         },
       },
+    });
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: "user-3" },
+      },
+      error: null,
     });
     mockMaybeSingle.mockResolvedValueOnce({
       data: {
@@ -269,6 +291,19 @@ describe("AuthProvider", () => {
         },
       },
     });
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: "user-suspended" },
+      },
+      error: null,
+    });
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: {
+        full_name: "Suspended User",
+        onboarding_completed: false,
+      },
+      error: null,
+    });
     mockMaybeSingle.mockResolvedValueOnce({
       data: {
         account_role: "member",
@@ -297,6 +332,12 @@ describe("AuthProvider", () => {
         },
       },
     });
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: "user-9" },
+      },
+      error: null,
+    });
 
     renderAuthProvider();
 
@@ -313,5 +354,32 @@ describe("AuthProvider", () => {
     });
 
     expect(mockMaybeSingle).toHaveBeenCalledTimes(2);
+  });
+
+  it("clears a stale persisted session before exposing the user", async () => {
+    mockGetSession.mockResolvedValue({
+      data: {
+        session: {
+          user: { id: "stale-user" },
+        },
+      },
+    });
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: null,
+      },
+      error: null,
+    });
+    mockSignOut.mockResolvedValue({ error: null });
+
+    renderAuthProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("loading")).toHaveTextContent("false");
+      expect(screen.getByTestId("user")).toHaveTextContent("none");
+    });
+
+    expect(mockSignOut).toHaveBeenCalledTimes(1);
+    expect(mockMaybeSingle).not.toHaveBeenCalled();
   });
 });

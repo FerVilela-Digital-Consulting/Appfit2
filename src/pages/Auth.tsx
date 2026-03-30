@@ -44,17 +44,21 @@ const Auth = () => {
     const [pendingEmailConfirmation, setPendingEmailConfirmation] = useState(false);
     const [authErrorMessage, setAuthErrorMessage] = useState("");
 
-    const { user, isGuest, signIn, signUp, resendConfirmationEmail, requestPasswordReset, continueAsGuest } = useAuth();
+    const { user, loading: authLoading, isGuest, signIn, signUp, resendConfirmationEmail, requestPasswordReset, continueAsGuest } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const allowGuestAuth = Boolean((location.state as { fromGuestSwitch?: boolean } | null)?.fromGuestSwitch);
     const showGuestAccess = false;
 
     useEffect(() => {
+        if (authLoading) {
+            return;
+        }
+
         if (user || (isGuest && !allowGuestAuth)) {
             navigate("/today", { replace: true });
         }
-    }, [user, isGuest, allowGuestAuth, navigate]);
+    }, [authLoading, user, isGuest, allowGuestAuth, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

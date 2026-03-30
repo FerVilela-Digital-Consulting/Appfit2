@@ -170,6 +170,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     };
 
+    const validatePersistedSessionUser = async (sessionUser: User): Promise<User | null> => {
+        try {
+            const { data, error } = await withTimeout(
+                supabase.auth.getUser(),
+                AUTH_RESOLVE_TIMEOUT_MS,
+                "Persisted auth user validation timed out.",
+            );
+
+            if (error || !data.user) {
+                console.warn("Discarding stale persisted auth session.", error);
+                return null;
+            }
+
+            return data.user;
+        } catch (error) {
+            console.warn("Could not validate persisted auth session.", error);
+            return null;
+        }
+    };
+
     const syncAuthenticatedUser = async (authUser: User, options?: { force?: boolean; source?: string }) => {
         logFlow(`Syncing authenticated user: ${authUser.id}${options?.source ? ` (${options.source})` : ''}`);
         setUser(authUser);
@@ -333,8 +353,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (!isMounted) return;
 
                 if (session?.user) {
-                    logFlow("Initial session detected: " + session.user.id);
-                    await syncAuthenticatedUser(session.user, { source: 'initializeAuth' });
+                    const validatedUser = await validatePersistedSessionUser(session.user);
+
+                    if (validatedUser) {
+                        logFlow("Initial session detected: " + validatedUser.id);
+                        await syncAuthenticatedUser(validatedUser, { source: 'initializeAuth' });
+                    } else {
+                        logFlow("Initial session was stale and has been cleared.");
+                        await supabase.auth.signOut().catch(() => undefined);
+                        setUser(null);
+                        setAuthedProfile(null);
+                        setAccountRole("member");
+                        setAccountRoleLoading(false);
+                        lastSuccessfulSyncRef.current = null;
+                        suspendedAccountNoticeRef.current = null;
+                        setGuestProfile(createGuestProfile());
+                        setOnboardingCompleted(isGuest ? true : false);
+                    }
                 } else {
                     logFlow("No initial session detected.");
                     setUser(null);

@@ -35,6 +35,38 @@ Este documento esta optimizado para recuperar contexto con bajo consumo de token
 
 ---
 
+## 2026-03-30 - Validacion de sesion persistida tras deploy
+
+### Alcance
+- Area: Auth bootstrap
+- Tipo: fix
+- Owner: CTO flow
+
+### Cambios
+- Se agrego validacion del usuario persistido con Supabase antes de aceptar la sesion inicial del navegador.
+- Se limpia la sesion local stale cuando `getSession()` devuelve un usuario pero la validacion remota no lo confirma.
+- La pantalla `/auth` ya no redirige a `/today` mientras el bootstrap de autenticacion sigue resolviendo.
+- Se agrego cobertura de tests para el caso de sesion persistida invalida post-deploy.
+
+### Archivos tocados
+- src/context/AuthContext.tsx
+- src/pages/Auth.tsx
+- src/context/AuthContext.test.tsx
+
+### Riesgo
+- medium
+- Notas: cambia el criterio de aceptacion de sesion inicial; conviene smoke test manual despues del siguiente deploy.
+
+### Verificacion
+- `npm test -- AuthContext`
+- Caso cubierto: una sesion persistida no validada ya no expone al usuario en la app antes de limpiar el estado.
+
+### Pendientes
+- Validar en entorno desplegado si el rebote post-deploy desaparece sin afectar logins legitimos.
+- Evaluar si conviene endurecer tambien la estrategia de cache HTML en Nginx/Dokploy.
+
+---
+
 ## 2026-03-27 - Cierre de sesion (CTO)
 
 ### Alcance

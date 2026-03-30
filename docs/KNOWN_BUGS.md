@@ -128,3 +128,49 @@ No local command is sufficient; verify through Supabase dashboard and SMTP provi
 
 - configure custom SMTP before production rollout
 - document auth email behavior and test cases
+
+---
+
+## Bug
+
+Persisted auth session after redeploy can briefly expose authenticated UI before the app forces a fresh login.
+
+## Contexto
+
+After a deploy, the browser can still hold a previous Supabase session in local storage. The frontend may rehydrate that session on boot before the newest build finishes validating it.
+
+## Stack involucrado
+
+- Supabase Auth
+- React auth bootstrap
+- Browser localStorage
+- Vite deploy lifecycle
+
+## Sintomas
+
+- user appears logged in immediately after opening the app post-deploy
+- protected routes or `/today` render briefly
+- a few seconds later the app redirects back to `/auth`
+- logging in a second time usually works normally
+
+## Causa raiz
+
+The previous implementation accepted the persisted session returned by `getSession()` during bootstrap before confirming that the current backend still recognized that user session.
+
+## Solucion
+
+- validate the persisted session with a remote user check before exposing authenticated app state
+- clear stale local session state when validation fails
+- avoid auth-page redirects while initial auth bootstrap is still loading
+
+## Comandos utiles
+
+```powershell
+npm test -- AuthContext
+```
+
+## Prevencion
+
+- smoke-test post-deploy auth in a clean browser session
+- watch for stale bundle or stale HTML cache after redeploy
+- avoid treating local persisted auth state as authoritative before remote validation
