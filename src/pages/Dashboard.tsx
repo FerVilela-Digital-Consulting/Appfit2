@@ -10,7 +10,6 @@ import {
   Clock3,
   Droplets,
   Dumbbell,
-  Flame,
   Footprints,
   Moon,
   RefreshCcw,
@@ -32,6 +31,7 @@ import DashboardEmptyState from "@/components/dashboard/DashboardEmptyState";
 import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState";
 import CalendarMiniWidget from "@/components/dashboard/CalendarMiniWidget";
 import TacticalNotesCard from "@/components/dashboard/TacticalNotesCard";
+import BiofeedbackQuickCheckin, { type BiofeedbackValues } from "@/components/dashboard/BiofeedbackQuickCheckin";
 import TodayStatusRow from "@/components/dashboard/TodayStatusRow";
 import TodayMealsModule from "@/components/daily/TodayMealsModule";
 import TodayWeightModule from "@/components/daily/TodayWeightModule";
@@ -74,6 +74,7 @@ import {
   getDashboardHomeWidgetPreferences,
   saveDashboardHomeWidgetPreferences,
 } from "@/services/dashboardHomePreferences";
+import { upsertDailyBiofeedback } from "@/services/dailyBiofeedback";
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
@@ -233,9 +234,11 @@ const Dashboard = () => {
   const [isModuleTransitioning, setIsModuleTransitioning] = useState(false);
   const [isWaterModalOpen, setIsWaterModalOpen] = useState(false);
   const [isSleepModalOpen, setIsSleepModalOpen] = useState(false);
+  const [isBiofeedbackModalOpen, setIsBiofeedbackModalOpen] = useState(false);
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [isTrainingSummaryOpen, setIsTrainingSummaryOpen] = useState(false);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [hasPendingBiofeedbackRefresh, setHasPendingBiofeedbackRefresh] = useState(false);
   const [weightTrendRange, setWeightTrendRange] = useState<(typeof WEIGHT_RANGE_OPTIONS)[number]["key"]>("7d");
   const [selectedTrainingWorkoutId, setSelectedTrainingWorkoutId] = useState<string | null>(null);
   const isMobile = useIsMobile();
@@ -257,6 +260,21 @@ const Dashboard = () => {
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, "No se pudo guardar la nota."));
+    },
+  });
+  const saveBiofeedbackMutation = useMutation({
+    mutationFn: async (values: BiofeedbackValues) =>
+      upsertDailyBiofeedback({
+        userId: user?.id ?? null,
+        date: new Date(),
+        isGuest,
+        timeZone,
+        notes: null,
+        ...values,
+      }),
+    onError: (error: unknown) => {
+      console.error("[dashboard] biofeedback autosave error", error);
+      toast.error(getErrorMessage(error, "No se pudo guardar el check-in de biofeedback."));
     },
   });
 
@@ -361,6 +379,20 @@ const Dashboard = () => {
   useEffect(() => {
     saveDashboardCardDensity(cardDensity);
   }, [cardDensity]);
+
+  useEffect(() => {
+    if (isBiofeedbackModalOpen || !hasPendingBiofeedbackRefresh) return;
+    void Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["dashboard_snapshot"] }),
+      queryClient.invalidateQueries({ queryKey: ["daily_biofeedback"] }),
+      queryClient.invalidateQueries({ queryKey: ["daily_biofeedback_summary"] }),
+      queryClient.invalidateQueries({ queryKey: ["daily_biofeedback_recent"] }),
+      queryClient.invalidateQueries({ queryKey: ["calendar_data"] }),
+      queryClient.invalidateQueries({ queryKey: ["calendar_day_biofeedback"] }),
+      queryClient.invalidateQueries({ queryKey: ["weekly_review_summary"] }),
+    ]);
+    setHasPendingBiofeedbackRefresh(false);
+  }, [hasPendingBiofeedbackRefresh, isBiofeedbackModalOpen, queryClient]);
 
   useEffect(() => {
     if (!isTrainingSummaryOpen) return;
@@ -576,6 +608,9 @@ const Dashboard = () => {
   );
   const energyLabel = core?.bioToday?.daily_energy !== null && core?.bioToday?.daily_energy !== undefined ? `${core.bioToday.daily_energy}/10` : "--";
   const stressLabel = core?.bioToday?.perceived_stress !== null && core?.bioToday?.perceived_stress !== undefined ? `${core.bioToday.perceived_stress}/10` : "--";
+  const biofeedbackValueLabel = core?.bioToday ? `Energía ${energyLabel}` : "Sin check-in";
+  const biofeedbackGoalLabel = core?.bioToday ? `Estrés ${stressLabel}` : "Registra hoy";
+  const biofeedbackProgress = core?.bioToday ? Math.max(0, Math.min(100, recoveryScore)) : 0;
 
   const recommendationLabel =
     recoveryScore >= 75
@@ -771,6 +806,7 @@ const Dashboard = () => {
       ? DASHBOARD_MODULE_ROUTE_FALLBACK[nextRequiredActionHref] ?? "/today"
       : nextRequiredActionHref;
   const nextRequiredActionButtonLabel = nextModule ? "Ir al registro" : primaryAction.label;
+  const biofeedbackStorageScopeKey = isGuest ? "guest" : user?.id ?? "anon";
   const getModuleIcon = (moduleKey: DashboardCheckinModuleKey) => {
     switch (moduleKey) {
       case "water":
@@ -1311,16 +1347,17 @@ const Dashboard = () => {
                     onActionClick={() => setIsWaterModalOpen(true)}
                   />
                 </section>
-                <section id="nutrition-mini" className="min-w-0">
+                <section id="biofeedback-mini" className="min-w-0">
                   <DashboardMetricCard
-                    title="Calorias"
-                    icon={Flame}
-                    valueLabel={`${consumedCalories.toLocaleString("es-PE")} kcal`}
-                    goalLabel={`${targetCalories.toLocaleString("es-PE")} kcal`}
-                    progressPct={caloriesProgress}
-                    accentClassName="bg-amber-500/90 text-amber-100"
-                    actionHref="/nutrition"
+                    title="Biofeedback"
+                    icon={Activity}
+                    valueLabel={biofeedbackValueLabel}
+                    goalLabel={biofeedbackGoalLabel}
+                    progressPct={biofeedbackProgress}
+                    accentClassName="bg-emerald-500/90 text-emerald-100"
+                    actionHref="/biofeedback"
                     actionLabel="+"
+                    onActionClick={() => setIsBiofeedbackModalOpen(true)}
                   />
                 </section>
                 <section id="sleep" className="min-w-0">
@@ -1431,19 +1468,12 @@ const Dashboard = () => {
                   </div>
                 </DashboardCardShell>
 
-                <DashboardCardShell title="Nota del día" contentClassName="space-y-2 p-3">
-                  <p className="line-clamp-1 text-xs text-muted-foreground">
-                    {core?.noteToday?.content?.trim() ? core.noteToday.content.trim() : "Agregar nota del día y sincronizar al calendario."}
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-9 w-full rounded-xl px-3 text-xs font-semibold"
-                    onClick={() => setIsNotesModalOpen(true)}
-                  >
-                    Abrir nota
-                  </Button>
-                </DashboardCardShell>
+                <TacticalNotesCard
+                  loading={snapshot.coreLoading}
+                  todayNote={core?.noteToday ?? null}
+                  latestNote={core?.noteLatest ?? null}
+                  onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
+                />
                 </div>
               </div>
 
@@ -1604,16 +1634,17 @@ const Dashboard = () => {
                       onActionClick={() => setIsWaterModalOpen(true)}
                     />
                   </section>
-                  <section id="nutrition-mini" className="min-w-0">
+                  <section id="biofeedback-mini" className="min-w-0">
                     <DashboardMetricCard
-                      title="Calorias"
-                      icon={Flame}
-                      valueLabel={`${consumedCalories.toLocaleString("es-PE")} kcal`}
-                      goalLabel={`${targetCalories.toLocaleString("es-PE")} kcal`}
-                      progressPct={caloriesProgress}
-                      accentClassName="bg-amber-500/90 text-amber-100"
-                      actionHref="/nutrition"
+                      title="Biofeedback"
+                      icon={Activity}
+                      valueLabel={biofeedbackValueLabel}
+                      goalLabel={biofeedbackGoalLabel}
+                      progressPct={biofeedbackProgress}
+                      accentClassName="bg-emerald-500/90 text-emerald-100"
+                      actionHref="/biofeedback"
                       actionLabel="+"
+                      onActionClick={() => setIsBiofeedbackModalOpen(true)}
                     />
                   </section>
                   <section id="sleep" className="min-w-0">
@@ -1677,16 +1708,17 @@ const Dashboard = () => {
                   onActionClick={() => setIsWaterModalOpen(true)}
                 />
               </section>
-              <section id="nutrition" className="min-w-0">
+              <section id="biofeedback" className="min-w-0">
                 <DashboardMetricCard
-                  title="Calorias"
-                  icon={Flame}
-                  valueLabel={`${consumedCalories.toLocaleString("es-PE")} kcal`}
-                  goalLabel={`${targetCalories.toLocaleString("es-PE")} kcal`}
-                  progressPct={caloriesProgress}
-                  accentClassName="bg-amber-500/90 text-amber-100"
-                  actionHref="/nutrition"
+                  title="Biofeedback"
+                  icon={Activity}
+                  valueLabel={biofeedbackValueLabel}
+                  goalLabel={biofeedbackGoalLabel}
+                  progressPct={biofeedbackProgress}
+                  accentClassName="bg-emerald-500/90 text-emerald-100"
+                  actionHref="/biofeedback"
                   actionLabel="+"
+                  onActionClick={() => setIsBiofeedbackModalOpen(true)}
                 />
               </section>
               <section id="sleep" className="min-w-0">
@@ -1828,6 +1860,24 @@ const Dashboard = () => {
           </DialogContent>
         </Dialog>
 
+        <Dialog open={isBiofeedbackModalOpen} onOpenChange={setIsBiofeedbackModalOpen}>
+          <DialogContent className="max-h-[90vh] w-[95vw] max-w-3xl overflow-y-auto p-4 md:p-6">
+            <DialogHeader>
+              <DialogTitle>Biofeedback</DialogTitle>
+              <DialogDescription>Check-in diario rápido con autoguardado, sin salir del centro operativo.</DialogDescription>
+            </DialogHeader>
+            <BiofeedbackQuickCheckin
+              storageScopeKey={biofeedbackStorageScopeKey}
+              todayLabel={core?.todayLabel ?? new Intl.DateTimeFormat("es-PE", { dateStyle: "full" }).format(new Date())}
+              initialEntry={core?.bioToday ?? null}
+              onAutosave={async (values) => {
+                await saveBiofeedbackMutation.mutateAsync(values);
+                setHasPendingBiofeedbackRefresh(true);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={isWeightModalOpen} onOpenChange={setIsWeightModalOpen}>
           <DialogContent className="max-h-[90vh] w-[95vw] max-w-4xl overflow-y-auto p-4 md:p-6">
             <DialogHeader>
@@ -1949,7 +1999,7 @@ const Dashboard = () => {
             </div>
           </DashboardCardShell>
 
-          {!isMobile && isWidgetVisible("notes") ? (
+          {!isMobile ? (
             <div className="space-y-3">
               <section className="min-w-0">
                 <TacticalNotesCard
