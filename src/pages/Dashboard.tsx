@@ -757,16 +757,6 @@ const Dashboard = () => {
   const currentWeightKg = core?.latestMeasurementWeight ?? core?.latestWeight ?? null;
   const currentWeightLabel = currentWeightKg !== null ? `${currentWeightKg.toFixed(1)} kg` : "--";
   const targetWeightLabel = targetWeightKg !== null ? `${targetWeightKg.toFixed(1)} kg` : "Sin meta";
-  const goalGapKg =
-    targetWeightKg !== null && currentWeightKg !== null
-      ? Math.abs(targetWeightKg - currentWeightKg)
-      : null;
-  const goalGapLabel =
-    goalGapKg === null
-      ? "Define una meta de peso para ver distancia."
-      : goalGapKg < 0.05
-        ? "Meta de peso alcanzada."
-        : `Te faltan ${goalGapKg.toFixed(1)} kg para tu meta.`;
   const nextRequiredActionLabel = nextModule ? `Registrar ${nextModule.label.toLowerCase()}` : "Día completado";
   const nextRequiredActionHref = nextModule?.href ?? primaryAction.href;
   const nextRequiredActionModal = nextRequiredActionHref === "#water"
@@ -1258,18 +1248,9 @@ const Dashboard = () => {
                   <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Foco</p>
                   <p className="line-clamp-1 text-sm font-semibold">{focusHeading}</p>
                 </div>
-                <div className="space-y-1 text-right">
-                  <p className="text-[11px] text-muted-foreground">Peso actual: <span className="font-semibold text-foreground">{currentWeightLabel}</span></p>
-                  <p className="text-[11px] text-muted-foreground">Meta usuario: <span className="font-semibold text-foreground">{targetWeightLabel}</span></p>
-                  <p className={cn("inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold", weightStatus.className)}>
-                    {weightStatus.label}
-                  </p>
-                  <div className="pt-1">
-                    <p className="text-[11px] text-muted-foreground">Tendencia - {selectedTrendRangeLabel}</p>
-                    <p className={cn("text-sm font-semibold", weightDeltaToneClass)}>{weightDeltaLabel}</p>
-                    <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
-                  </div>
-                </div>
+                <p className={cn("inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold", weightStatus.className)}>
+                  {weightStatus.label}
+                </p>
               </div>
 
               <WeightRangeControl
@@ -1278,35 +1259,40 @@ const Dashboard = () => {
                 layoutId="weight-range-desktop"
               />
 
-              <div className="flex items-end justify-between gap-3">
+              <div className="grid gap-2 md:grid-cols-[minmax(140px,220px)_minmax(0,1fr)] md:items-end md:gap-4">
                 <div>
                   <p className="text-xs text-muted-foreground">Peso actual</p>
                   <p className="text-3xl font-black leading-none">{core?.latestMeasurementWeight ? `${core.latestMeasurementWeight.toFixed(1)} kg` : "--"}</p>
+                </div>
+                <div className="space-y-1 md:pb-1">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Meta ({targetWeightLabel})</span>
+                    <span>{weightGoalProgressSafe !== null ? `${weightGoalProgressSafe}%` : "--"}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted">
+                    <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${weightGoalProgressSafe ?? 0}%` }} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">{physicalSummary?.lastUpdatedLabel ?? "Sin actualizaciones físicas"}</p>
                 </div>
               </div>
 
               {renderWeightTrendChart("h-40 md:h-44")}
 
-              <div className="flex items-center gap-2">
-                <Button type="button" className="h-9 rounded-xl px-3 text-xs font-semibold" onClick={() => setIsWeightModalOpen(true)}>
-                  Registrar peso
-                </Button>
-                <Button asChild type="button" variant="outline" className="h-9 rounded-xl px-3 text-xs font-semibold">
-                  <Link to="/body">Ir a medidas</Link>
-                </Button>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Meta ({targetWeightLabel})</span>
-                  <span>{weightGoalProgressSafe !== null ? `${weightGoalProgressSafe}%` : "--"}</span>
+              <div className="flex items-end justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Button type="button" className="h-9 rounded-xl px-3 text-xs font-semibold" onClick={() => setIsWeightModalOpen(true)}>
+                    Registrar peso
+                  </Button>
+                  <Button asChild type="button" variant="outline" className="h-9 rounded-xl px-3 text-xs font-semibold">
+                    <Link to="/body">Ir a medidas</Link>
+                  </Button>
                 </div>
-                <div className="h-2 rounded-full bg-muted">
-                  <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${weightGoalProgressSafe ?? 0}%` }} />
+                <div className="text-right">
+                  <p className="text-[11px] text-muted-foreground">Tendencia - {selectedTrendRangeLabel}</p>
+                  <p className={cn("text-base font-semibold leading-tight", weightDeltaToneClass)}>{weightDeltaLabel}</p>
+                  <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
                 </div>
               </div>
-
-              <p className="text-xs text-muted-foreground">{physicalSummary?.lastUpdatedLabel ?? "Sin actualizaciones físicas"}</p>
               </DashboardCardShell>
             ) : null}
 
@@ -1469,18 +1455,9 @@ const Dashboard = () => {
                       <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Foco</p>
                       <p className="line-clamp-1 text-sm font-semibold">{focusHeading}</p>
                     </div>
-                    <div className="space-y-1 text-right">
-                      <p className="text-[11px] text-muted-foreground">Peso: <span className="font-semibold text-foreground">{currentWeightLabel}</span></p>
-                      <p className="text-[11px] text-muted-foreground">Meta: <span className="font-semibold text-foreground">{targetWeightLabel}</span></p>
-                      <p className={cn("inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold", weightStatus.className)}>
-                        {weightStatus.label}
-                      </p>
-                      <div className="pt-1">
-                        <p className="text-[11px] text-muted-foreground">Tendencia - {selectedTrendRangeLabel}</p>
-                        <p className={cn("text-sm font-semibold", weightDeltaToneClass)}>{weightDeltaLabel}</p>
-                        <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
-                      </div>
-                    </div>
+                    <p className={cn("inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold", weightStatus.className)}>
+                      {weightStatus.label}
+                    </p>
                     </div>
                     <WeightRangeControl
                       value={weightTrendRange}
@@ -1488,40 +1465,41 @@ const Dashboard = () => {
                       layoutId="weight-range-mobile"
                       className="max-w-[14rem]"
                     />
-                    <div className="flex items-end justify-between gap-3">
+                    <div className="grid gap-2 sm:grid-cols-[minmax(120px,170px)_minmax(0,1fr)] sm:items-end sm:gap-3">
                       <div>
                         <p className="text-xs text-muted-foreground">Peso actual</p>
                         <p className="text-3xl font-black leading-none">{core?.latestMeasurementWeight ? `${core.latestMeasurementWeight.toFixed(1)} kg` : "--"}</p>
                       </div>
+                      <div className="space-y-1 sm:pb-1">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Meta ({targetWeightLabel})</span>
+                          <span>{weightGoalProgressSafe !== null ? `${weightGoalProgressSafe}%` : "--"}</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted">
+                          <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${weightGoalProgressSafe ?? 0}%` }} />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">{physicalSummary?.lastUpdatedLabel ?? "Sin actualizaciones físicas"}</p>
+                      </div>
                     </div>
                     {renderWeightTrendChart("h-36")}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Meta ({targetWeightLabel})</span>
-                        <span>{weightGoalProgressSafe !== null ? `${weightGoalProgressSafe}%` : "--"}</span>
+                    <div className="flex items-end justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          className="h-9 rounded-xl px-3 text-xs font-semibold"
+                          onClick={() => setIsWeightModalOpen(true)}
+                        >
+                          Registrar peso
+                        </Button>
+                        <Button asChild type="button" variant="outline" className="h-9 rounded-xl px-3 text-xs font-semibold">
+                          <Link to="/body">Ir a medidas</Link>
+                        </Button>
                       </div>
-                      <div className="h-2 rounded-full bg-muted">
-                        <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${weightGoalProgressSafe ?? 0}%` }} />
+                      <div className="text-right">
+                        <p className="text-[11px] text-muted-foreground">Tendencia - {selectedTrendRangeLabel}</p>
+                        <p className={cn("text-sm font-semibold", weightDeltaToneClass)}>{weightDeltaLabel}</p>
+                        <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
                       </div>
-                      <p className="text-[11px] text-muted-foreground">{goalGapLabel}</p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        className="h-9 rounded-xl px-3 text-xs font-semibold"
-                        onClick={() => setIsWeightModalOpen(true)}
-                      >
-                        Registrar peso
-                      </Button>
-                      <Button asChild type="button" variant="outline" className="h-9 rounded-xl px-3 text-xs font-semibold">
-                        <Link to="/body">Ver medidas</Link>
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                      <span>{physicalSummary?.lastUpdatedLabel ?? "Sin actualizaciones físicas"}</span>
-                      <span>{isGuest ? "Guardado local" : "Sincronizado"}</span>
                     </div>
                   </div>
                 </DashboardCardShell>
