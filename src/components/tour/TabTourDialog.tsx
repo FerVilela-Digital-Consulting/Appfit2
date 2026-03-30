@@ -383,14 +383,31 @@ const TabTourDialog = () => {
             ) : null}
 
             <motion.div
-              key={`today-tour-panel-${activeTodayStep.key}`}
               className="fixed z-[92] w-[min(92vw,380px)] rounded-2xl border border-border/70 bg-card/95 p-4 shadow-2xl"
               initial={{ opacity: 0, y: 8, x: panelDirection * 22, scale: 0.985 }}
-              animate={{ opacity: 1, y: 0, scale: 1, top: todayPanelPosition.top, left: todayPanelPosition.left }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                top: todayPanelPosition.top,
+                left: todayPanelPosition.left,
+              }}
               exit={{ opacity: 0, y: 6, x: panelDirection * -14, scale: 0.99 }}
-              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              transition={{
+                opacity: { duration: 0.18, ease: "easeOut" },
+                y: { duration: 0.22, ease: "easeOut" },
+                scale: { duration: 0.22, ease: "easeOut" },
+                top: { type: "spring", stiffness: 220, damping: 28, mass: 0.7 },
+                left: { type: "spring", stiffness: 220, damping: 28, mass: 0.7 },
+              }}
             >
-              <div className="flex items-start justify-between gap-3">
+              <motion.div
+                key={`today-tour-content-${activeTodayStep.key}`}
+                initial={{ opacity: 0.35 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="flex items-start justify-between gap-3"
+              >
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                     Paso {todayStepIndex + 1} de {TODAY_STEP_COUNT}
@@ -407,7 +424,7 @@ const TabTourDialog = () => {
                 >
                   <X className="h-4 w-4" />
                 </Button>
-              </div>
+              </motion.div>
               <p className="mt-3 text-sm text-muted-foreground">{activeTodayStep.description}</p>
 
               <div className="mt-4 flex items-center gap-2">
