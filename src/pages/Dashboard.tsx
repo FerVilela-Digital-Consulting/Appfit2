@@ -1103,9 +1103,8 @@ const Dashboard = () => {
       isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "h-full overflow-hidden pb-0",
     )}>
       <div className={cn("mx-auto flex max-w-[1540px] flex-col gap-5", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "h-full min-h-0 gap-2")}>
-        <div data-tour="hero-intro">
+        <div data-tour="hero-intro" className={cn("order-[-3]", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "shrink-0 gap-2")}>
           <AppPageIntro
-            className={cn("order-[-3]", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "shrink-0 gap-2")}
             eyebrow="Dashboard / Centro operativo"
             title={
               <>
@@ -1200,12 +1199,11 @@ const Dashboard = () => {
         <section data-tour="actions-zone" aria-labelledby="dashboard-zone-actions" className={cn("order-[-2] grid", denseSectionGapClass)}>
           <h2 id="dashboard-zone-actions" className="sr-only">Control operativo de hoy</h2>
           <div className={cn("grid", denseSectionGapClass, "xl:grid-cols-5")}>
-            <div data-tour="today-action-card">
+            <div data-tour="today-action-card" className="xl:col-span-2">
               <DashboardCardShell
                 title="Qué hacer hoy"
                 titleRight={renderCheckinModuleSelector()}
                 contentClassName={denseActionContentClass}
-                className="xl:col-span-2"
               >
                 <div className="space-y-3">
                 <div className="space-y-2">
@@ -1282,7 +1280,7 @@ const Dashboard = () => {
             </div>
 
             {!isMobile ? (
-              <div data-tour="weight-progress-card">
+              <div data-tour="weight-progress-card" className="xl:col-span-2">
                 <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass} className="xl:col-span-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="space-y-1">

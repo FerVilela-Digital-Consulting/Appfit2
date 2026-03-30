@@ -197,6 +197,19 @@ const TabTourDialog = () => {
     },
   });
 
+  const completeTodayTourMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.id || !currentTab) return null;
+      return markTourTabCompleted(user.id, currentTab.key, { isGuest: false });
+    },
+    onSuccess: async () => {
+      if (!user?.id) return;
+      await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id, isGuest] });
+      closeTourQuery();
+      toast.success("Recorrido de centro operativo completado.");
+    },
+  });
+
   const closeTourQuery = () => {
     const params = new URLSearchParams(location.search);
     params.delete(TOUR_QUERY_KEY);
@@ -259,7 +272,9 @@ const TabTourDialog = () => {
     if (!activeTodayStep) return;
     const isLastStep = todayStepIndex >= TODAY_TOUR_STEPS.length - 1;
     if (isLastStep) {
-      handleCompleteTab();
+      if (!completeTodayTourMutation.isPending) {
+        completeTodayTourMutation.mutate();
+      }
       return;
     }
     setTodayStepIndex((current) => Math.min(TODAY_TOUR_STEPS.length - 1, current + 1));
@@ -364,7 +379,7 @@ const TabTourDialog = () => {
                   <Button type="button" variant="ghost" onClick={handleSkipTour}>
                     Omitir
                   </Button>
-                  <Button type="button" onClick={handleTodayNext}>
+                  <Button type="button" onClick={handleTodayNext} disabled={completeTodayTourMutation.isPending}>
                     {isLastTodayStep ? "Finalizar" : "Siguiente"}
                   </Button>
                 </div>
