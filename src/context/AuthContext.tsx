@@ -21,8 +21,8 @@ import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_STORAGE_KEY = 'appfit_is_guest';
-const AUTH_RESOLVE_TIMEOUT_MS = 25000;
-const PROFILE_FETCH_TIMEOUT_MS = 30000;
+const AUTH_RESOLVE_TIMEOUT_MS = 8000;
+const PROFILE_FETCH_TIMEOUT_MS = 8000;
 const AUTH_SYNC_CACHE_WINDOW_MS = 30000;
 const SUSPENDED_ACCOUNT_ERROR_MESSAGE = 'Esta cuenta esta desactivada temporalmente. Contacta al administrador.';
 
@@ -385,10 +385,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                     if (validation.status === "valid") {
                         logFlow("Initial session detected: " + validation.user.id);
-                        await syncAuthenticatedUser(validation.user, { source: 'initializeAuth' });
+                        // Do not block initial app rendering on profile/account hydration.
+                        // Route guards can keep resolving with cached state while this finishes.
+                        void syncAuthenticatedUser(validation.user, { source: 'initializeAuth' }).catch((syncError) => {
+                            console.error("Error during background auth sync:", syncError);
+                        });
                     } else if (validation.status === "unknown") {
                         logFlow("Initial session validation deferred due to temporary connectivity issues.");
-                        await syncAuthenticatedUser(session.user, { source: 'initializeAuth-optimistic' });
+                        void syncAuthenticatedUser(session.user, { source: 'initializeAuth-optimistic' }).catch((syncError) => {
+                            console.error("Error during optimistic background auth sync:", syncError);
+                        });
                     } else {
                         logFlow("Initial session was stale and has been cleared.");
                         await supabase.auth.signOut().catch(() => undefined);

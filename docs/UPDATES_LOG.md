@@ -160,6 +160,34 @@ Este documento esta optimizado para recuperar contexto con bajo consumo de token
 
 ---
 
+## 2026-03-30 - Bootstrap de auth no bloqueante para reducir TTI en /today
+
+### Alcance
+- Area: Auth initialization performance
+- Tipo: fix
+- Owner: CTO flow
+
+### Cambios
+- Se redujeron los timeouts de resolucion de metadata de usuario/perfil (`8s`) para evitar esperas largas en redes inestables.
+- El `initializeAuth` ya no espera de forma bloqueante la sincronizacion completa de perfil/cuenta para marcar `loading=false`.
+- La sincronizacion de auth continua en background, manteniendo la hidratacion de datos sin bloquear el primer render.
+
+### Archivos tocados
+- src/context/AuthContext.tsx
+
+### Riesgo
+- medium
+- Notas: el perfil puede terminar de hidratarse unos instantes despues del primer paint; el estado de auth principal se mantiene consistente.
+
+### Verificacion
+- `npm test -- AuthContext`
+
+### Pendientes
+- Validar en produccion mejora de tiempo percibido de carga de usuario en `/today`.
+- Revisar si conviene extender el mismo patron no bloqueante a consultas secundarias del dashboard.
+
+---
+
 ## 2026-03-27 - Cierre de sesion (CTO)
 
 ### Alcance
