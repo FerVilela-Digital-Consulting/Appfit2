@@ -1,12 +1,12 @@
 ﻿import type { SaveExerciseInput } from "@/modules/training/types";
 
 export const MAX_ROUTINE_PREVIEW_EXERCISES = 4;
-export const TRAINING_TABS = ["train", "plan", "progress"] as const;
+export const TRAINING_TABS = ["train", "plan", "library", "progress"] as const;
 export type TrainingTab = (typeof TRAINING_TABS)[number];
 export const LEGACY_TRAINING_TAB_MAP: Record<string, TrainingTab> = {
   today: "train",
   routines: "plan",
-  library: "plan",
+  library: "library",
   history: "progress",
   progress: "progress",
 };
@@ -63,7 +63,7 @@ export const TRAINING_COPY = {
     rest: "Rest",
     activeSession: "Active session",
     noWorkout: "No workout",
-    tabs: { train: "Train", plan: "Plan", progress: "Progress" },
+    tabs: { train: "Train", plan: "Plan", library: "Library", progress: "Progress" },
     startWorkout: "Start workout",
     startedAt: "Started",
     cancel: "Cancel",
@@ -172,7 +172,7 @@ export const TRAINING_COPY = {
     rest: "Descanso",
     activeSession: "Sesión activa",
     noWorkout: "Sin entrenamiento",
-    tabs: { train: "Entrenar", plan: "Planificar", progress: "Progreso" },
+    tabs: { train: "Entrenar", plan: "Planificar", library: "Biblioteca", progress: "Progreso" },
     startWorkout: "Iniciar entrenamiento",
     startedAt: "Iniciada",
     cancel: "Cancelar",

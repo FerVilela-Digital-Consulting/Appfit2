@@ -14,7 +14,7 @@ import { useTrainingPageState } from "@/modules/training/ui/useTrainingPageState
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "motion/react";
 
-const TRAINING_TAB_ORDER = ["train", "plan", "progress"] as const;
+const TRAINING_TAB_ORDER = ["train", "plan", "library", "progress"] as const;
 
 const Training = () => {
   const isMobile = useIsMobile();
@@ -98,11 +98,11 @@ const Training = () => {
 
         <Tabs value={tab} onValueChange={handleTabChange} className="space-y-5">
         <div data-tour="training-tabs" className="app-surface-panel rounded-[20px] p-2 sm:rounded-[24px]">
-          <TabsList className="relative grid h-auto w-full grid-cols-3 bg-transparent p-0">
+          <TabsList className="relative grid h-auto w-full grid-cols-4 bg-transparent p-0">
             <motion.span
               aria-hidden
               className="absolute bottom-1 left-1 top-1 rounded-xl bg-primary"
-              style={{ width: "calc((100% - 0.5rem) / 3)" }}
+              style={{ width: "calc((100% - 0.5rem) / 4)" }}
               animate={{ x: `${TRAINING_TAB_ORDER.findIndex((tabKey) => tabKey === tab) * 100}%` }}
               transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             />
@@ -119,6 +119,13 @@ const Training = () => {
               value="plan"
             >
               {copy.tabs.plan}
+            </TabsTrigger>
+            <TabsTrigger
+              data-tour="training-tab-library"
+              className="relative z-10 min-w-0 rounded-xl bg-transparent px-2 text-xs font-semibold text-muted-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:text-sm"
+              value="library"
+            >
+              {copy.tabs.library}
             </TabsTrigger>
             <TabsTrigger
               data-tour="training-tab-progress"
@@ -197,22 +204,20 @@ const Training = () => {
             onDuplicateTemplate={(templateId) => duplicateTemplateMutation.mutate(templateId)}
             />
           </div>
-          <details data-tour="training-library-section">
-            <summary className="cursor-pointer select-none rounded-xl border border-border/70 bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
-              {copy.librarySupportHint}
-            </summary>
-            <div className="mt-3">
-              <TrainingLibrarySection
-                copy={copy}
-                filters={filters}
-                exerciseLibrary={exerciseLibrary}
-                formatExerciseName={formatExerciseName}
-                onOpenCustomExercise={() => setCustomExerciseOpen(true)}
-                onFiltersChange={setFilters}
-                onSelectExercise={setSelectedExerciseId}
-              />
-            </div>
-          </details>
+        </TabsContent>
+
+        <TabsContent value="library" className="space-y-5">
+          <div data-tour="training-library-section">
+            <TrainingLibrarySection
+              copy={copy}
+              filters={filters}
+              exerciseLibrary={exerciseLibrary}
+              formatExerciseName={formatExerciseName}
+              onOpenCustomExercise={() => setCustomExerciseOpen(true)}
+              onFiltersChange={setFilters}
+              onSelectExercise={setSelectedExerciseId}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="progress" className="space-y-5">

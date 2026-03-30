@@ -124,7 +124,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     {
       key: "tabs",
       title: "Navegacion interna",
-      description: "Estas pestañas separan la operacion diaria en Entrenar, Planificar y Progreso.",
+      description: "Estas pestañas separan la operacion diaria en Entrenar, Planificar, Biblioteca y Progreso.",
       selector: '[data-tour="training-tabs"]',
     },
     {
@@ -139,7 +139,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
       title: "Planificar",
       description: "Define la estructura semanal de rutinas y asigna que toca en cada dia.",
       selector: '[data-tour="training-plan-section"]',
-      activateSelector: '[data-tour="training-tab-plan"]',
+      activateSelector: '[data-tour="training-tab-library"]',
     },
     {
       key: "routines",
@@ -293,7 +293,8 @@ const resolveAnySelectorTarget = (selector: string): HTMLElement | null => {
 const resolveTrainingTabFromStep = (step: GuidedTourStep | null) => {
   if (!step) return null;
   if (step.key === "train") return "train";
-  if (step.key === "plan" || step.key === "routines" || step.key === "library") return "plan";
+  if (step.key === "plan" || step.key === "routines") return "plan";
+  if (step.key === "library") return "library";
   if (step.key === "progress") return "progress";
   return null;
 };
