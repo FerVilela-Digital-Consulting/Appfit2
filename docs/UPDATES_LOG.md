@@ -97,6 +97,39 @@ Este documento esta optimizado para recuperar contexto con bajo consumo de token
 
 ---
 
+## 2026-03-30 - Icono de pestana unificado en icono.ico
+
+### Alcance
+- Area: Branding / browser tab icon
+- Tipo: fix
+- Owner: CTO flow
+
+### Cambios
+- Se configuro `public/icono.ico` como icono principal para pestañas.
+- `index.html` ahora referencia `icono.ico` para `icon`, `shortcut icon` y `apple-touch-icon`.
+- Se actualizo la configuracion PWA para usar `icono.ico` en `includeAssets` y `manifest.icons`.
+- Se elimino `public/placeholder.svg` por ser placeholder legacy.
+- Se sincronizo `public/favicon.ico` con `public/icono.ico` para compatibilidad con navegadores que consultan `/favicon.ico`.
+
+### Archivos tocados
+- index.html
+- vite.config.ts
+- public/placeholder.svg (removed)
+- public/favicon.ico
+
+### Riesgo
+- low
+- Notas: requiere deploy para reflejarse en el dominio publicado.
+
+### Verificacion
+- `npm run build`
+- revisado que no quedan referencias activas a `placeholder.svg`.
+
+### Pendientes
+- Verificar en produccion el icono de pestana despues de limpiar cache de sitio una vez.
+
+---
+
 ## 2026-03-27 - Cierre de sesion (CTO)
 
 ### Alcance

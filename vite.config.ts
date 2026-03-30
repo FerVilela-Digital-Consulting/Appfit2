@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "robots.txt", "placeholder.svg"],
+      includeAssets: ["icono.ico", "robots.txt"],
       manifest: {
         name: "The Prime Protocol",
         short_name: "Appfit",
@@ -34,15 +34,9 @@ export default defineConfig(({ mode }) => ({
         orientation: "portrait",
         icons: [
           {
-            src: "/favicon.ico",
+            src: "/icono.ico",
             sizes: "64x64 32x32 24x24 16x16",
             type: "image/x-icon",
-          },
-          {
-            src: "/placeholder.svg",
-            sizes: "any",
-            type: "image/svg+xml",
-            purpose: "any maskable",
           },
         ],
       },
