@@ -36,6 +36,19 @@ const saveGuestNotes = (rows: DailyNote[]) => {
   localStorage.setItem(GUEST_DAILY_NOTES_KEY, JSON.stringify(rows));
 };
 
+const isLockAbortError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return (
+    message.includes("Lock broken by another request with the 'steal' option") ||
+    message.includes("AbortError")
+  );
+};
+
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+
 export const upsertDailyNote = async ({
   userId,
   date,
@@ -72,13 +85,25 @@ export const upsertDailyNote = async ({
 
   if (!userId) return null;
 
-  const { data, error } = await supabase
-    .from("daily_notes")
-    .upsert({ user_id: userId, ...payload }, { onConflict: "user_id,date_key" })
-    .select("*")
-    .single();
-  if (error) throw error;
-  return data as DailyNote;
+  const runUpsert = async () => {
+    const { data, error } = await supabase
+      .from("daily_notes")
+      .upsert({ user_id: userId, ...payload }, { onConflict: "user_id,date_key" })
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data as DailyNote;
+  };
+
+  try {
+    return await runUpsert();
+  } catch (error) {
+    if (!isLockAbortError(error)) {
+      throw error;
+    }
+    await wait(180);
+    return runUpsert();
+  }
 };
 
 export const getDailyNote = async (

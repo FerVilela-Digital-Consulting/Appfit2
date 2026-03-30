@@ -37,6 +37,7 @@ type MoodPreset = {
 type CustomPreset = {
   id: string;
   name: string;
+  emoji: string;
   values: BiofeedbackValues;
 };
 
@@ -118,6 +119,7 @@ const MOOD_PRESETS: MoodPreset[] = [
 
 const PRESET_STORAGE_PREFIX = "appfit_biofeedback_quick_presets_";
 const MAX_CUSTOM_PRESETS = 3;
+const EMOJI_OPTIONS = ["😵", "😮‍💨", "😌", "🔥", "💪", "🧘", "🌙", "⚡", "🚀", "😴"];
 
 const clampScale = (value: number) => Math.max(1, Math.min(10, Math.round(value)));
 
@@ -180,6 +182,7 @@ const loadCustomPresets = (scope: string): CustomPreset[] => {
       .map((item) => ({
         id: item.id,
         name: String(item.name || "").trim(),
+        emoji: typeof item.emoji === "string" && item.emoji.trim() ? item.emoji : "🙂",
         values: normalizeValues(item.values),
       }))
       .filter((item) => item.id && item.name)
@@ -199,6 +202,7 @@ const BiofeedbackQuickCheckin = ({ storageScopeKey, todayLabel, initialEntry, on
   const [showDetails, setShowDetails] = useState(false);
   const [customPresets, setCustomPresets] = useState<CustomPreset[]>(() => loadCustomPresets(storageScopeKey));
   const [presetName, setPresetName] = useState("");
+  const [presetEmoji, setPresetEmoji] = useState("🙂");
   const [saveState, setSaveState] = useState<"idle" | "typing" | "saving" | "saved" | "error">("idle");
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const skipAutosaveRef = useRef(true);
@@ -272,14 +276,15 @@ const BiofeedbackQuickCheckin = ({ storageScopeKey, todayLabel, initialEntry, on
     const existingIndex = customPresets.findIndex((item) => item.name.toLowerCase() === name.toLowerCase());
     const next = [...customPresets];
     if (existingIndex >= 0) {
-      next[existingIndex] = { ...next[existingIndex], values };
+      next[existingIndex] = { ...next[existingIndex], emoji: presetEmoji, values };
     } else {
       if (next.length >= MAX_CUSTOM_PRESETS) return;
-      next.push({ id: crypto.randomUUID(), name, values });
+      next.push({ id: crypto.randomUUID(), name, emoji: presetEmoji, values });
     }
     setCustomPresets(next);
     saveCustomPresets(storageScopeKey, next);
     setPresetName("");
+    setPresetEmoji("🙂");
   };
 
   const handleDeletePreset = (id: string) => {
@@ -330,22 +335,23 @@ const BiofeedbackQuickCheckin = ({ storageScopeKey, todayLabel, initialEntry, on
         <div className="mt-4">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Perfiles personalizados</p>
           {customPresets.length > 0 ? (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {customPresets.map((preset) => (
-                <div key={preset.id} className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2 py-1">
+                <div key={preset.id} className="relative">
                   <button
                     type="button"
-                    className="text-xs font-medium text-foreground"
+                    className="w-full rounded-xl border border-border/60 bg-background/50 px-2 py-2 text-center transition-colors hover:border-primary/40 hover:bg-primary/5"
                     onClick={() => {
                       setSelectedMood(null);
                       setValues(preset.values);
                     }}
                   >
-                    {preset.name}
+                    <p className="text-xl">{preset.emoji}</p>
+                    <p className="mt-1 text-xs font-medium text-foreground">{preset.name}</p>
                   </button>
                   <button
                     type="button"
-                    className="text-xs text-muted-foreground hover:text-destructive"
+                    className="absolute right-1 top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-background/80 text-[10px] text-muted-foreground hover:text-destructive"
                     onClick={() => handleDeletePreset(preset.id)}
                     aria-label={`Eliminar perfil ${preset.name}`}
                   >
@@ -410,6 +416,25 @@ const BiofeedbackQuickCheckin = ({ storageScopeKey, todayLabel, initialEntry, on
                 <Button type="button" size="sm" className="h-9 rounded-lg px-3" onClick={handleSavePreset} disabled={!presetName.trim() || customPresets.length >= MAX_CUSTOM_PRESETS}>
                   Guardar
                 </Button>
+              </div>
+              <div className="mt-2">
+                <p className="text-[11px] text-muted-foreground">Elige emoji para el perfil:</p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {EMOJI_OPTIONS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => setPresetEmoji(emoji)}
+                      className={cn(
+                        "inline-flex h-8 w-8 items-center justify-center rounded-md border border-border/60 bg-background text-base transition-colors",
+                        presetEmoji === emoji && "border-primary bg-primary/10",
+                      )}
+                      aria-label={`Seleccionar emoji ${emoji}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground">
                 Puedes guardar hasta {MAX_CUSTOM_PRESETS} perfiles personalizados.
