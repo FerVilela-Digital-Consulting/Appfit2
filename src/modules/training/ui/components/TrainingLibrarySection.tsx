@@ -28,6 +28,10 @@ export function TrainingLibrarySection({
   onFiltersChange,
   onSelectExercise,
 }: TrainingLibrarySectionProps) {
+  const totalExercises = exerciseLibrary.length;
+  const customExercises = exerciseLibrary.filter((exercise) => exercise.is_custom).length;
+  const baseExercises = totalExercises - customExercises;
+
   return (
     <Card>
       <CardHeader data-tour="training-library-focus" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -35,7 +39,14 @@ export function TrainingLibrarySection({
           <CardTitle>{copy.exerciseLibrary}</CardTitle>
           <CardDescription>{copy.exerciseLibraryDescription}</CardDescription>
         </div>
-        <Button className="w-full sm:w-auto" onClick={onOpenCustomExercise}><CirclePlus className="mr-2 h-4 w-4" />{copy.customExercise}</Button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+          <Button className="w-full sm:w-auto" onClick={onOpenCustomExercise}><CirclePlus className="mr-2 h-4 w-4" />{copy.customExercise}</Button>
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            <div className="rounded-xl border px-3 py-2">Total: <span className="font-semibold">{totalExercises}</span></div>
+            <div className="rounded-xl border px-3 py-2">Base: <span className="font-semibold">{baseExercises}</span></div>
+            <div className="rounded-xl border px-3 py-2">Custom: <span className="font-semibold">{customExercises}</span></div>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

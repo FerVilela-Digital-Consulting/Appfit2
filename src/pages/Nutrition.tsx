@@ -353,6 +353,7 @@ const Nutrition = () => {
         selectedRecentId={selectedRecentId}
         categories={categories}
         foodSearchResults={foodSearchResults}
+        foodLibraryItems={foodLibraryItems}
         favorites={favorites}
         yesterdayEntries={yesterdayEntries}
         recentEntries={recentEntries}
