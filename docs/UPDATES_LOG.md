@@ -78,9 +78,11 @@ Este documento esta optimizado para recuperar contexto con bajo consumo de token
 - Se activo registro inmediato del Service Worker para no diferir su handshake en rutas publicas.
 - Cuando hay nueva version (`onNeedRefresh`), ahora se aplica `updateSW(true)` automaticamente una vez por sesion.
 - Se mantiene evento de fallback para actualizacion manual si ya hubo auto-reload previo.
+- Se versionaron referencias del favicon en `index.html` para invalidar cache agresiva del icono en navegadores.
 
 ### Archivos tocados
 - src/pwa/registerServiceWorker.ts
+- index.html
 
 ### Riesgo
 - medium
