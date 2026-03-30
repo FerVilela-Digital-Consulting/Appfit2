@@ -80,7 +80,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     title: "Progreso corporal",
     description:
       "Compara peso actual contra tu meta y revisa tendencia por periodo (7D, 30D o Todo). El objetivo es detectar dirección, no solo el número de hoy.",
-    selector: '[data-tour="weight-progress-card"]',
+    selector: '[data-tour="weight-progress-card-full"]',
     mobileSlideIndex: 1,
   },
   {
@@ -327,6 +327,7 @@ const clampRectToSafeBounds = (
   rect: DOMRect,
   bounds: { top: number; bottom: number; left: number; right: number },
   isMobile: boolean,
+  allowTallMobileFocus: boolean,
 ) => {
   const top = clamp(rect.top, bounds.top, bounds.bottom);
   const bottom = clamp(rect.bottom, bounds.top, bounds.bottom);
@@ -337,7 +338,11 @@ const clampRectToSafeBounds = (
   if (clampedHeight < 6 || clampedWidth < 6) return null;
 
   const safeHeight = bounds.bottom - bounds.top;
-  const maxHeight = isMobile ? Math.min(safeHeight * 0.4, 176) : Math.min(safeHeight * 0.58, 300);
+  const maxHeight = isMobile
+    ? allowTallMobileFocus
+      ? Math.min(safeHeight * 0.72, 340)
+      : Math.min(safeHeight * 0.4, 176)
+    : Math.min(safeHeight * 0.58, 300);
   const limitedHeight = Math.min(clampedHeight, maxHeight);
 
   return {
@@ -587,7 +592,13 @@ const TabTourDialog = () => {
         return;
       }
       const safeBounds = getSafeViewportBounds(isMobile);
-      const clampedRect = clampRectToSafeBounds(targetNode.getBoundingClientRect(), safeBounds, isMobile);
+      const allowTallMobileFocus = ["body-progress", "training", "nutrition"].includes(activeTodayStep.key);
+      const clampedRect = clampRectToSafeBounds(
+        targetNode.getBoundingClientRect(),
+        safeBounds,
+        isMobile,
+        allowTallMobileFocus,
+      );
       setHighlightRect(clampedRect ? new DOMRect(clampedRect.left, clampedRect.top, clampedRect.width, clampedRect.height) : null);
     };
     const scheduleUpdate = () => {

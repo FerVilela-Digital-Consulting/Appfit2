@@ -1276,7 +1276,7 @@ const Dashboard = () => {
             </div>
 
             {!isMobile ? (
-              <div data-tour="weight-progress-card" className="xl:col-span-2">
+              <div data-tour="weight-progress-card-full" className="xl:col-span-2">
                 <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass} className="xl:col-span-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="space-y-1">
@@ -1482,7 +1482,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div data-tour-slide="1" data-tour="weight-progress-card" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
+              <div data-tour-slide="1" data-tour="weight-progress-card-full" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <DashboardCardShell title="Progreso corporal" className="h-full" contentClassName={denseCardContentClass}>
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2">
