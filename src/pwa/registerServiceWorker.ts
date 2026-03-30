@@ -1,5 +1,7 @@
 import { registerSW } from "virtual:pwa-register";
 
+const SW_AUTO_RELOAD_KEY = "appfit.pwa-auto-reload-on-update";
+
 declare global {
   interface Window {
     __appfitUpdateSW?: (reloadPage?: boolean) => Promise<void>;
@@ -13,8 +15,16 @@ export const registerAppServiceWorker = () => {
 
   const register = () => {
     const updateSW = registerSW({
-      immediate: false,
+      immediate: true,
       onNeedRefresh() {
+        const alreadyAutoReloaded = sessionStorage.getItem(SW_AUTO_RELOAD_KEY) === "1";
+
+        if (!alreadyAutoReloaded) {
+          sessionStorage.setItem(SW_AUTO_RELOAD_KEY, "1");
+          void updateSW(true);
+          return;
+        }
+
         window.dispatchEvent(new CustomEvent("appfit:pwa-update-available"));
       },
       onOfflineReady() {
@@ -28,27 +38,6 @@ export const registerAppServiceWorker = () => {
     window.__appfitUpdateSW = updateSW;
   };
 
-  const isPublicBootRoute =
-    window.location.pathname === "/" ||
-    window.location.pathname.startsWith("/auth");
-
-  if (!isPublicBootRoute) {
-    register();
-    return;
-  }
-
-  const scheduleRegister = () => {
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(() => register(), { timeout: 3500 });
-      return;
-    }
-    window.setTimeout(register, 1500);
-  };
-
-  if (document.readyState === "complete") {
-    scheduleRegister();
-  } else {
-    window.addEventListener("load", scheduleRegister, { once: true });
-  }
+  register();
 };
 

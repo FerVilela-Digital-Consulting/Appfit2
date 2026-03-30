@@ -67,6 +67,34 @@ Este documento esta optimizado para recuperar contexto con bajo consumo de token
 
 ---
 
+## 2026-03-30 - Actualizacion forzada de Service Worker en deploy
+
+### Alcance
+- Area: PWA cache invalidation
+- Tipo: infra
+- Owner: CTO flow
+
+### Cambios
+- Se activo registro inmediato del Service Worker para no diferir su handshake en rutas publicas.
+- Cuando hay nueva version (`onNeedRefresh`), ahora se aplica `updateSW(true)` automaticamente una vez por sesion.
+- Se mantiene evento de fallback para actualizacion manual si ya hubo auto-reload previo.
+
+### Archivos tocados
+- src/pwa/registerServiceWorker.ts
+
+### Riesgo
+- medium
+- Notas: la primera carga post-deploy puede recargar una vez automaticamente para garantizar bundle actualizado.
+
+### Verificacion
+- `npm run build`
+- Confirmar que `dist/sw.js` y `dist/workbox-*.js` se regeneran con el nuevo build.
+
+### Pendientes
+- Validar en produccion que desaparece el ciclo `/today -> /auth -> /today` inmediatamente despues de deploy.
+
+---
+
 ## 2026-03-27 - Cierre de sesion (CTO)
 
 ### Alcance

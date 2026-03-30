@@ -21,8 +21,8 @@ import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const GUEST_STORAGE_KEY = 'appfit_is_guest';
-const AUTH_RESOLVE_TIMEOUT_MS = 12000;
-const PROFILE_FETCH_TIMEOUT_MS = 15000;
+const AUTH_RESOLVE_TIMEOUT_MS = 25000;
+const PROFILE_FETCH_TIMEOUT_MS = 30000;
 const AUTH_SYNC_CACHE_WINDOW_MS = 30000;
 const SUSPENDED_ACCOUNT_ERROR_MESSAGE = 'Esta cuenta esta desactivada temporalmente. Contacta al administrador.';
 
@@ -33,6 +33,10 @@ type UserAccountRow = {
     account_status?: AccountStatus | null;
     onboarding_completed?: boolean | null;
 };
+type PersistedSessionValidationResult =
+    | { status: "valid"; user: User }
+    | { status: "invalid" }
+    | { status: "unknown" };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
@@ -170,7 +174,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     };
 
-    const validatePersistedSessionUser = async (sessionUser: User): Promise<User | null> => {
+    const isNetworkOrTimeoutError = (error: unknown) => {
+        if (!(error instanceof Error)) {
+            return false;
+        }
+        const message = error.message.toLowerCase();
+        return (
+            message.includes("timed out") ||
+            message.includes("timeout") ||
+            message.includes("network") ||
+            message.includes("failed to fetch")
+        );
+    };
+
+    const validatePersistedSessionUser = async (sessionUser: User): Promise<PersistedSessionValidationResult> => {
         try {
             const { data, error } = await withTimeout(
                 supabase.auth.getUser(),
@@ -178,15 +195,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 "Persisted auth user validation timed out.",
             );
 
-            if (error || !data.user) {
-                console.warn("Discarding stale persisted auth session.", error);
-                return null;
+            if (isNetworkOrTimeoutError(error)) {
+                console.warn("Could not validate persisted auth session due to transient connectivity issue.", error);
+                return { status: "unknown" };
             }
 
-            return data.user;
+            if (error) {
+                console.warn("Discarding stale persisted auth session.", error);
+                return { status: "invalid" };
+            }
+
+            if (!data.user) {
+                console.warn("Discarding stale persisted auth session: no active user returned.");
+                return { status: "invalid" };
+            }
+
+            return { status: "valid", user: data.user };
         } catch (error) {
-            console.warn("Could not validate persisted auth session.", error);
-            return null;
+            if (isNetworkOrTimeoutError(error)) {
+                console.warn("Could not validate persisted auth session due to timeout/network issue.", error);
+                return { status: "unknown" };
+            }
+
+            console.warn("Discarding persisted auth session after validation error.", error);
+            return { status: "invalid" };
         }
     };
 
@@ -345,19 +377,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const initializeAuth = async () => {
             logFlow("Initializing Auth...");
             try {
-                const { data: { session } } = await withTimeout(
-                    supabase.auth.getSession(),
-                    AUTH_RESOLVE_TIMEOUT_MS,
-                    'Initial auth session check timed out.'
-                );
+                const { data: { session } } = await supabase.auth.getSession();
                 if (!isMounted) return;
 
                 if (session?.user) {
-                    const validatedUser = await validatePersistedSessionUser(session.user);
+                    const validation = await validatePersistedSessionUser(session.user);
 
-                    if (validatedUser) {
-                        logFlow("Initial session detected: " + validatedUser.id);
-                        await syncAuthenticatedUser(validatedUser, { source: 'initializeAuth' });
+                    if (validation.status === "valid") {
+                        logFlow("Initial session detected: " + validation.user.id);
+                        await syncAuthenticatedUser(validation.user, { source: 'initializeAuth' });
+                    } else if (validation.status === "unknown") {
+                        logFlow("Initial session validation deferred due to temporary connectivity issues.");
+                        await syncAuthenticatedUser(session.user, { source: 'initializeAuth-optimistic' });
                     } else {
                         logFlow("Initial session was stale and has been cleared.");
                         await supabase.auth.signOut().catch(() => undefined);
