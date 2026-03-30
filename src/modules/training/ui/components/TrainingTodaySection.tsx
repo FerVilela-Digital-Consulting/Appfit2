@@ -97,7 +97,7 @@ export function TrainingTodaySection({
   return (
     <div className="grid gap-5 pb-24 xl:grid-cols-[1.4fr_0.9fr] xl:pb-0">
       <Card>
-        <CardHeader>
+        <CardHeader data-tour="training-train-focus">
           <CardTitle>{copy.tabs.train}</CardTitle>
           <CardDescription>La sesión activa tiene prioridad sobre todo lo demás.</CardDescription>
         </CardHeader>

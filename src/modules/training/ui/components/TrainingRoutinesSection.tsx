@@ -47,7 +47,7 @@ export function TrainingRoutinesSection({
   return (
     <div className="grid gap-5 xl:grid-cols-[1.2fr_0.9fr]">
       <Card>
-        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardHeader data-tour="training-routines-focus" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>{copy.personalRoutines}</CardTitle>
             <CardDescription>{copy.personalRoutinesDescription}</CardDescription>

@@ -29,7 +29,7 @@ export function NutritionMealsSection({
 }: NutritionMealsSectionProps) {
   return (
     <div className="app-surface-panel rounded-[24px] sm:rounded-[28px]">
-      <div className="flex flex-col gap-3 border-b border-border/40 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
+      <div data-tour="nutrition-logbook-focus" className="flex flex-col gap-3 border-b border-border/40 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
         <div>
           <p className="app-surface-caption text-[11px] font-semibold uppercase tracking-[0.28em]">Logbook</p>
           <h2 className="app-surface-heading mt-1 text-xl font-bold md:text-2xl">Registro operativo de comidas</h2>

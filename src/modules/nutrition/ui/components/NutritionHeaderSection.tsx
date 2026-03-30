@@ -93,7 +93,7 @@ export function NutritionHeaderSection({
 
   return (
     <section className="space-y-4">
-      {showIntro ? <div className="space-y-2 px-1">
+      {showIntro ? <div data-tour="nutrition-header-focus" className="space-y-2 px-1">
         <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-primary/80">Bitacora de nutrición</p>
         <div className="flex items-start justify-between gap-3">
           <h1 className="app-surface-heading text-3xl font-black tracking-tight md:text-4xl">Nutrición - Hoy</h1>
@@ -123,7 +123,7 @@ export function NutritionHeaderSection({
         <p className="app-surface-caption text-sm">Registra rápido y entiende exactamente que plan nutricional estás usando.</p>
       </div> : null}
 
-      <div className="app-surface-hero rounded-[24px] px-4 py-5 sm:rounded-[28px] sm:px-6 sm:py-6">
+      <div data-tour="nutrition-header-focus" className="app-surface-hero rounded-[24px] px-4 py-5 sm:rounded-[28px] sm:px-6 sm:py-6">
         <div className="grid gap-3 xl:grid-cols-1 xl:items-stretch">
           <article data-tour="nutrition-daily-profile" className="app-chip-muted rounded-2xl px-4 py-3">
             <div className="mb-2 flex items-center justify-between gap-2">

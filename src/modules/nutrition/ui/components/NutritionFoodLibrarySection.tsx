@@ -248,7 +248,7 @@ export function NutritionFoodLibrarySection({
   return (
     <section className="app-surface-panel rounded-[24px] sm:rounded-[28px]">
       <div className="flex flex-col gap-3 border-b border-border/40 px-4 py-4 sm:px-6 sm:py-5">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div data-tour="nutrition-library-focus" className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="app-surface-caption text-[11px] font-semibold uppercase tracking-[0.28em]">Biblioteca</p>
             <h2 className="app-surface-heading mt-1 text-xl font-bold md:text-2xl">Biblioteca de alimentos</h2>

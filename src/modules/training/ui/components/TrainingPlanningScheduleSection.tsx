@@ -24,7 +24,7 @@ export function TrainingPlanningScheduleSection({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader data-tour="training-plan-focus">
         <CardTitle>{copy.planningSectionTitle}</CardTitle>
         <CardDescription>{copy.planningSectionDescription}</CardDescription>
       </CardHeader>

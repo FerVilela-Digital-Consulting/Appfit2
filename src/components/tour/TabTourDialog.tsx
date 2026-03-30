@@ -131,35 +131,35 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
       key: "train",
       title: "Entrenar",
       description: "Aqui inicias o continuas la sesion del dia y registras series, repeticiones y notas.",
-      selector: '[data-tour="training-train-section"]',
+      selector: '[data-tour="training-train-focus"]',
       activateSelector: '[data-tour="training-tab-train"]',
     },
     {
       key: "plan",
       title: "Planificar",
       description: "Define la estructura semanal de rutinas y asigna que toca en cada dia.",
-      selector: '[data-tour="training-plan-section"]',
+      selector: '[data-tour="training-plan-focus"]',
       activateSelector: '[data-tour="training-tab-plan"]',
     },
     {
       key: "routines",
       title: "Rutinas",
       description: "Crea, edita, duplica y elimina rutinas para mantener tu biblioteca operativa.",
-      selector: '[data-tour="training-routines-section"]',
+      selector: '[data-tour="training-routines-focus"]',
       activateSelector: '[data-tour="training-tab-plan"]',
     },
     {
       key: "library",
       title: "Biblioteca de ejercicios",
       description: "Aqui agregas ejercicios personalizados y ajustas filtros para planificar mas rapido.",
-      selector: '[data-tour="training-library-section"]',
+      selector: '[data-tour="training-library-focus"]',
       activateSelector: '[data-tour="training-tab-library"]',
     },
     {
       key: "progress",
       title: "Progreso",
       description: "Revisa PRs, evolucion por ejercicio e historial para decidir siguientes ajustes.",
-      selector: '[data-tour="training-progress-section"]',
+      selector: '[data-tour="training-progress-focus"]',
       activateSelector: '[data-tour="training-tab-progress"]',
     },
     {
@@ -186,7 +186,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
       key: "header",
       title: "Contexto del dia",
       description: "Controla fecha, perfil activo y fuente del plan para saber exactamente con que objetivo trabajas hoy.",
-      selector: '[data-tour="nutrition-header-section"]',
+      selector: '[data-tour="nutrition-header-focus"]',
       activateSelector: '[data-tour="nutrition-view-summary"]',
     },
     {
@@ -201,21 +201,21 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
       key: "summary",
       title: "Resumen nutricional",
       description: "Este panel compara calorias y macros consumidos contra tu meta diaria en tiempo real.",
-      selector: '[data-tour="nutrition-summary-panel"]',
+      selector: '[data-tour="nutrition-summary-focus"]',
       activateSelector: '[data-tour="nutrition-view-summary"]',
     },
     {
       key: "logbook",
       title: "Logbook",
       description: "Aqui registras comidas por bloque y ajustas entradas del dia sin salir de la pestaña.",
-      selector: '[data-tour="nutrition-logbook-section"]',
+      selector: '[data-tour="nutrition-logbook-focus"]',
       activateSelector: '[data-tour="nutrition-view-logbook"]',
     },
     {
       key: "library",
       title: "Biblioteca",
       description: "Usa alimentos guardados y favoritos para acelerar el registro y reducir friccion.",
-      selector: '[data-tour="nutrition-library-section"]',
+      selector: '[data-tour="nutrition-library-focus"]',
       activateSelector: '[data-tour="nutrition-view-library"]',
     },
     {
@@ -328,12 +328,19 @@ const clampRectToSafeBounds = (rect: DOMRect, bounds: { top: number; bottom: num
   const bottom = clamp(rect.bottom, bounds.top, bounds.bottom);
   const left = clamp(rect.left, bounds.left, bounds.right);
   const right = clamp(rect.right, bounds.left, bounds.right);
-  if (bottom - top < 6 || right - left < 6) return null;
+  const clampedHeight = bottom - top;
+  const clampedWidth = right - left;
+  if (clampedHeight < 6 || clampedWidth < 6) return null;
+
+  const safeHeight = bounds.bottom - bounds.top;
+  const maxHeight = Math.min(safeHeight * 0.58, window.innerWidth < 768 ? 220 : 300);
+  const limitedHeight = Math.min(clampedHeight, maxHeight);
+
   return {
     top,
     left,
-    width: right - left,
-    height: bottom - top,
+    width: clampedWidth,
+    height: limitedHeight,
   };
 };
 

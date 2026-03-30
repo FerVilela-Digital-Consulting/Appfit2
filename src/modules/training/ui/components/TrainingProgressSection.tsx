@@ -36,7 +36,7 @@ export function TrainingProgressSection({
   return (
     <div className="grid gap-5 xl:grid-cols-[1.15fr_0.95fr]">
       <Card>
-        <CardHeader>
+        <CardHeader data-tour="training-progress-focus">
           <CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-primary" />{copy.progressTitle}</CardTitle>
           <CardDescription>{copy.progressDescription}</CardDescription>
         </CardHeader>

@@ -125,8 +125,8 @@ export function NutritionSidebarPanel({
 
   return (
     <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
-      {showPlanCard ? <div className="app-surface-panel rounded-[24px] p-4 sm:rounded-[28px] sm:p-5">
-        <div className="flex items-start justify-between gap-4">
+      {showPlanCard ? <div data-tour="nutrition-summary-focus" className="app-surface-panel rounded-[24px] p-4 sm:rounded-[28px] sm:p-5">
+        <div data-tour="nutrition-summary-focus" className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary/80">Plan de hoy</p>
