@@ -719,9 +719,20 @@ const Dashboard = () => {
   };
   const weightGoalProgress = core?.goalProgress ?? null;
   const weightGoalProgressSafe = weightGoalProgress !== null ? Math.max(0, Math.min(100, Math.round(weightGoalProgress))) : null;
-  const weightDelta = core?.latestWeightDeltaKg ?? null;
+  const selectedTrendRangeLabel = weightTrendRange === "7d" ? "7D" : weightTrendRange === "30d" ? "30D" : "TODO";
+  const selectedRangeWeightDelta =
+    weightSeriesRows.length >= 2
+      ? weightSeriesRows[weightSeriesRows.length - 1].weight - weightSeriesRows[0].weight
+      : null;
+  const weightDelta = selectedRangeWeightDelta;
   const weightTrendLabel =
-    core?.weightTrend?.trend === "up" ? "Subiendo" : core?.weightTrend?.trend === "down" ? "Bajando" : core?.weightTrend?.trend === "stable" ? "Estable" : "Sin tendencia";
+    weightDelta === null
+      ? "Sin tendencia"
+      : weightDelta > 0
+        ? "Subiendo"
+        : weightDelta < 0
+          ? "Bajando"
+          : "Estable";
   const weightStatus =
     core?.latestMeasurementWeight === null || core?.latestMeasurementWeight === undefined || weightGoalProgressSafe === null
       ? { label: "Sin datos", className: "border-border/60 bg-muted/40 text-muted-foreground" }
@@ -744,6 +755,8 @@ const Dashboard = () => {
   const remainingActionsCount = Math.max(missingModules.length, 0);
   const targetWeightKg = core?.goal?.target_weight_kg ?? null;
   const currentWeightKg = core?.latestMeasurementWeight ?? core?.latestWeight ?? null;
+  const currentWeightLabel = currentWeightKg !== null ? `${currentWeightKg.toFixed(1)} kg` : "--";
+  const targetWeightLabel = targetWeightKg !== null ? `${targetWeightKg.toFixed(1)} kg` : "Sin meta";
   const goalGapKg =
     targetWeightKg !== null && currentWeightKg !== null
       ? Math.abs(targetWeightKg - currentWeightKg)
@@ -1245,9 +1258,18 @@ const Dashboard = () => {
                   <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Foco</p>
                   <p className="line-clamp-1 text-sm font-semibold">{focusHeading}</p>
                 </div>
-                <p className={cn("rounded-full border px-2 py-0.5 text-xs font-semibold", weightStatus.className)}>
-                  {weightStatus.label}
-                </p>
+                <div className="space-y-1 text-right">
+                  <p className="text-[11px] text-muted-foreground">Peso actual: <span className="font-semibold text-foreground">{currentWeightLabel}</span></p>
+                  <p className="text-[11px] text-muted-foreground">Meta usuario: <span className="font-semibold text-foreground">{targetWeightLabel}</span></p>
+                  <p className={cn("inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold", weightStatus.className)}>
+                    {weightStatus.label}
+                  </p>
+                  <div className="pt-1">
+                    <p className="text-[11px] text-muted-foreground">Tendencia - {selectedTrendRangeLabel}</p>
+                    <p className={cn("text-sm font-semibold", weightDeltaToneClass)}>{weightDeltaLabel}</p>
+                    <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
+                  </div>
+                </div>
               </div>
 
               <WeightRangeControl
@@ -1260,10 +1282,6 @@ const Dashboard = () => {
                 <div>
                   <p className="text-xs text-muted-foreground">Peso actual</p>
                   <p className="text-3xl font-black leading-none">{core?.latestMeasurementWeight ? `${core.latestMeasurementWeight.toFixed(1)} kg` : "--"}</p>
-                </div>
-                <div className="text-right">
-                  <p className={cn("text-sm font-semibold", weightDeltaToneClass)}>7d: {weightDeltaLabel}</p>
-                  <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
                 </div>
               </div>
 
@@ -1280,7 +1298,7 @@ const Dashboard = () => {
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Meta</span>
+                  <span>Meta ({targetWeightLabel})</span>
                   <span>{weightGoalProgressSafe !== null ? `${weightGoalProgressSafe}%` : "--"}</span>
                 </div>
                 <div className="h-2 rounded-full bg-muted">
@@ -1451,9 +1469,18 @@ const Dashboard = () => {
                       <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Foco</p>
                       <p className="line-clamp-1 text-sm font-semibold">{focusHeading}</p>
                     </div>
-                    <p className={cn("rounded-full border px-2 py-0.5 text-xs font-semibold", weightStatus.className)}>
-                      {weightStatus.label}
-                    </p>
+                    <div className="space-y-1 text-right">
+                      <p className="text-[11px] text-muted-foreground">Peso: <span className="font-semibold text-foreground">{currentWeightLabel}</span></p>
+                      <p className="text-[11px] text-muted-foreground">Meta: <span className="font-semibold text-foreground">{targetWeightLabel}</span></p>
+                      <p className={cn("inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold", weightStatus.className)}>
+                        {weightStatus.label}
+                      </p>
+                      <div className="pt-1">
+                        <p className="text-[11px] text-muted-foreground">Tendencia - {selectedTrendRangeLabel}</p>
+                        <p className={cn("text-sm font-semibold", weightDeltaToneClass)}>{weightDeltaLabel}</p>
+                        <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
+                      </div>
+                    </div>
                     </div>
                     <WeightRangeControl
                       value={weightTrendRange}
@@ -1466,15 +1493,11 @@ const Dashboard = () => {
                         <p className="text-xs text-muted-foreground">Peso actual</p>
                         <p className="text-3xl font-black leading-none">{core?.latestMeasurementWeight ? `${core.latestMeasurementWeight.toFixed(1)} kg` : "--"}</p>
                       </div>
-                      <div className="text-right">
-                        <p className={cn("text-sm font-semibold", weightDeltaToneClass)}>7d: {weightDeltaLabel}</p>
-                        <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
-                      </div>
                     </div>
                     {renderWeightTrendChart("h-36")}
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Meta</span>
+                        <span>Meta ({targetWeightLabel})</span>
                         <span>{weightGoalProgressSafe !== null ? `${weightGoalProgressSafe}%` : "--"}</span>
                       </div>
                       <div className="h-2 rounded-full bg-muted">
