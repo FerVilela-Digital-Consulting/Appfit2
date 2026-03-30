@@ -299,6 +299,90 @@ const resolveTrainingTabFromStep = (step: GuidedTourStep | null) => {
   return null;
 };
 
+const getSafeViewportBounds = (isMobile: boolean) => {
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+  const headerNode = document.querySelector("header");
+  const mobileNavNode = document.querySelector('nav[aria-label="Navegacion principal movil"]');
+  const headerBottom = headerNode instanceof HTMLElement ? headerNode.getBoundingClientRect().bottom : 0;
+  const mobileNavHeight =
+    isMobile && mobileNavNode instanceof HTMLElement ? Math.max(0, mobileNavNode.getBoundingClientRect().height) : 0;
+
+  const top = clamp(Math.round(headerBottom + 8), 0, Math.max(0, viewportHeight - 120));
+  const bottom = clamp(
+    Math.round(viewportHeight - mobileNavHeight - (isMobile ? 10 : 8)),
+    Math.min(viewportHeight, top + 120),
+    viewportHeight,
+  );
+
+  return {
+    top,
+    bottom,
+    left: 8,
+    right: viewportWidth - 8,
+  };
+};
+
+const clampRectToSafeBounds = (rect: DOMRect, bounds: { top: number; bottom: number; left: number; right: number }) => {
+  const top = clamp(rect.top, bounds.top, bounds.bottom);
+  const bottom = clamp(rect.bottom, bounds.top, bounds.bottom);
+  const left = clamp(rect.left, bounds.left, bounds.right);
+  const right = clamp(rect.right, bounds.left, bounds.right);
+  if (bottom - top < 6 || right - left < 6) return null;
+  return {
+    top,
+    left,
+    width: right - left,
+    height: bottom - top,
+  };
+};
+
+const findScrollableAncestor = (element: HTMLElement, axis: "x" | "y") => {
+  const isY = axis === "y";
+  let current = element.parentElement;
+  while (current) {
+    const style = window.getComputedStyle(current);
+    const overflow = isY ? style.overflowY : style.overflowX;
+    const canScroll = overflow === "auto" || overflow === "scroll";
+    const hasScrollableSpace = isY ? current.scrollHeight > current.clientHeight : current.scrollWidth > current.clientWidth;
+    if (canScroll && hasScrollableSpace) {
+      return current;
+    }
+    current = current.parentElement;
+  }
+  return null;
+};
+
+const scrollTargetIntoViewSoft = (target: HTMLElement, isMobile: boolean) => {
+  const bounds = getSafeViewportBounds(isMobile);
+  const rect = target.getBoundingClientRect();
+  const verticalVisible = rect.top >= bounds.top + 10 && rect.bottom <= bounds.bottom - 10;
+  const horizontalVisible = rect.left >= bounds.left + 8 && rect.right <= bounds.right - 8;
+
+  if (!verticalVisible) {
+    const ancestorY = findScrollableAncestor(target, "y");
+    if (ancestorY) {
+      const ancestorRect = ancestorY.getBoundingClientRect();
+      const targetTopInAncestor = rect.top - ancestorRect.top + ancestorY.scrollTop;
+      const nextTop = Math.max(0, targetTopInAncestor - (isMobile ? 18 : 14));
+      ancestorY.scrollTo({ top: nextTop, behavior: "smooth" });
+    } else {
+      const nextY = Math.max(0, window.scrollY + rect.top - bounds.top - 14);
+      window.scrollTo({ top: nextY, behavior: "smooth" });
+    }
+  }
+
+  if (!horizontalVisible) {
+    const ancestorX = findScrollableAncestor(target, "x");
+    if (ancestorX) {
+      const ancestorRect = ancestorX.getBoundingClientRect();
+      const targetLeftInAncestor = rect.left - ancestorRect.left + ancestorX.scrollLeft;
+      const nextLeft = Math.max(0, targetLeftInAncestor - 12);
+      ancestorX.scrollTo({ left: nextLeft, behavior: "smooth" });
+    }
+  }
+};
+
 const getPanelPosition = (targetRect: DOMRect | null) => {
   const panelWidth = 380;
   const panelHeight = 260;
@@ -436,10 +520,10 @@ const TabTourDialog = () => {
     if (!activeTodayStep.activateSelector) return;
     const node = resolveSelectorTarget(activeTodayStep.activateSelector) ?? resolveAnySelectorTarget(activeTodayStep.activateSelector);
     if (node) {
-      node.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+      scrollTargetIntoViewSoft(node, isMobile);
       window.setTimeout(() => node.click(), 140);
     }
-  }, [activeTodayStep, currentTourKey, location.pathname, location.search, navigate, shouldOpen]);
+  }, [activeTodayStep, currentTourKey, isMobile, location.pathname, location.search, navigate, shouldOpen]);
 
   useEffect(() => {
     if (!shouldOpen || !activeTodayStep) {
@@ -460,14 +544,14 @@ const TabTourDialog = () => {
   }, [activeTodayStep, isMobile, isTodayTour, shouldOpen]);
 
   useEffect(() => {
-    if (!shouldOpen || !activeTodayStep || !activeSelector || !isMobile) return;
+    if (!shouldOpen || !activeTodayStep || !activeSelector) return;
     const scrollToTarget = () => {
       const targetNode =
         resolveSelectorTarget(activeSelector, {
           mobileSlideIndex: activeTodayStep.mobileSlideIndex ?? null,
         }) ?? resolveAnySelectorTarget(activeSelector);
       if (!targetNode) return;
-      targetNode.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+      scrollTargetIntoViewSoft(targetNode, isMobile);
     };
 
     scrollToTarget();
@@ -487,7 +571,13 @@ const TabTourDialog = () => {
       const targetNode = resolveSelectorTarget(activeSelector, {
         mobileSlideIndex: isMobile ? activeTodayStep.mobileSlideIndex ?? null : null,
       });
-      setHighlightRect(targetNode ? targetNode.getBoundingClientRect() : null);
+      if (!targetNode) {
+        setHighlightRect(null);
+        return;
+      }
+      const safeBounds = getSafeViewportBounds(isMobile);
+      const clampedRect = clampRectToSafeBounds(targetNode.getBoundingClientRect(), safeBounds);
+      setHighlightRect(clampedRect ? new DOMRect(clampedRect.left, clampedRect.top, clampedRect.width, clampedRect.height) : null);
     };
     const scheduleUpdate = () => {
       if (frameId) cancelAnimationFrame(frameId);
