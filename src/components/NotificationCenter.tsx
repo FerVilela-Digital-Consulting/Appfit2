@@ -1,8 +1,8 @@
-﻿import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Bell, CheckCheck, ChevronDown, CircleAlert, Info, Send } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -25,12 +25,14 @@ import {
   getNextIncompleteTourTab,
   getTourProgressLocalSnapshot,
   getTourProgressState,
+  getTourTabByPath,
   isTourNotificationRead,
   isTourCompleted,
   markTourNotificationRead,
   markTourInviteResponded,
   restartTourProgress,
   shouldPromptTourInvite,
+  type TourTabDefinition,
 } from "@/services/tourProgress";
 
 const severityMeta: Record<UserNotification["severity"], { label: string; icon: typeof Info }> = {
@@ -61,16 +63,29 @@ const isLocalTourNotification = (notification: UserNotification | LocalTourNotif
 
 const NotificationCenter = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { user, isGuest } = useAuth();
   const [open, setOpen] = useState(false);
   const tourQueryKey = ["tour_progress", user?.id, isGuest] as const;
+  const supportedTourKeys = useMemo(() => new Set(["today", "training", "nutrition"]), []);
+
+  const contextualTourTab = useMemo(() => {
+    const tab = getTourTabByPath(location.pathname);
+    if (!tab || !supportedTourKeys.has(tab.key)) return null;
+    return tab;
+  }, [location.pathname, supportedTourKeys]);
+
+  const fallbackTourTab = getFirstTourTab();
+  const activeTourTab = (contextualTourTab ?? fallbackTourTab) as TourTabDefinition | null;
+  const activeTourLabel = activeTourTab?.title ?? "Centro operativo";
 
   const notificationsQuery = useQuery({
     queryKey: ["user_notifications"],
     queryFn: () => listMyNotifications(25),
     enabled: Boolean(user?.id) && !isGuest,
   });
+
   const tourStateQuery = useQuery({
     queryKey: tourQueryKey,
     queryFn: () => getTourProgressState(user?.id ?? null, { isGuest }),
@@ -96,6 +111,7 @@ const NotificationCenter = () => {
     if (!user?.id || isGuest) return null;
     const tourState = tourStateQuery.data ?? getTourProgressLocalSnapshot(user.id, { isGuest: false });
     const nextTab = getNextIncompleteTourTab(tourState) ?? getFirstTourTab();
+    const preferredTab = contextualTourTab ?? nextTab;
     const buildReadAt = (notificationId: LocalTourNotification["id"]) =>
       isTourNotificationRead(tourState, notificationId) ? tourState.updatedAt ?? new Date().toISOString() : null;
 
@@ -104,7 +120,7 @@ const NotificationCenter = () => {
         id: TOUR_REPLAY_NOTIFICATION_ID,
         notification_kind: "general",
         title: "Recorrido completado",
-        body: "Puedes rehacer el recorrido cuando quieras desde este centro de mensajes.",
+        body: `Puedes rehacer el recorrido de ${activeTourLabel} cuando quieras desde este centro de mensajes.`,
         action_path: null,
         action_label: "Rehacer recorrido",
         severity: "info",
@@ -117,13 +133,13 @@ const NotificationCenter = () => {
     }
 
     if (shouldPromptTourInvite(tourState)) {
-      if (!nextTab) return null;
+      if (!preferredTab) return null;
       return {
         id: TOUR_INVITE_NOTIFICATION_ID,
         notification_kind: "general",
         title: "¿Quieres hacer un recorrido guiado?",
-        body: "Podemos mostrarte un tour rápido por cada pestaña para que conozcas la app en pocos minutos.",
-        action_path: `${nextTab.route}?tour=1`,
+        body: `Se iniciará el recorrido: ${preferredTab.title}.`,
+        action_path: `${preferredTab.route}?tour=1`,
         action_label: "Iniciar tour",
         severity: "info",
         metadata: { source: "local_tour" },
@@ -135,13 +151,13 @@ const NotificationCenter = () => {
     }
 
     if (tourState.inviteResponded && tourState.completedTabs.length > 0) {
-      if (!nextTab) return null;
+      if (!preferredTab) return null;
       return {
         id: TOUR_CONTINUE_NOTIFICATION_ID,
         notification_kind: "general",
         title: "Recorrido en progreso",
-        body: "Te faltan algunas pestañas. Puedes continuar el recorrido cuando quieras.",
-        action_path: `${nextTab.route}?tour=1`,
+        body: `Puedes continuar en ${preferredTab.title} cuando quieras.`,
+        action_path: `${preferredTab.route}?tour=1`,
         action_label: "Continuar recorrido",
         severity: "info",
         metadata: { source: "local_tour" },
@@ -152,13 +168,13 @@ const NotificationCenter = () => {
       };
     }
 
-    if (!nextTab) return null;
+    if (!preferredTab) return null;
     return {
       id: TOUR_INVITE_NOTIFICATION_ID,
       notification_kind: "general",
       title: "Recorrido disponible",
-      body: "Puedes iniciar o retomar el recorrido guiado desde aquí en cualquier momento.",
-      action_path: `${nextTab.route}?tour=1`,
+      body: `Puedes iniciar o retomar el recorrido de ${preferredTab.title} desde aquí.`,
+      action_path: `${preferredTab.route}?tour=1`,
       action_label: "Iniciar recorrido",
       severity: "info",
       metadata: { source: "local_tour" },
@@ -188,12 +204,11 @@ const NotificationCenter = () => {
       }
 
       if (notification.id === TOUR_REPLAY_NOTIFICATION_ID) {
-        const firstTab = getFirstTourTab();
-        if (!firstTab) return;
+        if (!activeTourTab) return;
         await restartTourProgress(user.id, { isGuest: false });
         await queryClient.invalidateQueries({ queryKey: tourQueryKey });
         setOpen(false);
-        navigate(`${firstTab.route}?tour=1`);
+        navigate(`${activeTourTab.route}?tour=1`);
         return;
       }
 
@@ -235,13 +250,11 @@ const NotificationCenter = () => {
   };
 
   const handleQuickRestartTour = async () => {
-    if (!user?.id) return;
-    const firstTab = getFirstTourTab();
-    if (!firstTab) return;
+    if (!user?.id || !activeTourTab) return;
     await restartTourProgress(user.id, { isGuest: false });
     await queryClient.invalidateQueries({ queryKey: tourQueryKey });
     setOpen(false);
-    navigate(`${firstTab.route}?tour=1`);
+    navigate(`${activeTourTab.route}?tour=1`);
   };
 
   if (isGuest || !user?.id) {
@@ -282,7 +295,7 @@ const NotificationCenter = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="relative">
-                    Recorrido
+                    {`Recorrido: ${activeTourLabel}`}
                     <ChevronDown className="ml-1.5 h-4 w-4" />
                     {hasLocalUnread ? (
                       <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary" />
@@ -290,7 +303,7 @@ const NotificationCenter = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
-                  <DropdownMenuLabel>Recorrido guiado</DropdownMenuLabel>
+                  <DropdownMenuLabel>{`Recorrido guiado: ${activeTourLabel}`}</DropdownMenuLabel>
                   {localTourNotification ? (
                     <>
                       <div className="px-2 py-1.5 text-xs text-muted-foreground">{localTourNotification.body}</div>
@@ -398,4 +411,3 @@ const NotificationCenter = () => {
 };
 
 export default NotificationCenter;
-

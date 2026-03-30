@@ -143,7 +143,7 @@ const Nutrition = () => {
       <div className="mx-auto max-w-[1540px] space-y-6">
         <div className="grid gap-6 xl:grid-cols-[1.65fr_0.8fr]">
           <section className="space-y-5">
-            <div className="space-y-2 px-1 sm:hidden">
+            <div data-tour="nutrition-hero" className="space-y-2 px-1 sm:hidden">
               <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-primary/80">Bitacora de nutrición</p>
               <div className="flex items-start justify-between gap-3">
                 <h1 className="app-surface-heading text-3xl font-black tracking-tight">Nutrición - Hoy</h1>
@@ -172,7 +172,7 @@ const Nutrition = () => {
               </div>
               <p className="app-surface-caption text-sm">Registra rápido y entiende exactamente que plan nutricional estás usando.</p>
             </div>
-            <div className="hidden sm:block">
+            <div data-tour="nutrition-header-section" className="hidden sm:block">
               <NutritionHeaderSection
                 selectedDate={selectedDate}
                 selectedProfileId={selectedNutritionProfile?.id ?? null}
@@ -191,7 +191,7 @@ const Nutrition = () => {
                 onOpenTechnicalConfig={() => setTechnicalOpen(true)}
               />
             </div>
-            <div className="app-surface-panel rounded-[20px] p-2 sm:rounded-[24px]">
+            <div data-tour="nutrition-view-switch" className="app-surface-panel rounded-[20px] p-2 sm:rounded-[24px]">
               <div className="relative grid grid-cols-3 sm:hidden">
                 <motion.span
                   aria-hidden
@@ -201,6 +201,7 @@ const Nutrition = () => {
                   transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                 />
                 <button
+                  data-tour="nutrition-view-summary"
                   type="button"
                   className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("summary")}
@@ -208,6 +209,7 @@ const Nutrition = () => {
                   <span className={activeMainView === "summary" ? "text-primary-foreground" : "text-muted-foreground"}>Resumen</span>
                 </button>
                 <button
+                  data-tour="nutrition-view-logbook"
                   type="button"
                   className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("logbook")}
@@ -215,6 +217,7 @@ const Nutrition = () => {
                   <span className={activeMainView === "logbook" ? "text-primary-foreground" : "text-muted-foreground"}>Logbook</span>
                 </button>
                 <button
+                  data-tour="nutrition-view-library"
                   type="button"
                   className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("library")}
@@ -231,6 +234,7 @@ const Nutrition = () => {
                   transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                 />
                 <button
+                  data-tour="nutrition-view-logbook"
                   type="button"
                   className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("logbook")}
@@ -238,6 +242,7 @@ const Nutrition = () => {
                   <span className={desktopMainView === "logbook" ? "text-primary-foreground" : "text-muted-foreground"}>Logbook</span>
                 </button>
                 <button
+                  data-tour="nutrition-view-library"
                   type="button"
                   className="relative z-10 rounded-xl px-3 py-2 text-sm font-semibold"
                   onClick={() => setActiveMainView("library")}
@@ -249,7 +254,8 @@ const Nutrition = () => {
             {activeMainView === "summary" ? (
               <>
                 <div className="space-y-5 sm:hidden">
-                  <NutritionHeaderSection
+                  <div data-tour="nutrition-header-section">
+                    <NutritionHeaderSection
                     selectedDate={selectedDate}
                     selectedProfileId={selectedNutritionProfile?.id ?? null}
                     selectedPlanName={effectiveProfileLabel}
@@ -266,10 +272,11 @@ const Nutrition = () => {
                     isApplyingWeeklyPlan={weeklyProfilePlanMutation.isPending}
                     onOpenTechnicalConfig={() => setTechnicalOpen(true)}
                     showIntro={false}
-                  />
-                  {sidebarPanel}
+                    />
+                  </div>
+                  <div data-tour="nutrition-summary-panel">{sidebarPanel}</div>
                 </div>
-                <div className="hidden sm:block">
+                <div data-tour="nutrition-logbook-section" className="hidden sm:block">
                   <NutritionMealsSection
                     mealOverview={mealOverview}
                     onOpenMealDialog={openDialogForMeal}
@@ -278,7 +285,8 @@ const Nutrition = () => {
                 </div>
               </>
             ) : activeMainView === "library" ? (
-              <NutritionFoodLibrarySection
+              <div data-tour="nutrition-library-section">
+                <NutritionFoodLibrarySection
                 foodLibraryItems={foodLibraryItems}
                 favorites={favorites}
                 categories={categories}
@@ -287,17 +295,20 @@ const Nutrition = () => {
                 onDeleteFavorite={(favoriteId) => deleteFavoriteMutation.mutate(favoriteId)}
                 isUpdatingFavorite={updateFavoriteMutation.isPending}
                 isDeletingFavorite={deleteFavoriteMutation.isPending}
-              />
+                />
+              </div>
             ) : (
-              <NutritionMealsSection
+              <div data-tour="nutrition-logbook-section">
+                <NutritionMealsSection
                 mealOverview={mealOverview}
                 onOpenMealDialog={openDialogForMeal}
                 onDeleteEntry={(entryId) => deleteMutation.mutate(entryId)}
-              />
+                />
+              </div>
             )}
           </section>
 
-          <div className="hidden sm:block">{sidebarPanel}</div>
+          <div data-tour="nutrition-summary-panel" className="hidden sm:block">{sidebarPanel}</div>
         </div>
       </div>
 

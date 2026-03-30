@@ -16,18 +16,21 @@ import {
 } from "@/services/tourProgress";
 
 const TOUR_QUERY_KEY = "tour";
-const TODAY_STEP_COUNT = 11;
+const SUPPORTED_TOUR_KEYS = ["today", "training", "nutrition"] as const;
+type GuidedTourKey = (typeof SUPPORTED_TOUR_KEYS)[number];
 
-type TodayTourStep = {
+type GuidedTourStep = {
   key: string;
   title: string;
   description: string;
   selector: string;
   mobileSelector?: string;
   mobileSlideIndex?: number;
+  activateSelector?: string;
 };
 
-const TODAY_TOUR_STEPS: TodayTourStep[] = [
+const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
+  today: [
   {
     key: "welcome",
     title: "Bienvenido al recorrido",
@@ -110,7 +113,111 @@ const TODAY_TOUR_STEPS: TodayTourStep[] = [
     description: "Cuando quieras repetirlo, entra a Notificaciones y usa la opción de Recorrido.",
     selector: '[data-tour="notifications-center"]',
   },
-];
+  ],
+  training: [
+    {
+      key: "welcome",
+      title: "Bienvenido a Entrenamiento",
+      description: "Aqui gestionas todo el ciclo: ejecutar sesion, planificar rutinas y revisar progreso.",
+      selector: '[data-tour="training-hero"]',
+    },
+    {
+      key: "tabs",
+      title: "Navegacion interna",
+      description: "Estas pestañas separan la operacion diaria en Entrenar, Planificar y Progreso.",
+      selector: '[data-tour="training-tabs"]',
+    },
+    {
+      key: "train",
+      title: "Entrenar",
+      description: "Aqui inicias o continuas la sesion del dia y registras series, repeticiones y notas.",
+      selector: '[data-tour="training-train-section"]',
+      activateSelector: '[data-tour="training-tab-train"]',
+    },
+    {
+      key: "plan",
+      title: "Planificar",
+      description: "Define la estructura semanal de rutinas y asigna que toca en cada dia.",
+      selector: '[data-tour="training-plan-section"]',
+      activateSelector: '[data-tour="training-tab-plan"]',
+    },
+    {
+      key: "routines",
+      title: "Rutinas",
+      description: "Crea, edita, duplica y elimina rutinas para mantener tu biblioteca operativa.",
+      selector: '[data-tour="training-routines-section"]',
+      activateSelector: '[data-tour="training-tab-plan"]',
+    },
+    {
+      key: "library",
+      title: "Biblioteca de ejercicios",
+      description: "Aqui agregas ejercicios personalizados y ajustas filtros para planificar mas rapido.",
+      selector: '[data-tour="training-library-section"]',
+      activateSelector: '[data-tour="training-tab-plan"]',
+    },
+    {
+      key: "progress",
+      title: "Progreso",
+      description: "Revisa PRs, evolucion por ejercicio e historial para decidir siguientes ajustes.",
+      selector: '[data-tour="training-progress-section"]',
+      activateSelector: '[data-tour="training-tab-progress"]',
+    },
+    {
+      key: "tour-reopen",
+      title: "Reabrir este recorrido",
+      description: "Desde Notificaciones podras reiniciar el recorrido de Entrenamiento cuando quieras.",
+      selector: '[data-tour="notifications-center"]',
+    },
+  ],
+  nutrition: [
+    {
+      key: "welcome",
+      title: "Bienvenido a Alimentacion",
+      description: "Esta vista integra plan, registro diario y biblioteca para que la adherencia sea simple.",
+      selector: '[data-tour="nutrition-hero"]',
+    },
+    {
+      key: "switcher",
+      title: "Selector de vistas",
+      description: "Desde aqui alternas entre Resumen, Logbook y Biblioteca segun la tarea que necesites.",
+      selector: '[data-tour="nutrition-view-switch"]',
+    },
+    {
+      key: "header",
+      title: "Contexto del dia",
+      description: "Controla fecha, perfil activo y fuente del plan para saber exactamente con que objetivo trabajas hoy.",
+      selector: '[data-tour="nutrition-header-section"]',
+      activateSelector: '[data-tour="nutrition-view-summary"]',
+    },
+    {
+      key: "summary",
+      title: "Resumen nutricional",
+      description: "Este panel compara calorias y macros consumidos contra tu meta diaria en tiempo real.",
+      selector: '[data-tour="nutrition-summary-panel"]',
+      activateSelector: '[data-tour="nutrition-view-summary"]',
+    },
+    {
+      key: "logbook",
+      title: "Logbook",
+      description: "Aqui registras comidas por bloque y ajustas entradas del dia sin salir de la pestaña.",
+      selector: '[data-tour="nutrition-logbook-section"]',
+      activateSelector: '[data-tour="nutrition-view-logbook"]',
+    },
+    {
+      key: "library",
+      title: "Biblioteca",
+      description: "Usa alimentos guardados y favoritos para acelerar el registro y reducir friccion.",
+      selector: '[data-tour="nutrition-library-section"]',
+      activateSelector: '[data-tour="nutrition-view-library"]',
+    },
+    {
+      key: "tour-reopen",
+      title: "Reabrir este recorrido",
+      description: "Desde Notificaciones podras iniciar de nuevo el recorrido de Alimentacion.",
+      selector: '[data-tour="notifications-center"]',
+    },
+  ],
+};
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
@@ -201,12 +308,18 @@ const TabTourDialog = () => {
 
   const currentTab = useMemo(() => getTourTabByPath(location.pathname), [location.pathname]);
   const progress = tourStateQuery.data;
-  const shouldOpen = Boolean(user?.id) && !isGuest && isTourActive && currentTab?.key === "today";
-  const isTodayTour = currentTab?.key === "today";
+  const currentTourKey: GuidedTourKey | null = useMemo(() => {
+    if (!currentTab) return null;
+    return SUPPORTED_TOUR_KEYS.includes(currentTab.key as GuidedTourKey) ? (currentTab.key as GuidedTourKey) : null;
+  }, [currentTab]);
+  const activeSteps = currentTourKey ? GUIDED_TOUR_STEPS[currentTourKey] : [];
+  const totalStepCount = activeSteps.length;
+  const shouldOpen = Boolean(user?.id) && !isGuest && isTourActive && Boolean(currentTourKey);
+  const isTodayTour = currentTourKey === "today";
   const [todayStepIndex, setTodayStepIndex] = useState(0);
   const [panelDirection, setPanelDirection] = useState<1 | -1>(1);
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
-  const activeTodayStep = TODAY_TOUR_STEPS[todayStepIndex] ?? null;
+  const activeTodayStep = activeSteps[todayStepIndex] ?? null;
   const activeSelector = useMemo(() => {
     if (!activeTodayStep) return null;
     return isMobile && activeTodayStep.mobileSelector ? activeTodayStep.mobileSelector : activeTodayStep.selector;
@@ -227,14 +340,14 @@ const TabTourDialog = () => {
 
   const completeTodayTourMutation = useMutation({
     mutationFn: async () => {
-      if (!user?.id || !currentTab) return null;
-      return markTourTabCompleted(user.id, currentTab.key, { isGuest: false });
+      if (!user?.id || !currentTourKey) return null;
+      return markTourTabCompleted(user.id, currentTourKey, { isGuest: false });
     },
     onSuccess: async () => {
       if (!user?.id) return;
       await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id, isGuest] });
       closeTourQuery();
-      toast.success("Recorrido de centro operativo completado.");
+      toast.success(`Recorrido de ${currentTab?.title ?? "esta pestaña"} completado.`);
     },
   });
 
@@ -256,24 +369,32 @@ const TabTourDialog = () => {
   };
 
   useEffect(() => {
-    if (!shouldOpen || !isTodayTour) return;
+    if (!shouldOpen || !currentTourKey) return;
     setTodayStepIndex(0);
     setPanelDirection(1);
-  }, [isTodayTour, location.pathname, shouldOpen]);
+  }, [currentTourKey, location.pathname, shouldOpen]);
 
   useEffect(() => {
     if (!user?.id || isGuest || !isTourActive) return;
-    if (currentTab && currentTab.key !== "today") {
+    if (!currentTourKey) {
       navigate("/today?tour=1", { replace: true });
     }
-  }, [currentTab, isGuest, isTourActive, navigate, user?.id]);
+  }, [currentTourKey, isGuest, isTourActive, navigate, user?.id]);
 
   useEffect(() => {
-    if (!shouldOpen || !isTodayTour || !activeTodayStep) {
+    if (!shouldOpen || !activeTodayStep?.activateSelector) return;
+    const node = resolveSelectorTarget(activeTodayStep.activateSelector);
+    if (node) {
+      window.setTimeout(() => node.click(), 60);
+    }
+  }, [activeTodayStep, shouldOpen]);
+
+  useEffect(() => {
+    if (!shouldOpen || !activeTodayStep) {
       return;
     }
 
-    if (!isMobile || typeof activeTodayStep.mobileSlideIndex !== "number") {
+    if (!isMobile || !isTodayTour || typeof activeTodayStep.mobileSlideIndex !== "number") {
       return;
     }
 
@@ -287,7 +408,7 @@ const TabTourDialog = () => {
   }, [activeTodayStep, isMobile, isTodayTour, shouldOpen]);
 
   useEffect(() => {
-    if (!shouldOpen || !isTodayTour || !activeTodayStep || !activeSelector) {
+    if (!shouldOpen || !activeTodayStep || !activeSelector) {
       setHighlightRect(null);
       return;
     }
@@ -316,7 +437,7 @@ const TabTourDialog = () => {
       window.removeEventListener("resize", scheduleUpdate);
       window.removeEventListener("scroll", scheduleUpdate, true);
     };
-  }, [activeSelector, activeTodayStep, isMobile, isTodayTour, shouldOpen]);
+  }, [activeSelector, activeTodayStep, isMobile, shouldOpen]);
 
   const handleTodayBack = () => {
     setPanelDirection(-1);
@@ -325,7 +446,7 @@ const TabTourDialog = () => {
 
   const handleTodayNext = () => {
     if (!activeTodayStep) return;
-    const isLastStep = todayStepIndex >= TODAY_TOUR_STEPS.length - 1;
+    const isLastStep = todayStepIndex >= totalStepCount - 1;
     if (isLastStep) {
       if (!completeTodayTourMutation.isPending) {
         completeTodayTourMutation.mutate();
@@ -333,7 +454,7 @@ const TabTourDialog = () => {
       return;
     }
     setPanelDirection(1);
-    setTodayStepIndex((current) => Math.min(TODAY_TOUR_STEPS.length - 1, current + 1));
+    setTodayStepIndex((current) => Math.min(totalStepCount - 1, current + 1));
   };
 
   if (!shouldOpen || !currentTab || !progress) {
@@ -342,9 +463,9 @@ const TabTourDialog = () => {
 
   const todayPanelPosition = getPanelPosition(highlightRect);
   const canGoBackToday = todayStepIndex > 0;
-  const isLastTodayStep = todayStepIndex >= TODAY_TOUR_STEPS.length - 1;
+  const isLastTodayStep = todayStepIndex >= totalStepCount - 1;
 
-  if (isTodayTour && activeTodayStep) {
+  if (activeTodayStep) {
     return (
       <AnimatePresence>
         {shouldOpen ? (
@@ -410,7 +531,7 @@ const TabTourDialog = () => {
               >
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-                    Paso {todayStepIndex + 1} de {TODAY_STEP_COUNT}
+                    Paso {todayStepIndex + 1} de {totalStepCount}
                   </p>
                   <p className="mt-1 text-lg font-black leading-tight">{activeTodayStep.title}</p>
                 </div>
@@ -432,12 +553,12 @@ const TabTourDialog = () => {
                   <motion.div
                     className="h-full rounded-full bg-primary"
                     initial={false}
-                    animate={{ width: `${((todayStepIndex + 1) / TODAY_STEP_COUNT) * 100}%` }}
+                    animate={{ width: `${((todayStepIndex + 1) / totalStepCount) * 100}%` }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
                   />
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {todayStepIndex + 1}/{TODAY_STEP_COUNT}
+                  {todayStepIndex + 1}/{totalStepCount}
                 </span>
               </div>
 

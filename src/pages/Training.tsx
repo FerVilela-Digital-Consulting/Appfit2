@@ -89,13 +89,15 @@ const Training = () => {
   return (
     <div className="app-shell min-h-screen px-4 py-5 text-foreground sm:px-6 sm:py-8">
       <div className="mx-auto max-w-[1540px] space-y-6">
-        <AppPageIntro eyebrow="Bitácora de entrenamiento" title={copy.title} description={isMobile ? undefined : copy.subtitle} />
+        <div data-tour="training-hero">
+          <AppPageIntro eyebrow="Bitácora de entrenamiento" title={copy.title} description={isMobile ? undefined : copy.subtitle} />
+        </div>
 
         {isTrainingLoading ? <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">{copy.loading}</div> : null}
         {trainingError ? <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">{copy.failedLoad}: {trainingErrorMessage}</div> : null}
 
         <Tabs value={tab} onValueChange={handleTabChange} className="space-y-5">
-        <div className="app-surface-panel rounded-[20px] p-2 sm:rounded-[24px]">
+        <div data-tour="training-tabs" className="app-surface-panel rounded-[20px] p-2 sm:rounded-[24px]">
           <TabsList className="relative grid h-auto w-full grid-cols-3 bg-transparent p-0">
             <motion.span
               aria-hidden
@@ -105,18 +107,21 @@ const Training = () => {
               transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             />
             <TabsTrigger
+              data-tour="training-tab-train"
               className="relative z-10 min-w-0 rounded-xl bg-transparent px-2 text-xs font-semibold text-muted-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:text-sm"
               value="train"
             >
               {copy.tabs.train}
             </TabsTrigger>
             <TabsTrigger
+              data-tour="training-tab-plan"
               className="relative z-10 min-w-0 rounded-xl bg-transparent px-2 text-xs font-semibold text-muted-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:text-sm"
               value="plan"
             >
               {copy.tabs.plan}
             </TabsTrigger>
             <TabsTrigger
+              data-tour="training-tab-progress"
               className="relative z-10 min-w-0 rounded-xl bg-transparent px-2 text-xs font-semibold text-muted-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:text-sm"
               value="progress"
             >
@@ -126,7 +131,8 @@ const Training = () => {
         </div>
 
         <TabsContent value="train" className="space-y-5">
-          <TrainingTodaySection
+          <div data-tour="training-train-section">
+            <TrainingTodaySection
             copy={copy}
             activeSession={activeSession}
             scheduledWorkout={scheduledWorkout}
@@ -157,18 +163,22 @@ const Training = () => {
             isSaveSessionNotePending={saveSessionNoteMutation.isPending}
             isSaveSetPending={saveSetMutation.isPending}
             isDeleteSetPending={deleteSetMutation.isPending}
-          />
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="plan" className="space-y-5">
-          <TrainingPlanningScheduleSection
+          <div data-tour="training-plan-section">
+            <TrainingPlanningScheduleSection
             copy={copy}
             schedule={schedule}
             workouts={workouts}
             isSaveSchedulePending={saveScheduleMutation.isPending}
             onSaveScheduleDay={(payload) => saveScheduleMutation.mutate(payload)}
-          />
-          <TrainingRoutinesSection
+            />
+          </div>
+          <div data-tour="training-routines-section">
+            <TrainingRoutinesSection
             copy={copy}
             workouts={workouts}
             templates={templates}
@@ -185,8 +195,9 @@ const Training = () => {
             onEditWorkout={openEditRoutine}
             onDeleteWorkout={setDeleteWorkoutId}
             onDuplicateTemplate={(templateId) => duplicateTemplateMutation.mutate(templateId)}
-          />
-          <details>
+            />
+          </div>
+          <details data-tour="training-library-section">
             <summary className="cursor-pointer select-none rounded-xl border border-border/70 bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
               {copy.librarySupportHint}
             </summary>
@@ -205,7 +216,8 @@ const Training = () => {
         </TabsContent>
 
         <TabsContent value="progress" className="space-y-5">
-          <TrainingProgressSection
+          <div data-tour="training-progress-section" className="space-y-5">
+            <TrainingProgressSection
             copy={copy}
             selectedExerciseId={selectedExerciseId}
             exerciseLibrary={exerciseLibrary}
@@ -216,13 +228,14 @@ const Training = () => {
             formatDateTime={formatDateTime}
             formatExerciseName={formatExerciseName}
             onSelectExercise={setSelectedExerciseId}
-          />
-          <TrainingHistorySection
+            />
+            <TrainingHistorySection
             copy={copy}
             history={history}
             renderPlaceholder={renderPlaceholder}
             formatDateTime={formatDateTime}
-          />
+            />
+          </div>
         </TabsContent>
         </Tabs>
 
