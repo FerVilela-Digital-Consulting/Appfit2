@@ -290,6 +290,14 @@ const resolveAnySelectorTarget = (selector: string): HTMLElement | null => {
   return null;
 };
 
+const resolveTrainingTabFromStep = (step: GuidedTourStep | null) => {
+  if (!step) return null;
+  if (step.key === "train") return "train";
+  if (step.key === "plan" || step.key === "routines" || step.key === "library") return "plan";
+  if (step.key === "progress") return "progress";
+  return null;
+};
+
 const getPanelPosition = (targetRect: DOMRect | null) => {
   const panelWidth = 380;
   const panelHeight = 260;
@@ -404,13 +412,33 @@ const TabTourDialog = () => {
   }, [currentTourKey, isGuest, isTourActive, navigate, user?.id]);
 
   useEffect(() => {
-    if (!shouldOpen || !activeTodayStep?.activateSelector) return;
+    if (!shouldOpen || !activeTodayStep) return;
+
+    if (currentTourKey === "training") {
+      const forcedTab = resolveTrainingTabFromStep(activeTodayStep);
+      if (forcedTab) {
+        const nextParams = new URLSearchParams(location.search);
+        if (nextParams.get("tab") !== forcedTab) {
+          nextParams.set("tab", forcedTab);
+          navigate(
+            {
+              pathname: location.pathname,
+              search: `?${nextParams.toString()}`,
+            },
+            { replace: true },
+          );
+          return;
+        }
+      }
+    }
+
+    if (!activeTodayStep.activateSelector) return;
     const node = resolveSelectorTarget(activeTodayStep.activateSelector) ?? resolveAnySelectorTarget(activeTodayStep.activateSelector);
     if (node) {
       node.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
       window.setTimeout(() => node.click(), 140);
     }
-  }, [activeTodayStep, shouldOpen]);
+  }, [activeTodayStep, currentTourKey, location.pathname, location.search, navigate, shouldOpen]);
 
   useEffect(() => {
     if (!shouldOpen || !activeTodayStep) {
