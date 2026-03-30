@@ -61,7 +61,7 @@ const MOOD_PRESETS: MoodPreset[] = [
   {
     key: "bad",
     emoji: "😴",
-    label: "Bad",
+    label: "Mal",
     values: {
       sleep_quality: 3,
       daily_energy: 3,
@@ -75,7 +75,7 @@ const MOOD_PRESETS: MoodPreset[] = [
   {
     key: "okay",
     emoji: "😐",
-    label: "Okay",
+    label: "OK",
     values: {
       sleep_quality: 5,
       daily_energy: 5,
@@ -89,7 +89,7 @@ const MOOD_PRESETS: MoodPreset[] = [
   {
     key: "good",
     emoji: "⚡",
-    label: "Good",
+    label: "Bien",
     values: {
       sleep_quality: 7,
       daily_energy: 7,
@@ -103,7 +103,7 @@ const MOOD_PRESETS: MoodPreset[] = [
   {
     key: "excellent",
     emoji: "🚀",
-    label: "Excellent",
+    label: "Excelente",
     values: {
       sleep_quality: 9,
       daily_energy: 9,
@@ -153,18 +153,18 @@ const calculateRecoveryScore = (values: BiofeedbackValues) => {
   );
 
   const recommendation =
-    score > 80 ? "High intensity training" : score > 60 ? "Moderate training" : "Recovery / rest";
+    score > 80 ? "Entrenamiento intenso" : score > 60 ? "Entrenamiento moderado" : "Recuperación / descanso";
 
   return { score, recommendation };
 };
 
 const sliderRows: Array<{ key: keyof BiofeedbackValues; label: string; emoji: string }> = [
-  { key: "sleep_quality", label: "Sleep quality", emoji: "😴" },
-  { key: "daily_energy", label: "Daily energy", emoji: "⚡" },
-  { key: "training_energy", label: "Training energy", emoji: "🏋️" },
-  { key: "perceived_stress", label: "Stress", emoji: "🧠" },
-  { key: "hunger_level", label: "Hunger", emoji: "🍽️" },
-  { key: "digestion", label: "Digestion", emoji: "🧬" },
+  { key: "sleep_quality", label: "Calidad de sueño", emoji: "😴" },
+  { key: "daily_energy", label: "Energía diaria", emoji: "⚡" },
+  { key: "training_energy", label: "Energía para entrenar", emoji: "🏋️" },
+  { key: "perceived_stress", label: "Estrés", emoji: "🧠" },
+  { key: "hunger_level", label: "Hambre", emoji: "🍽️" },
+  { key: "digestion", label: "Digestión", emoji: "🧬" },
   { key: "libido", label: "Libido", emoji: "❤️" },
 ];
 
@@ -240,7 +240,7 @@ const BiofeedbackQuickCheckin = ({ storageScopeKey, todayLabel, initialEntry, on
         lastSavedRef.current = values;
         setSaveState("saved");
         setSavedAt(new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }));
-        console.log("Saved check-in", values);
+        console.log("Check-in guardado", values);
       } catch {
         setSaveState("error");
       }
@@ -290,24 +290,24 @@ const BiofeedbackQuickCheckin = ({ storageScopeKey, todayLabel, initialEntry, on
 
   const saveIndicator =
     saveState === "saving"
-      ? "Autosaving..."
+      ? "Guardando automáticamente..."
       : saveState === "typing"
-        ? "Typing..."
+        ? "Escribiendo..."
         : saveState === "saved"
-          ? `Autosaved${savedAt ? ` · ${savedAt}` : ""}`
+          ? `Guardado automático${savedAt ? ` · ${savedAt}` : ""}`
           : saveState === "error"
-            ? "Save error"
-            : "Auto save enabled";
+            ? "Error al guardar"
+            : "Autoguardado activado";
 
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">🧬 Daily Check-in</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">🧬 Check-in diario</p>
         <p className="mt-1 text-sm text-muted-foreground">{todayLabel}</p>
       </div>
 
       <div className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-sm">
-        <p className="text-sm font-semibold text-foreground">How do you feel today?</p>
+        <p className="text-sm font-semibold text-foreground">¿Cómo te sientes hoy?</p>
         <div className="mt-3 grid grid-cols-4 gap-2">
           {MOOD_PRESETS.map((preset) => (
             <button
@@ -326,6 +326,38 @@ const BiofeedbackQuickCheckin = ({ storageScopeKey, todayLabel, initialEntry, on
             </button>
           ))}
         </div>
+
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Perfiles personalizados</p>
+          {customPresets.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {customPresets.map((preset) => (
+                <div key={preset.id} className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2 py-1">
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-foreground"
+                    onClick={() => {
+                      setSelectedMood(null);
+                      setValues(preset.values);
+                    }}
+                  >
+                    {preset.name}
+                  </button>
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-destructive"
+                    onClick={() => handleDeletePreset(preset.id)}
+                    aria-label={`Eliminar perfil ${preset.name}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-muted-foreground">Aún no tienes perfiles guardados.</p>
+          )}
+        </div>
       </div>
 
       <div className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-sm">
@@ -334,7 +366,7 @@ const BiofeedbackQuickCheckin = ({ storageScopeKey, todayLabel, initialEntry, on
           onClick={() => setShowDetails((prev) => !prev)}
           className="flex w-full items-center justify-between text-left"
         >
-          <p className="text-sm font-semibold text-foreground">Adjust details (optional)</p>
+          <p className="text-sm font-semibold text-foreground">Ajustes (opcional)</p>
           <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", showDetails && "rotate-180")} />
         </button>
 
@@ -366,52 +398,29 @@ const BiofeedbackQuickCheckin = ({ storageScopeKey, todayLabel, initialEntry, on
 
             <div className="rounded-xl border border-border/60 bg-background/50 p-3">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Save custom preset ({customPresets.length}/{MAX_CUSTOM_PRESETS})
+                Guardar perfil personalizado ({customPresets.length}/{MAX_CUSTOM_PRESETS})
               </p>
               <div className="mt-2 flex items-center gap-2">
                 <input
                   value={presetName}
                   onChange={(event) => setPresetName(event.target.value)}
-                  placeholder="e.g. Estresado"
+                  placeholder="Ejemplo: Estresado"
                   className="h-9 w-full rounded-lg border border-border/60 bg-background px-3 text-sm outline-none focus:border-primary/60"
                 />
                 <Button type="button" size="sm" className="h-9 rounded-lg px-3" onClick={handleSavePreset} disabled={!presetName.trim() || customPresets.length >= MAX_CUSTOM_PRESETS}>
-                  Save
+                  Guardar
                 </Button>
               </div>
-              {customPresets.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {customPresets.map((preset) => (
-                    <div key={preset.id} className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2 py-1">
-                      <button
-                        type="button"
-                        className="text-xs font-medium text-foreground"
-                        onClick={() => {
-                          setSelectedMood(null);
-                          setValues(preset.values);
-                        }}
-                      >
-                        {preset.name}
-                      </button>
-                      <button
-                        type="button"
-                        className="text-xs text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDeletePreset(preset.id)}
-                        aria-label={`Delete preset ${preset.name}`}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Puedes guardar hasta {MAX_CUSTOM_PRESETS} perfiles personalizados.
+              </p>
             </div>
           </div>
         ) : null}
       </div>
 
       <div className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">🧬 Recovery estimate</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">🧬 Recovery estimado</p>
         <div className="mt-2 flex items-end justify-between">
           <p className="text-4xl font-black leading-none text-foreground">{recovery.score}%</p>
           <Sparkles className="h-5 w-5 text-primary" />
