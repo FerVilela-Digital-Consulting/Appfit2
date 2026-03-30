@@ -130,6 +130,36 @@ Este documento esta optimizado para recuperar contexto con bajo consumo de token
 
 ---
 
+## 2026-03-30 - Ajuste de arquitectura para carga de datos post-login
+
+### Alcance
+- Area: Auth bootstrap + PWA asset caching
+- Tipo: fix
+- Owner: CTO flow
+
+### Cambios
+- Se removio el fallback de Supabase a `placeholder.supabase.co`; ahora el build falla de forma explicita si faltan `VITE_SUPABASE_URL` o `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- Se cambio la estrategia de cache de `script/style` en Workbox de `StaleWhileRevalidate` a `NetworkFirst` con timeout corto para reducir mezcla de chunks viejos/nuevos despues de deploy.
+- Objetivo: disminuir tiempos de hidratacion y evitar errores intermitentes `net::ERR_NAME_NOT_RESOLVED` durante carga inicial de datos de usuario.
+
+### Archivos tocados
+- src/services/supabaseClient.ts
+- vite.config.ts
+
+### Riesgo
+- medium
+- Notas: requiere que build-time args de Supabase esten bien definidos en Dokploy; de lo contrario el build fallara temprano (comportamiento esperado).
+
+### Verificacion
+- `npm run build`
+- revisado que el SW se regenere con nueva estrategia de cache para assets.
+
+### Pendientes
+- Medir en produccion el tiempo desde `DOMContentLoaded` hasta primera carga completa de paneles en `/today`.
+- Validar reduccion de errores `ERR_NAME_NOT_RESOLVED` en sesiones moviles reales.
+
+---
+
 ## 2026-03-27 - Cierre de sesion (CTO)
 
 ### Alcance

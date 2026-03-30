@@ -58,9 +58,10 @@ export default defineConfig(({ mode }) => ({
           },
           {
             urlPattern: ({ request }) => request.destination === "script" || request.destination === "style",
-            handler: "StaleWhileRevalidate",
+            handler: "NetworkFirst",
             options: {
               cacheName: "app-assets",
+              networkTimeoutSeconds: 3,
             },
           },
           {
