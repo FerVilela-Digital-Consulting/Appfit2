@@ -125,7 +125,7 @@ export function NutritionHeaderSection({
 
       <div className="app-surface-hero rounded-[24px] px-4 py-5 sm:rounded-[28px] sm:px-6 sm:py-6">
         <div className="grid gap-3 xl:grid-cols-1 xl:items-stretch">
-          <article className="app-chip-muted rounded-2xl px-4 py-3">
+          <article data-tour="nutrition-daily-profile" className="app-chip-muted rounded-2xl px-4 py-3">
             <div className="mb-2 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <div className="app-surface-caption text-[10px] font-semibold uppercase tracking-[0.24em]">Perfil nutricional diario</div>

@@ -190,6 +190,14 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
       activateSelector: '[data-tour="nutrition-view-summary"]',
     },
     {
+      key: "daily-profile",
+      title: "Perfiles diarios nutricionales",
+      description:
+        "Aqui eliges la plantilla nutricional del dia y puedes aplicar plan semanal. Si presionas el boton '?' veras mas detalles del funcionamiento y calculo en cards clave.",
+      selector: '[data-tour="nutrition-daily-profile"]',
+      activateSelector: '[data-tour="nutrition-view-summary"]',
+    },
+    {
       key: "summary",
       title: "Resumen nutricional",
       description: "Este panel compara calorias y macros consumidos contra tu meta diaria en tiempo real.",
@@ -264,6 +272,20 @@ const resolveSelectorTarget = (selector: string, options?: { mobileSlideIndex?: 
       }
     }
     if (bestNode) return bestNode;
+  }
+  return null;
+};
+
+const resolveAnySelectorTarget = (selector: string): HTMLElement | null => {
+  const selectors = selector
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  for (const currentSelector of selectors) {
+    const node = document.querySelector(currentSelector);
+    if (node instanceof HTMLElement) {
+      return node;
+    }
   }
   return null;
 };
@@ -383,9 +405,10 @@ const TabTourDialog = () => {
 
   useEffect(() => {
     if (!shouldOpen || !activeTodayStep?.activateSelector) return;
-    const node = resolveSelectorTarget(activeTodayStep.activateSelector);
+    const node = resolveSelectorTarget(activeTodayStep.activateSelector) ?? resolveAnySelectorTarget(activeTodayStep.activateSelector);
     if (node) {
-      window.setTimeout(() => node.click(), 60);
+      node.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+      window.setTimeout(() => node.click(), 140);
     }
   }, [activeTodayStep, shouldOpen]);
 

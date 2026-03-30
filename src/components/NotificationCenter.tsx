@@ -295,7 +295,7 @@ const NotificationCenter = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="relative">
-                    {`Recorrido: ${activeTourLabel}`}
+                    Recorrido
                     <ChevronDown className="ml-1.5 h-4 w-4" />
                     {hasLocalUnread ? (
                       <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary" />
