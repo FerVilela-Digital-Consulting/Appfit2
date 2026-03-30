@@ -47,8 +47,8 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     key: "command-center",
     title: "Centro operativo",
     description: "Aquí se concentra tu flujo del día: prioridad, registros rápidos y estado global.",
-    selector: '[data-tour="actions-zone"]',
-    mobileSelector: '[data-tour="mobile-command-center"]',
+    selector: '[data-tour="command-center-focus"]',
+    mobileSelector: '[data-tour="mobile-command-center-focus"]',
     mobileSlideIndex: 0,
   },
   {
@@ -56,7 +56,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     title: "Qué hacer hoy",
     description:
       "Este bloque prioriza tu día: arriba ves el avance total y abajo la siguiente acción recomendada. Si completas ese paso, el progreso diario sube automáticamente.",
-    selector: '[data-tour="today-action-card"]',
+    selector: '[data-tour="today-priority-focus"]',
     mobileSlideIndex: 0,
   },
   {
@@ -64,7 +64,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     title: "Tarjetas rápidas",
     description:
       "Aquí registras rápido lo esencial del día (agua, sueño, biofeedback y pasos). El botón “+” abre cada módulo en popup para guardar sin salir del centro operativo.",
-    selector: '[data-tour="mini-cards-zone"]',
+    selector: '[data-tour="mini-cards-focus"]',
     mobileSlideIndex: 4,
   },
   {
@@ -80,7 +80,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     title: "Progreso corporal",
     description:
       "Compara peso actual contra tu meta y revisa tendencia por periodo (7D, 30D o Todo). El objetivo es detectar dirección, no solo el número de hoy.",
-    selector: '[data-tour="weight-progress-card"]',
+    selector: '[data-tour="weight-progress-focus"]',
     mobileSlideIndex: 1,
   },
   {
@@ -88,7 +88,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     title: "Entrenamiento",
     description:
       "Desde aquí ves la rutina del día, minutos estimados y nivel de carga sugerido. Puedes iniciar o continuar sesión sin navegar a otra pestaña primero.",
-    selector: '[data-tour="training-card"]',
+    selector: '[data-tour="training-card-focus"]',
     mobileSlideIndex: 2,
   },
   {
@@ -96,7 +96,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     title: "Nutrición",
     description:
       "Muestra el progreso de calorías frente a tu meta diaria. Si estás por debajo o por encima, aquí mismo tienes acceso directo para registrar comida.",
-    selector: '[data-tour="nutrition-card"]',
+    selector: '[data-tour="nutrition-card-focus"]',
     mobileSlideIndex: 3,
   },
   {
@@ -323,7 +323,11 @@ const getSafeViewportBounds = (isMobile: boolean) => {
   };
 };
 
-const clampRectToSafeBounds = (rect: DOMRect, bounds: { top: number; bottom: number; left: number; right: number }) => {
+const clampRectToSafeBounds = (
+  rect: DOMRect,
+  bounds: { top: number; bottom: number; left: number; right: number },
+  isMobile: boolean,
+) => {
   const top = clamp(rect.top, bounds.top, bounds.bottom);
   const bottom = clamp(rect.bottom, bounds.top, bounds.bottom);
   const left = clamp(rect.left, bounds.left, bounds.right);
@@ -333,7 +337,7 @@ const clampRectToSafeBounds = (rect: DOMRect, bounds: { top: number; bottom: num
   if (clampedHeight < 6 || clampedWidth < 6) return null;
 
   const safeHeight = bounds.bottom - bounds.top;
-  const maxHeight = Math.min(safeHeight * 0.58, window.innerWidth < 768 ? 220 : 300);
+  const maxHeight = isMobile ? Math.min(safeHeight * 0.4, 176) : Math.min(safeHeight * 0.58, 300);
   const limitedHeight = Math.min(clampedHeight, maxHeight);
 
   return {
@@ -583,7 +587,7 @@ const TabTourDialog = () => {
         return;
       }
       const safeBounds = getSafeViewportBounds(isMobile);
-      const clampedRect = clampRectToSafeBounds(targetNode.getBoundingClientRect(), safeBounds);
+      const clampedRect = clampRectToSafeBounds(targetNode.getBoundingClientRect(), safeBounds, isMobile);
       setHighlightRect(clampedRect ? new DOMRect(clampedRect.left, clampedRect.top, clampedRect.width, clampedRect.height) : null);
     };
     const scheduleUpdate = () => {

@@ -1109,7 +1109,7 @@ const Dashboard = () => {
             }
             description={todayDateLabel}
             actions={
-              <div className="hidden items-center gap-2 md:flex">
+              <div data-tour="command-center-focus" className="hidden items-center gap-2 md:flex">
               <Button variant="outline" size="sm" className="h-10 rounded-xl px-4">
                 Día
               </Button>
@@ -1209,7 +1209,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/10 p-3 md:flex-row md:items-center md:justify-between">
+                <div data-tour="today-priority-focus" className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/10 p-3 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-start gap-3">
                     <div className="rounded-2xl border border-primary/20 bg-primary/10 p-2 text-primary">
                       <CheckCircle2 className="h-5 w-5" />
@@ -1294,7 +1294,7 @@ const Dashboard = () => {
                 layoutId="weight-range-desktop"
               />
 
-              <div className="grid gap-2 md:grid-cols-[minmax(140px,220px)_minmax(0,1fr)] md:items-end md:gap-4">
+              <div data-tour="weight-progress-focus" className="grid gap-2 md:grid-cols-[minmax(140px,220px)_minmax(0,1fr)] md:items-end md:gap-4">
                 <div>
                   <p className="text-xs text-muted-foreground">Peso actual</p>
                   <p className="text-3xl font-black leading-none">{core?.latestMeasurementWeight ? `${core.latestMeasurementWeight.toFixed(1)} kg` : "--"}</p>
@@ -1334,7 +1334,7 @@ const Dashboard = () => {
 
             {!isMobile ? (
               <div data-tour="mini-cards-zone" className="space-y-3 xl:col-span-1">
-                <section id="water" className="min-w-0">
+                <section id="water" data-tour="mini-cards-focus" className="min-w-0">
                   <DashboardMetricCard
                     title="Agua"
                     icon={Droplets}
@@ -1417,7 +1417,7 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/10 p-3">
+                    <div data-tour="today-priority-focus" className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/10 p-3">
                       <div className="flex items-start gap-3">
                         <div className="rounded-2xl border border-primary/20 bg-primary/10 p-2 text-primary">
                           <CheckCircle2 className="h-5 w-5" />
@@ -1500,7 +1500,7 @@ const Dashboard = () => {
                       layoutId="weight-range-mobile"
                       className="max-w-[14rem]"
                     />
-                    <div className="grid gap-2 sm:grid-cols-[minmax(120px,170px)_minmax(0,1fr)] sm:items-end sm:gap-3">
+                    <div data-tour="weight-progress-focus" className="grid gap-2 sm:grid-cols-[minmax(120px,170px)_minmax(0,1fr)] sm:items-end sm:gap-3">
                       <div>
                         <p className="text-xs text-muted-foreground">Peso actual</p>
                         <p className="text-3xl font-black leading-none">{core?.latestMeasurementWeight ? `${core.latestMeasurementWeight.toFixed(1)} kg` : "--"}</p>
@@ -1555,7 +1555,7 @@ const Dashboard = () => {
                     </div>
                     <p className="text-xs text-muted-foreground">El resumen de ejercicios se muestra al iniciar entrenamiento.</p>
                     {renderTrainingRecoveryPanel()}
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div data-tour="training-card-focus" className="flex flex-wrap items-center gap-2">
                       <Button type="button" className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90" onClick={handleOpenTrainingSummary}>
                         {activeSession ? "Continuar entrenamiento" : "Iniciar entrenamiento"}
                       </Button>
@@ -1585,7 +1585,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
-                    <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                    <div data-tour="nutrition-card-focus" className="rounded-xl border border-border/60 bg-muted/10 p-3">
                       <div className="flex flex-col items-center gap-3 text-center">
                         <div className="relative h-32 w-32">
                           <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
@@ -1626,7 +1626,7 @@ const Dashboard = () => {
 
               <div data-tour-slide="4" data-tour="mini-cards-zone" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <div className="flex h-full flex-col gap-2.5">
-                  <section id="water" className="min-w-0">
+                  <section id="water" data-tour="mini-cards-focus" className="min-w-0">
                     <DashboardMetricCard
                       title="Agua"
                       icon={Droplets}
@@ -1682,7 +1682,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-1.5">
+            <div data-tour="mobile-command-center-focus" className="flex items-center justify-center gap-1.5">
               {Array.from({ length: mobileSlidesCount }).map((_, index) => (
                 <span
                   key={`mobile-slide-dot-${index}`}
@@ -1933,7 +1933,7 @@ const Dashboard = () => {
 
                 {renderTrainingRecoveryPanel()}
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div data-tour="training-card-focus" className="flex flex-wrap items-center gap-2">
                   <Button type="button" className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90" onClick={handleOpenTrainingSummary}>
                     {activeSession ? "Continuar entrenamiento" : "Iniciar entrenamiento"}
                   </Button>
@@ -1966,7 +1966,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">{nutritionActionHint}</p>
-                <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                <div data-tour="nutrition-card-focus" className="rounded-xl border border-border/60 bg-muted/10 p-3">
                   <div className="flex flex-col items-center gap-3 text-center">
                     <div className="relative mx-auto h-32 w-32">
                       <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
