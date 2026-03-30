@@ -1103,17 +1103,18 @@ const Dashboard = () => {
       isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "h-full overflow-hidden pb-0",
     )}>
       <div className={cn("mx-auto flex max-w-[1540px] flex-col gap-5", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "h-full min-h-0 gap-2")}>
-        <AppPageIntro
-          className={cn("order-[-3]", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "shrink-0 gap-2")}
-          eyebrow="Dashboard / Centro operativo"
-          title={
-            <>
-              {greetingLabel}, <span className="text-primary">{profileDisplayName}</span>
-            </>
-          }
-          description={todayDateLabel}
-          actions={
-            <div className="hidden items-center gap-2 md:flex">
+        <div data-tour="hero-intro">
+          <AppPageIntro
+            className={cn("order-[-3]", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "shrink-0 gap-2")}
+            eyebrow="Dashboard / Centro operativo"
+            title={
+              <>
+                {greetingLabel}, <span className="text-primary">{profileDisplayName}</span>
+              </>
+            }
+            description={todayDateLabel}
+            actions={
+              <div className="hidden items-center gap-2 md:flex">
               <Button variant="outline" size="sm" className="h-10 rounded-xl px-4">
                 Día
               </Button>
@@ -1170,9 +1171,10 @@ const Dashboard = () => {
                 <RefreshCcw className="mr-2 h-4 w-4" />
                 Sincronizar
               </Button>
-            </div>
-          }
-        />
+              </div>
+            }
+          />
+        </div>
         <section aria-label="Día de la semana" className={cn("order-[-3] space-y-2 px-1 md:hidden", isMobile && USE_MOBILE_HORIZONTAL_SCROLL && "shrink-0 space-y-1.5")}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Día de la semana</p>
           <div className="grid grid-cols-7 gap-2">
@@ -1195,16 +1197,17 @@ const Dashboard = () => {
 
 
         {!isMobile || !USE_MOBILE_HORIZONTAL_SCROLL ? (
-        <section aria-labelledby="dashboard-zone-actions" className={cn("order-[-2] grid", denseSectionGapClass)}>
+        <section data-tour="actions-zone" aria-labelledby="dashboard-zone-actions" className={cn("order-[-2] grid", denseSectionGapClass)}>
           <h2 id="dashboard-zone-actions" className="sr-only">Control operativo de hoy</h2>
           <div className={cn("grid", denseSectionGapClass, "xl:grid-cols-5")}>
-            <DashboardCardShell
-              title="Qué hacer hoy"
-              titleRight={renderCheckinModuleSelector()}
-              contentClassName={denseActionContentClass}
-              className="xl:col-span-2"
-            >
-              <div className="space-y-3">
+            <div data-tour="today-action-card">
+              <DashboardCardShell
+                title="Qué hacer hoy"
+                titleRight={renderCheckinModuleSelector()}
+                contentClassName={denseActionContentClass}
+                className="xl:col-span-2"
+              >
+                <div className="space-y-3">
                 <div className="space-y-2">
                   <p className="text-[1.05rem] font-bold">Hoy estás al {todayCompletionPct}% completado</p>
                   <div className="h-2.5 rounded-full bg-muted">
@@ -1274,11 +1277,13 @@ const Dashboard = () => {
                     </div>
                   </div>
                 ) : null : null}
-              </div>
-            </DashboardCardShell>
+                </div>
+              </DashboardCardShell>
+            </div>
 
             {!isMobile ? (
-              <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass} className="xl:col-span-2">
+              <div data-tour="weight-progress-card">
+                <DashboardCardShell title="Progreso corporal" contentClassName={denseCardContentClass} className="xl:col-span-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="space-y-1">
                   <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Foco</p>
@@ -1328,12 +1333,13 @@ const Dashboard = () => {
                   <p className={cn("text-base font-semibold leading-tight", weightDeltaToneClass)}>{weightDeltaLabel}</p>
                   <p className="text-xs text-muted-foreground">{weightTrendLabel}</p>
                 </div>
+                </div>
+                </DashboardCardShell>
               </div>
-              </DashboardCardShell>
             ) : null}
 
             {!isMobile ? (
-              <div className="space-y-3 xl:col-span-1">
+              <div data-tour="mini-cards-zone" className="space-y-3 xl:col-span-1">
                 <section id="water" className="min-w-0">
                   <DashboardMetricCard
                     title="Agua"
@@ -1347,7 +1353,7 @@ const Dashboard = () => {
                     onActionClick={() => setIsWaterModalOpen(true)}
                   />
                 </section>
-                <section id="biofeedback-mini" className="min-w-0">
+                <section id="biofeedback-mini" data-tour="biofeedback-card" className="min-w-0">
                   <DashboardMetricCard
                     title="Biofeedback"
                     icon={Activity}
@@ -1401,6 +1407,7 @@ const Dashboard = () => {
             >
               <div className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <div className="flex h-full flex-col gap-3">
+                <div data-tour="today-action-card">
                 <DashboardCardShell
                   title="Qué hacer hoy"
                   titleRight={renderCheckinModuleSelector()}
@@ -1467,17 +1474,20 @@ const Dashboard = () => {
                     ) : null}
                   </div>
                 </DashboardCardShell>
+                </div>
 
-                <TacticalNotesCard
-                  loading={snapshot.coreLoading}
-                  todayNote={core?.noteToday ?? null}
-                  latestNote={core?.noteLatest ?? null}
-                  onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
-                />
+                <div data-tour="notes-card">
+                  <TacticalNotesCard
+                    loading={snapshot.coreLoading}
+                    todayNote={core?.noteToday ?? null}
+                    latestNote={core?.noteLatest ?? null}
+                    onSave={(payload) => saveNoteMutation.mutateAsync(payload).then(() => undefined)}
+                  />
+                </div>
                 </div>
               </div>
 
-              <div className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
+              <div data-tour="weight-progress-card" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <DashboardCardShell title="Progreso corporal" className="h-full" contentClassName={denseCardContentClass}>
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2">
@@ -1535,7 +1545,7 @@ const Dashboard = () => {
                 </DashboardCardShell>
               </div>
 
-              <div className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
+              <div data-tour="training-card" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <DashboardCardShell title="Entrenamiento" className="h-full xl:col-span-2" contentClassName={denseCardContentClass}>
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
@@ -1566,7 +1576,7 @@ const Dashboard = () => {
                 </DashboardCardShell>
               </div>
 
-              <div className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
+              <div data-tour="nutrition-card" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <DashboardCardShell title="Nutrición" className="h-full" contentClassName={cn(denseCardContentClass, "!space-y-0 flex h-full flex-col")}>
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
@@ -1619,7 +1629,7 @@ const Dashboard = () => {
                 </DashboardCardShell>
               </div>
 
-              <div className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
+              <div data-tour="mini-cards-zone" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <div className="flex h-full flex-col gap-2.5">
                   <section id="water" className="min-w-0">
                     <DashboardMetricCard
@@ -1634,7 +1644,7 @@ const Dashboard = () => {
                       onActionClick={() => setIsWaterModalOpen(true)}
                     />
                   </section>
-                  <section id="biofeedback-mini" className="min-w-0">
+                  <section id="biofeedback-mini" data-tour="biofeedback-card" className="min-w-0">
                     <DashboardMetricCard
                       title="Biofeedback"
                       icon={Activity}
@@ -1692,7 +1702,7 @@ const Dashboard = () => {
         ) : null}
 
         {isMobile && !USE_MOBILE_HORIZONTAL_SCROLL ? (
-          <section aria-labelledby="dashboard-zone-metrics" className="order-[-1] space-y-2 pt-1">
+          <section data-tour="mini-cards-zone" aria-labelledby="dashboard-zone-metrics" className="order-[-1] space-y-2 pt-1">
             <h2 id="dashboard-zone-metrics" className="sr-only">Métricas diarias</h2>
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
               <section id="water" className="min-w-0">
@@ -1708,7 +1718,7 @@ const Dashboard = () => {
                   onActionClick={() => setIsWaterModalOpen(true)}
                 />
               </section>
-              <section id="biofeedback" className="min-w-0">
+              <section id="biofeedback" data-tour="biofeedback-card" className="min-w-0">
                 <DashboardMetricCard
                   title="Biofeedback"
                   icon={Activity}
@@ -1908,7 +1918,8 @@ const Dashboard = () => {
             <h2 id="dashboard-zone-main" className="sr-only">Bloques principales del dashboard</h2>
 
           {!isMobile ? (
-            <DashboardCardShell title="Entrenamiento" className="h-full" contentClassName={denseCardContentClass}>
+            <div data-tour="training-card">
+              <DashboardCardShell title="Entrenamiento" className="h-full" contentClassName={denseCardContentClass}>
               <div className="space-y-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
@@ -1941,10 +1952,12 @@ const Dashboard = () => {
                   {formatDurationLabel(Math.round(estimatedWorkoutMinutes))} estimados
                 </p>
               </div>
-            </DashboardCardShell>
+              </DashboardCardShell>
+            </div>
           ) : null}
 
-          <DashboardCardShell title="Nutrición" className="h-full" contentClassName={denseCardContentClass}>
+          <div data-tour="nutrition-card">
+            <DashboardCardShell title="Nutrición" className="h-full" contentClassName={denseCardContentClass}>
             <div className="flex h-full flex-col gap-4">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -1997,11 +2010,12 @@ const Dashboard = () => {
                 </Button>
               </div>
             </div>
-          </DashboardCardShell>
+            </DashboardCardShell>
+          </div>
 
           {!isMobile ? (
             <div className="space-y-3">
-              <section className="min-w-0">
+              <section data-tour="notes-card" className="min-w-0">
                 <TacticalNotesCard
                   loading={snapshot.coreLoading}
                   todayNote={core?.noteToday ?? null}

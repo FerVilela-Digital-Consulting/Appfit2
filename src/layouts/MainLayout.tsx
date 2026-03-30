@@ -63,7 +63,7 @@ const MainLayout = () => {
 
   return (
     <div className="app-shell flex h-[100dvh] overflow-hidden bg-background md:h-screen">
-      <div className="hidden md:block">
+      <div data-tour="sidebar-nav" className="hidden md:block">
         <Sidebar />
       </div>
 
@@ -84,7 +84,9 @@ const MainLayout = () => {
           >
           <Outlet />
         </main>
-        <MobileBottomNav />
+        <div data-tour="mobile-bottom-nav">
+          <MobileBottomNav />
+        </div>
         <TabTourDialog />
       </div>
     </div>

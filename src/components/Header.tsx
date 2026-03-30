@@ -167,7 +167,7 @@ const DashboardHeader = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <div className="md:hidden">
+        <div data-tour="notifications-center" className="md:hidden">
           <NotificationCenter />
         </div>
         <DropdownMenu>
@@ -190,7 +190,7 @@ const DashboardHeader = () => {
             <DropdownMenuItem onSelect={() => navigate("/onboarding")}>Test onboarding (temporal)</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <div className="hidden md:flex">
+        <div data-tour="notifications-center" className="hidden md:flex">
           <NotificationCenter />
         </div>
         <button
