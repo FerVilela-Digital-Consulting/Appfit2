@@ -139,7 +139,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
       title: "Planificar",
       description: "Define la estructura semanal de rutinas y asigna que toca en cada dia.",
       selector: '[data-tour="training-plan-section"]',
-      activateSelector: '[data-tour="training-tab-library"]',
+      activateSelector: '[data-tour="training-tab-plan"]',
     },
     {
       key: "routines",
@@ -153,7 +153,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
       title: "Biblioteca de ejercicios",
       description: "Aqui agregas ejercicios personalizados y ajustas filtros para planificar mas rapido.",
       selector: '[data-tour="training-library-section"]',
-      activateSelector: '[data-tour="training-tab-plan"]',
+      activateSelector: '[data-tour="training-tab-library"]',
     },
     {
       key: "progress",
@@ -458,6 +458,22 @@ const TabTourDialog = () => {
     const nextLeft = slide.offsetLeft - Math.max(0, (carousel.clientWidth - slide.clientWidth) / 2);
     carousel.scrollTo({ left: Math.max(0, nextLeft), behavior: "smooth" });
   }, [activeTodayStep, isMobile, isTodayTour, shouldOpen]);
+
+  useEffect(() => {
+    if (!shouldOpen || !activeTodayStep || !activeSelector || !isMobile) return;
+    const scrollToTarget = () => {
+      const targetNode =
+        resolveSelectorTarget(activeSelector, {
+          mobileSlideIndex: activeTodayStep.mobileSlideIndex ?? null,
+        }) ?? resolveAnySelectorTarget(activeSelector);
+      if (!targetNode) return;
+      targetNode.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    };
+
+    scrollToTarget();
+    const timerId = window.setTimeout(scrollToTarget, 220);
+    return () => window.clearTimeout(timerId);
+  }, [activeSelector, activeTodayStep, isMobile, shouldOpen]);
 
   useEffect(() => {
     if (!shouldOpen || !activeTodayStep || !activeSelector) {
