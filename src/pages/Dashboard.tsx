@@ -1393,13 +1393,14 @@ const Dashboard = () => {
         ) : null}
 
         {isMobile && USE_MOBILE_HORIZONTAL_SCROLL ? (
-          <section aria-label="Centro de mando movil" className="order-[-2] flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+          <section data-tour="mobile-command-center" aria-label="Centro de mando movil" className="order-[-2] flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
             <div
+              data-tour-mobile-carousel
               ref={mobileCarouselRef}
               onScroll={handleMobileCarouselScroll}
               className="hide-scrollbar flex min-h-0 flex-1 snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overflow-y-hidden px-[4%] pb-1"
             >
-              <div className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
+              <div data-tour-slide="0" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <div className="flex h-full flex-col gap-3">
                 <div data-tour="today-action-card">
                 <DashboardCardShell
@@ -1481,7 +1482,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div data-tour="weight-progress-card" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
+              <div data-tour-slide="1" data-tour="weight-progress-card" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <DashboardCardShell title="Progreso corporal" className="h-full" contentClassName={denseCardContentClass}>
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2">
@@ -1539,7 +1540,7 @@ const Dashboard = () => {
                 </DashboardCardShell>
               </div>
 
-              <div data-tour="training-card" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
+              <div data-tour-slide="2" data-tour="training-card" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <DashboardCardShell title="Entrenamiento" className="h-full xl:col-span-2" contentClassName={denseCardContentClass}>
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
@@ -1570,7 +1571,7 @@ const Dashboard = () => {
                 </DashboardCardShell>
               </div>
 
-              <div data-tour="nutrition-card" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
+              <div data-tour-slide="3" data-tour="nutrition-card" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <DashboardCardShell title="Nutrición" className="h-full" contentClassName={cn(denseCardContentClass, "!space-y-0 flex h-full flex-col")}>
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
@@ -1623,7 +1624,7 @@ const Dashboard = () => {
                 </DashboardCardShell>
               </div>
 
-              <div data-tour="mini-cards-zone" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
+              <div data-tour-slide="4" data-tour="mini-cards-zone" className="h-full w-[92%] shrink-0 snap-center overflow-hidden">
                 <div className="flex h-full flex-col gap-2.5">
                   <section id="water" className="min-w-0">
                     <DashboardMetricCard

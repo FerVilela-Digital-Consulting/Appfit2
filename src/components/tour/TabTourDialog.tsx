@@ -3,17 +3,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
-import { CircleHelp, Sparkles, X } from "lucide-react";
+import { X } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  getNextIncompleteTourTab,
   getTourProgressState,
   getTourTabByPath,
-  isTourCompleted,
   markTourInviteResponded,
   markTourTabCompleted,
 } from "@/services/tourProgress";
@@ -26,6 +23,8 @@ type TodayTourStep = {
   title: string;
   description: string;
   selector: string;
+  mobileSelector?: string;
+  mobileSlideIndex?: number;
 };
 
 const TODAY_TOUR_STEPS: TodayTourStep[] = [
@@ -46,6 +45,8 @@ const TODAY_TOUR_STEPS: TodayTourStep[] = [
     title: "Centro operativo",
     description: "Aquí se concentra tu flujo del día: prioridad, registros rápidos y estado global.",
     selector: '[data-tour="actions-zone"]',
+    mobileSelector: '[data-tour="mobile-command-center"]',
+    mobileSlideIndex: 0,
   },
   {
     key: "today-priority",
@@ -53,6 +54,7 @@ const TODAY_TOUR_STEPS: TodayTourStep[] = [
     description:
       "Este bloque prioriza tu día: arriba ves el avance total y abajo la siguiente acción recomendada. Si completas ese paso, el progreso diario sube automáticamente.",
     selector: '[data-tour="today-action-card"]',
+    mobileSlideIndex: 0,
   },
   {
     key: "mini-cards",
@@ -60,6 +62,7 @@ const TODAY_TOUR_STEPS: TodayTourStep[] = [
     description:
       "Aquí registras rápido lo esencial del día (agua, sueño, biofeedback y pasos). El botón “+” abre cada módulo en popup para guardar sin salir del centro operativo.",
     selector: '[data-tour="mini-cards-zone"]',
+    mobileSlideIndex: 4,
   },
   {
     key: "biofeedback",
@@ -67,6 +70,7 @@ const TODAY_TOUR_STEPS: TodayTourStep[] = [
     description:
       "Este check-in impacta tu recuperación y la recomendación de carga de entrenamiento. Puedes usar un perfil rápido o ajustar valores en detalle cuando lo necesites.",
     selector: '[data-tour="biofeedback-card"]',
+    mobileSlideIndex: 4,
   },
   {
     key: "body-progress",
@@ -74,6 +78,7 @@ const TODAY_TOUR_STEPS: TodayTourStep[] = [
     description:
       "Compara peso actual contra tu meta y revisa tendencia por periodo (7D, 30D o Todo). El objetivo es detectar dirección, no solo el número de hoy.",
     selector: '[data-tour="weight-progress-card"]',
+    mobileSlideIndex: 1,
   },
   {
     key: "training",
@@ -81,6 +86,7 @@ const TODAY_TOUR_STEPS: TodayTourStep[] = [
     description:
       "Desde aquí ves la rutina del día, minutos estimados y nivel de carga sugerido. Puedes iniciar o continuar sesión sin navegar a otra pestaña primero.",
     selector: '[data-tour="training-card"]',
+    mobileSlideIndex: 2,
   },
   {
     key: "nutrition",
@@ -88,6 +94,7 @@ const TODAY_TOUR_STEPS: TodayTourStep[] = [
     description:
       "Muestra el progreso de calorías frente a tu meta diaria. Si estás por debajo o por encima, aquí mismo tienes acceso directo para registrar comida.",
     selector: '[data-tour="nutrition-card"]',
+    mobileSlideIndex: 3,
   },
   {
     key: "notes",
@@ -95,6 +102,7 @@ const TODAY_TOUR_STEPS: TodayTourStep[] = [
     description:
       "Usa esta nota para registrar contexto útil del día (energía, molestias, decisiones). Se guarda automáticamente y luego te sirve para revisar patrones.",
     selector: '[data-tour="notes-card"]',
+    mobileSlideIndex: 0,
   },
   {
     key: "tour-reopen",
@@ -112,15 +120,43 @@ const isElementVisible = (element: HTMLElement) => {
   return rect.width > 1 && rect.height > 1 && style.visibility !== "hidden" && style.display !== "none";
 };
 
-const resolveSelectorTarget = (selector: string): HTMLElement | null => {
+const getVisibleArea = (rect: DOMRect) => {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const left = Math.max(0, rect.left);
+  const top = Math.max(0, rect.top);
+  const right = Math.min(viewportWidth, rect.right);
+  const bottom = Math.min(viewportHeight, rect.bottom);
+  return Math.max(0, right - left) * Math.max(0, bottom - top);
+};
+
+const resolveSelectorTarget = (selector: string, options?: { mobileSlideIndex?: number | null }): HTMLElement | null => {
+  const { mobileSlideIndex = null } = options ?? {};
   const selectors = selector.split(",").map((item) => item.trim()).filter(Boolean);
+  let searchRoot: ParentNode = document;
+  if (typeof mobileSlideIndex === "number") {
+    const slide = document.querySelector(`[data-tour-slide="${mobileSlideIndex}"]`);
+    if (slide) {
+      searchRoot = slide;
+    }
+  }
+
   for (const currentSelector of selectors) {
-    const nodes = document.querySelectorAll(currentSelector);
+    const localNodes = Array.from(searchRoot.querySelectorAll(currentSelector));
+    const fallbackNodes = searchRoot === document ? [] : Array.from(document.querySelectorAll(currentSelector));
+    const nodes = [...localNodes, ...fallbackNodes];
+    let bestNode: HTMLElement | null = null;
+    let bestVisibleArea = 0;
     for (const node of nodes) {
       if (node instanceof HTMLElement && isElementVisible(node)) {
-        return node;
+        const visibleArea = getVisibleArea(node.getBoundingClientRect());
+        if (visibleArea > bestVisibleArea) {
+          bestVisibleArea = visibleArea;
+          bestNode = node;
+        }
       }
     }
+    if (bestNode) return bestNode;
   }
   return null;
 };
@@ -151,6 +187,7 @@ const getPanelPosition = (targetRect: DOMRect | null) => {
 
 const TabTourDialog = () => {
   const { user, isGuest } = useAuth();
+  const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -164,11 +201,16 @@ const TabTourDialog = () => {
 
   const currentTab = useMemo(() => getTourTabByPath(location.pathname), [location.pathname]);
   const progress = tourStateQuery.data;
-  const shouldOpen = Boolean(user?.id) && !isGuest && isTourActive && Boolean(currentTab);
+  const shouldOpen = Boolean(user?.id) && !isGuest && isTourActive && currentTab?.key === "today";
   const isTodayTour = currentTab?.key === "today";
   const [todayStepIndex, setTodayStepIndex] = useState(0);
+  const [panelDirection, setPanelDirection] = useState<1 | -1>(1);
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
   const activeTodayStep = TODAY_TOUR_STEPS[todayStepIndex] ?? null;
+  const activeSelector = useMemo(() => {
+    if (!activeTodayStep) return null;
+    return isMobile && activeTodayStep.mobileSelector ? activeTodayStep.mobileSelector : activeTodayStep.selector;
+  }, [activeTodayStep, isMobile]);
 
   const skipTourMutation = useMutation({
     mutationFn: async () => {
@@ -180,27 +222,6 @@ const TabTourDialog = () => {
       await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id, isGuest] });
       closeTourQuery();
       toast.info("Tour pausado. Puedes retomarlo cuando quieras.");
-    },
-  });
-
-  const completeTabMutation = useMutation({
-    mutationFn: async () => {
-      if (!user?.id || !currentTab) return null;
-      return markTourTabCompleted(user.id, currentTab.key, { isGuest: false });
-    },
-    onSuccess: async (nextState) => {
-      if (!user?.id) return;
-      await queryClient.invalidateQueries({ queryKey: ["tour_progress", user.id, isGuest] });
-      if (!nextState) return;
-
-      const nextTab = getNextIncompleteTourTab(nextState);
-      if (!nextTab) {
-        closeTourQuery();
-        toast.success("Recorrido completado.");
-        return;
-      }
-
-      navigate(`${nextTab.route}?tour=1`);
     },
   });
 
@@ -234,25 +255,49 @@ const TabTourDialog = () => {
     skipTourMutation.mutate();
   };
 
-  const handleCompleteTab = () => {
-    if (!user?.id || !currentTab || completeTabMutation.isPending) return;
-    completeTabMutation.mutate();
-  };
-
   useEffect(() => {
     if (!shouldOpen || !isTodayTour) return;
     setTodayStepIndex(0);
+    setPanelDirection(1);
   }, [isTodayTour, location.pathname, shouldOpen]);
 
   useEffect(() => {
+    if (!user?.id || isGuest || !isTourActive) return;
+    if (currentTab && currentTab.key !== "today") {
+      navigate("/today?tour=1", { replace: true });
+    }
+  }, [currentTab, isGuest, isTourActive, navigate, user?.id]);
+
+  useEffect(() => {
     if (!shouldOpen || !isTodayTour || !activeTodayStep) {
+      return;
+    }
+
+    if (!isMobile || typeof activeTodayStep.mobileSlideIndex !== "number") {
+      return;
+    }
+
+    const carousel = document.querySelector("[data-tour-mobile-carousel]");
+    if (!(carousel instanceof HTMLElement)) return;
+    const slide = carousel.querySelector(`[data-tour-slide="${activeTodayStep.mobileSlideIndex}"]`);
+    if (!(slide instanceof HTMLElement)) return;
+
+    const nextLeft = slide.offsetLeft - Math.max(0, (carousel.clientWidth - slide.clientWidth) / 2);
+    carousel.scrollTo({ left: Math.max(0, nextLeft), behavior: "smooth" });
+  }, [activeTodayStep, isMobile, isTodayTour, shouldOpen]);
+
+  useEffect(() => {
+    if (!shouldOpen || !isTodayTour || !activeTodayStep || !activeSelector) {
       setHighlightRect(null);
       return;
     }
 
     let frameId = 0;
+    let timerId: number | null = null;
     const updateRect = () => {
-      const targetNode = resolveSelectorTarget(activeTodayStep.selector);
+      const targetNode = resolveSelectorTarget(activeSelector, {
+        mobileSlideIndex: isMobile ? activeTodayStep.mobileSlideIndex ?? null : null,
+      });
       setHighlightRect(targetNode ? targetNode.getBoundingClientRect() : null);
     };
     const scheduleUpdate = () => {
@@ -261,17 +306,20 @@ const TabTourDialog = () => {
     };
 
     scheduleUpdate();
+    timerId = window.setTimeout(scheduleUpdate, 260);
     window.addEventListener("resize", scheduleUpdate);
     window.addEventListener("scroll", scheduleUpdate, true);
 
     return () => {
       if (frameId) cancelAnimationFrame(frameId);
+      if (timerId !== null) window.clearTimeout(timerId);
       window.removeEventListener("resize", scheduleUpdate);
       window.removeEventListener("scroll", scheduleUpdate, true);
     };
-  }, [activeTodayStep, isTodayTour, shouldOpen]);
+  }, [activeSelector, activeTodayStep, isMobile, isTodayTour, shouldOpen]);
 
   const handleTodayBack = () => {
+    setPanelDirection(-1);
     setTodayStepIndex((current) => Math.max(0, current - 1));
   };
 
@@ -284,6 +332,7 @@ const TabTourDialog = () => {
       }
       return;
     }
+    setPanelDirection(1);
     setTodayStepIndex((current) => Math.min(TODAY_TOUR_STEPS.length - 1, current + 1));
   };
 
@@ -291,8 +340,6 @@ const TabTourDialog = () => {
     return null;
   }
 
-  const completedCount = progress.completedTabs.length;
-  const totalCount = isTourCompleted(progress) ? completedCount : completedCount + 1;
   const todayPanelPosition = getPanelPosition(highlightRect);
   const canGoBackToday = todayStepIndex > 0;
   const isLastTodayStep = todayStepIndex >= TODAY_TOUR_STEPS.length - 1;
@@ -308,7 +355,7 @@ const TabTourDialog = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <motion.div className="absolute inset-0 bg-background/70 backdrop-blur-[1px]" />
+            <motion.div className="absolute inset-0 bg-background/65" />
 
             {highlightRect ? (
               <motion.div
@@ -320,29 +367,28 @@ const TabTourDialog = () => {
                   left: highlightRect.left - 8,
                   width: highlightRect.width + 16,
                   height: highlightRect.height + 16,
-                  boxShadow: [
-                    "0 0 0 1px hsl(var(--primary) / 0.15), 0 0 0 0 hsl(var(--primary) / 0.18)",
-                    "0 0 0 1px hsl(var(--primary) / 0.35), 0 0 28px 4px hsl(var(--primary) / 0.28)",
-                    "0 0 0 1px hsl(var(--primary) / 0.15), 0 0 0 0 hsl(var(--primary) / 0.18)",
-                  ],
+                  opacity: [0.86, 1, 0.86],
+                  scale: [1, 1.012, 1],
                 }}
                 transition={{
                   top: { duration: 0.22, ease: "easeOut" },
                   left: { duration: 0.22, ease: "easeOut" },
                   width: { duration: 0.22, ease: "easeOut" },
                   height: { duration: 0.22, ease: "easeOut" },
-                  boxShadow: { duration: 2.1, repeat: Infinity, ease: "easeInOut" },
+                  opacity: { duration: 1.7, repeat: Infinity, ease: "easeInOut" },
+                  scale: { duration: 1.7, repeat: Infinity, ease: "easeInOut" },
                 }}
+                style={{ boxShadow: "0 0 0 1px hsl(var(--primary) / 0.32), 0 0 18px hsl(var(--primary) / 0.26)" }}
               />
             ) : null}
 
             <motion.div
               key={`today-tour-panel-${activeTodayStep.key}`}
-              className="fixed z-[92] w-[min(92vw,380px)] rounded-2xl border border-border/70 bg-card/95 p-4 shadow-2xl backdrop-blur"
-              initial={{ opacity: 0, y: 14, scale: 0.98 }}
+              className="fixed z-[92] w-[min(92vw,380px)] rounded-2xl border border-border/70 bg-card/95 p-4 shadow-2xl"
+              initial={{ opacity: 0, y: 8, x: panelDirection * 22, scale: 0.985 }}
               animate={{ opacity: 1, y: 0, scale: 1, top: todayPanelPosition.top, left: todayPanelPosition.left }}
-              exit={{ opacity: 0, y: 10, scale: 0.98 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              exit={{ opacity: 0, y: 6, x: panelDirection * -14, scale: 0.99 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -397,60 +443,7 @@ const TabTourDialog = () => {
       </AnimatePresence>
     );
   }
-
-  return (
-    <Dialog open={shouldOpen} onOpenChange={(open) => !open && handleSkipTour()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            {currentTab.title}
-          </DialogTitle>
-          <DialogDescription>{currentTab.description}</DialogDescription>
-        </DialogHeader>
-
-        <div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
-          Paso {Math.max(1, totalCount)} de 8
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-sm font-semibold">Herramientas de esta pestaña</p>
-          <div className="grid gap-2">
-            {currentTab.tools.map((tool) => (
-              <div key={`${currentTab.key}-${tool.title}`} className="rounded-xl border border-border/60 bg-background/60 px-3 py-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold">{tool.title}</p>
-                    <p className="text-xs text-muted-foreground">{tool.summary}</p>
-                  </div>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0">
-                        <CircleHelp className="h-4 w-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent side="left" align="start" className="w-72">
-                      <p className="text-sm font-semibold">{tool.title}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">{tool.detail}</p>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <DialogFooter className="gap-2 sm:justify-end">
-          <Button type="button" variant="outline" onClick={handleSkipTour}>
-            Omitir tour
-          </Button>
-          <Button type="button" onClick={handleCompleteTab}>
-            Completar y continuar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+  return null;
 };
 
 export default TabTourDialog;
