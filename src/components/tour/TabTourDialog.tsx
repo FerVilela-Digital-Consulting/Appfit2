@@ -47,8 +47,8 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     key: "command-center",
     title: "Centro operativo",
     description: "Aquí se concentra tu flujo del día: prioridad, registros rápidos y estado global.",
-    selector: '[data-tour="command-center-focus"]',
-    mobileSelector: '[data-tour="mobile-command-center-focus"]',
+    selector: '[data-tour="hero-intro"]',
+    mobileSelector: '[data-tour="hero-intro"]',
     mobileSlideIndex: 0,
   },
   {
@@ -80,7 +80,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     title: "Progreso corporal",
     description:
       "Compara peso actual contra tu meta y revisa tendencia por periodo (7D, 30D o Todo). El objetivo es detectar dirección, no solo el número de hoy.",
-    selector: '[data-tour="weight-progress-focus"]',
+    selector: '[data-tour="weight-progress-card"]',
     mobileSlideIndex: 1,
   },
   {
@@ -88,7 +88,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     title: "Entrenamiento",
     description:
       "Desde aquí ves la rutina del día, minutos estimados y nivel de carga sugerido. Puedes iniciar o continuar sesión sin navegar a otra pestaña primero.",
-    selector: '[data-tour="training-card-focus"]',
+    selector: '[data-tour="training-card"]',
     mobileSlideIndex: 2,
   },
   {
@@ -96,7 +96,7 @@ const GUIDED_TOUR_STEPS: Record<GuidedTourKey, GuidedTourStep[]> = {
     title: "Nutrición",
     description:
       "Muestra el progreso de calorías frente a tu meta diaria. Si estás por debajo o por encima, aquí mismo tienes acceso directo para registrar comida.",
-    selector: '[data-tour="nutrition-card-focus"]',
+    selector: '[data-tour="nutrition-card"]',
     mobileSlideIndex: 3,
   },
   {
