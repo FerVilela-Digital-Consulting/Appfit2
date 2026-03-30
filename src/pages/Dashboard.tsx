@@ -114,11 +114,7 @@ const DashboardMetricCard = ({
           </div>
           <p className="text-[1.05rem] font-semibold tracking-tight text-foreground">{title}</p>
         </div>
-        {comingSoon ? (
-          <span className="inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-600 sm:px-2 sm:text-[11px] dark:text-amber-300">
-            Próximamente
-          </span>
-        ) : (
+        {comingSoon ? null : (
           <>
             {onActionClick ? (
               <button

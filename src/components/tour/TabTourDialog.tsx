@@ -50,43 +50,50 @@ const TODAY_TOUR_STEPS: TodayTourStep[] = [
   {
     key: "today-priority",
     title: "Qué hacer hoy",
-    description: "Este bloque te muestra tu siguiente acción y lo que falta para cerrar el día.",
+    description:
+      "Este bloque prioriza tu día: arriba ves el avance total y abajo la siguiente acción recomendada. Si completas ese paso, el progreso diario sube automáticamente.",
     selector: '[data-tour="today-action-card"]',
   },
   {
     key: "mini-cards",
     title: "Tarjetas rápidas",
-    description: "Agua, sueño, biofeedback y pasos se actualizan aquí para registrar sin cambiar de pantalla.",
+    description:
+      "Aquí registras rápido lo esencial del día (agua, sueño, biofeedback y pasos). El botón “+” abre cada módulo en popup para guardar sin salir del centro operativo.",
     selector: '[data-tour="mini-cards-zone"]',
   },
   {
     key: "biofeedback",
     title: "Biofeedback rápido",
-    description: "Desde esta tarjeta registras cómo te sientes hoy y alimentas el cálculo de recuperación.",
+    description:
+      "Este check-in impacta tu recuperación y la recomendación de carga de entrenamiento. Puedes usar un perfil rápido o ajustar valores en detalle cuando lo necesites.",
     selector: '[data-tour="biofeedback-card"]',
   },
   {
     key: "body-progress",
     title: "Progreso corporal",
-    description: "Compara peso actual, meta y tendencia por rango (7D, 30D o Todo).",
+    description:
+      "Compara peso actual contra tu meta y revisa tendencia por periodo (7D, 30D o Todo). El objetivo es detectar dirección, no solo el número de hoy.",
     selector: '[data-tour="weight-progress-card"]',
   },
   {
     key: "training",
     title: "Entrenamiento",
-    description: "Consulta rutina del día y entra directo a la sesión desde este bloque.",
+    description:
+      "Desde aquí ves la rutina del día, minutos estimados y nivel de carga sugerido. Puedes iniciar o continuar sesión sin navegar a otra pestaña primero.",
     selector: '[data-tour="training-card"]',
   },
   {
     key: "nutrition",
     title: "Nutrición",
-    description: "Revisa consumo frente a objetivo y registra comidas en un toque.",
+    description:
+      "Muestra el progreso de calorías frente a tu meta diaria. Si estás por debajo o por encima, aquí mismo tienes acceso directo para registrar comida.",
     selector: '[data-tour="nutrition-card"]',
   },
   {
     key: "notes",
     title: "Notas del día",
-    description: "Escribe aquí observaciones rápidas. Se guardan automáticamente para tu contexto diario.",
+    description:
+      "Usa esta nota para registrar contexto útil del día (energía, molestias, decisiones). Se guarda automáticamente y luego te sirve para revisar patrones.",
     selector: '[data-tour="notes-card"]',
   },
   {
