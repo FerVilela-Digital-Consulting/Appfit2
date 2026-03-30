@@ -305,3 +305,55 @@ Este documento esta optimizado para recuperar contexto con bajo consumo de token
 
 ### Pendientes
 - Revisar microcopy final del dropdown.
+
+---
+
+## 2026-03-30 - Rework de recorridos por pestaña y mejora de registro de alimentos
+
+### Alcance
+- Area: UX de recorridos + Nutricion + Biblioteca de entrenamiento
+- Tipo: feat
+- Owner: CTO flow
+
+### Cambios
+- Se consolido el recorrido guiado contextual por pestaña (centro operativo, entrenamiento y alimentacion) manteniendo el mismo estilo base.
+- Se mejoro el comportamiento mobile del tour para enfocar bloques mas precisos, con scroll menos agresivo y mejor ajuste de contornos.
+- Se incorporo `Biblioteca` como pestaña superior en entrenamiento para que el recorrido y el acceso funcional sean directos.
+- Se ajusto el centro de notificaciones para mostrar el recorrido contextual por seccion y simplificar la accion principal.
+- Se replanteo el modal de registro de alimentos en modo base para operar como una mini-biblioteca:
+  - buscador + filtros + orden
+  - lista seleccionable de alimentos
+  - vista previa de macros y kcal antes de guardar
+  - flujo mas rapido para cargar al logbook
+- Se agrego panel de metricas en biblioteca de ejercicios con contadores `Total / Base / Custom`, alineado al patron de biblioteca de alimentos.
+
+### Archivos tocados
+- src/components/NotificationCenter.tsx
+- src/components/tour/TabTourDialog.tsx
+- src/pages/Training.tsx
+- src/pages/Nutrition.tsx
+- src/modules/training/ui/trainingConstants.ts
+- src/modules/training/ui/components/TrainingTodaySection.tsx
+- src/modules/training/ui/components/TrainingPlanningScheduleSection.tsx
+- src/modules/training/ui/components/TrainingRoutinesSection.tsx
+- src/modules/training/ui/components/TrainingLibrarySection.tsx
+- src/modules/training/ui/components/TrainingProgressSection.tsx
+- src/modules/nutrition/ui/components/NutritionHeaderSection.tsx
+- src/modules/nutrition/ui/components/NutritionSidebarPanel.tsx
+- src/modules/nutrition/ui/components/NutritionMealsSection.tsx
+- src/modules/nutrition/ui/components/NutritionFoodLibrarySection.tsx
+- src/modules/nutrition/ui/components/NutritionMealDialog.tsx
+
+### Riesgo
+- medium
+- Notas: cambios amplios en UX de navegacion de tours y en flujo de captura de comidas; conviene smoke test completo desktop/mobile.
+
+### Verificacion
+- `npm run build`
+- Validacion manual del recorrido en centro operativo, entrenamiento y alimentacion.
+- Validacion manual del nuevo flujo de seleccion en modal de registro de alimentos.
+
+### Pendientes
+- Ejecutar QA funcional end-to-end de tours en resoluciones moviles extremas.
+- Revisar microcopy final en pasos largos del tour para mantener claridad sin saturar.
+- Medir tiempo de registro de comida (antes vs despues) para confirmar mejora en friccion.
