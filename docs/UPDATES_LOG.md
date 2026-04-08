@@ -357,3 +357,8 @@ Este documento esta optimizado para recuperar contexto con bajo consumo de token
 - Ejecutar QA funcional end-to-end de tours en resoluciones moviles extremas.
 - Revisar microcopy final en pasos largos del tour para mantener claridad sin saturar.
 - Medir tiempo de registro de comida (antes vs despues) para confirmar mejora en friccion.
+
+
+## 2026-04-08
+
+- **Auth.tsx**: Se agregó soporte para capturar el error 'failed to fetch' en el formulario de recuperación de contraseña. Se sugiere al usuario deshabilitar ad-blockers si esto ocurre. Además, se añadió e.preventDefault() a handleForgotPassword para prevenir envíos de formularios accidentales que interrumpieran la petición de Supabase.

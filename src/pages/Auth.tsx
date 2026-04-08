@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,12 @@ const isInvalidCredentialsError = (message: string) => {
 };
 
 const mapAuthErrorMessage = (message: string) => {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("failed to fetch")) {
+    return "Error de red: No se pudo verificar la solicitud. Esto suele ocurrir si un Ad-Blocker intercepta la petición a Supabase Auth o hay problemas de internet. Intenta pausar tu bloqueador de anuncios o usar modo incógnito.";
+  }
+
   if (isEmailRateLimitError(message)) {
     return "Hemos alcanzado el límite temporal de envío de correos. Espera unos minutos y revisa tu bandeja, incluido spam, antes de volver a intentarlo.";
   }
@@ -116,7 +122,11 @@ const Auth = () => {
         }
     };
 
-    const handleForgotPassword = async () => {
+    const handleForgotPassword = async (e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+        }
+
         if (!email) {
             toast.error("Ingresa tu correo para enviarte el enlace de recuperación.");
             return;
