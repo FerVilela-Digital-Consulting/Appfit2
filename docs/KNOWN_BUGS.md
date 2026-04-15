@@ -2,6 +2,58 @@
 
 ## Bug
 
+Dokploy AppFit database can be populated while the deployed frontend still uses the hosted Supabase project.
+
+## Contexto
+
+The AppFit frontend in Dokploy is a static Vite/Nginx container. The deployed bundle contains Supabase configuration baked at build time, while the Dokploy PostgreSQL service is a separate plain PostgreSQL container.
+
+## Stack involucrado
+
+- Vite build-time environment variables
+- Supabase JS client
+- Dokploy
+- PostgreSQL
+- Nginx
+
+## Sintomas
+
+- The Dokploy PostgreSQL database contains restored tables and data, but the browser app does not use that database.
+- The deployed frontend can respond with `200` on SPA routes while still reading and writing through a different Supabase backend.
+- A documented temporary Traefik host can return `404` while the active production host routes correctly to the container.
+
+## Causa raiz
+
+The frontend depends on `VITE_SUPABASE_URL` and the publishable key at build time. A plain PostgreSQL URL is not a valid replacement for the Supabase HTTP API URL expected by `@supabase/supabase-js`, and the current AppFit Dokploy stack does not include Supabase Auth/PostgREST services for the Dokploy PostgreSQL database.
+
+## Solucion
+
+- Choose the intended backend source of truth before rebuilding:
+  - keep using the hosted Supabase project and restore the backup there with proper database credentials, or
+  - deploy a Supabase-compatible stack for the Dokploy PostgreSQL database and rebuild the frontend with that stack's public Supabase URL and publishable key.
+- Do not set `VITE_SUPABASE_URL` to a raw `postgresql://...` URL.
+- Update deployment docs and Dokploy build-time arguments after the backend target is chosen.
+
+## Comandos utiles
+
+```powershell
+docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
+```
+
+```powershell
+curl -I -L https://<APP_HOST>/auth
+```
+
+## Prevencion
+
+- Treat Vite build-time variables as part of deployment release state.
+- Add a post-deploy check that compares the active bundle's Supabase URL with the intended backend.
+- Keep the documented application host aligned with the active Dokploy route.
+
+---
+
+## Bug
+
 `.env` in repo root is not ignored by `.gitignore`.
 
 ## Contexto

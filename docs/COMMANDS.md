@@ -69,13 +69,13 @@ rg -n "describe\\(|it\\(|test\\(" src --glob "*.test.ts" --glob "*.test.tsx"
 Fetch deployed HTML:
 
 ```powershell
-Invoke-WebRequest -UseBasicParsing 'http://appfit-test-yrrcmo-cf0564-45-33-74-166.traefik.me/' | Select-Object -ExpandProperty Content
+Invoke-WebRequest -UseBasicParsing 'https://theprime.digitalfuturelab.org/' | Select-Object -ExpandProperty Content
 ```
 
 Fetch deployed auth route:
 
 ```powershell
-(Invoke-WebRequest -UseBasicParsing 'http://appfit-test-yrrcmo-cf0564-45-33-74-166.traefik.me/auth').StatusCode
+(Invoke-WebRequest -UseBasicParsing 'https://theprime.digitalfuturelab.org/auth').StatusCode
 ```
 
 Check whether a bundle still contains placeholders:

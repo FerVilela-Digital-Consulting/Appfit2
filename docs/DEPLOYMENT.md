@@ -53,17 +53,23 @@ Recommended operational settings:
 - rebuild after any environment change
 - prefer rebuild without cache when diagnosing stale bundles
 
+## Active App Host
+
+Observed active Dokploy route:
+
+- `https://theprime.digitalfuturelab.org`
+
+The older temporary Traefik host can return `404` even when the AppFit container is healthy.
+
 ## Supabase Auth URLs
 
-When using the current temporary HTTP domain, keep Supabase Auth configured with absolute URLs.
-
-Recommended values while the temporary domain remains in use:
+Keep Supabase Auth configured with absolute URLs for the active app host.
 
 - Site URL:
-  - `http://appfit-test-yrrcmo-cf0564-45-33-74-166.traefik.me`
+  - `https://theprime.digitalfuturelab.org`
 - Redirect URLs:
-  - `http://appfit-test-yrrcmo-cf0564-45-33-74-166.traefik.me`
-  - `http://appfit-test-yrrcmo-cf0564-45-33-74-166.traefik.me/auth`
+  - `https://theprime.digitalfuturelab.org`
+  - `https://theprime.digitalfuturelab.org/auth`
 
 Important:
 
