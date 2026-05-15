@@ -56,6 +56,12 @@ The frontend expects these variables:
 
 Use `.env.example` as the reference template. Do not commit real secret values.
 
+Important:
+
+- this SPA does not connect directly to PostgreSQL
+- a Dokploy `postgresql://...` URL is not a drop-in replacement for `VITE_SUPABASE_*`
+- if you migrate data out of Supabase, see `docs/DOKPLOY_POSTGRES_MIGRATION.md`
+
 ## Deployment
 
 The app is deployed as a static bundle behind Nginx using the included `Dockerfile` and `nginx.conf`.

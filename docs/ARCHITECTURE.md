@@ -20,6 +20,7 @@ AppFit is a client-heavy fitness tracking SPA. The browser is responsible for re
 - The main client currently used by auth and services is `src/services/supabaseClient.ts`
 - Service modules in `src/services/*` encapsulate CRUD, RPC calls, and storage access
 - `src/features/*` contain pure calculations and domain helpers
+- The current frontend cannot consume a raw PostgreSQL connection string directly; any Dokploy PostgreSQL migration still requires either Supabase to remain as the API/Auth layer or a new backend service
 
 ### Auth
 

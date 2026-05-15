@@ -16,6 +16,7 @@ Important:
 
 - These must be present at build time in Dokploy.
 - Runtime-only environment variables are not enough for a Vite frontend.
+- A raw PostgreSQL connection string does not replace these values for the current architecture.
 
 ## Docker Strategy
 
@@ -94,6 +95,15 @@ After each redeploy:
 - Browser cache can preserve old bundles after redeploys
 - Dokploy cache can preserve an old build if not rebuilt properly
 - Built-in Supabase email delivery is not reliable for production use
+- Copying the database to Dokploy PostgreSQL does not remove the frontend dependency on Supabase Auth, PostgREST, RPC, and Storage
+
+## Dokploy PostgreSQL Note
+
+If Dokploy PostgreSQL is introduced as a replica or future target:
+
+- do not replace `VITE_SUPABASE_*` with a `postgresql://...` value in this frontend
+- keep Supabase build arguments until a backend replacement exists
+- use `docs/DOKPLOY_POSTGRES_MIGRATION.md` as the migration runbook
 
 ## Production Hardening Recommendations
 
